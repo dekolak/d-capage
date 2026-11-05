@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { tousLesChamps } from '@decapage/machine-kit';
 import { Chargement, Erreur } from '../components/Composants';
 import { AnimationReglage } from '../components/AnimationsLaser';
@@ -16,6 +16,9 @@ export default function Aide() {
   const [versionId, setVersionId] = useState('');
   const [v, setV] = useState<Version>();
   const [err, setErr] = useState<unknown>();
+  // Une seule rubrique ouverte à la fois sur toute la page.
+  const [ouvert, setOuvert] = useState<string | null>('guide-0');
+  const r = (id: string) => ({ id, ouvert: ouvert === id, basculer: () => setOuvert(ouvert === id ? null : id) });
 
   useEffect(() => {
     Promise.all([api<MaMachine[]>('/moi/machines'), api<Fabricant[]>('/catalogue')])
@@ -57,10 +60,9 @@ export default function Aide() {
               <h2>Les bases</h2>
               <div className="accordeon">
                 {cfg.guide.map((g, i) => (
-                  <details key={i} open={i === 0}>
-                    <summary>{t(g.titre)}</summary>
+                  <Rubrique key={i} {...r(`guide-${i}`)} titre={t(g.titre)}>
                     <p>{t(g.texte)}</p>
-                  </details>
+                  </Rubrique>
                 ))}
               </div>
             </>
@@ -69,11 +71,16 @@ export default function Aide() {
           <h2>Les réglages</h2>
           <div className="accordeon">
             {champs.map((c) => (
-              <details key={c.key}>
-                <summary>
-                  <span>{t(c.label)}</span>
-                  {c.label.en && <small>{c.label.en}</small>}
-                </summary>
+              <Rubrique
+                key={c.key}
+                {...r(c.key)}
+                titre={
+                  <>
+                    <span>{t(c.label)}</span>
+                    {c.label.en && <small>{c.label.en}</small>}
+                  </>
+                }
+              >
                 <p>{t(c.aide)}</p>
                 {cfg.technologie === 'laser-pulse' && <AnimationReglage k={c.key} />}
                 {c.type === 'nombre' && (
@@ -92,20 +99,19 @@ export default function Aide() {
                     ))}
                   </div>
                 )}
-              </details>
+              </Rubrique>
             ))}
           </div>
 
           <h2>Les indicateurs</h2>
           <div className="accordeon">
-            <details>
-              <summary>Énergie, crête, écart…</summary>
+            <Rubrique {...r('indicateurs')} titre="Énergie, crête, écart…">
               <p>
                 Sous les réglages, l'app calcule quelques repères à partir de vos valeurs : la puissance moyenne, l'énergie de
                 chaque impulsion, la puissance crête et l'écart entre deux impulsions. Ce sont des calculs simples pour comparer
                 des réglages entre eux ; une valeur marquée d'une étoile (*) dépend d'une estimation (taille du spot).
               </p>
-            </details>
+            </Rubrique>
           </div>
 
           {cfg.lienAide && (
@@ -117,5 +123,27 @@ export default function Aide() {
         </>
       )}
     </div>
+  );
+}
+
+/** Rubrique repliable contrôlée : ouvrir l'une ferme les autres, et la garde visible à l'écran. */
+function Rubrique({ ouvert, basculer, titre, children }: { id: string; ouvert: boolean; basculer(): void; titre: ReactNode; children: ReactNode }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    // Les rubriques au-dessus se referment : on recale celle-ci en haut de l'écran.
+    if (ouvert) requestAnimationFrame(() => ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+  }, [ouvert]);
+  return (
+    <details ref={ref} open={ouvert}>
+      <summary
+        onClick={(e) => {
+          e.preventDefault();
+          basculer();
+        }}
+      >
+        {titre}
+      </summary>
+      {ouvert && children}
+    </details>
   );
 }

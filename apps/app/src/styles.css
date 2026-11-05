@@ -323,3 +323,4 @@ textarea { resize: vertical; }
 .anim-defile { animation: defile 5s linear infinite; }
 @keyframes defile { from { transform: translateX(0); } to { transform: translateX(-300px); } }
 @media (prefers-reduced-motion: reduce) { .anim-defile { animation: none; } }
+.accordeon details { scroll-margin: 16px 0 110px; }
