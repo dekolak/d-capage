@@ -1,0 +1,233 @@
+// Schéma de données — voir ARCHITECTURE.md.
+// Principe : les valeurs de réglage sont en JSON, validées par @decapage/machine-kit
+// selon la version d'interface de la machine. Ajouter une machine ne modifie pas ce schéma.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Visibilite {
+  PRIVEE
+  PARTAGEE
+}
+
+enum TypePhoto {
+  AVANT
+  APRES
+  INTERFACE
+  AUTRE
+}
+
+// ---------- Utilisateurs ----------
+
+/// Prévu pour plus tard : une entreprise avec plusieurs utilisateurs.
+model Organisation {
+  id        String   @id @default(cuid())
+  nom       String
+  createdAt DateTime @default(now())
+  users     User[]
+}
+
+model User {
+  id             String        @id @default(cuid())
+  identifiant    String        @unique
+  passwordHash   String
+  nom            String?
+  role           Role          @default(USER)
+  actif          Boolean       @default(true)
+  organisationId String?
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  machines    UserMachine[]
+  fiches      Fiche[]
+  evaluations Evaluation[]
+  apiKeys     ApiKey[]
+}
+
+/// Clé API pour créer des comptes depuis un autre système (site, CRM…).
+/// Seul le hash est stocké ; la clé en clair n'est montrée qu'une fois.
+model ApiKey {
+  id          String    @id @default(cuid())
+  nom         String
+  prefixe     String    @unique
+  hash        String
+  creeParId   String?
+  creePar     User?     @relation(fields: [creeParId], references: [id])
+  derniereUtilisation DateTime?
+  revoqueeLe  DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+// ---------- Catalogue machines ----------
+
+model Technologie {
+  id      String   @id @default(cuid())
+  slug    String   @unique // = clé du module de calcul (ex. laser-pulse)
+  nom     String
+  modeles Modele[]
+}
+
+model Fabricant {
+  id      String   @id @default(cuid())
+  slug    String   @unique
+  nom     String
+  modeles Modele[]
+}
+
+model Modele {
+  id            String      @id @default(cuid())
+  slug          String
+  nom           String
+  fabricantId   String
+  fabricant     Fabricant   @relation(fields: [fabricantId], references: [id])
+  technologieId String
+  technologie   Technologie @relation(fields: [technologieId], references: [id])
+  variantes     Variante[]
+
+  @@unique([fabricantId, slug])
+}
+
+/// Ex. 300 W. Une variante a une ou plusieurs versions d'interface.
+model Variante {
+  id        String             @id @default(cuid())
+  slug      String
+  nom       String
+  modeleId  String
+  modele    Modele             @relation(fields: [modeleId], references: [id])
+  actif     Boolean            @default(true)
+  versions  VersionInterface[]
+  machines  UserMachine[]
+
+  @@unique([modeleId, slug])
+}
+
+/// Config miroir (JSON validé par machine-kit). Une fiche pointe vers une version précise :
+/// si le menu de la machine change, on crée une nouvelle version et les anciennes fiches restent lisibles.
+model VersionInterface {
+  id         String   @id @default(cuid())
+  varianteId String
+  variante   Variante @relation(fields: [varianteId], references: [id])
+  numero     Int
+  config     Json
+  publiee    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  fiches     Fiche[]
+
+  @@unique([varianteId, numero])
+}
+
+/// Machines possédées par un utilisateur (pas de numéro de série).
+model UserMachine {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  varianteId String
+  variante   Variante @relation(fields: [varianteId], references: [id])
+  surnom     String?
+  createdAt  DateTime @default(now())
+  fiches     Fiche[]
+
+  @@unique([userId, varianteId, surnom])
+}
+
+// ---------- Tags ----------
+
+/// Ex. « Matériau », « À enlever », « Application ». Administrable.
+model GroupeTag {
+  id    String @id @default(cuid())
+  slug  String @unique
+  nom   String
+  ordre Int    @default(0)
+  tags  Tag[]
+}
+
+model Tag {
+  id       String     @id @default(cuid())
+  slug     String
+  nom      String
+  groupeId String
+  groupe   GroupeTag  @relation(fields: [groupeId], references: [id])
+  valide   Boolean    @default(true) // false = proposé par un utilisateur, à valider
+  fiches   FicheTag[]
+
+  @@unique([groupeId, slug])
+}
+
+// ---------- Fiches réglage ----------
+
+model Fiche {
+  id                 String           @id @default(cuid())
+  userId             String
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userMachineId      String?
+  userMachine        UserMachine?     @relation(fields: [userMachineId], references: [id], onDelete: SetNull)
+  versionInterfaceId String
+  versionInterface   VersionInterface @relation(fields: [versionInterfaceId], references: [id])
+  titre              String
+  commentaire        String?
+  /// Valeurs saisies dans le miroir (uniquement les champs `enregistre`).
+  valeurs            Json
+  visibilite         Visibilite       @default(PRIVEE)
+  /// Fiche d'origine quand on duplique le réglage d'un autre.
+  parentId           String?
+  parent             Fiche?           @relation("Duplication", fields: [parentId], references: [id], onDelete: SetNull)
+  copies             Fiche[]          @relation("Duplication")
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  tags        FicheTag[]
+  photos      Photo[]
+  evaluations Evaluation[]
+
+  @@index([versionInterfaceId, visibilite])
+}
+
+model FicheTag {
+  ficheId String
+  fiche   Fiche  @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  tagId   String
+  tag     Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([ficheId, tagId])
+  @@index([tagId])
+}
+
+model Photo {
+  id        String    @id @default(cuid())
+  ficheId   String
+  fiche     Fiche     @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  type      TypePhoto
+  cle       String // chemin dans le stockage
+  miniature String?
+  largeur   Int?
+  hauteur   Int?
+  ordre     Int       @default(0)
+  createdAt DateTime  @default(now())
+}
+
+/// Note 1 à 5 : une par utilisateur et par fiche (l'auteur note aussi sa propre fiche).
+model Evaluation {
+  id        String   @id @default(cuid())
+  ficheId   String
+  fiche     Fiche    @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  note      Int
+  avis      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ficheId, userId])
+}

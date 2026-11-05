@@ -1,0 +1,15 @@
+{
+  "name": "decapage",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build:kit": "npm run build --workspace packages/machine-kit",
+    "test:kit": "npm test --workspace packages/machine-kit",
+    "api": "npm run start:dev --workspace apps/api",
+    "seed": "npm run seed --workspace apps/api",
+    "test": "npm test --workspaces --if-present"
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "technologie": "laser-pulse",
+  "fabricant": { "slug": "lazzeko", "nom": "Lazzeko" },
+  "modele": { "slug": "nettoyeur-laser-pulse", "nom": "Nettoyeur laser pulsé" },
+  "variante": { "slug": "300w", "nom": "300 W" },
+  "versionInterface": 1,
+  "langues": ["fr", "en"],
+  "theme": {
+    "fond": "#e2e8f3",
+    "carte": "#f3f5fa",
+    "pastille": "#5a6b8e",
+    "orange": "#f08a3c",
+    "rouge": "#e5533d",
+    "marine": "#34405c",
+    "ligne": "#b8c1d2"
+  },
+  "constantes": {
+    "pmax": 300,
+    "spot_f254_mm": 0.1,
+    "hatch_echelle_mm": 0.01
+  },
+  "hypotheses": [
+    "spot_f254_mm : diamètre du spot avec la lentille F254, non indiqué dans le manuel.",
+    "hatch_echelle_mm : mm réels par unité affichée dans « Esp. rempl. », à vérifier.",
+    "Préréglages 5 à 8 et 10 : valeurs d'exemple, seul le n° 9 a été lu sur la machine."
+  ],
+  "pages": [
+    {
+      "id": "main",
+      "label": { "fr": "Page principale", "en": "Main" },
+      "sections": [
+        {
+          "id": "haut",
+          "zone": "haut",
+          "champs": [
+            {
+              "key": "air", "type": "interrupteur", "enregistre": true, "defaut": true,
+              "label": { "fr": "Soufflage", "en": "Air Blow" },
+              "aide": { "fr": "Soufflage d'air de la buse. À allumer avant le laser." }
+            }
+          ]
+        },
+        {
+          "id": "laser",
+          "zone": "gauche",
+          "champs": [
+            {
+              "key": "pwr", "type": "nombre", "enregistre": true,
+              "label": { "fr": "Puis. laser (%)", "en": "Laser Pwr" },
+              "unite": "%", "min": 0, "max": 100, "step": 1, "defaut": 85,
+              "aide": { "fr": "Puissance en % du maximum (300 W). Fixe l'énergie de chaque impulsion." }
+            },
+            {
+              "key": "pw", "type": "nombre", "enregistre": true,
+              "label": { "fr": "Larg. imp. (ns)", "en": "Pulse Width" },
+              "unite": "ns", "min": 20, "max": 500, "step": 1, "defaut": 500,
+              "aide": { "fr": "Durée d'une impulsion. Plus court = crête plus haute ; plus long = plus de chaleur." }
+            },
+            {
+              "key": "freq", "type": "nombre", "enregistre": true, "echelle": "log",
+              "label": { "fr": "Fréq. (kHz)", "en": "Freq" },
+              "unite": "kHz", "min": 20, "max": 4000, "step": 1, "defaut": 20,
+              "aide": { "fr": "Impulsions par seconde. Haute = petites impulsions serrées ; basse = impulsions fortes et espacées." }
+            }
+          ]
+        },
+        {
+          "id": "balayage",
+          "zone": "droite",
+          "colonnes": 2,
+          "champs": [
+            {
+              "key": "scan", "type": "choix", "affichage": "icones", "enregistre": true, "defaut": 4,
+              "label": { "fr": "Type de balayage", "en": "Scan Type" },
+              "aide": { "fr": "Forme dessinée par le faisceau. Les réglages de taille changent selon le motif." },
+              "options": [
+                { "valeur": 1, "label": { "fr": "Ligne ondulée", "en": "Wave" },
+                  "icone": "<path d='M4 18c6-12 10-12 16 0s10 12 16 0 10-12 16 0M4 18c6 12 10 12 16 0s10-12 16 0 10 12 16 0' stroke-width='3.2'/>" },
+                { "valeur": 2, "label": { "fr": "Anneau", "en": "Ring" },
+                  "icone": "<circle cx='28' cy='18' r='11' stroke-width='7'/>" },
+                { "valeur": 3, "label": { "fr": "Rectangle, remplissage dans un sens", "en": "Rectangle fill" },
+                  "icone": "<rect x='10' y='3' width='36' height='30' stroke-width='2.4'/><path d='M10 9h36' stroke-width='2.4'/><path d='M28 12v14M24 22l4 5 4-5' stroke-width='2.8'/>" },
+                { "valeur": 4, "label": { "fr": "Rectangle, remplissage croisé", "en": "Rectangle cross fill" },
+                  "icone": "<rect x='10' y='3' width='36' height='30' stroke-width='2.4'/><path d='M18 4v26M10 13h36' stroke-width='2.4'/><path d='M32 13v12M29 22l3 4 3-4M18 26h16M30 23l4 3-4 3' stroke-width='2.4'/>" },
+                { "valeur": 5, "label": { "fr": "Disque quadrillé", "en": "Grid disc" },
+                  "icone": "<circle cx='28' cy='18' r='15' stroke-width='2.4'/><path d='M14 11h28M13 18h30M14 25h28M21 4v28M28 3v30M35 4v28' stroke-width='1.8'/>" },
+                { "valeur": 6, "label": { "fr": "Fleur", "en": "Flower" },
+                  "icone": "<path d='M28 18c-3-8-3-13 0-15 3 2 3 7 0 15zM28 18c3 8 3 13 0 15-3-2-3-7 0-15zM28 18c-8-6-11-10-10-13 4 0 7 4 10 13zM28 18c8 6 11 10 10 13-4 0-7-4-10-13zM28 18c-8 6-12 7-14 5 2-3 6-5 14-5zM28 18c8-6 12-7 14-5-2 3-6 5-14 5z' stroke-width='1.8'/>" }
+              ]
+            },
+            {
+              "key": "len", "type": "nombre", "enregistre": true, "visibleSi": { "scan": [1, 3, 4] },
+              "label": { "fr": "Longueur (mm)", "en": "Length" },
+              "unite": "mm", "min": 1, "max": 245, "step": 1, "defaut": 30,
+              "aide": { "fr": "Longueur de la zone balayée. Max selon la lentille : 160→100, 210→120, 254→150, 330→175, 420→245 mm." }
+            },
+            {
+              "key": "wid", "type": "nombre", "enregistre": true, "visibleSi": { "scan": [1, 3, 4] },
+              "label": { "fr": "Largeur (mm)", "en": "Width" },
+              "unite": "mm", "min": 0, "max": 245, "step": 1, "defaut": 30
+            },
+            {
+              "key": "oR", "type": "nombre", "enregistre": true, "visibleSi": { "scan": [2, 5, 6] },
+              "label": { "fr": "Rayon ext. (mm)", "en": "Outer Rad" },
+              "unite": "mm", "min": 1, "max": 122, "step": 1, "defaut": 10
+            },
+            {
+              "key": "iR", "type": "nombre", "enregistre": true, "visibleSi": { "scan": [2] },
+              "label": { "fr": "Rayon int. (mm)", "en": "Inner Rad" },
+              "unite": "mm", "min": 0, "max": 121, "step": 1, "defaut": 2
+            },
+            {
+              "key": "ph", "type": "nombre", "enregistre": true, "visibleSi": { "scan": [6] },
+              "label": { "fr": "Déphasage (°)", "en": "Phase Shift" },
+              "unite": "°", "min": 0, "max": 180, "step": 1, "defaut": 1
+            },
+            {
+              "key": "speed", "type": "nombre", "enregistre": true,
+              "label": { "fr": "Vit. galvo (m/s)", "en": "Galvo Speed" },
+              "unite": "m/s", "min": 0.1, "max": 30, "step": 0.1, "defaut": 20,
+              "aide": { "fr": "Vitesse du point laser. Lent = impulsions qui se recouvrent ; rapide = impulsions espacées." }
+            },
+            {
+              "key": "hatch", "type": "nombre", "enregistre": true,
+              "label": { "fr": "Esp. rempl. (mm)", "en": "Hatch Dist" },
+              "unite": "mm", "min": 0, "max": 50, "step": 1, "defaut": 10,
+              "aide": { "fr": "Écart entre les lignes des motifs remplis. Faible = remplissage dense." }
+            },
+            {
+              "key": "times", "type": "nombre", "enregistre": true,
+              "label": { "fr": "Nb de balayages", "en": "Scan Times" },
+              "min": 0, "max": 100, "step": 1, "defaut": 0,
+              "aide": { "fr": "0 = continu tant que la gâchette est appuyée." }
+            }
+          ]
+        },
+        {
+          "id": "bas",
+          "zone": "bas",
+          "colonnes": 2,
+          "champs": [
+            {
+              "key": "paramNo", "type": "nombre", "enregistre": true,
+              "label": { "fr": "N° param.", "en": "Param No." },
+              "min": 1, "max": 10, "step": 1, "defaut": 9,
+              "aide": { "fr": "1 à 4 : vos réglages. 5 à 10 : bibliothèque." }
+            },
+            {
+              "key": "paramName", "type": "texte", "enregistre": true, "maxLength": 16, "defaut": "---",
+              "label": { "fr": "Paramètre", "en": "Param Name" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "param",
+      "label": { "fr": "Réglage param.", "en": "Params" },
+      "sections": [
+        {
+          "id": "optique",
+          "champs": [
+            {
+              "key": "lens", "type": "choix", "enregistre": true, "defaut": "254",
+              "label": { "fr": "Sélection lentille", "en": "Lens Select" },
+              "aide": { "fr": "Lentille montée sur la tête. Fixe la zone max et la taille du spot. 254 = standard." },
+              "options": [
+                { "valeur": "160", "label": { "fr": "160 (100×100)" }, "donnees": { "focale": 160, "zone": 100 } },
+                { "valeur": "210", "label": { "fr": "210 (120×120)" }, "donnees": { "focale": 210, "zone": 120 } },
+                { "valeur": "254", "label": { "fr": "254 (150×150)" }, "donnees": { "focale": 254, "zone": 150 } },
+                { "valeur": "330", "label": { "fr": "330 (175×175)" }, "donnees": { "focale": 330, "zone": 175 } },
+                { "valeur": "420", "label": { "fr": "420 (245×245)" }, "donnees": { "focale": 420, "zone": 245 } }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "presets": [
+    { "no": 5, "label": { "fr": "Dégraissage", "en": "Degrease" }, "exemple": true, "tags": ["degraissage"],
+      "valeurs": { "pwr": 40, "freq": 100, "pw": 100, "scan": 1, "paramName": "Dégraissage" } },
+    { "no": 6, "label": { "fr": "Dérouillage", "en": "Rust" }, "exemple": true, "tags": ["derouillage"],
+      "valeurs": { "pwr": 80, "freq": 40, "pw": 200, "scan": 1, "paramName": "Dérouillage" } },
+    { "no": 7, "label": { "fr": "Enlèvement peinture", "en": "Paint" }, "exemple": true, "tags": ["peinture"],
+      "valeurs": { "pwr": 100, "freq": 40, "pw": 250, "scan": 1, "speed": 10, "paramName": "Peinture" } },
+    { "no": 8, "label": { "fr": "Couche d'oxyde", "en": "Oxide" }, "exemple": true, "tags": ["oxyde"],
+      "valeurs": { "pwr": 60, "freq": 60, "pw": 150, "scan": 1, "paramName": "Oxyde" } },
+    { "no": 9, "label": { "fr": "Soudure", "en": "Weld" }, "exemple": false, "tags": ["soudure"],
+      "valeurs": { "pwr": 85, "freq": 20, "pw": 500, "scan": 4, "len": 30, "wid": 30, "speed": 20, "hatch": 10, "times": 0, "paramName": "---" } },
+    { "no": 10, "label": { "fr": "Moule", "en": "Mold" }, "exemple": true, "tags": ["moule"],
+      "valeurs": { "pwr": 50, "freq": 100, "pw": 50, "scan": 3, "paramName": "Moule" } }
+  ]
+}
