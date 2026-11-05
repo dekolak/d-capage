@@ -32,18 +32,26 @@ export default function App() {
       </main>
       <nav className="onglets">
         <NavLink to="/" end>
-          <span>☰</span>Mes fiches
+          <Ic d="M4 6h16M4 12h16M4 18h10" />Mes fiches
         </NavLink>
         <NavLink to="/fiches/nouvelle" className="plus">
           <span>+</span>Nouvelle
         </NavLink>
         <NavLink to="/communaute">
-          <span>★</span>Communauté
+          <Ic d="M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M22 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8" />Communauté
         </NavLink>
         <NavLink to="/compte">
-          <span>●</span>Compte
+          <Ic d="M20 21v-1a5 5 0 0 0-5-5H9a5 5 0 0 0-5 5v1M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />Compte
         </NavLink>
       </nav>
     </>
+  );
+}
+
+function Ic({ d }: { d: string }) {
+  return (
+    <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={d} />
+    </svg>
   );
 }
