@@ -51,6 +51,8 @@ export class FiltresDto {
   @IsOptional() @IsString() tags?: string;
   @IsOptional() @IsString() @MaxLength(80) q?: string;
   @IsOptional() @IsIn(['note', 'recent']) tri?: 'note' | 'recent';
+  /** Note moyenne minimale (ex. 4 = 4 étoiles et plus ; les fiches non notées sont exclues). */
+  @IsOptional() @Type(() => Number) @Min(1) @Max(5) noteMin?: number;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(50) parPage?: number;
 }

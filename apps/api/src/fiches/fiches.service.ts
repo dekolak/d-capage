@@ -116,6 +116,7 @@ export class FichesService {
           : {}),
       ...(f.q ? { OR: [{ titre: { contains: f.q, mode: 'insensitive' } }, { commentaire: { contains: f.q, mode: 'insensitive' } }] } : {}),
       ...(tags.length ? { AND: tags.map((tagId) => ({ tags: { some: { tagId } } })) } : {}),
+      ...(f.noteMin ? { noteMoyenne: { gte: f.noteMin } } : {}),
     };
   }
 
