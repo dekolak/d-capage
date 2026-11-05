@@ -170,7 +170,7 @@ export class FichesService {
         titre: dto.titre.trim(),
         commentaire: dto.commentaire?.trim() || null,
         valeurs,
-        visibilite: dto.visibilite ?? Visibilite.PRIVEE,
+        visibilite: dto.visibilite ?? Visibilite.PARTAGEE, // mise en commun par défaut
         parentId: dto.parentId ?? null,
         tags: { create: tagIds.map((tagId) => ({ tagId })) },
       },

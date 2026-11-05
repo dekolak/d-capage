@@ -87,6 +87,10 @@ export function Indicateurs({ liste }: { liste: Indicateur[] }) {
   );
 }
 
+/**
+ * Choix des tags : une liste déroulante par groupe (Matériau, À enlever, Application).
+ * Plusieurs tags possibles par groupe ; « Autre… » permet d'en proposer un nouveau.
+ */
 export function ChoixTags({
   groupes,
   choisis,
@@ -98,33 +102,45 @@ export function ChoixTags({
   onChange(ids: string[]): void;
   onProposer?: (groupeId: string, nom: string) => Promise<void>;
 }) {
-  const basculer = (id: string) => onChange(choisis.includes(id) ? choisis.filter((x) => x !== id) : [...choisis, id]);
+  const AUTRE = '__autre__';
   return (
     <div className="choix-tags">
-      {groupes.map((g) => (
-        <div key={g.id} className="groupe-tags">
-          <h4>{g.nom}</h4>
-          <div className="puces">
-            {g.tags.map((t) => (
-              <button key={t.id} type="button" className={'puce' + (choisis.includes(t.id) ? ' on' : '')} onClick={() => basculer(t.id)}>
-                {t.nom}
-              </button>
-            ))}
-            {onProposer && (
-              <button
-                type="button"
-                className="puce ajout"
-                onClick={async () => {
-                  const nom = prompt(`Nouveau tag dans « ${g.nom} »`)?.trim();
-                  if (nom && nom.length >= 2) await onProposer(g.id, nom);
+      {groupes.map((g) => {
+        const pris = g.tags.filter((t) => choisis.includes(t.id));
+        const libres = g.tags.filter((t) => !choisis.includes(t.id));
+        return (
+          <div key={g.id} className="groupe-tags">
+            <label className="champ-tag">
+              <span>{g.nom}</span>
+              <select
+                value=""
+                onChange={async (e) => {
+                  const v = e.target.value;
+                  if (v === AUTRE) {
+                    const nom = prompt(`Nouveau choix dans « ${g.nom} »`)?.trim();
+                    if (nom && nom.length >= 2 && onProposer) await onProposer(g.id, nom);
+                  } else if (v) onChange([...choisis, v]);
                 }}
               >
-                + autre
-              </button>
+                <option value="">{pris.length ? '+ Ajouter…' : 'Choisir…'}</option>
+                {libres.map((t) => (
+                  <option key={t.id} value={t.id}>{t.nom}</option>
+                ))}
+                {onProposer && <option value={AUTRE}>Autre…</option>}
+              </select>
+            </label>
+            {pris.length > 0 && (
+              <div className="puces">
+                {pris.map((t) => (
+                  <button key={t.id} type="button" className="puce on" onClick={() => onChange(choisis.filter((x) => x !== t.id))} aria-label={`Retirer ${t.nom}`}>
+                    {t.nom} ×
+                  </button>
+                ))}
+              </div>
             )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

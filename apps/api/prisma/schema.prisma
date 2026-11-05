@@ -179,7 +179,8 @@ model Fiche {
   commentaire        String?
   /// Valeurs saisies dans le miroir (uniquement les champs `enregistre`).
   valeurs            Json
-  visibilite         Visibilite       @default(PRIVEE)
+  /// Toutes les fiches sont partagées (mise en commun). PRIVEE reste possible via l'API pour plus tard.
+  visibilite         Visibilite       @default(PARTAGEE)
   /// Dénormalisé (mis à jour à chaque note) pour trier la communauté en base.
   noteMoyenne        Float?
   nbNotes            Int              @default(0)

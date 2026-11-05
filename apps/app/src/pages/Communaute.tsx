@@ -31,7 +31,6 @@ export default function Communaute() {
     api<PageFiches>(`/communaute?${p}`).then(setData).catch(setErr);
   }, [varianteId, tags, tri]);
 
-  const basculer = (id: string) => setTags(tags.includes(id) ? tags.filter((x) => x !== id) : [...tags, id]);
 
   return (
     <div className="page">
@@ -51,21 +50,26 @@ export default function Communaute() {
           <button type="button" className={tri === 'note' ? 'on' : ''} onClick={() => setTri('note')}>Mieux notés</button>
           <button type="button" className={tri === 'recent' ? 'on' : ''} onClick={() => setTri('recent')}>Récents</button>
         </div>
-        <details>
-          <summary>Filtrer par tags {tags.length ? `(${tags.length})` : ''}</summary>
-          {groupes.map((g) => (
-            <div key={g.id} className="groupe-tags">
-              <h4>{g.nom}</h4>
-              <div className="puces">
+        {groupes.map((g) => {
+          const actuel = g.tags.find((t) => tags.includes(t.id))?.id ?? '';
+          return (
+            <label key={g.id} className="champ-tag">
+              <span>{g.nom}</span>
+              <select
+                value={actuel}
+                onChange={(e) => {
+                  const autres = tags.filter((id) => !g.tags.some((t) => t.id === id));
+                  setTags(e.target.value ? [...autres, e.target.value] : autres);
+                }}
+              >
+                <option value="">Tous</option>
                 {g.tags.map((t) => (
-                  <button key={t.id} type="button" className={'puce' + (tags.includes(t.id) ? ' on' : '')} onClick={() => basculer(t.id)}>
-                    {t.nom}
-                  </button>
+                  <option key={t.id} value={t.id}>{t.nom}</option>
                 ))}
-              </div>
-            </div>
-          ))}
-        </details>
+              </select>
+            </label>
+          );
+        })}
       </div>
       <Erreur e={err} />
       {!data ? (

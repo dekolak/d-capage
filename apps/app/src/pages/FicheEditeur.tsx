@@ -10,7 +10,7 @@ import { nomMachine } from '../lib/util';
 interface NouvellePhoto { type: TypePhoto; fichier: Blob; miniature: Blob; apercu: string }
 interface Brouillon {
   userMachineId: string; valeurs: Valeurs | null; tagIds: string[]; titre: string; commentaire: string;
-  partage: boolean; note: number | null; etape: number;
+  note: number | null; etape: number;
 }
 const CLE_BROUILLON = 'decapage.brouillon';
 const ETAPES = ['Machine', 'Surface', 'Avant', 'Réglages', 'Écran', 'Résultat'] as const;
@@ -26,7 +26,7 @@ export default function FicheEditeur() {
   const [machines, setMachines] = useState<MaMachine[]>();
   const [groupes, setGroupes] = useState<GroupeTag[]>([]);
   const [version, setVersion] = useState<Version>();
-  const [b, setB] = useState<Brouillon>({ userMachineId: '', valeurs: null, tagIds: [], titre: '', commentaire: '', partage: false, note: null, etape: modif ? 1 : 0 });
+  const [b, setB] = useState<Brouillon>({ userMachineId: '', valeurs: null, tagIds: [], titre: '', commentaire: '', note: null, etape: modif ? 1 : 0 });
   const [photos, setPhotos] = useState<NouvellePhoto[]>([]);
   const [existantes, setExistantes] = useState<PhotoRef[]>([]);
   const [noteInitiale, setNoteInitiale] = useState<number | null>(null);
@@ -51,7 +51,7 @@ export default function FicheEditeur() {
         setB({
           userMachineId: f.machine.userMachineId ?? '', valeurs: completer(v.config, f.valeurs),
           tagIds: f.tags.map((t) => t.id), titre: f.titre, commentaire: f.commentaire ?? '',
-          partage: f.visibilite === 'PARTAGEE', note: f.note.maNote, etape: 1,
+          note: f.note.maNote, etape: 1,
         });
       } else if (depuis) {
         const p = await api<Fiche>(`/fiches/${depuis}`);
@@ -135,7 +135,6 @@ export default function FicheEditeur() {
       setEnvoi('Enregistrement…');
       const corps = {
         titre: b.titre, commentaire: b.commentaire, valeurs: validation.valeurs, tagIds: b.tagIds,
-        visibilite: b.partage ? 'PARTAGEE' : 'PRIVEE',
       };
       const f = modif
         ? await api<Fiche>(`/fiches/${ficheId}`, { method: 'PATCH', json: corps })
@@ -270,10 +269,6 @@ export default function FicheEditeur() {
           <label>
             Commentaire
             <textarea rows={4} value={b.commentaire} onChange={(ev) => maj({ commentaire: ev.target.value })} placeholder="Nombre de passages, distance, remarques…" />
-          </label>
-          <label className="interrupteur">
-            <input type="checkbox" checked={b.partage} onChange={(ev) => maj({ partage: ev.target.checked })} />
-            Partager avec la communauté
           </label>
           {validation && !validation.ok && (
             <div className="alerte">Réglages à corriger : {validation.erreurs.map((x) => `${x.key ?? ''} ${x.message}`).join(', ')}</div>

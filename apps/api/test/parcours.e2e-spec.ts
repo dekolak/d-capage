@@ -71,8 +71,7 @@ describe('Parcours complet', () => {
       titre: 'Rouille sur acier',
       valeurs: { pwr: 85, freq: 20, pw: 500, scan: 2, oR: 10, iR: 2, speed: 20, lens: '254' },
       tagIds: [tagAcier, tagRouille],
-      visibilite: 'PARTAGEE',
-      note: 4,
+      note: 4, // partagée par défaut
     });
     expect(r.status).toBe(201);
     fiche = r.body.id;
@@ -102,7 +101,7 @@ describe('Parcours complet', () => {
     expect(d.note).toMatchObject({ moyenne: 3, nombre: 2, maNote: 2 });
     expect(d.evaluations).toHaveLength(2);
 
-    const copie = await http.post('/api/fiches').set(auth(bob)).send({ userMachineId: machineBob, titre: 'Ma version', valeurs: { ...d.valeurs, pwr: 70 }, parentId: fiche });
+    const copie = await http.post('/api/fiches').set(auth(bob)).send({ userMachineId: machineBob, titre: 'Ma version', valeurs: { ...d.valeurs, pwr: 70 }, parentId: fiche, visibilite: 'PRIVEE' });
     expect(copie.status).toBe(201);
     expect(copie.body.parent.id).toBe(fiche);
 

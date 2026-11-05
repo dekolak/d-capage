@@ -45,7 +45,7 @@ export default function FicheDetail() {
     <div className="page">
       <h1>{f.titre}</h1>
       <p className="muted petit">
-        {f.machine.nom} · {f.estAuteur ? 'vous' : f.auteur} · {date(f.createdAt)} · {f.visibilite === 'PARTAGEE' ? 'partagée' : 'privée'}
+        {f.machine.nom} · {f.estAuteur ? 'vous' : f.auteur} · {date(f.createdAt)}
       </p>
       {f.parent && <p className="petit">Dupliquée de <Link to={`/fiches/${f.parent.id}`}>{f.parent.titre}</Link></p>}
       <div className="puces">{f.tags.map((t) => <span key={t.id} className="puce">{t.nom}</span>)}</div>

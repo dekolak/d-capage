@@ -13,7 +13,6 @@ export function CarteFiche({ f, montrerAuteur }: { f: Fiche; montrerAuteur?: boo
         <div className="muted petit">
           {f.machine.nom}
           {montrerAuteur ? ` · ${f.auteur}` : ''} · {date(f.createdAt)}
-          {!montrerAuteur && f.visibilite === 'PARTAGEE' ? ' · partagée' : ''}
         </div>
         <div className="puces mini">
           {f.tags.slice(0, 4).map((t) => (

@@ -215,3 +215,9 @@ textarea { resize: vertical; }
   .boutons-photo { grid-template-columns: 2fr 1fr; }
 }
 .note-hyp { grid-column: 1 / -1; margin: 0; padding: 6px 10px; font-size: 12px; color: var(--g); }
+.champ-tag { display: grid; gap: 4px; font-weight: 700; font-size: 14px; }
+.champ-tag span { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g); }
+.choix-tags { display: grid; gap: 14px; }
+.choix-tags .puces { margin-top: 6px; }
+.choix-tags .puce.on { cursor: pointer; }
+.barre-etapes .btn { white-space: nowrap; padding: 0 10px; }
