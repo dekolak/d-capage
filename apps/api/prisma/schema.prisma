@@ -180,6 +180,9 @@ model Fiche {
   /// Valeurs saisies dans le miroir (uniquement les champs `enregistre`).
   valeurs            Json
   visibilite         Visibilite       @default(PRIVEE)
+  /// Dénormalisé (mis à jour à chaque note) pour trier la communauté en base.
+  noteMoyenne        Float?
+  nbNotes            Int              @default(0)
   /// Fiche d'origine quand on duplique le réglage d'un autre.
   parentId           String?
   parent             Fiche?           @relation("Duplication", fields: [parentId], references: [id], onDelete: SetNull)
@@ -192,6 +195,7 @@ model Fiche {
   evaluations Evaluation[]
 
   @@index([versionInterfaceId, visibilite])
+  @@index([visibilite, noteMoyenne])
 }
 
 model FicheTag {

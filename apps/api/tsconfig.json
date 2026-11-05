@@ -17,5 +17,5 @@
     "noImplicitAny": true,
     "resolveJsonModule": true
   },
-  "include": ["src", "prisma"]
+  "include": ["src", "prisma", "test"]
 }
