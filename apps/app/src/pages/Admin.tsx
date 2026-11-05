@@ -1,9 +1,10 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Erreur } from '../components/Composants';
 import { api, Fabricant, MaMachine } from '../lib/api';
 import { date } from '../lib/util';
 
-interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string }
+interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number } }
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
 interface TagAValider { id: string; nom: string; groupe: { nom: string } }
 
@@ -63,6 +64,10 @@ export default function Admin() {
     <div className="page">
       <h1>Administration</h1>
       <Erreur e={err} />
+      <Link to="/admin/fiches" className="bandeau lien-bandeau">
+        <span><b>Toutes les fiches</b> : voir qui les a faites, masquer</span>
+        <span>›</span>
+      </Link>
 
       <h2>Créer un utilisateur</h2>
       <form className="form" onSubmit={creerUser}>
@@ -88,6 +93,8 @@ export default function Admin() {
             <button type="button" className="btn petit" onClick={() => basculerActif(u)}>{u.actif ? 'Désactiver' : 'Réactiver'}</button>
             {selection?.id === u.id && (
               <div className="sous-bloc">
+                <Link to={`/admin/fiches?userId=${u.id}`} className="lien">Voir ses fiches ({u._count?.fiches ?? 0}) ›</Link>
+                <br />
                 <b>Machines</b>
                 <ul>{machinesSel.map((m) => <li key={m.id}>{m.surnom ? `${m.surnom} · ` : ''}{m.nom}</li>)}</ul>
                 <select value="" onChange={(e) => attribuer(e.target.value)}>

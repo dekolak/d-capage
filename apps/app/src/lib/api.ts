@@ -54,7 +54,9 @@ export type TypePhoto = 'AVANT' | 'APRES' | 'INTERFACE' | 'AUTRE';
 export interface PhotoRef { id: string; type: TypePhoto; ordre: number }
 export interface Fiche {
   id: string; titre: string; commentaire: string | null; valeurs: Valeurs; visibilite: 'PRIVEE' | 'PARTAGEE';
-  createdAt: string; estAuteur: boolean; auteur: string;
+  createdAt: string; estAuteur: boolean; auteur: string; masquee: boolean;
+  /** Présent uniquement pour les admins. */
+  auteurAdmin?: { id: string; identifiant: string; nom: string | null };
   machine: { userMachineId: string | null; surnom: string | null; varianteId: string; modeleId: string; nom: string };
   version: { id: string; numero: number }; tags: Tag[]; photos: PhotoRef[];
   note: { moyenne: number | null; nombre: number; maNote: number | null };

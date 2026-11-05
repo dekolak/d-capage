@@ -92,7 +92,7 @@ export class PhotosController {
   }
 
   private async photoVisible(id: string, moi: Principal) {
-    const p = await this.prisma.photo.findUnique({ where: { id }, include: { fiche: { select: { userId: true, visibilite: true } } } });
+    const p = await this.prisma.photo.findUnique({ where: { id }, include: { fiche: { select: { userId: true, visibilite: true, masquee: true } } } });
     if (!p || !this.fiches.peutVoir(p.fiche, moi)) throw new NotFoundException();
     return p;
   }

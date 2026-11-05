@@ -4,6 +4,7 @@ import { Chargement, Erreur, Etoiles, Galerie, Indicateurs } from '../components
 import { Miroir } from '../components/Miroir';
 import { completer } from '@decapage/machine-kit';
 import { api, chargerVersion, Fiche, Version } from '../lib/api';
+import { useAuth } from '../lib/auth';
 import { date } from '../lib/util';
 
 export default function FicheDetail() {
@@ -13,6 +14,8 @@ export default function FicheDetail() {
   const [version, setVersion] = useState<Version>();
   const [err, setErr] = useState<unknown>();
   const [avis, setAvis] = useState('');
+  const { moi } = useAuth();
+  const admin = moi?.role === 'ADMIN';
 
   const charger = useCallback(async () => {
     const fiche = await api<Fiche>(`/fiches/${id}`);
@@ -32,6 +35,15 @@ export default function FicheDetail() {
     charger().catch(setErr);
   };
 
+  const basculerMasque = async () => {
+    if (!f.masquee && !confirm('Masquer cette fiche ? Elle ne sera plus visible que par son auteur et les admins.')) return;
+    try {
+      setF(await api<Fiche>(`/admin/fiches/${f.id}`, { method: 'PATCH', json: { masquee: !f.masquee } }));
+    } catch (e) {
+      setErr(e);
+    }
+  };
+
   const supprimer = async () => {
     if (!confirm('Supprimer définitivement cette fiche ?')) return;
     await api(`/fiches/${f.id}`, { method: 'DELETE' });
@@ -43,7 +55,17 @@ export default function FicheDetail() {
 
   return (
     <div className="page">
+      {f.masquee && (
+        <div className="bandeau">
+          <span><b>Fiche masquée</b> par l'administrateur : visible seulement par son auteur et les admins.</span>
+        </div>
+      )}
       <h1>{f.titre}</h1>
+      {admin && f.auteurAdmin && (
+        <p className="admin-auteur">
+          Enregistrée par <b>{f.auteurAdmin.nom || f.auteurAdmin.identifiant}</b> ({f.auteurAdmin.identifiant})
+        </p>
+      )}
       <p className="muted petit">
         {f.machine.nom} · {f.estAuteur ? 'vous' : f.auteur} · {date(f.createdAt)}
       </p>
@@ -81,7 +103,10 @@ export default function FicheDetail() {
       <div className="actions">
         <Link to={`/fiches/nouvelle?depuis=${f.id}`} className="btn prim">Dupliquer ce réglage</Link>
         {f.estAuteur && <Link to={`/fiches/${f.id}/modifier`} className="btn">Modifier</Link>}
-        {f.estAuteur && <button type="button" className="btn danger" onClick={supprimer}>Supprimer</button>}
+        {(f.estAuteur || admin) && <button type="button" className="btn danger" onClick={supprimer}>Supprimer</button>}
+        {admin && (
+          <button type="button" className="btn" onClick={basculerMasque}>{f.masquee ? 'Réafficher' : 'Masquer'}</button>
+        )}
       </div>
       <Erreur e={err} />
     </div>

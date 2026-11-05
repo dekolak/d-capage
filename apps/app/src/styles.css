@@ -289,3 +289,9 @@ textarea { resize: vertical; }
 .bandeau { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--o-doux); color: #7c2d12; border: 1px solid #fbd0bd; border-radius: var(--r-sm); padding: 10px 14px; margin: 0 0 14px; font-size: 14px; }
 .lien-bandeau { text-decoration: none; }
 .lien-bandeau span:last-child { font-size: 22px; line-height: 1; color: var(--o); }
+.admin-auteur { margin: -6px 0 8px; font-size: 14px; background: #eef2ff; color: #312e81; border-radius: 10px; padding: 6px 10px; display: inline-block; }
+.carte-fiche.admin { align-items: center; }
+.carte-fiche.admin .cf-lien { display: flex; gap: 12px; flex: 1; min-width: 0; text-decoration: none; color: inherit; }
+.carte-fiche.masquee { opacity: 0.7; background: #fafafa; }
+.badge-masquee { justify-self: start; background: #fde2e2; color: #9b1c1c; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.seg { flex-wrap: wrap; }

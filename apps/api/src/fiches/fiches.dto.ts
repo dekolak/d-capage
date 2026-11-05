@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsEnum,
   IsIn,
   IsInt,
@@ -53,3 +54,13 @@ export class FiltresDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(50) parPage?: number;
 }
+
+export class FiltresAdminDto extends FiltresDto {
+  @IsOptional() @IsString() userId?: string;
+  @IsOptional() @IsIn(['oui', 'non']) masquee?: 'oui' | 'non';
+}
+
+export class MasquerDto {
+  @IsBoolean() masquee!: boolean;
+}
+

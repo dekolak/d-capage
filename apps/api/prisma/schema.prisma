@@ -182,6 +182,9 @@ model Fiche {
   /// Toutes les fiches sont partagées (mise en commun). PRIVEE reste possible via l'API pour plus tard.
   visibilite         Visibilite       @default(PARTAGEE)
   /// Dénormalisé (mis à jour à chaque note) pour trier la communauté en base.
+  /// Masquée par un admin (modération) : invisible pour tous sauf l'auteur et les admins.
+  masquee            Boolean          @default(false)
+  masqueeLe          DateTime?
   noteMoyenne        Float?
   nbNotes            Int              @default(0)
   /// Fiche d'origine quand on duplique le réglage d'un autre.
