@@ -47,7 +47,7 @@ Nouvelle technologie (sablage, aérogommage…) = un fichier + une ligne dans `c
 ## Structure du repo
 ```
 apps/api               NestJS + Prisma + PostgreSQL
-apps/app               (à venir) PWA React mobile
+apps/app               PWA React mobile (Vite) — servie par l'API en production
 packages/machine-kit   schéma des configs, validation, calculs (partagé api / app / site)
 machines/              configs JSON des machines
 ```
@@ -73,10 +73,17 @@ machines/              configs JSON des machines
 - Toutes les routes sont protégées par défaut (`@Public()` pour ouvrir, `@Roles()` pour restreindre).
 - Clé API (`X-Api-Key: dk_…`) acceptée uniquement sur les routes marquées `@AutoriseCleApi()` (création de comptes). Une clé ne peut pas créer d'admin ni d'autre clé.
 
+## App mobile (apps/app)
+- PWA installable (manifeste + service worker : l'app démarre hors ligne, l'API reste en ligne).
+- `components/Miroir.tsx` : rendu **uniquement à partir de la config** (zones, colonnes, `visibleSi`, icônes, préréglages). Saisie par panneau : clavier numérique, −/+, curseur (log pour la fréquence), « Suivant » pour enchaîner les champs dans l'ordre de l'écran.
+- La validation et les indicateurs utilisent le **même code** que l'API (`machine-kit`, importé en source).
+- Photos compressées sur le téléphone (1600 px + miniature 400 px) avant envoi.
+- Brouillon de la fiche en cours conservé localement (hors photos).
+
 ## Plan
 1. ✅ Base : monorepo, machine-kit, config Lazzeko 300 W, utilisateurs, connexion, clés API, seed.
-2. Catalogue + « mes machines » (ajout par l'utilisateur, attribution par l'admin).
-3. Fiches : miroir, tags, note (API + app mobile).
-4. Photos : compression côté téléphone, stockage S3 compatible.
-5. Communauté : partage, notes des autres, duplication, tri par note.
-6. Plus tard : édition des configs dans une interface admin, entreprises, simulateur du site branché sur le JSON, lecture auto de la photo d'écran.
+2. ✅ Catalogue + « mes machines » (ajout par l'utilisateur, attribution par l'admin ou clé API).
+3. ✅ Fiches : miroir, tags (proposition par les utilisateurs), note — API + app mobile.
+4. ✅ Photos : compression côté téléphone, stockage local derrière une interface.
+5. ✅ Communauté : partage, notes des autres, duplication, tri par note (moyenne dénormalisée).
+6. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran, mode hors ligne complet (file d'envoi).

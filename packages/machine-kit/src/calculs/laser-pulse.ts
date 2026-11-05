@@ -49,14 +49,16 @@ export const laserPulse: Technologie = {
       { key: 'energie', label: 'Énergie / impulsion', valeur: +m.E.toFixed(2), unite: 'mJ' },
       { key: 'crete', label: 'Puissance crête', valeur: +m.crete.toFixed(1), unite: 'kW', note: 'calcul simple, forme d\'impulsion non connue' },
       { key: 'ecart', label: 'Écart entre impulsions', valeur: +m.ecart.toFixed(3), unite: 'mm' },
-      {
-        key: 'recouvrement',
-        label: 'Recouvrement',
-        valeur: r,
-        unite: '%',
-        hypothese: true,
-        note: r >= 0 ? 'trace continue' : 'points séparés',
-      },
+      r >= 0
+        ? { key: 'recouvrement', label: 'Recouvrement', valeur: r, unite: '%', hypothese: true, note: 'trace continue' }
+        : {
+            key: 'recouvrement',
+            label: 'Écart / spot',
+            valeur: +(m.ecart / m.spot).toFixed(1),
+            unite: '× le spot',
+            hypothese: true,
+            note: 'points séparés : les passages suivants complètent',
+          },
     ];
   },
   valider(cfg, v): Erreur[] {

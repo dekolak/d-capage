@@ -10,6 +10,9 @@
     "test:kit": "npm test --workspace packages/machine-kit",
     "api": "npm run start:dev --workspace apps/api",
     "seed": "npm run seed --workspace apps/api",
-    "test": "npm test --workspaces --if-present"
+    "test": "npm test --workspaces --if-present",
+    "app": "npm run dev --workspace apps/app",
+    "build": "npm run build --workspace packages/machine-kit && npm run build --workspace apps/api && npm run build --workspace apps/app",
+    "test:e2e": "npm run test:e2e --workspace apps/api"
   }
 }

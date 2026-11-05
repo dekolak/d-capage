@@ -23,6 +23,8 @@ const ChampBase = {
   /** true = la valeur est enregistrée dans une fiche réglage. */
   enregistre: z.boolean().default(false),
   visibleSi: ConditionSchema.optional(),
+  /** Colonne d'affichage dans une section à plusieurs colonnes (comme sur l'écran réel). */
+  colonne: z.number().int().min(1).max(3).optional(),
 };
 
 export const ChampNombreSchema = z.object({

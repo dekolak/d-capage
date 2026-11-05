@@ -9,5 +9,21 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+  # Production : docker compose --profile prod up -d --build
+  app:
+    profiles: ["prod"]
+    build: .
+    depends_on: [db]
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://decapage:decapage@db:5432/decapage?schema=public
+      JWT_SECRET: ${JWT_SECRET:?définir JWT_SECRET}
+      ADMIN_IDENTIFIANT: ${ADMIN_IDENTIFIANT:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?définir ADMIN_PASSWORD}
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
 volumes:
   pgdata:
+  uploads:
