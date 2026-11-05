@@ -295,3 +295,22 @@ textarea { resize: vertical; }
 .carte-fiche.masquee { opacity: 0.7; background: #fafafa; }
 .badge-masquee { justify-self: start; background: #fde2e2; color: #9b1c1c; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
 .seg { flex-wrap: wrap; }
+.onglets { grid-template-columns: repeat(5, 1fr); }
+.onglets a { font-size: 10.5px; }
+.aide > select { margin-bottom: 6px; }
+.accordeon { display: grid; gap: 8px; }
+.accordeon details { background: var(--carte); border-radius: var(--r); box-shadow: var(--ombre); padding: 0 14px; }
+.accordeon summary {
+  list-style: none; cursor: pointer; padding: 14px 24px 14px 0; font-weight: 650; position: relative;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+}
+.accordeon summary::-webkit-details-marker { display: none; }
+.accordeon summary::after { content: '+'; position: absolute; right: 0; top: 11px; font-size: 20px; color: var(--g2); font-weight: 400; }
+.accordeon details[open] summary::after { content: '−'; }
+.accordeon summary small { color: var(--g2); font-weight: 500; font-size: 12px; }
+.accordeon p { margin: 0 0 14px; color: #3f414a; }
+.accordeon .plage { font-size: 13px; color: var(--g); margin-top: -6px; }
+.aide-icones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.aide-icones div { display: grid; justify-items: center; gap: 4px; text-align: center; }
+.aide-icones .m-sc { width: 72px; height: 48px; background: #5a6b8e; }
+.aide-icones small { font-size: 11px; color: var(--g); line-height: 1.25; }
