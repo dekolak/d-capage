@@ -314,3 +314,12 @@ textarea { resize: vertical; }
 .aide-icones div { display: grid; justify-items: center; gap: 4px; text-align: center; }
 .aide-icones .m-sc { width: 72px; height: 48px; background: #5a6b8e; }
 .aide-icones small { font-size: 11px; color: var(--g); line-height: 1.25; }
+/* ---------- animations de l'aide ---------- */
+.anim { display: grid; gap: 10px; background: var(--fond); border-radius: var(--r-sm); padding: 10px 12px; margin: 0 0 14px; }
+.anim-titre { font-size: 12px; margin-bottom: 2px; }
+.anim-titre b { font-weight: 700; }
+.anim-titre span { color: var(--g); }
+.anim svg { width: 100%; height: 44px; display: block; overflow: hidden; }
+.anim-defile { animation: defile 5s linear infinite; }
+@keyframes defile { from { transform: translateX(0); } to { transform: translateX(-300px); } }
+@media (prefers-reduced-motion: reduce) { .anim-defile { animation: none; } }
