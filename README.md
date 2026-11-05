@@ -15,6 +15,8 @@ npm run app                              # App  http://localhost:5173 (accessibl
 ```
 
 ## Mettre en ligne
+Coolify + OVH : voir [DEPLOIEMENT.md](DEPLOIEMENT.md).
+
 Un seul service : l'API sert aussi l'app compilée.
 ```bash
 JWT_SECRET=… ADMIN_PASSWORD=… docker compose --profile prod up -d --build
