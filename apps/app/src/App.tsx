@@ -3,6 +3,7 @@ import { Chargement } from './components/Composants';
 import { useAuth } from './lib/auth';
 import Admin from './pages/Admin';
 import AdminFiches from './pages/AdminFiches';
+import Aide from './pages/Aide';
 import Communaute from './pages/Communaute';
 import Compte from './pages/Compte';
 import Connexion from './pages/Connexion';
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/communaute" element={<Communaute />} />
           <Route path="/machines" element={<Machines />} />
           <Route path="/compte" element={<Compte />} />
+          <Route path="/aide" element={<Aide />} />
           {moi.role === 'ADMIN' && <Route path="/admin" element={<Admin />} />}
           {moi.role === 'ADMIN' && <Route path="/admin/fiches" element={<AdminFiches />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -41,6 +43,9 @@ export default function App() {
         </NavLink>
         <NavLink to="/communaute">
           <Ic d="M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M22 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8" />Communauté
+        </NavLink>
+        <NavLink to="/aide">
+          <Ic d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01" />Aide
         </NavLink>
         <NavLink to="/compte">
           <Ic d="M20 21v-1a5 5 0 0 0-5-5H9a5 5 0 0 0-5 5v1M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />Compte

@@ -127,6 +127,10 @@ export const ConfigMachineSchema = z
     hypotheses: z.array(z.string()).default([]),
     pages: z.array(PageSchema).min(1),
     presets: z.array(PresetSchema).default([]),
+    /** Explications générales affichées dans le menu Aide de l'app. */
+    guide: z.array(z.object({ titre: I18nSchema, texte: I18nSchema })).default([]),
+    /** Lien vers l'aide complète (simulateur, exercices) sur le site. */
+    lienAide: z.string().url().optional(),
   })
   .superRefine((cfg, ctx) => {
     const keys = new Map<string, Champ>();

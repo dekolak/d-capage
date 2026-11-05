@@ -62,7 +62,7 @@
               "step": 1,
               "defaut": 85,
               "aide": {
-                "fr": "Puissance en % du maximum (300 W). Fixe l'énergie de chaque impulsion."
+                "fr": "Puissance du laser en % du maximum (300 W). Elle fixe l'énergie de chaque impulsion : plus elle est haute, plus chaque impulsion enlève de matière, mais plus elle chauffe la pièce. Commencez bas et montez progressivement."
               }
             },
             {
@@ -79,7 +79,7 @@
               "step": 1,
               "defaut": 500,
               "aide": {
-                "fr": "Durée d'une impulsion. Plus court = crête plus haute ; plus long = plus de chaleur."
+                "fr": "Durée d'une impulsion (20 à 500 ns). Pour la même énergie, une impulsion courte est plus « sèche » (crête plus haute, enlève sans chauffer). Une impulsion longue est plus douce mais met plus de chaleur dans la pièce : utile sur la rouille épaisse, à éviter sur les supports fragiles."
               }
             },
             {
@@ -97,7 +97,7 @@
               "step": 1,
               "defaut": 20,
               "aide": {
-                "fr": "Impulsions par seconde. Haute = petites impulsions serrées ; basse = impulsions fortes et espacées."
+                "fr": "Nombre d'impulsions par seconde (20 à 4000 kHz). À puissance égale : fréquence haute = beaucoup de petites impulsions serrées (finition, nettoyage léger) ; fréquence basse = moins d'impulsions mais plus fortes et plus espacées (décapage d'une couche épaisse)."
               }
             }
           ]
@@ -118,7 +118,7 @@
                 "en": "Scan Type"
               },
               "aide": {
-                "fr": "Forme dessinée par le faisceau. Les réglages de taille changent selon le motif."
+                "fr": "Forme dessinée par le faisceau : ligne ondulée, anneau, rectangle (remplissage dans un sens ou croisé), disque quadrillé ou fleur. Les réglages de taille changent selon le motif (longueur/largeur, rayons, déphasage)."
               },
               "options": [
                 {
@@ -192,7 +192,7 @@
               "step": 1,
               "defaut": 30,
               "aide": {
-                "fr": "Longueur de la zone balayée. Max selon la lentille : 160→100, 210→120, 254→150, 330→175, 420→245 mm."
+                "fr": "Longueur de la zone balayée. Plus la zone est grande, plus un passage est long et moins l'énergie est concentrée. Maximum selon la lentille : 160 → 100, 210 → 120, 254 → 150, 330 → 175, 420 → 245 mm."
               }
             },
             {
@@ -214,7 +214,10 @@
               "min": 0,
               "max": 245,
               "step": 1,
-              "defaut": 30
+              "defaut": 30,
+              "aide": {
+                "fr": "Largeur de la zone balayée. Même limite que la longueur selon la lentille."
+              }
             },
             {
               "key": "oR",
@@ -235,7 +238,10 @@
               "min": 1,
               "max": 122,
               "step": 1,
-              "defaut": 10
+              "defaut": 10,
+              "aide": {
+                "fr": "Rayon extérieur des motifs ronds (anneau, disque quadrillé, fleur)."
+              }
             },
             {
               "key": "iR",
@@ -254,7 +260,10 @@
               "min": 0,
               "max": 121,
               "step": 1,
-              "defaut": 2
+              "defaut": 2,
+              "aide": {
+                "fr": "Rayon intérieur de l'anneau : le centre n'est pas balayé. Doit rester plus petit que le rayon extérieur."
+              }
             },
             {
               "key": "ph",
@@ -273,7 +282,10 @@
               "min": 0,
               "max": 180,
               "step": 1,
-              "defaut": 1
+              "defaut": 1,
+              "aide": {
+                "fr": "Rotation de la fleur à chaque passage : les pétales tournent et finissent par couvrir tout le disque."
+              }
             },
             {
               "key": "speed",
@@ -290,7 +302,7 @@
               "step": 0.1,
               "defaut": 20,
               "aide": {
-                "fr": "Vitesse du point laser. Lent = impulsions qui se recouvrent ; rapide = impulsions espacées."
+                "fr": "Vitesse du point laser sur la pièce. Lent = impulsions serrées qui se recouvrent, effet plus fort au même endroit. Rapide = impulsions plus espacées, passages plus fréquents, moins de chaleur."
               }
             },
             {
@@ -308,7 +320,7 @@
               "step": 1,
               "defaut": 10,
               "aide": {
-                "fr": "Écart entre les lignes des motifs remplis. Faible = remplissage dense."
+                "fr": "Écart entre les lignes des motifs remplis. Plus la valeur est faible, plus le remplissage est dense (meilleure couverture, mais plus lent et plus de chaleur)."
               }
             },
             {
@@ -325,7 +337,7 @@
               "step": 1,
               "defaut": 0,
               "aide": {
-                "fr": "0 = continu tant que la gâchette est appuyée."
+                "fr": "Nombre de passages avant arrêt automatique. 0 = balayage continu tant que la gâchette est appuyée."
               }
             }
           ]
@@ -344,7 +356,7 @@
                 "en": "Lens Select"
               },
               "aide": {
-                "fr": "Lentille montée sur la tête. Fixe la zone max et la taille du spot. 254 = standard."
+                "fr": "Lentille montée sur la tête (focale en mm). Elle fixe la zone maximale et la taille du spot : grande focale = zone plus large mais spot plus gros, donc énergie moins concentrée. 254 = lentille standard."
               },
               "options": [
                 {
@@ -404,5 +416,47 @@
       ]
     }
   ],
-  "presets": []
+  "presets": [],
+  "guide": [
+    {
+      "titre": {
+        "fr": "Par où commencer ?"
+      },
+      "texte": {
+        "fr": "Partez d'un réglage existant (le vôtre ou un réglage 4 étoiles de la communauté) et ne changez qu'un paramètre à la fois. Faites un essai sur une petite zone, comparez avant / après, puis notez le résultat : c'est ce qui rend les réglages utiles pour tout le monde."
+      }
+    },
+    {
+      "titre": {
+        "fr": "Puissance, fréquence et énergie"
+      },
+      "texte": {
+        "fr": "L'énergie de chaque impulsion = puissance ÷ fréquence. À puissance égale, baisser la fréquence donne des impulsions plus fortes (décapage), l'augmenter donne des impulsions plus douces et plus serrées (finition)."
+      }
+    },
+    {
+      "titre": {
+        "fr": "Vitesse et recouvrement"
+      },
+      "texte": {
+        "fr": "L'écart entre deux impulsions = vitesse ÷ fréquence. Si cet écart est plus petit que le spot, les impulsions se recouvrent (trace continue, effet fort). S'il est plus grand, elles laissent des points séparés que les passages suivants complètent."
+      }
+    },
+    {
+      "titre": {
+        "fr": "Protéger la pièce"
+      },
+      "texte": {
+        "fr": "Si la surface noircit, bleuit ou se déforme : baissez la puissance, raccourcissez l'impulsion ou augmentez la vitesse. Sur les supports fragiles (bois, aluminium fin, plastique), commencez toujours bas."
+      }
+    },
+    {
+      "titre": {
+        "fr": "Sécurité"
+      },
+      "texte": {
+        "fr": "Lunettes de protection laser obligatoires pour toute personne proche, cache anti-poussière retiré avant de tirer, soufflage actif pour protéger la lentille."
+      }
+    }
+  ]
 }
