@@ -97,6 +97,10 @@ describe('Parcours complet', () => {
     expect(c.fiches.some((f: any) => f.id === fiche)).toBe(true);
 
     await http.post(`/api/fiches/${fiche}/evaluation`).set(auth(bob)).send({ note: 2, avis: 'un peu fort pour moi' }).expect(201);
+    // moyenne 3 (4 + 2) : exclue du filtre « 4 étoiles et plus », présente sans filtre
+    const top = (await http.get(`/api/communaute?varianteId=${varianteId}&noteMin=4&parPage=50`).set(auth(bob))).body;
+    expect(top.fiches.some((f: any) => f.id === fiche)).toBe(false);
+    expect(top.fiches.every((f: any) => f.note.moyenne >= 4)).toBe(true);
     const d = (await http.get(`/api/fiches/${fiche}`).set(auth(bob))).body;
     expect(d.note).toMatchObject({ moyenne: 3, nombre: 2, maNote: 2 });
     expect(d.evaluations).toHaveLength(2);
