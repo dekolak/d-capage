@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { completer, technologie, validerValeurs, Valeurs } from '@decapage/machine-kit';
+import { completer, technologie, validerValeurs } from '@decapage/machine-kit';
 import { ChoixTags, Chargement, Erreur, Etoiles, Galerie, Indicateurs, LIBELLE_PHOTO } from '../components/Composants';
 import { Miroir } from '../components/Miroir';
 import { api, chargerVersion, envoyerPhoto, Fiche, GroupeTag, MaMachine, PhotoRef, Tag, TypePhoto, Version } from '../lib/api';
 import { compresser } from '../lib/image';
+import {
+  Brouillon, brouillonUtile, ecrireBrouillon, ecrirePhotosBrouillon, effacerBrouillon, lireBrouillon, lirePhotosBrouillon,
+} from '../lib/brouillon';
 import { nomMachine } from '../lib/util';
 
 interface NouvellePhoto { type: TypePhoto; fichier: Blob; miniature: Blob; apercu: string }
-interface Brouillon {
-  userMachineId: string; valeurs: Valeurs | null; tagIds: string[]; titre: string; commentaire: string;
-  note: number | null; etape: number;
-}
-const CLE_BROUILLON = 'decapage.brouillon';
 const ETAPES = ['Machine', 'Surface', 'Avant', 'Réglages', 'Écran', 'Résultat'] as const;
 
 /** Création (avec brouillon local), duplication (?depuis=id) et modification (/fiches/:id/modifier). */
@@ -31,6 +29,8 @@ export default function FicheEditeur() {
   const [existantes, setExistantes] = useState<PhotoRef[]>([]);
   const [noteInitiale, setNoteInitiale] = useState<number | null>(null);
   const [parent, setParent] = useState<Fiche>();
+  const [repris, setRepris] = useState<number | null>(null);
+  const [pret, setPret] = useState(false); // brouillon relu : on peut sauvegarder
   const [err, setErr] = useState<unknown>();
   const [envoi, setEnvoi] = useState('');
   const maj = (p: Partial<Brouillon>) => setB((x) => ({ ...x, ...p }));
@@ -60,10 +60,15 @@ export default function FicheEditeur() {
         const m = ms.find((x) => x.varianteId === p.machine.varianteId) ?? ms[0];
         maj({ userMachineId: m?.id ?? '', valeurs: p.valeurs, tagIds: p.tags.map((t) => t.id), titre: p.titre, etape: m ? 1 : 0 });
       } else {
-        const brouillon = localStorage.getItem(CLE_BROUILLON);
-        if (brouillon) setB(JSON.parse(brouillon));
-        else if (ms.length === 1) maj({ userMachineId: ms[0].id, etape: 1 });
+        const brouillon = lireBrouillon();
+        const ph = await lirePhotosBrouillon();
+        if (brouillonUtile(brouillon, ph.length)) {
+          setB({ ...brouillon!, userMachineId: ms.some((m) => m.id === brouillon!.userMachineId) ? brouillon!.userMachineId : '' });
+          setPhotos(ph.map((x) => ({ ...x, apercu: URL.createObjectURL(x.miniature) })));
+          setRepris(brouillon!.maj ?? Date.now());
+        } else if (ms.length === 1) maj({ userMachineId: ms[0].id, etape: 1 });
       }
+      setPret(true);
     })().catch(setErr);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ficheId, depuis]);
@@ -76,10 +81,22 @@ export default function FicheEditeur() {
       setGroupes(gs.map((g) => ({ ...g, tags: [...g.tags, ...manquants.filter((t) => t.groupe === g.slug)] })));
   }
 
-  // Sauvegarde du brouillon (création simple uniquement ; les photos ne sont pas conservées)
+  // Sauvegarde automatique du brouillon (création simple) : champs + photos
+  const avecBrouillon = !modif && !depuis;
   useEffect(() => {
-    if (!modif && !depuis && machines) localStorage.setItem(CLE_BROUILLON, JSON.stringify(b));
-  }, [b, modif, depuis, machines]);
+    if (avecBrouillon && pret) ecrireBrouillon(b);
+  }, [b, avecBrouillon, pret]);
+  useEffect(() => {
+    if (avecBrouillon && pret) ecrirePhotosBrouillon(photos);
+  }, [photos, avecBrouillon, pret]);
+
+  const recommencer = async () => {
+    if (!confirm('Effacer le brouillon et recommencer une fiche vide ?')) return;
+    await effacerBrouillon();
+    setPhotos([]);
+    setRepris(null);
+    setB({ userMachineId: machines?.length === 1 ? machines[0].id : '', valeurs: null, tagIds: [], titre: '', commentaire: '', note: null, etape: machines?.length === 1 ? 1 : 0 });
+  };
 
   // Config de la machine choisie
   const machine = machines?.find((m) => m.id === b.userMachineId);
@@ -148,7 +165,7 @@ export default function FicheEditeur() {
         setEnvoi(`Envoi des photos ${i + 1}/${photos.length}…`);
         await envoyerPhoto(f.id, p.type, p);
       }
-      if (!modif && !depuis) localStorage.removeItem(CLE_BROUILLON);
+      if (avecBrouillon) await effacerBrouillon();
       nav(`/fiches/${f.id}`, { replace: true });
     } catch (e) {
       setErr(e);
@@ -216,6 +233,14 @@ export default function FicheEditeur() {
           </li>
         ))}
       </ol>
+
+      {repris && (
+        <div className="bandeau">
+          <span>Brouillon du {new Date(repris).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} repris.</span>
+          <button type="button" className="btn-lien" onClick={recommencer}>Recommencer</button>
+        </div>
+      )}
+      {avecBrouillon && !repris && <p className="muted petit">Enregistré automatiquement sur ce téléphone : vous pouvez reprendre plus tard.</p>}
 
       <Erreur e={err} />
 

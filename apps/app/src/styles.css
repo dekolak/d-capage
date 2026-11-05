@@ -286,3 +286,6 @@ textarea { resize: vertical; }
   .boutons-photo { grid-template-columns: 2fr 1fr; }
 }
 .onglets .ic { width: 22px; height: 22px; margin: 2px 0 3px; }
+.bandeau { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--o-doux); color: #7c2d12; border: 1px solid #fbd0bd; border-radius: var(--r-sm); padding: 10px 14px; margin: 0 0 14px; font-size: 14px; }
+.lien-bandeau { text-decoration: none; }
+.lien-bandeau span:last-child { font-size: 22px; line-height: 1; color: var(--o); }

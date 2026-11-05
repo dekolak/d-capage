@@ -214,7 +214,6 @@ function Panneau({
       {c.type === 'texte' && (
         <input
           className="m-input"
-          autoFocus
           maxLength={c.maxLength}
           value={valeur === '---' ? '' : String(valeur ?? '')}
           onChange={(e) => onChange(e.target.value || '---')}
@@ -248,10 +247,6 @@ function SaisieNombre({
     if (document.activeElement !== ref.current || Number(txt.replace(',', '.')) !== valeur) setTxt(fmt(c, valeur));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valeur, c]);
-  useEffect(() => {
-    ref.current?.focus();
-    ref.current?.select();
-  }, []);
 
   const log = c.echelle === 'log' && c.min > 0;
   const versCurseur = (v: number) => (log ? Math.round((1000 * Math.log(v / c.min)) / Math.log(c.max / c.min)) : v);
@@ -269,6 +264,7 @@ function SaisieNombre({
         <input
           ref={ref}
           className="m-input m-num"
+          onFocus={(e) => e.target.select()}
           inputMode="decimal"
           value={txt}
           onChange={(e) => {
