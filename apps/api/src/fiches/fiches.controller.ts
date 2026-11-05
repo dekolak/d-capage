@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { Moi, Principal } from '../auth/decorators';
-import { CreerFicheDto, EvaluerDto, FiltresDto, ModifierFicheDto } from './fiches.dto';
+import { Role } from '@prisma/client';
+import { Moi, Principal, Roles } from '../auth/decorators';
+import { CreerFicheDto, EvaluerDto, FiltresAdminDto, FiltresDto, MasquerDto, ModifierFicheDto } from './fiches.dto';
 import { FichesService } from './fiches.service';
 
 @Controller()
@@ -46,5 +47,19 @@ export class FichesController {
   @Delete('fiches/:id/evaluation')
   retirerEvaluation(@Moi() moi: Principal, @Param('id') id: string) {
     return this.fiches.retirerEvaluation(id, moi);
+  }
+
+  // --- administration ---
+  @Get('admin/fiches')
+  @Roles(Role.ADMIN)
+  adminFiches(@Moi() moi: Principal, @Query() f: FiltresAdminDto) {
+    return this.fiches.adminFiches(moi, f);
+  }
+
+  /** Masquer / réafficher une fiche (modération). */
+  @Patch('admin/fiches/:id')
+  @Roles(Role.ADMIN)
+  masquer(@Moi() moi: Principal, @Param('id') id: string, @Body() dto: MasquerDto) {
+    return this.fiches.masquer(id, dto.masquee, moi);
   }
 }

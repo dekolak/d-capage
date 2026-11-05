@@ -31,8 +31,9 @@ export class FichesService {
 
   // ---------- lecture ----------
 
-  peutVoir(f: { userId: string; visibilite: Visibilite }, moi: Principal) {
-    return f.userId === moi.id || f.visibilite === Visibilite.PARTAGEE || moi.role === Role.ADMIN;
+  peutVoir(f: { userId: string; visibilite: Visibilite; masquee: boolean }, moi: Principal) {
+    if (f.userId === moi.id || moi.role === Role.ADMIN) return true;
+    return f.visibilite === Visibilite.PARTAGEE && !f.masquee;
   }
 
   async charger(id: string, moi: Principal) {
@@ -81,6 +82,9 @@ export class FichesService {
           updatedAt: f.updatedAt,
           estAuteur: f.userId === moi.id,
           auteur: f.user.nom || f.user.identifiant,
+          masquee: f.masquee,
+          // Réservé aux admins : savoir précisément qui a fait l'enregistrement.
+          ...(moi.role === Role.ADMIN ? { auteurAdmin: { id: f.user.id, identifiant: f.user.identifiant, nom: f.user.nom } } : {}),
           machine: {
             userMachineId: f.userMachine?.id ?? null,
             surnom: f.userMachine?.surnom ?? null,
@@ -134,7 +138,29 @@ export class FichesService {
   }
 
   communaute(moi: Principal, f: FiltresDto) {
-    return this.page({ ...this.where(f), visibilite: Visibilite.PARTAGEE }, { tri: 'note', ...f }, moi);
+    return this.page({ ...this.where(f), visibilite: Visibilite.PARTAGEE, masquee: false }, { tri: 'note', ...f }, moi);
+  }
+
+  // ---------- administration ----------
+
+  /** Toutes les fiches (masquées comprises), filtrables par auteur et par état. */
+  adminFiches(moi: Principal, f: FiltresDto & { userId?: string; masquee?: string }) {
+    return this.page(
+      {
+        ...this.where(f),
+        ...(f.userId ? { userId: f.userId } : {}),
+        ...(f.masquee === 'oui' ? { masquee: true } : f.masquee === 'non' ? { masquee: false } : {}),
+      },
+      { tri: 'recent', ...f },
+      moi,
+    );
+  }
+
+  async masquer(id: string, masquee: boolean, moi: Principal) {
+    const f = await this.prisma.fiche.findUnique({ where: { id } });
+    if (!f) throw new NotFoundException('Fiche introuvable');
+    await this.prisma.fiche.update({ where: { id }, data: { masquee, masqueeLe: masquee ? new Date() : null } });
+    return this.detail(id, moi);
   }
 
   // ---------- écriture ----------

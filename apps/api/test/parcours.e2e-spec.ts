@@ -109,4 +109,24 @@ describe('Parcours complet', () => {
     expect((await http.patch(`/api/fiches/${fiche}`).set(auth(bob)).send({ titre: 'pirate' })).status).toBe(403);
     expect((await http.get(`/api/fiches/${copie.body.id}`).set(auth(alice))).status).toBe(404);
   });
+
+  it('admin : voit qui a fait la fiche et peut la masquer', async () => {
+    const liste = (await http.get('/api/admin/fiches?parPage=50').set(auth(admin))).body;
+    const f = liste.fiches.find((x: any) => x.id === fiche);
+    expect(f.auteurAdmin.identifiant).toBe(`alice-${id}`);
+    expect((await http.get('/api/admin/fiches').set(auth(bob))).status).toBe(403);
+    // l'auteur réel n'est pas exposé aux non-admins
+    expect((await http.get(`/api/fiches/${fiche}`).set(auth(bob))).body.auteurAdmin).toBeUndefined();
+
+    await http.patch(`/api/admin/fiches/${fiche}`).set(auth(admin)).send({ masquee: true }).expect(200);
+    expect((await http.get(`/api/fiches/${fiche}`).set(auth(bob))).status).toBe(404);
+    const c = (await http.get(`/api/communaute?varianteId=${varianteId}&parPage=50`).set(auth(bob))).body;
+    expect(c.fiches.some((x: any) => x.id === fiche)).toBe(false);
+    const vueAuteur = (await http.get(`/api/fiches/${fiche}`).set(auth(alice))).body;
+    expect(vueAuteur.masquee).toBe(true);
+    expect((await http.patch(`/api/admin/fiches/${fiche}`).set(auth(bob)).send({ masquee: false })).status).toBe(403);
+
+    await http.patch(`/api/admin/fiches/${fiche}`).set(auth(admin)).send({ masquee: false }).expect(200);
+    expect((await http.get(`/api/fiches/${fiche}`).set(auth(bob))).status).toBe(200);
+  });
 });

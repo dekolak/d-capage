@@ -30,7 +30,7 @@ export class UsersService {
   }
 
   lister() {
-    return this.prisma.user.findMany({ select: USER_PUBLIC, orderBy: { createdAt: 'desc' } });
+    return this.prisma.user.findMany({ select: { ...USER_PUBLIC, _count: { select: { fiches: true } } }, orderBy: { createdAt: 'desc' } });
   }
 
   async trouver(id: string) {

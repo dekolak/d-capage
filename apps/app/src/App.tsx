@@ -2,6 +2,7 @@ import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { Chargement } from './components/Composants';
 import { useAuth } from './lib/auth';
 import Admin from './pages/Admin';
+import AdminFiches from './pages/AdminFiches';
 import Communaute from './pages/Communaute';
 import Compte from './pages/Compte';
 import Connexion from './pages/Connexion';
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/machines" element={<Machines />} />
           <Route path="/compte" element={<Compte />} />
           {moi.role === 'ADMIN' && <Route path="/admin" element={<Admin />} />}
+          {moi.role === 'ADMIN' && <Route path="/admin/fiches" element={<AdminFiches />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
