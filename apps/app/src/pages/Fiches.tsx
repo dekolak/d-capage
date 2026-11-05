@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CarteFiche } from '../components/CarteFiche';
 import { Chargement, Erreur, FiltreTags } from '../components/Composants';
 import { api, GroupeTag, MaMachine, PageFiches } from '../lib/api';
+import { brouillonUtile, lireBrouillon } from '../lib/brouillon';
 import { nomMachine } from '../lib/util';
 
 /** Mes réglages : recherche texte + filtres machine et tags (combinables). */
@@ -37,6 +38,12 @@ export default function Fiches() {
   return (
     <div className="page">
       <h1>Mes réglages</h1>
+      {brouillonUtile(lireBrouillon()) && (
+        <Link to="/fiches/nouvelle" className="bandeau lien-bandeau">
+          <span><b>Fiche en cours</b> : reprendre là où vous en étiez</span>
+          <span>›</span>
+        </Link>
+      )}
       <div className="filtres">
         <input className="recherche" placeholder="Rechercher (titre, commentaire)…" value={q} onChange={(e) => setQ(e.target.value)} />
         <button type="button" className="btn petit" onClick={() => setOuverts(!ouverts)}>
