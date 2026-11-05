@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CarteFiche } from '../components/CarteFiche';
-import { Chargement, Erreur } from '../components/Composants';
+import { Chargement, Erreur, FiltreTags } from '../components/Composants';
 import { api, Fabricant, GroupeTag, MaMachine, PageFiches } from '../lib/api';
 
 /** Réglages partagés : même machine + mêmes tags, triés par note. */
@@ -10,6 +10,7 @@ export default function Communaute() {
   const [varianteId, setVariante] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tri, setTri] = useState<'note' | 'recent'>('note');
+  const [q, setQ] = useState('');
   const [data, setData] = useState<PageFiches>();
   const [err, setErr] = useState<unknown>();
 
@@ -24,12 +25,13 @@ export default function Communaute() {
   }, []);
 
   useEffect(() => {
-    setData(undefined);
     const p = new URLSearchParams({ tri, parPage: '50' });
     if (varianteId) p.set('varianteId', varianteId);
     if (tags.length) p.set('tags', tags.join(','));
-    api<PageFiches>(`/communaute?${p}`).then(setData).catch(setErr);
-  }, [varianteId, tags, tri]);
+    if (q.trim()) p.set('q', q.trim());
+    const h = setTimeout(() => api<PageFiches>(`/communaute?${p}`).then(setData).catch(setErr), 250);
+    return () => clearTimeout(h);
+  }, [varianteId, tags, tri, q]);
 
 
   return (
@@ -50,26 +52,8 @@ export default function Communaute() {
           <button type="button" className={tri === 'note' ? 'on' : ''} onClick={() => setTri('note')}>Mieux notés</button>
           <button type="button" className={tri === 'recent' ? 'on' : ''} onClick={() => setTri('recent')}>Récents</button>
         </div>
-        {groupes.map((g) => {
-          const actuel = g.tags.find((t) => tags.includes(t.id))?.id ?? '';
-          return (
-            <label key={g.id} className="champ-tag">
-              <span>{g.nom}</span>
-              <select
-                value={actuel}
-                onChange={(e) => {
-                  const autres = tags.filter((id) => !g.tags.some((t) => t.id === id));
-                  setTags(e.target.value ? [...autres, e.target.value] : autres);
-                }}
-              >
-                <option value="">Tous</option>
-                {g.tags.map((t) => (
-                  <option key={t.id} value={t.id}>{t.nom}</option>
-                ))}
-              </select>
-            </label>
-          );
-        })}
+        <input className="recherche" placeholder="Rechercher (titre, commentaire)…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <FiltreTags groupes={groupes} tags={tags} onChange={setTags} />
       </div>
       <Erreur e={err} />
       {!data ? (

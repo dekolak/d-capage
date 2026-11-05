@@ -221,3 +221,5 @@ textarea { resize: vertical; }
 .choix-tags .puces { margin-top: 6px; }
 .choix-tags .puce.on { cursor: pointer; }
 .barre-etapes .btn { white-space: nowrap; padding: 0 10px; }
+.btn-lien { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; text-decoration: underline; color: var(--od); }
+.filtres .recherche { margin-bottom: 0; }

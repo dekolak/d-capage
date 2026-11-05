@@ -145,6 +145,34 @@ export function ChoixTags({
   );
 }
 
+/** Filtres de recherche : une liste déroulante par groupe de tags (« Tous » = pas de filtre). */
+export function FiltreTags({ groupes, tags, onChange }: { groupes: GroupeTag[]; tags: string[]; onChange(ids: string[]): void }) {
+  return (
+    <>
+      {groupes.map((g) => {
+        const actuel = g.tags.find((t) => tags.includes(t.id))?.id ?? '';
+        return (
+          <label key={g.id} className="champ-tag">
+            <span>{g.nom}</span>
+            <select
+              value={actuel}
+              onChange={(e) => {
+                const autres = tags.filter((id) => !g.tags.some((t) => t.id === id));
+                onChange(e.target.value ? [...autres, e.target.value] : autres);
+              }}
+            >
+              <option value="">Tous</option>
+              {g.tags.map((t) => (
+                <option key={t.id} value={t.id}>{t.nom}</option>
+              ))}
+            </select>
+          </label>
+        );
+      })}
+    </>
+  );
+}
+
 export function Chargement() {
   return <div className="chargement">Chargement…</div>;
 }
