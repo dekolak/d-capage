@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { tousLesChamps } from '@decapage/machine-kit';
 import { Chargement, Erreur } from '../components/Composants';
+import { AnimationReglage } from '../components/AnimationsLaser';
 import { Icone } from '../components/Miroir';
 import { api, chargerVersion, Fabricant, MaMachine, Version } from '../lib/api';
 import { t } from '../lib/util';
@@ -74,6 +75,7 @@ export default function Aide() {
                   {c.label.en && <small>{c.label.en}</small>}
                 </summary>
                 <p>{t(c.aide)}</p>
+                {cfg.technologie === 'laser-pulse' && <AnimationReglage k={c.key} />}
                 {c.type === 'nombre' && (
                   <p className="plage">
                     De {c.min} à {c.max}
