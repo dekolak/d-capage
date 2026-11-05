@@ -1,43 +1,49 @@
-# Déploiement sur Coolify + domaine OVH
+# Déploiement : Coolify + Traefik n8n + domaine OVH (app.lazzeko.com)
+
+## Contexte du VPS
+Le VPS fait déjà tourner **n8n avec son propre Traefik** (`n8n-compose-traefik-1`) sur les ports 80/443,
+avec des webhooks en production. Le proxy de Coolify (`coolify-proxy`) ne peut pas démarrer
+(« Port 80 is in use ») et **doit rester arrêté**.
+L'app est donc routée par le **Traefik de n8n** via les labels de `docker-compose.prod.yml`
+(même méthode que le projet pose). Rien n'est modifié côté n8n.
 
 ## 1. DNS chez OVH
-Espace client OVH → **Noms de domaine** → ton domaine → **Zone DNS** → **Ajouter une entrée** :
-- type **A**, sous-domaine `reglages` (par ex.), cible = **IP du serveur Coolify**.
+Zone DNS de `lazzeko.com` → entrée **A** `app` → `51.178.183.183` (IP du VPS, sans port).
 
-Compter de quelques minutes à 1 h pour la propagation.
+## 2. Ressource Coolify
+**+ New** → **Private Repository (with GitHub App)** → `dekolak/d-capage`, branche `main`.
+- **Build pack** : `Docker Compose`
+- **Docker Compose file** : `/docker-compose.prod.yml`
+- **Domains** : **laisser vide** (sinon Coolify active son propre proxy).
 
-## 2. Base de données (Coolify)
-Projet → **+ New** → **Database** → **PostgreSQL**. Démarrer, puis copier l'**URL interne** (`postgres://…`).
+La base PostgreSQL est incluse dans ce compose (service `db`) : pas besoin de ressource PostgreSQL séparée.
 
-## 3. Application (Coolify)
-Projet → **+ New** → **Public/Private repository (GitHub App)** → `dekolak/d-capage`, branche `main`.
-- **Build pack** : `Dockerfile`
-- **Port** : `3000`
-- **Domaine** : `https://reglages.ton-domaine.fr` (Coolify crée le certificat HTTPS tout seul)
-- **Health check** : chemin `/api/health`
-
-**Variables d'environnement** :
+## 3. Variables d'environnement
 | Variable | Valeur |
 |---|---|
-| `DATABASE_URL` | URL interne de la base (étape 2) |
-| `JWT_SECRET` | longue chaîne aléatoire (ex. `openssl rand -base64 48`) |
-| `ADMIN_IDENTIFIANT` | `admin` |
-| `ADMIN_PASSWORD` | mot de passe admin (8 caractères min.) |
-| `UPLOAD_DIR` | `/data/uploads` |
+| `POSTGRES_PASSWORD` | mot de passe de la base (aléatoire, long) |
+| `JWT_SECRET` | longue chaîne aléatoire — ne plus la changer ensuite |
+| `ADMIN_PASSWORD` | mot de passe du 1er compte admin (8 caractères min.) |
+| `ADMIN_IDENTIFIANT` | facultatif, `admin` par défaut |
 
-**Stockage persistant** (onglet *Storages*) : volume monté sur `/data/uploads`, sinon les photos sont perdues à chaque redéploiement.
+Le compte admin n'est créé qu'au premier démarrage.
 
-**Deploy**. Au démarrage : migrations → catalogue machines et tags → API + app.
+## 4. Proxy Coolify
+**Servers → localhost → Proxy** : il doit rester **arrêté** (Stop Proxy s'il tente de démarrer).
 
-## 4. Vérifier
-- `https://reglages.ton-domaine.fr/api/health` → `{"ok":true}`
-- Ouvrir le site sur le téléphone, se connecter avec `admin`, puis **Compte → Administration** pour créer les comptes clients.
-- Sur le téléphone : menu du navigateur → **Ajouter à l'écran d'accueil**.
+## 5. Déployer et vérifier
+**Deploy**, puis :
+- `https://app.lazzeko.com/api/health` → `{"ok":true}`
+- `https://app.lazzeko.com` → page de connexion (certificat émis par le Traefik n8n, `mytlschallenge`).
 
-## 5. Sauvegardes
-- Base : dans la ressource PostgreSQL de Coolify → **Backups** → activer une sauvegarde planifiée (idéalement vers un stockage S3).
-- Photos : sauvegarder le volume `/data/uploads`.
+Données persistantes : volumes Docker `decapage_db` (base) et `decapage_uploads` (photos).
+
+## 6. Sauvegardes
+La base est dans le compose : sauvegarde par tâche planifiée Coolify (*Scheduled Tasks*, service `db`) :
+```
+pg_dump -U decapage decapage > /var/lib/postgresql/data/sauvegarde.sql
+```
+ou sauvegarde des volumes `decapage_db` et `decapage_uploads` au niveau du VPS.
 
 ## Mises à jour
-Chaque merge sur `main` peut redéployer automatiquement (option *Auto Deploy* de Coolify).
-Ajouter une machine = ajouter son JSON dans `machines/` puis redéployer.
+Merge sur `main` → **Redeploy** (ou *Auto Deploy*). Ajouter une machine = un JSON dans `machines/` + redéployer.

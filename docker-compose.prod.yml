@@ -1,0 +1,59 @@
+# Production sur le VPS (Coolify, build pack « Docker Compose », fichier /docker-compose.prod.yml).
+#
+# Ce VPS a déjà un Traefik (stack n8n, conteneur n8n-compose-traefik-1) sur les ports 80/443,
+# avec des webhooks n8n en production. Le proxy de Coolify (coolify-proxy) reste donc ARRÊTÉ :
+# l'app est routée par le Traefik de n8n grâce aux labels ci-dessous (même méthode que le projet pose).
+# Ne PAS renseigner de domaine dans Coolify pour cette ressource.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: decapage
+      POSTGRES_USER: decapage
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant}"
+    volumes:
+      - decapage_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U decapage -d decapage"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://decapage:${POSTGRES_PASSWORD}@db:5432/decapage?schema=public
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant}"
+      ADMIN_IDENTIFIANT: ${ADMIN_IDENTIFIANT:-admin}
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?ADMIN_PASSWORD manquant}"
+      UPLOAD_DIR: /data/uploads
+      PORT: 3000
+    volumes:
+      - decapage_uploads:/data/uploads
+    networks:
+      - default
+      - n8n_shared
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-compose_default"
+      - "traefik.http.routers.decapage.rule=Host(`app.lazzeko.com`)"
+      - "traefik.http.routers.decapage.entrypoints=websecure"
+      - "traefik.http.routers.decapage.tls=true"
+      - "traefik.http.routers.decapage.tls.certresolver=mytlschallenge"
+      - "traefik.http.services.decapage.loadbalancer.server.port=3000"
+
+volumes:
+  decapage_db:
+  decapage_uploads:
+
+networks:
+  default: {}
+  # Réseau du stack n8n (Traefik y écoute). Géré par n8n : jamais créé ni détruit ici.
+  n8n_shared:
+    name: n8n-compose_default
+    external: true
