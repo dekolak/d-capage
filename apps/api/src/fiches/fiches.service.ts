@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, Role, Visibilite } from '@prisma/client';
-import { technologie, validerValeurs, valeursParDefaut } from '@decapage/machine-kit';
+import { completer, technologie, validerValeurs } from '@decapage/machine-kit';
 import { Principal } from '../auth/decorators';
 import { CatalogueService, nomMachine } from '../catalogue/catalogue.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -95,7 +95,7 @@ export class FichesService {
           parent: f.parent,
           nbCopies: f._count.copies,
           // Recalculés à chaque lecture : corriger une constante met à jour toutes les fiches.
-          indicateurs: technologie(cfg.technologie)?.indicateurs(cfg, { ...valeursParDefaut(cfg), ...valeurs }) ?? [],
+          indicateurs: technologie(cfg.technologie)?.indicateurs(cfg, completer(cfg, valeurs)) ?? [],
         };
       }),
     );

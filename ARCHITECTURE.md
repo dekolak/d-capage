@@ -75,7 +75,7 @@ machines/              configs JSON des machines
 
 ## App mobile (apps/app)
 - PWA installable (manifeste + service worker : l'app démarre hors ligne, l'API reste en ligne).
-- `components/Miroir.tsx` : rendu **uniquement à partir de la config** (zones, colonnes, `visibleSi`, icônes, préréglages). Saisie par panneau : clavier numérique, −/+, curseur (log pour la fréquence), « Suivant » pour enchaîner les champs dans l'ordre de l'écran.
+- `components/Miroir.tsx` : rendu **uniquement à partir de la config** (zones, colonnes, `visibleSi`, icônes ; préréglages possibles mais non utilisés pour Lazzeko). Saisie par panneau : clavier numérique, −/+, curseur (log pour la fréquence), « Suivant » pour enchaîner les champs dans l'ordre de l'écran.
 - La validation et les indicateurs utilisent le **même code** que l'API (`machine-kit`, importé en source).
 - Photos compressées sur le téléphone (1600 px + miniature 400 px) avant envoi.
 - Brouillon de la fiche en cours conservé localement (hors photos).

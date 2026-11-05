@@ -103,3 +103,10 @@ export function validerValeurs(
 
   return { ok: erreurs.length === 0, valeurs, erreurs };
 }
+
+/** Valeurs par défaut + valeurs connues de cette config (ignore les champs retirés d'une ancienne fiche). */
+export function completer(cfg: ConfigMachine, valeurs: Record<string, unknown> | null | undefined): Valeurs {
+  const v = valeursParDefaut(cfg);
+  for (const k of Object.keys(v)) if (valeurs && k in valeurs) v[k] = valeurs[k] as Valeurs[string];
+  return v;
+}

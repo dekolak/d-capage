@@ -8,7 +8,6 @@ import {
   technologie,
   validerValeurs,
   valeursParDefaut,
-  valeursPreset,
 } from './index';
 
 const brut = JSON.parse(
@@ -21,13 +20,14 @@ describe('config Lazzeko 300 W', () => {
   it('se charge et expose les champs enregistrés', () => {
     const keys = champsEnregistres(cfg).map((c) => c.key);
     expect(keys).toEqual(
-      expect.arrayContaining(['air', 'pwr', 'pw', 'freq', 'scan', 'len', 'wid', 'oR', 'iR', 'ph', 'speed', 'hatch', 'times', 'lens']),
+      expect.arrayContaining(['pwr', 'pw', 'freq', 'scan', 'len', 'wid', 'oR', 'iR', 'ph', 'speed', 'hatch', 'times', 'lens']),
     );
+    // Non pertinents pour archiver un réglage : retirés
+    for (const k of ['air', 'paramNo', 'paramName']) expect(keys).not.toContain(k);
   });
 
-  it('le préréglage Soudure (n° 9) correspond à l\'écran réel', () => {
-    const v = valeursPreset(cfg, 9);
-    expect(v).toMatchObject({ pwr: 85, freq: 20, pw: 500, scan: 4, speed: 20, hatch: 10 });
+  it('les valeurs par défaut correspondent à l\'écran réel (photo)', () => {
+    expect(valeursParDefaut(cfg)).toMatchObject({ pwr: 85, freq: 20, pw: 500, scan: 4, speed: 20, hatch: 10, lens: '254' });
   });
 
   it('ne garde que les champs visibles selon le motif', () => {
@@ -55,7 +55,7 @@ describe('config Lazzeko 300 W', () => {
   });
 
   it('calcule les indicateurs comme le simulateur', () => {
-    const v = valeursPreset(cfg, 9);
+    const v = valeursParDefaut(cfg);
     const m = modeleLaser(cfg, v);
     expect(m.P).toBeCloseTo(255); // 300 W × 85 %
     expect(m.E).toBeCloseTo(12.75); // 255 W / 20 kHz
@@ -67,7 +67,7 @@ describe('config Lazzeko 300 W', () => {
 describe('validation du schéma', () => {
   it('rejette une config incohérente', () => {
     const casse = structuredClone(brut);
-    casse.pages[0].sections[1].champs[0].defaut = 999;
+    casse.pages[0].sections[0].champs[0].defaut = 999;
     expect(() => chargerConfig(casse)).toThrow(/Limites incohérentes/);
   });
 });

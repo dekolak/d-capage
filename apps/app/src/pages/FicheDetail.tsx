@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur, Etoiles, Galerie, Indicateurs } from '../components/Composants';
 import { Miroir } from '../components/Miroir';
-import { valeursParDefaut } from '@decapage/machine-kit';
+import { completer } from '@decapage/machine-kit';
 import { api, chargerVersion, Fiche, Version } from '../lib/api';
 import { date } from '../lib/util';
 
@@ -53,7 +53,7 @@ export default function FicheDetail() {
       <Galerie photos={photos} />
 
       <h2>Réglages</h2>
-      <Miroir config={version.config} valeurs={{ ...valeursParDefaut(version.config), ...f.valeurs }} />
+      <Miroir config={version.config} valeurs={completer(version.config, f.valeurs)} />
       <Indicateurs liste={f.indicateurs} />
 
       {f.commentaire && (<><h2>Commentaire</h2><p className="commentaire">{f.commentaire}</p></>)}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { technologie, validerValeurs, valeursParDefaut, Valeurs } from '@decapage/machine-kit';
+import { completer, technologie, validerValeurs, Valeurs } from '@decapage/machine-kit';
 import { ChoixTags, Chargement, Erreur, Etoiles, Galerie, Indicateurs, LIBELLE_PHOTO } from '../components/Composants';
 import { Miroir } from '../components/Miroir';
 import { api, chargerVersion, envoyerPhoto, Fiche, GroupeTag, MaMachine, PhotoRef, Tag, TypePhoto, Version } from '../lib/api';
@@ -49,7 +49,7 @@ export default function FicheEditeur() {
         setNoteInitiale(f.note.maNote);
         ajouterTagsInconnus(gs, f.tags);
         setB({
-          userMachineId: f.machine.userMachineId ?? '', valeurs: { ...valeursParDefaut(v.config), ...f.valeurs },
+          userMachineId: f.machine.userMachineId ?? '', valeurs: completer(v.config, f.valeurs),
           tagIds: f.tags.map((t) => t.id), titre: f.titre, commentaire: f.commentaire ?? '',
           partage: f.visibilite === 'PARTAGEE', note: f.note.maNote, etape: 1,
         });
@@ -88,7 +88,7 @@ export default function FicheEditeur() {
     chargerVersion(machine.version.id)
       .then((v) => {
         setVersion(v);
-        setB((x) => ({ ...x, valeurs: { ...valeursParDefaut(v.config), ...(x.valeurs ?? {}) } }));
+        setB((x) => ({ ...x, valeurs: completer(v.config, x.valeurs) }));
       })
       .catch(setErr);
   }, [machine?.version?.id, modif]);

@@ -69,7 +69,7 @@ describe('Parcours complet', () => {
     const r = await http.post('/api/fiches').set(auth(alice)).send({
       userMachineId: machineAlice,
       titre: 'Rouille sur acier',
-      valeurs: { pwr: 85, freq: 20, pw: 500, scan: 2, oR: 10, iR: 2, speed: 20, lens: '254', air: true },
+      valeurs: { pwr: 85, freq: 20, pw: 500, scan: 2, oR: 10, iR: 2, speed: 20, lens: '254' },
       tagIds: [tagAcier, tagRouille],
       visibilite: 'PARTAGEE',
       note: 4,
