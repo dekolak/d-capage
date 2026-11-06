@@ -90,7 +90,7 @@ export default function AdminFiches() {
                       <div className="muted petit">{f.machine.nom} · {date(f.createdAt)}</div>
                       <NoteResume moyenne={f.note.moyenne} nombre={f.note.nombre} />
                       {f.masquee && <span className="badge-masquee">Masquée</span>}
-                      {f.accordPhotos && f.photos.length > 0 && <span className="badge-accord">📷 Photos utilisables</span>}
+                      {f.auteurAdmin?.accordPhotosMarketing && f.photos.length > 0 && <span className="badge-accord">📷 Photos utilisables</span>}
                     </div>
                   </Link>
                   <button type="button" className="btn petit" onClick={() => basculer(f)}>{f.masquee ? 'Réafficher' : 'Masquer'}</button>

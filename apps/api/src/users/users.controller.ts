@@ -1,12 +1,13 @@
 import { Body, Controller, ForbiddenException, Get, Param, Patch, Post } from '@nestjs/common';
 import { Role } from '@prisma/client';
-import { AutoriseCleApi, Moi, Principal, Roles } from '../auth/decorators';
-import { ChangerMotDePasseDto, CreerUserDto, ModifierUserDto } from './users.dto';
+import { AutoriseCleApi, Moi, Principal, Roles, SansConditions } from '../auth/decorators';
+import { ParametresService } from '../parametres/parametres.service';
+import { AccepterConditionsDto, ChangerMotDePasseDto, CreerUserDto, ModifierUserDto, PreferencesDto } from './users.dto';
 import { UsersService } from './users.service';
 
 @Controller()
 export class UsersController {
-  constructor(private users: UsersService) {}
+  constructor(private users: UsersService, private parametres: ParametresService) {}
 
   /** Création d'un compte : admin connecté ou clé API (X-Api-Key). */
   @Post('users')
@@ -37,11 +38,31 @@ export class UsersController {
   }
 
   @Get('moi')
-  moi(@Moi() moi: Principal) {
-    return this.users.trouver(moi.id);
+  @SansConditions()
+  async moi(@Moi() moi: Principal) {
+    const u = await this.users.trouver(moi.id);
+    const courante = await this.parametres.versionConditions();
+    return { ...u, conditionsAJour: u.role === 'ADMIN' || (u.conditionsVersion ?? 0) >= courante };
+  }
+
+  /** Accepter les conditions (partage communautaire) + accord facultatif photos. */
+  @Post('moi/conditions')
+  @SansConditions()
+  async accepter(@Moi() moi: Principal, @Body() dto: AccepterConditionsDto) {
+    await this.users.accepterConditions(moi.id, dto.version, await this.parametres.versionConditions(), dto.accordPhotosMarketing);
+    return this.moi(moi);
+  }
+
+  /** Accord photos (réutilisation par Lazzeko), modifiable à tout moment. */
+  @Patch('moi/preferences')
+  @SansConditions()
+  async preferences(@Moi() moi: Principal, @Body() dto: PreferencesDto) {
+    await this.users.preferences(moi.id, dto.accordPhotosMarketing);
+    return this.moi(moi);
   }
 
   @Post('moi/mot-de-passe')
+  @SansConditions()
   changerMotDePasse(@Moi() moi: Principal, @Body() dto: ChangerMotDePasseDto) {
     return this.users.changerMotDePasse(moi.id, dto.ancien, dto.nouveau);
   }

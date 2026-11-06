@@ -16,6 +16,9 @@ export class ErreurApi extends Error {
 
 let surDeconnexion: () => void = () => {};
 export const onDeconnexion = (f: () => void) => (surDeconnexion = f);
+let surConditions: () => void = () => {};
+/** Appelé quand l'API exige d'accepter (de nouveau) les conditions d'utilisation. */
+export const onConditions = (f: () => void) => (surConditions = f);
 
 export async function api<T = unknown>(chemin: string, opts: RequestInit & { json?: unknown } = {}): Promise<T> {
   const headers = new Headers(opts.headers);
@@ -33,6 +36,7 @@ export async function api<T = unknown>(chemin: string, opts: RequestInit & { jso
   }
   if (!r.ok) {
     const e = await r.json().catch(() => ({}));
+    if (r.status === 403 && e.code === 'CONDITIONS_A_ACCEPTER') surConditions();
     const msg = Array.isArray(e.message) ? e.message.join(', ') : e.message || `Erreur ${r.status}`;
     throw new ErreurApi(r.status, msg, e.erreurs);
   }
@@ -41,7 +45,10 @@ export async function api<T = unknown>(chemin: string, opts: RequestInit & { jso
 }
 
 // ---------- types renvoyés par l'API ----------
-export interface Moi { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER' }
+export interface Moi {
+  id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER';
+  conditionsAJour: boolean; conditionsVersion: number | null; accordPhotosMarketing: boolean;
+}
 export interface Variante { id: string; slug: string; nom: string; version: { id: string; numero: number }; imageUrl: string | null; imagePropre: boolean }
 export interface Fabricant { id: string; nom: string; modeles: { id: string; nom: string; technologie: string; imageUrl: string | null; variantes: Variante[] }[] }
 export interface MaMachine {
@@ -56,9 +63,8 @@ export interface Fiche {
   id: string; titre: string; commentaire: string | null; valeurs: Valeurs; visibilite: 'PRIVEE' | 'PARTAGEE';
   createdAt: string; estAuteur: boolean; auteur: string; masquee: boolean;
   /** Présent uniquement pour les admins. */
-  auteurAdmin?: { id: string; identifiant: string; nom: string | null };
+  auteurAdmin?: { id: string; identifiant: string; nom: string | null; accordPhotosMarketing: boolean };
   machine: { userMachineId: string | null; surnom: string | null; varianteId: string; modeleId: string; nom: string; varianteNom: string; imageUrl: string | null };
-  accordPhotos: boolean;
   version: { id: string; numero: number }; tags: Tag[]; photos: PhotoRef[];
   note: { moyenne: number | null; nombre: number; maNote: number | null };
   parent: { id: string; titre: string } | null; nbCopies: number; indicateurs: Indicateur[];

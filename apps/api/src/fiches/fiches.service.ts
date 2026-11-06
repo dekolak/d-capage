@@ -8,7 +8,7 @@ import { WebhooksService } from '../webhooks/webhooks.service';
 import { CreerFicheDto, EvaluerDto, FiltresDto, ModifierFicheDto } from './fiches.dto';
 
 const INCLUDE = {
-  user: { select: { id: true, identifiant: true, nom: true } },
+  user: { select: { id: true, identifiant: true, nom: true, accordPhotosMarketing: true } },
   userMachine: { select: { id: true, surnom: true } },
   versionInterface: {
     select: {
@@ -114,9 +114,8 @@ export class FichesService {
           estAuteur: f.userId === moi.id,
           auteur: f.user.nom || f.user.identifiant,
           masquee: f.masquee,
-          accordPhotos: f.accordPhotos,
           // Réservé aux admins : savoir précisément qui a fait l'enregistrement.
-          ...(moi.role === Role.ADMIN ? { auteurAdmin: { id: f.user.id, identifiant: f.user.identifiant, nom: f.user.nom } } : {}),
+          ...(moi.role === Role.ADMIN ? { auteurAdmin: { id: f.user.id, identifiant: f.user.identifiant, nom: f.user.nom, accordPhotosMarketing: f.user.accordPhotosMarketing } } : {}),
           machine: {
             userMachineId: f.userMachine?.id ?? null,
             surnom: f.userMachine?.surnom ?? null,
@@ -255,7 +254,8 @@ export class FichesService {
         ...this.where(f),
         ...(f.userId ? { userId: f.userId } : {}),
         ...(f.masquee === 'oui' ? { masquee: true } : f.masquee === 'non' ? { masquee: false } : {}),
-        ...(f.photosUtilisables === 'oui' ? { accordPhotos: true, photos: { some: {} } } : {}),
+        // Photos utilisables = l'auteur a donné son accord (dans son compte) et la fiche a des photos.
+        ...(f.photosUtilisables === 'oui' ? { user: { accordPhotosMarketing: true }, photos: { some: {} } } : {}),
       },
       { tri: 'recent', ...f },
       moi,
@@ -349,8 +349,6 @@ export class FichesService {
         valeurs,
         visibilite: dto.visibilite ?? Visibilite.PARTAGEE, // mise en commun par défaut
         parentId: dto.parentId ?? null,
-        accordPhotos: !!dto.accordPhotos,
-        accordPhotosLe: dto.accordPhotos ? new Date() : null,
         tags: { create: tagIds.map((tagId) => ({ tagId })) },
       },
     });
@@ -372,10 +370,6 @@ export class FichesService {
     if (dto.titre !== undefined) data.titre = dto.titre.trim();
     if (dto.commentaire !== undefined) data.commentaire = dto.commentaire.trim() || null;
     if (dto.visibilite) data.visibilite = dto.visibilite;
-    if (dto.accordPhotos !== undefined && dto.accordPhotos !== f.accordPhotos) {
-      data.accordPhotos = dto.accordPhotos;
-      data.accordPhotosLe = dto.accordPhotos ? new Date() : null;
-    }
     // Les valeurs restent validées contre la version d'origine de la fiche.
     if (dto.valeurs) data.valeurs = await this.valider(f.versionInterfaceId, dto.valeurs);
     if (dto.tagIds) {

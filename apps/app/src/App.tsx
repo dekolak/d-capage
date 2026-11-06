@@ -1,6 +1,7 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { Chargement } from './components/Composants';
 import { useAuth } from './lib/auth';
+import Accueil from './pages/Accueil';
 import Admin from './pages/Admin';
 import AdminAvis from './pages/AdminAvis';
 import AdminCatalogue from './pages/AdminCatalogue';
@@ -9,6 +10,7 @@ import AdminWebhooks from './pages/AdminWebhooks';
 import Aide from './pages/Aide';
 import Communaute from './pages/Communaute';
 import Compte from './pages/Compte';
+import Conditions from './pages/Conditions';
 import Connexion from './pages/Connexion';
 import FicheDetail from './pages/FicheDetail';
 import FicheEditeur from './pages/FicheEditeur';
@@ -20,6 +22,7 @@ export default function App() {
   const { moi, pret } = useAuth();
   if (!pret) return <Chargement />;
   if (!moi) return <Connexion />;
+  if (!moi.conditionsAJour) return <Accueil />;
 
   return (
     <>
@@ -33,6 +36,7 @@ export default function App() {
           <Route path="/top" element={<Top />} />
           <Route path="/machines" element={<Machines />} />
           <Route path="/compte" element={<Compte />} />
+          <Route path="/conditions" element={<Conditions />} />
           <Route path="/aide" element={<Aide />} />
           {moi.role === 'ADMIN' && <Route path="/admin" element={<Admin />} />}
           {moi.role === 'ADMIN' && <Route path="/admin/fiches" element={<AdminFiches />} />}

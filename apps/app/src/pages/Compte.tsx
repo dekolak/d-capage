@@ -5,7 +5,8 @@ import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 
 export default function Compte() {
-  const { moi, deconnexion } = useAuth();
+  const { moi, deconnexion, rafraichir } = useAuth();
+  const [accord, setAccord] = useState(!!moi?.accordPhotosMarketing);
   const [ancien, setAncien] = useState('');
   const [nouveau, setNouveau] = useState('');
   const [ok, setOk] = useState(false);
@@ -34,6 +35,31 @@ export default function Compte() {
       <div className="actions">
         <Link to="/machines" className="btn">Mes machines</Link>
         {moi?.role === 'ADMIN' && <Link to="/admin" className="btn">Administration</Link>}
+      </div>
+
+      <h2>Mes photos</h2>
+      <div className="carte">
+        <label className="interrupteur choix-accord" style={{ boxShadow: 'none', padding: 0 }}>
+          <input
+            type="checkbox"
+            checked={accord}
+            onChange={async (e) => {
+              const v = e.target.checked;
+              setAccord(v); // affichage immédiat
+              try {
+                await rafraichir(await api('/moi/preferences', { method: 'PATCH', json: { accordPhotosMarketing: v } }));
+              } catch (x) {
+                setAccord(!v);
+                setErr(x);
+              }
+            }}
+          />
+          <span>
+            J'accepte que Lazzeko réutilise mes photos (site, réseaux sociaux, documentation).
+            <small className="muted"> Facultatif. Vos photos restent partagées avec la communauté dans tous les cas.</small>
+          </span>
+        </label>
+        <Link to="/conditions" className="lien petit">Lire les conditions d'utilisation ›</Link>
       </div>
 
       <h2>Changer de mot de passe</h2>

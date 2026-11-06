@@ -3,8 +3,9 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import { ApiKeysService } from '../api-keys/api-keys.service';
+import { ParametresService } from '../parametres/parametres.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { CLE_API, Principal, PUBLIC, ROLES } from './decorators';
+import { CLE_API, Principal, PUBLIC, ROLES, SANS_CONDITIONS } from './decorators';
 
 /**
  * Garde globale :
@@ -19,6 +20,7 @@ export class AuthGuard implements CanActivate {
     private jwt: JwtService,
     private prisma: PrismaService,
     private cles: ApiKeysService,
+    private parametres: ParametresService,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -43,9 +45,16 @@ export class AuthGuard implements CanActivate {
     } catch {
       throw new UnauthorizedException();
     }
-    const user = await this.prisma.user.findUnique({ where: { id: sub }, select: { id: true, role: true, actif: true } });
+    const user = await this.prisma.user.findUnique({ where: { id: sub }, select: { id: true, role: true, actif: true, conditionsVersion: true } });
     if (!user?.actif) throw new UnauthorizedException();
     req.principal = { type: 'user', id: user.id, role: user.role } satisfies Principal;
+
+    // Le partage communautaire est la condition d'utilisation : rien n'est accessible avant de l'accepter.
+    if (user.role !== Role.ADMIN && !meta<boolean>(SANS_CONDITIONS)) {
+      const courante = await this.parametres.versionConditions();
+      if ((user.conditionsVersion ?? 0) < courante)
+        throw new ForbiddenException({ message: 'Conditions d\'utilisation à accepter', code: 'CONDITIONS_A_ACCEPTER' });
+    }
 
     const roles = meta<Role[]>(ROLES);
     if (roles?.length && !roles.includes(user.role)) throw new ForbiddenException();

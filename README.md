@@ -61,6 +61,9 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 | POST · DELETE | idem, champ multipart `image` (PNG conseillé, 5 Mo max) | admin |
 | GET | `/api/top?varianteId=` (3 meilleurs réglages par tag) | connecté |
 | GET · PATCH | `/api/parametres`, `/api/admin/parametres` `{aideSupport}` | connecté · admin |
+| GET · POST | `/api/conditions` · `/api/moi/conditions` `{version, accordPhotosMarketing?}` | connecté |
+| PATCH | `/api/moi/preferences` `{accordPhotosMarketing}` | connecté |
+| POST | `/api/admin/conditions` `{texte}` (nouvelle version) | admin |
 | POST | `/api/fiches/:id/aide` `{message}` (si `aideSupport` activé) | connecté |
 | GET · PATCH | `/api/admin/aide`, `/api/admin/aide/:id` `{traitee}` | admin **ou clé API** |
 
@@ -68,9 +71,12 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 Administration → **Machines** : envoyer un PNG par modèle (machine entière, fond transparent ou clair, ~800 × 800 px).
 Une variante peut avoir sa propre image, sinon elle reprend celle du modèle. Sans image, l'app affiche une illustration par défaut.
 
-## Accord pour les photos
-À l'enregistrement d'une fiche avec photos, l'auteur peut cocher « J'accepte que Lazzeko utilise mes photos ». Filtre admin : Toutes les fiches → **📷 Photos utilisables**.
-À compléter dans vos conditions d'utilisation / politique de confidentialité (usage des photos, retrait de l'accord).
+## Conditions d'utilisation et accord photos
+- **Première connexion** : écran d'accueil. Le partage communautaire (fiches, réglages, photos, avis visibles par les autres) est **obligatoire** : c'est la contrepartie de l'accès à la communauté. Sans acceptation, l'API répond `403` avec `code: "CONDITIONS_A_ACCEPTER"` (sauf pour les admins).
+- **Réutilisation des photos par Lazzeko** (site, réseaux, documentation) : case **facultative**, réglée une fois dans le compte (Compte → Mes photos), modifiable à tout moment. Filtre admin : Toutes les fiches → **📷 Photos utilisables**.
+- Le texte est modifiable dans Administration → Conditions d'utilisation. **Publier une nouvelle version** oblige chacun à accepter de nouveau. Version et date d'acceptation enregistrées par utilisateur.
+- Le texte de départ est un projet : à faire relire par un juriste.
+- Les photos sont recompressées sur le téléphone avant l'envoi : les métadonnées (dont la position GPS) sont supprimées.
 
 ## Modération et envoi vers une API (IA)
 - Chaque **nouvelle fiche**, **fiche modifiée**, **nouvel avis** ou **avis modifié** peut être envoyé en `POST` JSON à une ou plusieurs adresses (Administration → *Envoi vers une API*).

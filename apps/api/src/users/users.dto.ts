@@ -1,5 +1,5 @@
 import { Role } from '@prisma/client';
-import { IsBoolean, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Matches, MaxLength, Min, MinLength } from 'class-validator';
 
 export class CreerUserDto {
   @IsString()
@@ -18,6 +18,15 @@ export class ModifierUserDto {
   @IsOptional() @IsEnum(Role) role?: Role;
   @IsOptional() @IsBoolean() actif?: boolean;
   @IsOptional() @IsString() @MinLength(8) @MaxLength(128) motDePasse?: string;
+}
+
+export class AccepterConditionsDto {
+  @IsInt() @Min(1) version!: number;
+  @IsOptional() @IsBoolean() accordPhotosMarketing?: boolean;
+}
+
+export class PreferencesDto {
+  @IsBoolean() accordPhotosMarketing!: boolean;
 }
 
 export class ChangerMotDePasseDto {
