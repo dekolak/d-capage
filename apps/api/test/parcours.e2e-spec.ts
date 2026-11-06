@@ -6,6 +6,8 @@ import 'dotenv/config';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { createHmac } from 'node:crypto';
+import { createServer, Server } from 'node:http';
 import { AppModule } from '../src/app.module';
 
 // Plus petit JPEG valide (1×1)
@@ -132,5 +134,62 @@ describe('Parcours complet', () => {
 
     await http.patch(`/api/admin/fiches/${fiche}`).set(auth(admin)).send({ masquee: false }).expect(200);
     expect((await http.get(`/api/fiches/${fiche}`).set(auth(bob))).status).toBe(200);
+  });
+
+  it('avis : modération par l\'admin ou par une clé API, et envoi des webhooks', async () => {
+    // Récepteur local qui joue le rôle du service de modération externe.
+    const recus: { corps: any; signature: string }[] = [];
+    const srv: Server = createServer((req, res) => {
+      let b = '';
+      req.on('data', (c) => (b += c)).on('end', () => {
+        recus.push({ corps: JSON.parse(b), signature: String(req.headers['x-decapage-signature']) });
+        res.end('ok');
+      });
+    });
+    await new Promise<void>((ok) => srv.listen(0, ok));
+    const port = (srv.address() as any).port;
+    const wh = (await http.post('/api/admin/webhooks').set(auth(admin)).send({ nom: 'IA', url: `http://127.0.0.1:${port}/`, evenements: ['avis.publie', 'avis.modifie', 'fiche.creee'] })).body;
+    expect(wh.secret).toMatch(/^whsec_/);
+
+    // un nouvel avis → envoyé, signé
+    const carol = `carol-${id}`;
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'ia' })).body.cle;
+    await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: carol, motDePasse: 'motdepasse1' }).expect(201);
+    const tc = (await http.post('/api/auth/connexion').send({ identifiant: carol, motDePasse: 'motdepasse1' })).body.jeton;
+    await http.post(`/api/fiches/${fiche}/evaluation`).set(auth(tc)).send({ note: 1, avis: 'Avis pas top du tout' }).expect(201);
+    for (let i = 0; i < 40 && !recus.some((r) => r.corps.evenement === 'avis.publie'); i++) await new Promise((r) => setTimeout(r, 100));
+    const env = recus.find((r) => r.corps.evenement === 'avis.publie')!;
+    expect(env.corps.avis.texte).toBe('Avis pas top du tout');
+    const attendu = 'sha256=' + createHmac('sha256', wh.secret).update(JSON.stringify(env.corps)).digest('hex');
+    expect(env.signature).toBe(attendu);
+    const avisId = env.corps.avis.id;
+
+    const avant = (await http.get(`/api/fiches/${fiche}`).set(auth(bob))).body;
+    expect(avant.evaluations.some((e: any) => e.id === avisId)).toBe(true);
+
+    // la « IA » masque l'avis via la clé API
+    await http.patch(`/api/admin/avis/${avisId}`).set('X-Api-Key', cle).send({ statut: 'MASQUE', raison: 'hors sujet' }).expect(200);
+    const apres = (await http.get(`/api/fiches/${fiche}`).set(auth(bob))).body;
+    expect(apres.evaluations.some((e: any) => e.id === avisId)).toBe(false);
+    expect(apres.note.nombre).toBe(avant.note.nombre - 1); // exclu de la moyenne
+    // l'auteur de l'avis le voit encore, avec son statut
+    const pourCarol = (await http.get(`/api/fiches/${fiche}`).set(auth(tc))).body.evaluations.find((e: any) => e.estMoi);
+    expect(pourCarol).toMatchObject({ statut: 'MASQUE', moderationRaison: 'hors sujet' });
+    // le modifier ne le fait pas réapparaître
+    await http.post(`/api/fiches/${fiche}/evaluation`).set(auth(tc)).send({ note: 2, avis: 'Je corrige' }).expect(201);
+    expect((await http.get(`/api/fiches/${fiche}`).set(auth(bob))).body.evaluations.some((e: any) => e.id === avisId)).toBe(false);
+
+    // liste admin + réaffichage par l'admin ; un utilisateur ne peut pas modérer
+    const liste = (await http.get('/api/admin/avis?statut=MASQUE').set(auth(admin))).body;
+    expect(liste.avis.find((a: any) => a.id === avisId)).toMatchObject({ moderePar: 'auto' });
+    expect((await http.patch(`/api/admin/avis/${avisId}`).set(auth(bob)).send({ statut: 'VISIBLE' })).status).toBe(403);
+    await http.patch(`/api/admin/avis/${avisId}`).set(auth(admin)).send({ statut: 'VISIBLE' }).expect(200);
+    expect((await http.get(`/api/fiches/${fiche}`).set(auth(bob))).body.evaluations.some((e: any) => e.id === avisId)).toBe(true);
+
+    // journal des envois
+    const liv = (await http.get(`/api/admin/webhooks/${wh.id}/livraisons`).set(auth(admin))).body;
+    expect(liv.some((l: any) => l.statut === 'ENVOYE')).toBe(true);
+    await http.delete(`/api/admin/webhooks/${wh.id}`).set(auth(admin)).expect(200);
+    srv.close();
   });
 });

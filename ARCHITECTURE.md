@@ -80,6 +80,16 @@ machines/              configs JSON des machines
 - Photos compressées sur le téléphone (1600 px + miniature 400 px) avant envoi.
 - Brouillon de la fiche en cours conservé localement (hors photos).
 
+## Avis et modération
+- Un avis = une note (1 à 5) + un texte facultatif, **un par personne et par réglage**, modifiable et supprimable. Pas de réponses (choix volontaire : pas de discussions).
+- `Evaluation.statut` : `VISIBLE`, `EN_ATTENTE` (modération préalable), `MASQUE` ; `moderePar` = `admin` ou `auto` (service externe via clé API). Seuls les avis visibles comptent dans la moyenne.
+- Fiches : `masquee` + `moderationRaison` + `moderePar`.
+
+## Webhooks (préparation de la modération par IA)
+- `Webhook` (url, secret, événements) et `WebhookLivraison` (file persistante : statut, tentatives, prochain essai, dernier code / erreur).
+- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`. Envoi en arrière-plan, signé HMAC-SHA256, sans jamais bloquer l'utilisateur.
+- Retour de la modération : `PATCH /api/admin/avis/:id` et `PATCH /api/admin/fiches/:id`, accessibles avec une clé API.
+
 ## Plan
 1. ✅ Base : monorepo, machine-kit, config Lazzeko 300 W, utilisateurs, connexion, clés API, seed.
 2. ✅ Catalogue + « mes machines » (ajout par l'utilisateur, attribution par l'admin ou clé API).

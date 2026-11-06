@@ -61,7 +61,12 @@ export interface Fiche {
   version: { id: string; numero: number }; tags: Tag[]; photos: PhotoRef[];
   note: { moyenne: number | null; nombre: number; maNote: number | null };
   parent: { id: string; titre: string } | null; nbCopies: number; indicateurs: Indicateur[];
-  evaluations?: { note: number; avis: string | null; date: string; auteur: string; estAuteurFiche: boolean }[];
+  evaluations?: Avis[];
+}
+export type StatutAvis = 'VISIBLE' | 'EN_ATTENTE' | 'MASQUE';
+export interface Avis {
+  id: string; note: number; avis: string | null; date: string; auteur: string; estAuteurFiche: boolean;
+  estMoi: boolean; statut: StatutAvis; moderationRaison?: string | null;
 }
 export interface PageFiches { total: number; page: number; parPage: number; fiches: Fiche[] }
 export interface Version { id: string; numero: number; varianteId: string; nomMachine: string; config: ConfigMachine }

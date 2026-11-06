@@ -53,6 +53,22 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 | GET | `/api/communaute?varianteId=&modeleId=&tags=id1,id2&tri=note\|recent` | connecté |
 | POST | `/api/fiches/:id/photos` (multipart `fichier`, `miniature`, `type`) | auteur |
 | GET · PATCH · DELETE | `/api/photos/:id[?taille=min]` | selon visibilité de la fiche |
+| GET | `/api/admin/avis?statut=VISIBLE\|EN_ATTENTE\|MASQUE&q=` | admin **ou clé API** |
+| PATCH | `/api/admin/avis/:id` `{statut, raison?}` | admin **ou clé API** |
+| PATCH | `/api/admin/fiches/:id` `{masquee, raison?}` | admin **ou clé API** |
+| GET · POST · PATCH · DELETE | `/api/admin/webhooks` (+ `/:id/test`, `/:id/livraisons`) | admin |
+
+## Modération et envoi vers une API (IA)
+- Chaque **nouvelle fiche**, **fiche modifiée**, **nouvel avis** ou **avis modifié** peut être envoyé en `POST` JSON à une ou plusieurs adresses (Administration → *Envoi vers une API*).
+- Chaque envoi est signé : en-tête `X-Decapage-Signature: sha256=<HMAC-SHA256(secret, corps)>`, plus `X-Decapage-Evenement` et `X-Decapage-Livraison`.
+- File d'envoi en base : rien n'est perdu au redémarrage, 6 tentatives espacées (jusqu'à 2 h), journal visible dans l'admin.
+- Le corps contient le texte à modérer et l'adresse pour agir (`moderation.url`). Le service répond en appelant, avec une **clé API** :
+```bash
+curl -X PATCH https://app.lazzeko.com/api/admin/avis/<id> -H "X-Api-Key: dk_…" \
+  -H "Content-Type: application/json" -d '{"statut":"MASQUE","raison":"hors sujet"}'
+```
+- `MODERATION_PREALABLE_AVIS=true` : les avis avec texte restent *en attente* jusqu'à validation (`statut: VISIBLE`).
+- Un avis masqué n'est plus visible (sauf par son auteur, qui voit la raison) et ne compte plus dans la moyenne.
 
 Créer un compte et lui attribuer une machine avec une clé API :
 ```bash

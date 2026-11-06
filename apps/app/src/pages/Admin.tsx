@@ -68,6 +68,14 @@ export default function Admin() {
         <span><b>Toutes les fiches</b> : voir qui les a faites, masquer</span>
         <span>›</span>
       </Link>
+      <Link to="/admin/avis" className="bandeau lien-bandeau">
+        <span><b>Avis</b> : masquer ceux qui ne conviennent pas</span>
+        <span>›</span>
+      </Link>
+      <Link to="/admin/webhooks" className="bandeau lien-bandeau">
+        <span><b>Envoi vers une API</b> : fiches et avis (modération IA)</span>
+        <span>›</span>
+      </Link>
 
       <h2>Créer un utilisateur</h2>
       <form className="form" onSubmit={creerUser}>
