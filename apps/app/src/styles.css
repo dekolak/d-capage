@@ -324,3 +324,14 @@ textarea { resize: vertical; }
 @keyframes defile { from { transform: translateX(0); } to { transform: translateX(-300px); } }
 @media (prefers-reduced-motion: reduce) { .anim-defile { animation: none; } }
 .accordeon details { scroll-margin: 16px 0 110px; }
+/* ---------- gros bouton photo ---------- */
+.bouton-photo {
+  display: flex; align-items: center; gap: 14px; min-height: 84px; padding: 14px 18px; border-radius: 18px; cursor: pointer;
+  background: var(--o); color: #fff; box-shadow: 0 6px 18px rgba(241, 90, 33, 0.3); transition: transform 0.08s;
+}
+.bouton-photo:active { transform: scale(0.98); }
+.bouton-photo svg { width: 40px; height: 40px; flex: none; }
+.bp-texte { display: grid; gap: 2px; }
+.bp-texte b { font-size: 21px; font-weight: 800; letter-spacing: -0.01em; text-transform: uppercase; }
+.bp-texte small { font-size: 13px; opacity: 0.92; }
+.bouton-photo.fait { background: var(--carte); color: var(--od); border: 2px solid var(--o); box-shadow: var(--ombre); }
