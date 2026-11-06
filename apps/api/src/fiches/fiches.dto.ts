@@ -1,5 +1,5 @@
-import { Visibilite } from '@prisma/client';
-import { Type } from 'class-transformer';
+import { StatutAvis, Visibilite } from '@prisma/client';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -64,5 +64,19 @@ export class FiltresAdminDto extends FiltresDto {
 
 export class MasquerDto {
   @IsBoolean() masquee!: boolean;
+  @IsOptional() @IsString() @MaxLength(300) raison?: string;
+}
+
+export class ModererAvisDto {
+  @IsEnum(StatutAvis) statut!: StatutAvis;
+  @IsOptional() @IsString() @MaxLength(300) raison?: string;
+}
+
+export class FiltresAvisDto {
+  @IsOptional() @IsEnum(StatutAvis) statut?: StatutAvis;
+  @IsOptional() @IsString() @MaxLength(80) q?: string;
+  @IsOptional() @Transform(({ value }) => value === true || value === 'true') @IsBoolean() avecTexte?: boolean;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) parPage?: number;
 }
 

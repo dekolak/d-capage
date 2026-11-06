@@ -335,3 +335,14 @@ textarea { resize: vertical; }
 .bp-texte b { font-size: 21px; font-weight: 800; letter-spacing: -0.01em; text-transform: uppercase; }
 .bp-texte small { font-size: 13px; opacity: 0.92; }
 .bouton-photo.fait { background: var(--carte); color: var(--od); border: 2px solid var(--o); box-shadow: var(--ombre); }
+/* ---------- avis ---------- */
+.moyenne { font-weight: 650; display: flex; align-items: center; gap: 6px; }
+.avis-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.avis-masque { opacity: 0.6; }
+.statut-avis { font-size: 12px; font-weight: 650; border-radius: 8px; padding: 4px 8px; margin: 6px 0 0; display: inline-block; }
+.statut-avis.en_attente { background: #fff7e0; color: #8a5a00; }
+.statut-avis.masque { background: #fde2e2; color: #9b1c1c; }
+.mon-texte { margin: 0; white-space: pre-wrap; }
+.actions-avis { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.ma-note textarea { min-height: 70px; }
+.ok { color: var(--ok); } .ko { color: var(--ko); } .carte.inactif { opacity: 0.55; }

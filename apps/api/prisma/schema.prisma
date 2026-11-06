@@ -185,6 +185,9 @@ model Fiche {
   /// Masquée par un admin (modération) : invisible pour tous sauf l'auteur et les admins.
   masquee            Boolean          @default(false)
   masqueeLe          DateTime?
+  /// Raison et origine de la modération (« admin », « auto » pour une IA via l'API…).
+  moderationRaison   String?
+  moderePar          String?
   noteMoyenne        Float?
   nbNotes            Int              @default(0)
   /// Fiche d'origine quand on duplique le réglage d'un autre.
@@ -225,7 +228,14 @@ model Photo {
   createdAt DateTime  @default(now())
 }
 
-/// Note 1 à 5 : une par utilisateur et par fiche (l'auteur note aussi sa propre fiche).
+enum StatutAvis {
+  VISIBLE
+  EN_ATTENTE // modération préalable (MODERATION_PREALABLE_AVIS=true) : invisible jusqu'à validation
+  MASQUE
+}
+
+/// Note 1 à 5 + avis : un par utilisateur et par fiche (l'auteur note aussi sa propre fiche).
+/// Pas de réponses : on évite les discussions.
 model Evaluation {
   id        String   @id @default(cuid())
   ficheId   String
@@ -234,8 +244,53 @@ model Evaluation {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   note      Int
   avis      String?
+  statut           StatutAvis @default(VISIBLE)
+  moderationRaison String?
+  moderePar        String?
+  modereLe         DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([ficheId, userId])
+  @@index([statut, updatedAt])
+}
+
+// ---------- Webhooks (envoi des publications vers un service externe, ex. modération IA) ----------
+
+/// Un abonné externe : reçoit en POST JSON signé chaque événement choisi.
+model Webhook {
+  id         String             @id @default(cuid())
+  nom        String
+  url        String
+  /// Secret de signature HMAC (en clair : nécessaire pour signer).
+  secret     String
+  /// Événements : fiche.creee, fiche.modifiee, avis.publie, avis.modifie (vide = tous).
+  evenements String[]
+  actif      Boolean            @default(true)
+  createdAt  DateTime           @default(now())
+  livraisons WebhookLivraison[]
+}
+
+enum StatutLivraison {
+  EN_ATTENTE
+  ENVOYE
+  ECHEC
+}
+
+/// File d'envoi persistante : rien n'est perdu si le serveur redémarre ; nouvelles tentatives espacées.
+model WebhookLivraison {
+  id             String          @id @default(cuid())
+  webhookId      String
+  webhook        Webhook         @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  evenement      String
+  charge         Json
+  statut         StatutLivraison @default(EN_ATTENTE)
+  tentatives     Int             @default(0)
+  prochainEssai  DateTime        @default(now())
+  dernierCode    Int?
+  derniereErreur String?
+  createdAt      DateTime        @default(now())
+  envoyeLe       DateTime?
+
+  @@index([statut, prochainEssai])
 }

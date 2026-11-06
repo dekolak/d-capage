@@ -13,6 +13,7 @@ import { HealthController } from './health.controller';
 import { MachinesModule } from './machines/machines.module';
 import { PhotosModule } from './photos/photos.module';
 import { TagsModule } from './tags/tags.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 
@@ -30,6 +31,7 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     CatalogueModule,
     MachinesModule,
     TagsModule,
+    WebhooksModule,
     FichesModule,
     PhotosModule,
   ],
