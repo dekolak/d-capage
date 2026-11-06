@@ -190,12 +190,22 @@ export default function FicheEditeur() {
     );
 
   const e = b.etape;
-  const blocPhotos = (type: TypePhoto, conseil: string) => (
+  const NOM_PHOTO: Record<TypePhoto, string> = { AVANT: 'Photo avant', APRES: 'Photo après', INTERFACE: 'Photo écran', AUTRE: 'Photo' };
+  const blocPhotos = (type: TypePhoto, conseil: string) => {
+    const nb = photos.filter((p) => p.type === type).length + existantes.filter((p) => p.type === type).length;
+    return (
     <section>
       <p className="muted">{conseil}</p>
       <div className="boutons-photo">
-        <label className="btn prim large">
-          📷 Prendre une photo
+        <label className={'bouton-photo' + (nb ? ' fait' : '')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
+            <circle cx="12" cy="13.5" r="3.8" />
+          </svg>
+          <span className="bp-texte">
+            <b>{nb ? `+ ${NOM_PHOTO[type]}` : NOM_PHOTO[type]}</b>
+            <small>{nb ? `${nb} photo${nb > 1 ? 's' : ''} ✓ · toucher pour en ajouter` : 'Toucher pour prendre la photo'}</small>
+          </span>
           <input type="file" accept="image/*" capture="environment" hidden onChange={(ev) => ajouterPhoto(type, ev.target.files)} />
         </label>
         <label className="btn">
@@ -216,7 +226,8 @@ export default function FicheEditeur() {
         )}
       </div>
     </section>
-  );
+    );
+  };
 
   return (
     <div className="page editeur">
