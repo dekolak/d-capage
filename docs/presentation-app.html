@@ -132,6 +132,28 @@
 #lzp .prog{height:3px;background:#ebebef;border-radius:2px;margin-top:14px;overflow:hidden}
 #lzp .prog i{display:block;height:100%;width:0;background:var(--o)}
 #lzp .cta{display:inline-flex;margin-top:18px;background:var(--o);color:#fff;font-weight:700;text-decoration:none;padding:12px 20px;border-radius:12px;box-shadow:0 6px 16px rgba(241,90,33,.3)}
+/* bulles d'annotation, légendes, avis */
+#lzp .bulle{position:absolute;left:14px;right:14px;z-index:6;background:#1c1d21;color:#fff;font-size:11px;font-weight:600;line-height:1.3;padding:8px 10px;border-radius:12px;box-shadow:0 8px 20px rgba(20,20,30,.25);opacity:0;transform:translateY(8px) scale(.97);transition:opacity .35s,transform .35s;display:flex;gap:7px;align-items:flex-start}
+#lzp .bulle.v{opacity:1;transform:none}
+#lzp .bulle:before{content:"";flex:none;width:8px;height:8px;margin-top:3px;border-radius:50%;background:var(--o)}
+#lzp .bulle:after{content:"";position:absolute;top:-6px;left:34px;border:6px solid transparent;border-top:0;border-bottom-color:#1c1d21}
+#lzp .bulle.bas:after{top:auto;bottom:-6px;border-bottom:0;border-top:6px solid #1c1d21}
+#lzp .vignette{display:grid;gap:3px;justify-items:center}
+#lzp .leg{font-size:8.5px;font-weight:700;color:var(--od);background:var(--od2);border-radius:99px;padding:1px 7px}
+#lzp .cite{display:block;font-size:9px;color:#4b4e58;font-style:italic;margin-top:2px}
+#lzp .comm{min-height:44px;border:1px solid #d4d5db;border-radius:10px;background:#fff;font-size:10.5px;padding:7px 9px;margin-top:4px;line-height:1.35}
+#lzp .comm.f{border-color:var(--o);box-shadow:0 0 0 3px rgba(241,90,33,.18)}
+#lzp .comm u{text-decoration:none;border-right:1.5px solid var(--o);animation:lzcur .8s steps(2) infinite}
+@keyframes lzcur{50%{border-color:transparent}}
+#lzp .duo{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0}
+#lzp .duo div{height:74px;border-radius:10px;position:relative}
+#lzp .duo span{position:absolute;left:5px;bottom:5px;font-size:8px;font-weight:800;color:#fff;background:rgba(20,20,30,.55);border-radius:99px;padding:1px 6px;text-transform:uppercase}
+#lzp .avis{background:#fff;border-radius:10px;padding:6px 8px;margin-bottom:5px;box-shadow:0 1px 6px rgba(20,20,30,.06);font-size:9.5px}
+#lzp .avis b{font-size:10px}
+#lzp .avis p{margin:2px 0 0;color:#3f414a;font-size:9.5px}
+#lzp .moy{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700}
+#lzp .ex{position:absolute;top:20px;right:24px;font-size:8px;font-weight:700;color:var(--g);background:#ebebef;border-radius:99px;padding:1px 6px;z-index:3}
+#lzp .note-ex{text-align:center;font-size:11px;color:var(--g);margin-top:10px}
 @media (max-width:800px){
  #lzp .scene{grid-template-columns:1fr;gap:20px;min-height:0}
  #lzp .txt{text-align:center}#lzp .txt p{margin:0 auto}#lzp .txt ul{justify-items:center}#lzp .txt h2{font-size:26px}
@@ -152,6 +174,7 @@
   <button type="button" id="lzpSuiv" aria-label="Étape suivante">›</button>
   <div class="points" id="lzpPoints"></div>
 </div>
+<p class="note-ex">Écrans, réglages et avis présentés à titre d'exemple.</p>
 
 <script>
 (function(){
@@ -172,9 +195,13 @@ function nav(a){var n=['Mes fiches','Nouvelle','Communauté','Aide','Compte'];re
 function etapes(o){var n=['Machine','Surface','Avant','Réglages','Écran','Résultat'];return '<div class="etapes">'+n.map(function(x,i){return '<span class="'+(i<o?'f':i===o?'o':'')+'"><b>'+(i+1)+'</b>'+x+'</span>'}).join('')+'</div>'}
 function barre(t){return '<div class="barre"><span>‹ Retour</span><span class="p">'+(t||'Suivant ›')+'</span></div>'}
 function cadre(contenu,a,extra){return '<div class="haut"></div><div class="contenu">'+contenu+'</div>'+(extra||'')+nav(a)+'<div class="doigt"></div><div class="flash"></div>'}
-function fiche(t,tags,n,c){return '<div class="carte fiche pop"><div class="vg '+(c||'')+'"></div><div><b>'+t+'</b><span class="muted">Lazzeko 300 W</span><div class="tags">'+tags.map(function(x){return '<span class="tg">'+x+'</span>'}).join('')+'</div><span class="st">'+'★'.repeat(n)+'<em>'+'★'.repeat(5-n)+'</em></span></div></div>'}
-function photo(nom){return '<div class="bphoto" id="bp">'+CAM+'<div><b>'+nom+'</b><small id="bps">Toucher pour prendre la photo</small></div></div><div class="btnl">Choisir dans la galerie</div><div class="galerie"></div>'}
-function prendre(nom,grad,ms){taper('#bp',ms,function(){q('.flash').classList.add('go');apres(350,function(){var g=q('.galerie');g.innerHTML='<div class="thumb pop" style="background:'+grad+'"></div>';apres(30,function(){voir('.galerie .thumb')});var b=q('#bp');b.classList.add('ok');b.querySelector('b').textContent='+ '+nom;q('#bps').textContent='1 photo ✓ · toucher pour en ajouter'})})}
+function fiche(t,tags,n,c,cite){return '<div class="carte fiche pop"><div class="vg '+(c||'')+'"></div><div><b>'+t+'</b><span class="muted">Lazzeko 300 W</span><div class="tags">'+tags.map(function(x){return '<span class="tg">'+x+'</span>'}).join('')+'</div><span class="st">'+'★'.repeat(n)+'<em>'+'★'.repeat(5-n)+'</em></span>'+(cite?'<span class="cite">« '+cite+' »</span>':'')+'</div></div>'}
+function photo(nom,court){return '<div class="bphoto" id="bp">'+CAM+'<div><b>'+nom+'</b><small id="bps">Toucher pour prendre la photo</small></div></div>'+(court?'':'<div class="btnl">Choisir dans la galerie</div>')+'<div class="galerie"></div>'}
+/* bulle d'explication posée sur l'écran (top en px depuis le haut de l'écran) */
+function bulle(txt,top,ms,bas){apres(ms,function(){E.insertAdjacentHTML('beforeend','<div class="bulle'+(bas?' bas':'')+'" style="top:'+top+'px">'+txt+'</div>');var b=E.lastChild;apres(30,function(){b.classList.add('v')})})}
+/* texte tapé lettre par lettre */
+function taperTexte(sel,txt,ms,f){apres(ms,function(){var c=q(sel);if(!c)return;c.classList.add('f');var i=0;(function g(){c.innerHTML=txt.slice(0,++i)+'<u></u>';if(i<txt.length)apres(28,g);else{c.innerHTML=txt;c.classList.remove('f');if(f)f()}})()})}
+function prendre(nom,grad,ms,leg){taper('#bp',ms,function(){q('.flash').classList.add('go');apres(350,function(){var g=q('.galerie');g.innerHTML='<div class="vignette"><div class="thumb pop" style="background:'+grad+'"></div>'+(leg?'<span class="leg">'+leg+'</span>':'')+'</div>';apres(30,function(){voir('.galerie .thumb')});var b=q('#bp');b.classList.add('ok');b.querySelector('b').textContent='+ '+nom;q('#bps').textContent='1 photo ✓ · toucher pour en ajouter'})})}
 
 var SCENES=[
 {d:5200,k:'Lazzeko',t:'Réglages décapage',p:'L\'app qui garde la mémoire de vos réglages laser : enregistrez, retrouvez et comparez ce qui marche vraiment.',l:['Sur votre téléphone, sur le chantier','Pensée pour le nettoyeur laser pulsé 300 W','Les réglages de chacun profitent à tous'],
@@ -187,24 +214,33 @@ var SCENES=[
  e:function(){return cadre(etapes(1)+'<div class="h1" style="font-size:16px">Surface décapée</div><div class="carte"><div class="lbl" style="margin-top:2px">Matériau</div><div class="sel" id="t1">+ Ajouter…</div><div class="chips" id="c1"></div><div class="lbl">À enlever</div><div class="sel" id="t2">+ Ajouter…</div><div class="chips" id="c2"></div><div class="lbl">Application</div><div class="sel" id="t3">Choisir…</div><div class="chips" id="c3"></div></div>',1,barre())},
  a:function(){function puce(z,n){q(z).insertAdjacentHTML('beforeend','<span class="chip pop">'+n+' ×</span>');apres(30,function(){q(z).lastChild.classList.add('v')})}
   taper('#t1',300,function(){puce('#c1','Acier')});taper('#t2',1600,function(){puce('#c2','Rouille')});taper('#t2',2700,function(){puce('#c2','Peinture')});taper('#t3',3800,function(){puce('#c3','Dérouillage')})}},
-{d:4600,k:'Étape 3',t:'Photo avant',p:'Un gros bouton, une photo : l\'app la compresse toute seule pour l\'envoyer même avec peu de réseau.',l:['Plusieurs photos possibles','Ou depuis la galerie du téléphone'],
+{d:5600,k:'Étape 3',t:'Photo avant',p:'Un gros bouton, une photo : l\'app la compresse toute seule pour l\'envoyer même avec peu de réseau.',l:['Photo du support avant décapage','Plusieurs photos possibles, ou depuis la galerie'],
  e:function(){return cadre(etapes(2)+'<div class="h1" style="font-size:16px">Photo avant</div><div class="muted">La surface avant le décapage.</div>'+photo('Photo avant'),1,barre())},
- a:function(){prendre('Photo avant','linear-gradient(135deg,#6d4c41,#a1887f 60%,#8d6e63)',500)}},
+ a:function(){prendre('Photo avant','linear-gradient(135deg,#6d4c41,#a1887f 60%,#8d6e63)',500,'Avant');bulle('Photo du support avant décapage : rouille, peinture, état de départ.',372,1700)}},
 {d:7600,k:'Étape 4',t:'Recopiez l\'écran de la machine',p:'Le « miroir » reprend exactement l\'écran de la Lazzeko : mêmes réglages, même ordre. Touchez une valeur, ajustez, suivant.',l:['Curseur et boutons − / +, ou clavier','Les champs changent selon le motif de balayage','Énergie, crête et écart calculés automatiquement'],
  e:function(){return cadre(etapes(3)+'<div class="mir"><div class="logo">LAZZEKO</div><div class="mc"><div class="ml">Puis. laser (%)<span class="pv" id="pw">85</span></div><div class="ml">Larg. imp. (ns)<span class="pv">500</span></div><div class="ml">Fréq. (kHz)<span class="pv" id="fq">20</span></div></div><div class="mc d"><div><div class="ml">Type de balayage<span class="pv sc"><svg width="30" height="18" viewBox="0 0 56 36" fill="none" stroke="#fff" stroke-linecap="round"><rect x="10" y="3" width="36" height="30" stroke-width="2.4"/><path d="M18 4v26M10 13h36" stroke-width="2.4"/></svg></span></div><div class="ml">Longueur (mm)<span class="pv">30</span></div></div><div><div class="ml">Vit. galvo (m/s)<span class="pv">20</span></div><div class="ml">Esp. rempl. (mm)<span class="pv">10</span></div></div></div></div><div class="indic"><div><small>Énergie / imp.</small><b id="en">12.75 mJ</b></div><div><small>Puissance moy.</small><b id="pm">255 W</b></div></div>',1,barre()+'<div class="feuille" id="fe"><b>Puis. laser (%)</b><p>Fixe l\'énergie de chaque impulsion.</p><div class="ctl"><span>−</span><div class="val" id="vv">85</div><span>+</span></div><div class="curseur"><i id="ci"></i><u id="cu"></u></div><div class="bt"><span>‹ Préc.</span><span class="p" id="sv">Suivant ›</span></div></div>')},
  a:function(){taper('#pw',400,function(c){c.classList.add('sel2');q('#fe').classList.add('up')});
   apres(1800,function(){var v=85,f=function(){v--;q('#vv').textContent=v;q('#pw').textContent=v;q('#ci').style.width=v+'%';q('#cu').style.left='calc('+v+'% - 8px)';q('#en').textContent=(300*v/100/20).toFixed(2)+' mJ';q('#pm').textContent=Math.round(300*v/100)+' W';if(v>70)apres(70,f)};f()});
   taper('#sv',3600,function(){q('#pw').classList.remove('sel2');q('#fe').classList.remove('up')});
   taper('#fq',5200,function(c){c.classList.add('sel2');apres(600,function(){c.classList.remove('sel2')})})}},
-{d:4600,k:'Étape 5',t:'Photo de l\'écran',p:'Une photo de l\'écran de réglage sert de preuve : on vérifie d\'un coup d\'œil que rien n\'a été mal recopié.',l:['Gardée avec la fiche','Visible par la communauté'],
+{d:5600,k:'Étape 5',t:'Photo de l\'écran',p:'Une photo de l\'écran de réglage sert de preuve : on vérifie d\'un coup d\'œil que rien n\'a été mal recopié.',l:['Photo d\'écran pour mémoire','Gardée avec la fiche, visible par la communauté'],
  e:function(){return cadre(etapes(4)+'<div class="h1" style="font-size:16px">Photo de l\'écran machine</div><div class="muted">Elle sert de preuve et de vérification.</div>'+photo('Photo écran'),1,barre())},
- a:function(){prendre('Photo écran','linear-gradient(135deg,#cfd8e8,#e2e8f3 50%,#5a6b8e)',500)}},
-{d:6200,k:'Étape 6',t:'Photo après et note',p:'La photo du résultat, une note de 1 à 5 étoiles, un commentaire : la fiche est enregistrée.',l:['Le brouillon est gardé si vous fermez l\'app','Reprise là où vous en étiez'],
- e:function(){return cadre(etapes(5)+'<div class="h1" style="font-size:16px">Résultat</div><div class="galerie" style="margin-top:0"><div class="thumb" style="background:linear-gradient(135deg,#90a4ae,#eceff1)"></div></div><div class="lbl">Votre note</div><div class="etoiles" id="et"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></div><div class="lbl">Titre</div><div class="champ">Acier · Rouille</div>',1,barre('Enregistrer')+'<div class="toast" id="to">✓ Fiche enregistrée</div>')},
- a:function(){var et=E.querySelectorAll('#et i');taper('#et i:nth-child(5)',400,function(){et.forEach(function(x,i){apres(i*120,function(){x.classList.add('on')})})});taper('.barre .p',2600,function(){q('#to').classList.add('v')})}},
-{d:6400,k:'Communauté',t:'Profitez des réglages des autres',p:'Tous les réglages sont mis en commun. Par défaut, vous voyez les meilleurs : 4 étoiles et plus, pour votre machine.',l:['Filtres matériau, à enlever, application','Notez un réglage après l\'avoir testé','« Dupliquer » pour partir d\'un bon réglage'],
- e:function(){return cadre('<div class="h1">Communauté</div><div class="seg"><span class="on2">★ 4 et plus</span><span>Tous</span></div>'+fiche('Rouille sur acier',['Acier','Rouille'],5,'c')+fiche('Peinture sur alu',['Aluminium','Peinture'],5,'b')+fiche('Oxyde inox',['Inox','Oxyde'],4)+'<div class="barre" style="position:static;margin-top:6px;grid-template-columns:1fr;background:none;box-shadow:none;padding:0"><span class="p pop" id="du">Dupliquer ce réglage</span></div>',2)},
- a:function(){E.querySelectorAll('.fiche').forEach(function(x,i){apres(250+i*300,function(){x.classList.add('v')})});apres(1600,function(){voir('#du')});taper('#du',2600)}},
+ a:function(){prendre('Photo écran','linear-gradient(135deg,#cfd8e8,#e2e8f3 50%,#5a6b8e)',500,'Écran');bulle('Photo de l\'écran pour mémoire : on retrouve les réglages exacts, même des mois après.',372,1700)}},
+{d:10500,k:'Étape 6',t:'Photo après, note et commentaire',p:'La photo du produit décapé, une note de 1 à 5 étoiles et quelques mots sur le résultat : c\'est ce qui rend le réglage utile aux autres.',l:['Photo du produit décapé','Notez honnêtement : les 4 étoiles et plus sont mis en avant','Le brouillon est gardé si vous fermez l\'app'],
+ e:function(){return cadre(etapes(5)+'<div class="h1" style="font-size:16px;margin-bottom:4px">Résultat</div>'+photo('Photo après',true)+'<div class="lbl">Votre note</div><div class="etoiles" id="et" style="margin:0"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></div><div class="lbl" style="margin-top:2px">Commentaire</div><div class="comm" id="cm"></div>',1,barre('Enregistrer')+'<div class="toast" id="to">✓ Fiche enregistrée</div>')},
+ a:function(){prendre('Photo après','linear-gradient(135deg,#90a4ae,#eceff1 55%,#b0bec5)',400,'Produit décapé');bulle('Photo du produit décapé : le résultat, à comparer avec la photo avant.',300,1500);
+  var et=E.querySelectorAll('#et i');taper('#et i:nth-child(5)',3300,function(){E.querySelectorAll('.bulle').forEach(function(x){x.classList.remove('v')});et.forEach(function(x,i){apres(i*120,function(){x.classList.add('on')})})});
+  taper('#cm',4600);taperTexte('#cm','Décapage bien passé : rouille partie en 2 passages, aucune trace de chauffe. Réglage au top !',5300);
+  taper('.barre .p',9000,function(){q('#to').classList.add('v')})}},
+{d:5600,k:'Communauté',t:'Profitez des réglages des autres',p:'Tous les réglages sont mis en commun. Par défaut, vous voyez les meilleurs : 4 étoiles et plus, pour votre machine.',l:['Filtres matériau, à enlever, application','Notez un réglage après l\'avoir testé','« Dupliquer » pour partir d\'un bon réglage'],
+ e:function(){return cadre('<div class="ex">Exemple</div><div class="h1">Communauté</div><div class="seg"><span class="on2">★ 4 et plus</span><span>Tous</span></div>'+fiche('Rouille sur acier',['Acier','Rouille'],5,'c','Réglage au top, 2 passages')+fiche('Peinture sur alu',['Aluminium','Peinture'],5,'b','Propre, sans chauffer la tôle')+fiche('Oxyde inox',['Inox','Oxyde'],4,'','Bon résultat, un peu lent')+'<div class="barre" style="position:static;margin-top:6px;grid-template-columns:1fr;background:none;box-shadow:none;padding:0"><span class="p pop" id="du">Dupliquer ce réglage</span></div>',2)},
+ a:function(){E.querySelectorAll('.fiche').forEach(function(x,i){apres(250+i*300,function(){x.classList.add('v')})});taper('.fiche',2000);apres(2900,function(){voir('#du')});taper('#du',3800)}},
+{d:9500,k:'Les avis',t:'Testé ? Donnez votre avis',p:'Chaque fiche montre l\'avant / après, les réglages et les avis de ceux qui l\'ont essayée. Vous notez à votre tour : les meilleurs réglages remontent tout seuls.',l:['Une note par personne et par réglage','Des commentaires concrets, de chantier','Vous savez à quoi vous attendre avant d\'essayer'],
+ e:function(){return cadre('<div class="ex">Exemple</div><div class="h1" style="font-size:17px;margin-bottom:2px">Rouille sur acier</div><div class="muted">Lazzeko 300 W · Acier · Rouille</div><div class="duo"><div style="background:linear-gradient(135deg,#6d4c41,#a1887f 60%,#8d6e63)"><span>Avant</span></div><div style="background:linear-gradient(135deg,#90a4ae,#eceff1 55%,#b0bec5)"><span>Après</span></div></div><div class="moy pop"><span class="st" style="font-size:14px">★★★★★</span>4,8 · 6 avis</div><div style="margin-top:6px" id="av"></div><div class="lbl" style="margin-top:4px">Votre note</div><div class="etoiles" id="et" style="margin:0;font-size:22px"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></div><div class="comm" id="cm" style="min-height:30px"></div>',2)},
+ a:function(){voir('.moy');var A=[['Marc','★★★★★','Portail rouillé : nickel en 2 passages, rien à reprendre.'],['Sophie','★★★★<em>★</em>','Un peu fort sur tôle fine, j\'ai baissé à 60 % et c\'est parfait.'],['Karim','★★★★★','Réglage au top, je l\'ai dupliqué pour mon camion.']];
+  A.forEach(function(x,i){apres(500+i*900,function(){q('#av').insertAdjacentHTML('beforeend','<div class="avis pop"><b>'+x[0]+'</b> <span class="st">'+x[1]+'</span><p>'+x[2]+'</p></div>');var d=q('#av').lastChild;apres(30,function(){d.classList.add('v')})})});
+  var et=E.querySelectorAll('#et i');taper('#et i:nth-child(5)',3600,function(){et.forEach(function(x,i){apres(i*110,function(){x.classList.add('on')})})});
+  taper('#cm',4800);taperTexte('#cm','Testé ce matin sur une remorque : même résultat, merci !',5400)}},
 {d:6000,k:'Aide',t:'Comprendre chaque réglage',p:'Un menu Aide explique simplement la puissance, la fréquence, la largeur d\'impulsion, la vitesse… avec de petites animations.',l:['Les bases pour bien commencer','Le simulateur complet reste sur notre site'],
  e:function(){return cadre('<div class="h1">Aide</div><div class="acc">Par où commencer ?</div><div class="acc" id="a1">Puis. laser (%)</div><div class="acc" id="a2">Fréq. (kHz)</div><div class="acc">Larg. imp. (ns)</div><div class="acc">Vit. galvo (m/s)</div>',3)},
  a:function(){function ouvrir(sel,txt,trains){taper(sel,0,function(c){E.querySelectorAll('.acc.ouv').forEach(function(x){x.classList.remove('ouv');x.innerHTML=x.dataset.t});c.dataset.t=c.textContent;c.classList.add('ouv');
