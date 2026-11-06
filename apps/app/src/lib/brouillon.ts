@@ -15,8 +15,6 @@ export interface Brouillon {
   commentaire: string;
   note: number | null;
   etape: number;
-  /** Accord pour que Lazzeko réutilise les photos. */
-  accordPhotos?: boolean;
   /** Horodatage de la dernière modification. */
   maj?: number;
 }

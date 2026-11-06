@@ -26,14 +26,11 @@ export class CreerFicheDto {
   @IsOptional() @IsEnum(Visibilite) visibilite?: Visibilite;
   /** Note de l'auteur (1 à 5). */
   @IsOptional() @IsInt() @Min(1) @Max(5) note?: number;
-  /** Accord pour que Lazzeko réutilise les photos de la fiche. */
-  @IsOptional() @IsBoolean() accordPhotos?: boolean;
   /** Fiche d'origine en cas de duplication. */
   @IsOptional() @IsString() parentId?: string;
 }
 
 export class ModifierFicheDto {
-  @IsOptional() @IsBoolean() accordPhotos?: boolean;
   @IsOptional() @IsString() @MinLength(1) @MaxLength(120) titre?: string;
   @IsOptional() @IsString() @MaxLength(4000) commentaire?: string;
   @IsOptional() @IsObject() valeurs?: Record<string, unknown>;

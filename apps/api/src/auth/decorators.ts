@@ -4,6 +4,7 @@ import { Role } from '@prisma/client';
 export const PUBLIC = 'public';
 export const ROLES = 'roles';
 export const CLE_API = 'cleApi';
+export const SANS_CONDITIONS = 'sansConditions';
 
 /** Route accessible sans connexion. */
 export const Public = () => SetMetadata(PUBLIC, true);
@@ -11,6 +12,8 @@ export const Public = () => SetMetadata(PUBLIC, true);
 export const Roles = (...roles: Role[]) => SetMetadata(ROLES, roles);
 /** Route accessible aussi avec une clé API (en-tête X-Api-Key), en plus d'un admin connecté. */
 export const AutoriseCleApi = () => SetMetadata(CLE_API, true);
+/** Route accessible avant d'avoir accepté les conditions d'utilisation (compte, conditions…). */
+export const SansConditions = () => SetMetadata(SANS_CONDITIONS, true);
 
 export interface Principal {
   type: 'user' | 'cleApi';

@@ -39,16 +39,22 @@ model Organisation {
 }
 
 model User {
-  id             String        @id @default(cuid())
-  identifiant    String        @unique
-  passwordHash   String
-  nom            String?
-  role           Role          @default(USER)
-  actif          Boolean       @default(true)
-  organisationId String?
-  organisation   Organisation? @relation(fields: [organisationId], references: [id])
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                      String        @id @default(cuid())
+  identifiant             String        @unique
+  passwordHash            String
+  nom                     String?
+  role                    Role          @default(USER)
+  /// Conditions d'utilisation acceptées (version) : partage communautaire obligatoire.
+  conditionsVersion       Int?
+  conditionsAccepteesLe   DateTime?
+  /// Accord facultatif pour que Lazzeko réutilise les photos (site, réseaux, documentation).
+  accordPhotosMarketing   Boolean       @default(false)
+  accordPhotosMarketingLe DateTime?
+  actif                   Boolean       @default(true)
+  organisationId          String?
+  organisation            Organisation? @relation(fields: [organisationId], references: [id])
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 
   machines     UserMachine[]
   fiches       Fiche[]
@@ -197,9 +203,6 @@ model Fiche {
   moderePar          String?
   noteMoyenne        Float?
   nbNotes            Int              @default(0)
-  /// Accord de l'auteur pour que Lazzeko réutilise ses photos (site, réseaux, documentation).
-  accordPhotos       Boolean          @default(false)
-  accordPhotosLe     DateTime?
   /// Fiche d'origine quand on duplique le réglage d'un autre.
   parentId           String?
   parent             Fiche?           @relation("Duplication", fields: [parentId], references: [id], onDelete: SetNull)

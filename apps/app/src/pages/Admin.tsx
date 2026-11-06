@@ -4,7 +4,7 @@ import { Erreur } from '../components/Composants';
 import { api, Fabricant, MaMachine } from '../lib/api';
 import { date } from '../lib/util';
 
-interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number } }
+interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; conditionsVersion: number | null; accordPhotosMarketing: boolean }
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
 interface TagAValider { id: string; nom: string; groupe: { nom: string } }
 
@@ -83,6 +83,8 @@ export default function Admin() {
 
       <AideSupport />
 
+      <ConditionsAdmin />
+
       <h2>Créer un utilisateur</h2>
       <form className="form" onSubmit={creerUser}>
         <label>Identifiant<input value={f.identifiant} autoCapitalize="none" onChange={(e) => setF({ ...f, identifiant: e.target.value })} required /></label>
@@ -103,6 +105,7 @@ export default function Admin() {
           <div key={u.id} className={'carte ligne-machine' + (u.actif ? '' : ' inactif')}>
             <button type="button" className="lien-bloc" onClick={() => setSelection(selection?.id === u.id ? null : u)}>
               <b>{u.nom || u.identifiant}</b> <span className="muted petit">{u.identifiant} · {u.role === 'ADMIN' ? 'admin' : 'utilisateur'} · {date(u.createdAt)}</span>
+              {u.role !== 'ADMIN' && <span className="petit"> {u.conditionsVersion ? `✓ conditions v${u.conditionsVersion}` : '· conditions non acceptées'}{u.accordPhotosMarketing ? ' · 📷 accord photos' : ''}</span>}
             </button>
             <button type="button" className="btn petit" onClick={() => basculerActif(u)}>{u.actif ? 'Désactiver' : 'Réactiver'}</button>
             {selection?.id === u.id && (
@@ -203,6 +206,49 @@ function AideSupport() {
             </div>
           ))
         )}
+      </div>
+    </>
+  );
+}
+
+/** Texte des conditions d'utilisation : publier une nouvelle version oblige chacun à les accepter de nouveau. */
+function ConditionsAdmin() {
+  const [c, setC] = useState<{ version: number; texte: string }>();
+  const [texte, setTexte] = useState('');
+  const [ouvert, setOuvert] = useState(false);
+  const [ok, setOk] = useState('');
+  useEffect(() => {
+    api<{ version: number; texte: string }>('/conditions').then((x) => { setC(x); setTexte(x.texte); });
+  }, []);
+  if (!c) return null;
+  return (
+    <>
+      <h2>Conditions d'utilisation</h2>
+      <div className="carte">
+        <p className="petit" style={{ marginTop: 0 }}>Version en vigueur : <b>{c.version}</b>. Texte de départ à faire relire par un juriste.</p>
+        {!ouvert ? (
+          <button type="button" className="btn petit" onClick={() => setOuvert(true)}>Modifier le texte</button>
+        ) : (
+          <div className="form">
+            <textarea rows={14} value={texte} onChange={(e) => setTexte(e.target.value)} />
+            <div className="actions-avis">
+              <button type="button" className="btn petit" onClick={() => { setOuvert(false); setTexte(c.texte); }}>Annuler</button>
+              <button
+                type="button"
+                className="btn prim"
+                disabled={texte.trim().length < 20 || texte === c.texte}
+                onClick={async () => {
+                  if (!confirm('Publier une nouvelle version ? Chaque utilisateur devra l\'accepter à sa prochaine utilisation.')) return;
+                  const n = await api<{ version: number; texte: string }>('/admin/conditions', { method: 'POST', json: { texte } });
+                  setC(n); setOuvert(false); setOk(`Version ${n.version} publiée.`);
+                }}
+              >
+                Publier une nouvelle version
+              </button>
+            </div>
+          </div>
+        )}
+        {ok && <div className="succes">{ok}</div>}
       </div>
     </>
   );

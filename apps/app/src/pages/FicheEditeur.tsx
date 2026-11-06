@@ -51,7 +51,7 @@ export default function FicheEditeur() {
         setB({
           userMachineId: f.machine.userMachineId ?? '', valeurs: completer(v.config, f.valeurs),
           tagIds: f.tags.map((t) => t.id), titre: f.titre, commentaire: f.commentaire ?? '',
-          note: f.note.maNote, etape: 1, accordPhotos: f.accordPhotos,
+          note: f.note.maNote, etape: 1,
         });
       } else if (depuis) {
         const p = await api<Fiche>(`/fiches/${depuis}`);
@@ -151,7 +151,7 @@ export default function FicheEditeur() {
     try {
       setEnvoi('Enregistrement…');
       const corps = {
-        titre: b.titre, commentaire: b.commentaire, valeurs: validation.valeurs, tagIds: b.tagIds, accordPhotos: !!b.accordPhotos,
+        titre: b.titre, commentaire: b.commentaire, valeurs: validation.valeurs, tagIds: b.tagIds,
       };
       const f = modif
         ? await api<Fiche>(`/fiches/${ficheId}`, { method: 'PATCH', json: corps })
@@ -308,15 +308,6 @@ export default function FicheEditeur() {
             Commentaire
             <textarea rows={4} value={b.commentaire} onChange={(ev) => maj({ commentaire: ev.target.value })} placeholder="Nombre de passages, distance, remarques…" />
           </label>
-          {(photos.length > 0 || existantes.length > 0) && (
-            <label className="interrupteur accord">
-              <input type="checkbox" checked={!!b.accordPhotos} onChange={(ev) => maj({ accordPhotos: ev.target.checked })} />
-              <span>
-                J'accepte que Lazzeko utilise mes photos (site, réseaux sociaux, documentation).
-                <small className="muted"> Facultatif, modifiable à tout moment.</small>
-              </span>
-            </label>
-          )}
           {validation && !validation.ok && (
             <div className="alerte">Réglages à corriger : {validation.erreurs.map((x) => `${x.key ?? ''} ${x.message}`).join(', ')}</div>
           )}

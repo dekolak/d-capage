@@ -5,7 +5,10 @@ import { AuthService } from '../auth/auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreerUserDto, ModifierUserDto } from './users.dto';
 
-export const USER_PUBLIC = { id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true } as const;
+export const USER_PUBLIC = {
+  id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true,
+  conditionsVersion: true, conditionsAccepteesLe: true, accordPhotosMarketing: true, accordPhotosMarketingLe: true,
+} as const;
 
 @Injectable()
 export class UsersService {
@@ -45,6 +48,27 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data: { ...reste, ...(motDePasse ? { passwordHash: await AuthService.hasher(motDePasse) } : {}) },
+      select: USER_PUBLIC,
+    });
+  }
+
+  async accepterConditions(id: string, version: number, courante: number, accordPhotosMarketing?: boolean) {
+    if (version !== courante) throw new ConflictException('Les conditions ont changé : rechargez la page');
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        conditionsVersion: version,
+        conditionsAccepteesLe: new Date(),
+        ...(accordPhotosMarketing !== undefined ? { accordPhotosMarketing, accordPhotosMarketingLe: new Date() } : {}),
+      },
+      select: USER_PUBLIC,
+    });
+  }
+
+  async preferences(id: string, accordPhotosMarketing: boolean) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { accordPhotosMarketing, accordPhotosMarketingLe: new Date() },
       select: USER_PUBLIC,
     });
   }

@@ -371,3 +371,20 @@ textarea { resize: vertical; }
 /* ---------- demande d'aide ---------- */
 .aide-support { background: var(--carte); border-radius: var(--r); box-shadow: var(--ombre); padding: 14px; display: grid; gap: 8px; margin-top: 16px; }
 .badge-accord { justify-self: start; background: #e8f5ec; color: #14532d; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+/* ---------- accueil / conditions ---------- */
+.accueil { max-width: 480px; margin: 0 auto; padding: 40px 18px 40px; display: grid; gap: 12px; justify-items: center; text-align: center; }
+.accueil img { border-radius: 18px; box-shadow: 0 8px 24px rgba(241, 90, 33, 0.3); }
+.accueil h1 { margin: 6px 0 0; }
+.accueil > p { margin: 0; }
+.accueil .petit { text-align: left; color: #3f414a; }
+.echange { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; width: 100%; background: linear-gradient(135deg, #fff, #fff1ea); border-radius: var(--r); padding: 14px; box-shadow: var(--ombre); }
+.echange div { display: grid; gap: 2px; justify-items: center; }
+.echange b { font-size: 26px; }
+.echange span { font-weight: 750; font-size: 14px; }
+.echange small { font-size: 12px; color: var(--g); }
+.echange .fleche { font-size: 24px; color: var(--o); font-weight: 800; }
+.texte-conditions { white-space: pre-wrap; text-align: left; font-size: 13px; line-height: 1.5; background: var(--carte); border-radius: var(--r-sm); padding: 14px; box-shadow: var(--ombre); max-height: 40vh; overflow: auto; width: 100%; }
+.page .texte-conditions { max-height: none; }
+.choix-accord { text-align: left; width: 100%; background: var(--carte); border-radius: var(--r-sm); padding: 12px; box-shadow: var(--ombre); font-weight: 500 !important; font-size: 14px !important; align-items: flex-start !important; }
+.choix-accord input { flex: none; margin-top: 2px; }
+.choix-accord.obligatoire { border: 1px solid #fbd0bd; }

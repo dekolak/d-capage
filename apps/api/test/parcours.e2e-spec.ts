@@ -40,7 +40,18 @@ describe('Parcours complet', () => {
       expect((await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `${n}-${id}`, motDePasse: 'motdepasse1', nom: n })).status).toBe(201);
     alice = (await http.post('/api/auth/connexion').send({ identifiant: `alice-${id}`, motDePasse: 'motdepasse1' })).body.jeton;
     bob = (await http.post('/api/auth/connexion').send({ identifiant: `bob-${id}`, motDePasse: 'motdepasse1' })).body.jeton;
+    // tant que les conditions ne sont pas acceptées, tout est bloqué
+    const bloque = await http.get('/api/catalogue').set(auth(alice));
+    expect(bloque.status).toBe(403);
+    expect(bloque.body.code).toBe('CONDITIONS_A_ACCEPTER');
+    for (const t of [alice, bob]) await accepter(t);
   });
+
+  /** Accepte les conditions en vigueur (partage communautaire). */
+  async function accepter(t: string, accordPhotosMarketing?: boolean) {
+    const { version } = (await http.get('/api/conditions').set(auth(t))).body;
+    await http.post('/api/moi/conditions').set(auth(t)).send({ version, accordPhotosMarketing }).expect(201);
+  }
 
   afterAll(() => app.close());
 
@@ -156,6 +167,7 @@ describe('Parcours complet', () => {
     const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'ia' })).body.cle;
     await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: carol, motDePasse: 'motdepasse1' }).expect(201);
     const tc = (await http.post('/api/auth/connexion').send({ identifiant: carol, motDePasse: 'motdepasse1' })).body.jeton;
+    await accepter(tc);
     await http.post(`/api/fiches/${fiche}/evaluation`).set(auth(tc)).send({ note: 1, avis: 'Avis pas top du tout' }).expect(201);
     for (let i = 0; i < 40 && !recus.some((r) => r.corps.evenement === 'avis.publie'); i++) await new Promise((r) => setTimeout(r, 100));
     const env = recus.find((r) => r.corps.evenement === 'avis.publie')!;
@@ -210,12 +222,13 @@ describe('Parcours complet', () => {
     expect((await http.get('/api/moi/machines').set(auth(alice))).body[0].imageUrl).toBe(url);
     expect((await http.get(`/api/fiches/${fiche}`).set(auth(alice))).body.machine.imageUrl).toBe(url);
 
-    // --- accord photos : filtre admin « photos utilisables » ---
+    // --- accord photos (dans le compte) : filtre admin « photos utilisables » ---
     const sans = (await http.get('/api/admin/fiches?photosUtilisables=oui&parPage=50').set(auth(admin))).body;
     expect(sans.fiches.some((x: any) => x.id === fiche)).toBe(false);
-    expect((await http.patch(`/api/fiches/${fiche}`).set(auth(alice)).send({ accordPhotos: true })).body.accordPhotos).toBe(true);
+    expect((await http.patch('/api/moi/preferences').set(auth(alice)).send({ accordPhotosMarketing: true })).body.accordPhotosMarketing).toBe(true);
     const avec = (await http.get('/api/admin/fiches?photosUtilisables=oui&parPage=50').set(auth(admin))).body;
-    expect(avec.fiches.some((x: any) => x.id === fiche)).toBe(true);
+    expect(avec.fiches.find((x: any) => x.id === fiche).auteurAdmin.accordPhotosMarketing).toBe(true);
+    expect((await http.get(`/api/fiches/${fiche}`).set(auth(bob))).body.auteurAdmin).toBeUndefined();
 
     // --- top réglages : la fiche notée apparaît sous ses tags ---
     // tag propre à ce test (la base de dev contient d'autres fiches « Acier »)
@@ -242,5 +255,21 @@ describe('Parcours complet', () => {
     await http.patch(`/api/admin/aide/${d.id}`).set(auth(admin)).send({ traitee: true }).expect(200);
     await http.patch('/api/admin/parametres').set(auth(admin)).send({ aideSupport: false }).expect(200);
     await http.delete(`/api/catalogue/modeles/${modele.id}/image`).set(auth(admin)).expect(200);
+  });
+
+  it('conditions : une nouvelle version doit être acceptée de nouveau', async () => {
+    const avant = (await http.get('/api/conditions').set(auth(alice))).body;
+    expect((await http.post('/api/admin/conditions').set(auth(bob)).send({ texte: 'x'.repeat(30) })).status).toBe(403);
+    const pub = (await http.post('/api/admin/conditions').set(auth(admin)).send({ texte: avant.texte })).body;
+    expect(pub.version).toBe(avant.version + 1);
+    // alice est bloquée jusqu'à acceptation ; /moi l'indique
+    expect((await http.get('/api/moi').set(auth(alice))).body.conditionsAJour).toBe(false);
+    await new Promise((r) => setTimeout(r, 0));
+    expect((await http.post('/api/moi/conditions').set(auth(alice)).send({ version: avant.version })).status).toBe(409);
+    await accepter(alice, false);
+    const m = (await http.get('/api/moi').set(auth(alice))).body;
+    expect(m).toMatchObject({ conditionsAJour: true, conditionsVersion: pub.version, accordPhotosMarketing: false });
+    // l'admin n'est jamais bloqué
+    expect((await http.get('/api/catalogue').set(auth(admin))).status).toBe(200);
   });
 });
