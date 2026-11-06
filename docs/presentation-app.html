@@ -1,0 +1,245 @@
+<!--
+  Lazzeko · Présentation animée de l'app « Réglages décapage »
+  À coller dans un bloc « Code HTML » d'Odoo (ou à ouvrir tel quel dans un navigateur).
+  Aucun fichier externe : tout est dans ce bloc. Lien de l'app : modifier APP_URL plus bas.
+-->
+<div id="lzp">
+<style>
+#lzp{--o:#f15a21;--od:#d9480f;--od2:#fff1ea;--t:#1c1d21;--g:#6f7280;--f:#f5f5f7;--b:#e6e6ea;--p:#5a6b8e;--mf:#e2e8f3;--mc:#f3f5fa;
+ font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--t);max-width:1100px;margin:0 auto;padding:24px 14px;box-sizing:border-box;line-height:1.45;text-align:left}
+#lzp *{box-sizing:border-box}
+#lzp h2,#lzp h3,#lzp p{font-family:inherit;color:inherit;text-transform:none;letter-spacing:normal;margin:0}
+#lzp button{font-family:inherit;margin:0;line-height:1.2;text-transform:none;letter-spacing:normal;box-shadow:none}
+#lzp .scene{display:grid;grid-template-columns:1fr 320px;gap:40px;align-items:center;min-height:620px}
+#lzp .txt .kick{color:var(--o);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+#lzp .txt h2{font-size:34px;line-height:1.08;font-weight:800;letter-spacing:-.02em;margin:10px 0 14px}
+#lzp .txt p{font-size:17px;color:#3f414a;max-width:460px}
+#lzp .txt ul{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+#lzp .txt li{display:flex;gap:10px;font-size:15px;color:#3f414a}
+#lzp .txt li:before{content:"";flex:none;width:8px;height:8px;margin-top:7px;border-radius:50%;background:var(--o)}
+#lzp .txt>*{opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s}
+#lzp .on .txt>*{opacity:1;transform:none}
+#lzp .on .txt>*:nth-child(2){transition-delay:.08s}#lzp .on .txt>*:nth-child(3){transition-delay:.16s}#lzp .on .txt>*:nth-child(4){transition-delay:.24s}
+/* ---------- téléphone ---------- */
+#lzp .tel{width:300px;height:610px;margin:0 auto;border-radius:44px;background:#16171b;padding:12px;box-shadow:0 30px 60px rgba(20,20,30,.25),inset 0 0 0 2px #2a2b31;position:relative}
+#lzp .tel:before{content:"";position:absolute;top:22px;left:50%;transform:translateX(-50%);width:84px;height:22px;border-radius:12px;background:#000;z-index:5}
+#lzp .ecran{position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;background:var(--f)}
+#lzp .haut{height:44px}
+#lzp .contenu{padding:6px 14px 0;height:calc(100% - 44px - 70px);overflow:hidden;position:relative}
+#lzp .h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:4px 0 10px}
+#lzp .muted{color:var(--g);font-size:11px}
+#lzp .nav{position:absolute;left:8px;right:8px;bottom:8px;height:58px;border-radius:18px;background:rgba(255,255,255,.95);box-shadow:0 6px 20px rgba(20,20,30,.12);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;text-align:center;font-size:8.5px;color:var(--g);font-weight:600}
+#lzp .nav span{display:grid;justify-items:center;gap:2px;padding:4px 0;border-radius:12px}
+#lzp .nav i{display:block;width:18px;height:18px;border-radius:6px;border:2px solid currentColor}
+#lzp .nav .plus i{background:var(--o);border-color:var(--o);border-radius:7px}
+#lzp .nav .act{color:var(--o);background:var(--od2)}
+#lzp .carte{background:#fff;border-radius:14px;box-shadow:0 1px 2px rgba(20,20,30,.04),0 4px 14px rgba(20,20,30,.06);padding:9px;margin-bottom:8px}
+#lzp .fiche{display:flex;gap:9px;align-items:center}
+#lzp .vg{width:50px;height:50px;border-radius:10px;flex:none;background:linear-gradient(135deg,#8d6e63,#c7a17a)}
+#lzp .vg.b{background:linear-gradient(135deg,#90a4ae,#cfd8dc)}#lzp .vg.c{background:linear-gradient(135deg,#6d4c41,#ff8a50)}
+#lzp .fiche b{font-size:12px;display:block}
+#lzp .tags{display:flex;gap:4px;margin:3px 0}
+#lzp .tg{font-size:9px;background:#f0f0f3;border-radius:99px;padding:1px 6px;color:#44464f}
+#lzp .st{color:#f5a623;font-size:11px;letter-spacing:1px}#lzp .st em{color:#dcdce2;font-style:normal}
+#lzp .etapes{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin-bottom:10px;text-align:center;font-size:7.5px;color:#9a9daa;font-weight:600}
+#lzp .etapes span{display:grid;justify-items:center;gap:2px}
+#lzp .etapes b{width:18px;height:18px;border-radius:50%;background:#e9e9ee;color:var(--g);display:flex;align-items:center;justify-content:center;font-size:9px}
+#lzp .etapes .f b{background:#ffe1d3;color:var(--od)}#lzp .etapes .o{color:var(--o)}#lzp .etapes .o b{background:var(--o);color:#fff}
+#lzp .lbl{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g);margin:8px 0 4px}
+#lzp .sel{height:34px;border:1px solid #d4d5db;border-radius:10px;background:#fff;font-size:12px;display:flex;align-items:center;padding:0 10px;justify-content:space-between}
+#lzp .sel:after{content:"⌄";color:var(--g)}
+#lzp .chips{display:flex;gap:5px;margin-top:5px;min-height:20px}
+#lzp .chip{font-size:10px;font-weight:600;color:var(--od);background:var(--od2);border:1px solid #fbd0bd;border-radius:99px;padding:2px 8px}
+#lzp .bphoto{display:flex;align-items:center;gap:10px;border-radius:14px;padding:12px;background:var(--o);color:#fff;box-shadow:0 5px 14px rgba(241,90,33,.3);margin-top:8px}
+#lzp .bphoto svg{width:28px;height:28px;flex:none}
+#lzp .bphoto b{font-size:15px;font-weight:800;text-transform:uppercase;display:block}
+#lzp .bphoto small{font-size:9px;opacity:.9}
+#lzp .bphoto.ok{background:#fff;color:var(--od);border:2px solid var(--o);box-shadow:none}
+#lzp .galerie{display:flex;gap:6px;margin-top:10px}
+#lzp .thumb{width:70px;height:70px;border-radius:10px}
+#lzp .btnl{height:30px;border:1px solid #d4d5db;border-radius:10px;background:#fff;font-size:11px;font-weight:650;display:flex;align-items:center;justify-content:center;margin-top:6px}
+#lzp .barre{position:absolute;left:8px;right:8px;bottom:74px;display:grid;grid-template-columns:1fr 2fr;gap:6px;padding:6px;border-radius:14px;background:rgba(255,255,255,.95);box-shadow:0 6px 18px rgba(20,20,30,.1)}
+#lzp .barre span{height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:1px solid #d4d5db;background:#fff}
+#lzp .barre .p{background:var(--o);border-color:var(--o);color:#fff}
+/* miroir */
+#lzp .mir{background:var(--mf);border-radius:14px;padding:6px 7px 8px}
+#lzp .mir .logo{text-align:center;color:#f08a3c;font-weight:700;letter-spacing:.12em;font-size:9px;margin:2px 0 5px}
+#lzp .mc{background:var(--mc);border-radius:10px;padding:1px 8px;margin-bottom:5px}
+#lzp .mc.d{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#lzp .ml{font-size:9.5px;color:#1d2433;padding:4px 0;border-bottom:1px solid #b8c1d2}
+#lzp .ml:last-child{border-bottom:0}
+#lzp .pv{display:block;margin-top:2px;background:var(--p);color:#fff;border-radius:99px;text-align:center;font-size:11px;padding:2px 0;font-variant-numeric:tabular-nums;transition:box-shadow .2s}
+#lzp .pv.sc{border-radius:7px;height:24px;display:flex;align-items:center;justify-content:center}
+#lzp .pv.sel2{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--o)}
+#lzp .feuille{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 20px rgba(20,20,30,.15);padding:16px 14px 16px;transform:translateY(105%);transition:transform .35s cubic-bezier(.2,.8,.2,1);z-index:4}
+#lzp .feuille.up{transform:none}
+#lzp .feuille:before{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:30px;height:4px;border-radius:2px;background:#d4d5db}
+#lzp .feuille b{font-size:13px}
+#lzp .feuille p{font-size:10px;color:#4b4e58;margin:4px 0 8px}
+#lzp .ctl{display:flex;gap:6px;align-items:center}
+#lzp .ctl span{width:34px;height:34px;border-radius:10px;background:#f0f0f3;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600}
+#lzp .ctl .val{flex:1;height:34px;border:1px solid var(--o);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;box-shadow:0 0 0 3px rgba(241,90,33,.2);font-variant-numeric:tabular-nums}
+#lzp .curseur{position:relative;height:4px;border-radius:2px;background:#d9d9de;margin:14px 2px 6px}
+#lzp .curseur i{position:absolute;left:0;top:0;height:4px;border-radius:2px;background:var(--o);width:85%;transition:width .9s}
+#lzp .curseur u{position:absolute;top:-6px;width:16px;height:16px;border-radius:50%;background:var(--o);left:calc(85% - 8px);transition:left .9s}
+#lzp .feuille .bt{display:grid;grid-template-columns:1fr 2fr;gap:6px;margin-top:10px}
+#lzp .feuille .bt span{height:30px;border-radius:9px;border:1px solid #d4d5db;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+#lzp .feuille .bt .p{background:var(--o);border-color:var(--o);color:#fff}
+#lzp .indic{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+#lzp .indic div{background:#fff;border-radius:8px;padding:4px 6px;box-shadow:0 1px 6px rgba(20,20,30,.06)}
+#lzp .indic small{display:block;font-size:7px;font-weight:700;color:var(--g);text-transform:uppercase}
+#lzp .indic b{font-size:12px}
+#lzp .etoiles{font-size:26px;color:#dcdce2;letter-spacing:2px;margin:6px 0}
+#lzp .etoiles i{font-style:normal;transition:color .2s,transform .2s;display:inline-block}
+#lzp .etoiles i.on{color:#f5a623;transform:scale(1.15)}
+#lzp .champ{height:32px;border:1px solid #d4d5db;border-radius:10px;background:#fff;font-size:11px;display:flex;align-items:center;padding:0 10px;margin-top:4px}
+#lzp .toast{position:absolute;left:50%;top:60px;transform:translate(-50%,-20px);background:#1f8a44;color:#fff;font-size:11px;font-weight:700;padding:8px 14px;border-radius:99px;opacity:0;transition:.35s;white-space:nowrap;z-index:6}
+#lzp .toast.v{opacity:1;transform:translate(-50%,0)}
+#lzp .seg{display:grid;grid-template-columns:1fr 1fr;background:#ebebef;border-radius:10px;padding:2px;margin-bottom:8px}
+#lzp .seg span{text-align:center;font-size:10px;font-weight:700;padding:6px 0;border-radius:8px;color:var(--g)}
+#lzp .seg .on2{background:#fff;color:var(--t);box-shadow:0 1px 3px rgba(20,20,30,.12)}
+#lzp .acc{background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(20,20,30,.06);padding:9px 10px;margin-bottom:6px;font-size:11.5px;font-weight:700;display:flex;justify-content:space-between}
+#lzp .acc:after{content:"+";color:#9a9daa;font-weight:400}
+#lzp .acc.ouv{display:block}#lzp .acc.ouv:after{content:none}
+#lzp .acc.ouv p{font-size:9.5px;font-weight:400;color:#3f414a;margin:5px 0}
+#lzp .train{height:30px;background:var(--f);border-radius:8px;overflow:hidden;position:relative;margin-top:4px}
+#lzp .train div{position:absolute;bottom:3px;left:0;width:200%;height:24px;display:flex;align-items:flex-end;animation:lzdef 3s linear infinite}
+#lzp .train i{flex:none;margin-right:16px;width:5px;border-radius:2px;background:var(--o)}
+@keyframes lzdef{to{transform:translateX(-50%)}}
+/* animations d'apparition */
+#lzp .pop{opacity:0;transform:translateY(12px) scale(.98);transition:opacity .4s,transform .4s}
+#lzp .pop.v{opacity:1;transform:none}
+/* doigt */
+#lzp .doigt{position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(241,90,33,.25);border:2px solid rgba(241,90,33,.9);pointer-events:none;z-index:7;opacity:0;transition:left .6s ease,top .6s ease,opacity .3s;transform:translate(-50%,-50%)}
+#lzp .doigt.v{opacity:1}
+#lzp .doigt.tap{animation:lztap .45s}
+@keyframes lztap{50%{transform:translate(-50%,-50%) scale(.7);background:rgba(241,90,33,.55)}}
+#lzp .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:6}
+#lzp .flash.go{animation:lzflash .5s}
+@keyframes lzflash{30%{opacity:.9}}
+/* intro / fin */
+#lzp .intro{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(160deg,#fff 0%,#fff1ea 100%);padding:20px}
+#lzp .intro .ic{width:76px;height:76px;border-radius:22px;background:var(--o);box-shadow:0 10px 24px rgba(241,90,33,.35);display:flex;align-items:center;justify-content:center}
+#lzp .intro h3{font-size:22px;font-weight:800;margin:14px 0 6px}
+#lzp .intro p{font-size:12px;color:var(--g)}
+/* commandes */
+#lzp .cmd{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:22px;flex-wrap:wrap}
+#lzp .cmd button{border:1px solid #d4d5db;background:#fff;border-radius:12px;min-width:44px;height:44px;font-size:18px;cursor:pointer;padding:0 12px}
+#lzp .cmd button.lect{background:var(--o);border-color:var(--o);color:#fff;font-size:14px;font-weight:700;min-width:110px}
+#lzp .points{display:flex;gap:6px}
+#lzp .points button{width:10px;min-width:10px;height:10px;padding:0;border-radius:99px;border:0;background:#d4d5db;transition:width .3s,background .3s}
+#lzp .points button.on{width:28px;background:var(--o)}
+#lzp .prog{height:3px;background:#ebebef;border-radius:2px;margin-top:14px;overflow:hidden}
+#lzp .prog i{display:block;height:100%;width:0;background:var(--o)}
+#lzp .cta{display:inline-flex;margin-top:18px;background:var(--o);color:#fff;font-weight:700;text-decoration:none;padding:12px 20px;border-radius:12px;box-shadow:0 6px 16px rgba(241,90,33,.3)}
+@media (max-width:800px){
+ #lzp .scene{grid-template-columns:1fr;gap:20px;min-height:0}
+ #lzp .txt{text-align:center}#lzp .txt p{margin:0 auto}#lzp .txt ul{justify-items:center}#lzp .txt h2{font-size:26px}
+ #lzp .txt li{text-align:left}
+ #lzp .tel{transform:scale(.92);transform-origin:top center;margin-bottom:-40px}
+}
+@media (prefers-reduced-motion:reduce){#lzp *{transition:none!important;animation:none!important}}
+</style>
+
+<div class="scene" id="lzpScene">
+  <div class="txt" id="lzpTxt"></div>
+  <div class="tel"><div class="ecran" id="lzpEcran"></div></div>
+</div>
+<div class="prog"><i id="lzpProg"></i></div>
+<div class="cmd">
+  <button type="button" id="lzpPrec" aria-label="Étape précédente">‹</button>
+  <button type="button" class="lect" id="lzpLect">❚❚ Pause</button>
+  <button type="button" id="lzpSuiv" aria-label="Étape suivante">›</button>
+  <div class="points" id="lzpPoints"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var APP_URL='https://app.lazzeko.com';
+var R=document.getElementById('lzp'),E=document.getElementById('lzpEcran'),T=document.getElementById('lzpTxt'),S=document.getElementById('lzpScene');
+var minuteurs=[],idx=0,lecture=true,debut=0,raf=0;
+function apres(ms,f){minuteurs.push(setTimeout(f,ms))}
+function stop(){minuteurs.forEach(clearTimeout);minuteurs=[]}
+function q(s){return E.querySelector(s)}
+function voir(s){var e=q(s);if(e)e.classList.add('v')}
+/* doigt : se déplace vers un élément puis « tape » */
+function taper(sel,ms,f){apres(ms,function(){var d=q('.doigt'),c=q(sel);if(!d||!c)return;var re=E.getBoundingClientRect(),rc=c.getBoundingClientRect(),k=re.width/E.offsetWidth;
+ d.style.left=((rc.left-re.left)/k+rc.width/k/2)+'px';d.style.top=((rc.top-re.top)/k+rc.height/k/2)+'px';d.classList.add('v');
+ apres(650,function(){d.classList.remove('tap');void d.offsetWidth;d.classList.add('tap');if(f)f(c)})})}
+var CAM='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.8"/></svg>';
+function nav(a){var n=['Mes fiches','Nouvelle','Communauté','Aide','Compte'];return '<div class="nav">'+n.map(function(x,i){return '<span class="'+(i===1?'plus ':'')+(i===a?'act':'')+'"><i></i>'+x+'</span>'}).join('')+'</div>'}
+function etapes(o){var n=['Machine','Surface','Avant','Réglages','Écran','Résultat'];return '<div class="etapes">'+n.map(function(x,i){return '<span class="'+(i<o?'f':i===o?'o':'')+'"><b>'+(i+1)+'</b>'+x+'</span>'}).join('')+'</div>'}
+function barre(t){return '<div class="barre"><span>‹ Retour</span><span class="p">'+(t||'Suivant ›')+'</span></div>'}
+function cadre(contenu,a,extra){return '<div class="haut"></div><div class="contenu">'+contenu+'</div>'+(extra||'')+nav(a)+'<div class="doigt"></div><div class="flash"></div>'}
+function fiche(t,tags,n,c){return '<div class="carte fiche pop"><div class="vg '+(c||'')+'"></div><div><b>'+t+'</b><span class="muted">Lazzeko 300 W</span><div class="tags">'+tags.map(function(x){return '<span class="tg">'+x+'</span>'}).join('')+'</div><span class="st">'+'★'.repeat(n)+'<em>'+'★'.repeat(5-n)+'</em></span></div></div>'}
+function photo(nom){return '<div class="bphoto" id="bp">'+CAM+'<div><b>'+nom+'</b><small id="bps">Toucher pour prendre la photo</small></div></div><div class="btnl">Choisir dans la galerie</div><div class="galerie"></div>'}
+function prendre(nom,grad,ms){taper('#bp',ms,function(){q('.flash').classList.add('go');apres(350,function(){var g=q('.galerie');g.innerHTML='<div class="thumb pop" style="background:'+grad+'"></div>';apres(30,function(){voir('.galerie .thumb')});var b=q('#bp');b.classList.add('ok');b.querySelector('b').textContent='+ '+nom;q('#bps').textContent='1 photo ✓ · toucher pour en ajouter'})})}
+
+var SCENES=[
+{d:5200,k:'Lazzeko',t:'Réglages décapage',p:'L\'app qui garde la mémoire de vos réglages laser : enregistrez, retrouvez et comparez ce qui marche vraiment.',l:['Sur votre téléphone, sur le chantier','Pensée pour le nettoyeur laser pulsé 300 W','Les réglages de chacun profitent à tous'],
+ e:function(){return '<div class="intro"><div class="ic pop">'+'<svg width="44" height="44" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M32 52V14M32 52 18 22M32 52 46 22M32 52 12 36M32 52 52 36"/></svg></div><h3 class="pop">Réglages décapage</h3><p class="pop">Vos meilleurs réglages, toujours sous la main.</p></div><div class="doigt"></div>'},
+ a:function(){E.querySelectorAll('.pop').forEach(function(x,i){apres(200+i*350,function(){x.classList.add('v')})})}},
+{d:5600,k:'Étape 1',t:'Ajoutez votre machine',p:'Choisissez votre modèle dans le catalogue : l\'app connaît son écran de réglage.',l:['Une ou plusieurs machines','Un surnom si vous voulez (« Atelier », « Camion »)'],
+ e:function(){return cadre('<div class="h1">Mes machines</div><div class="lbl">Modèle</div><div class="sel" id="s1"><span id="s1t">Choisir dans le catalogue…</span></div><div class="lbl">Surnom</div><div class="champ" id="sn"></div><div class="barre" style="position:static;margin-top:12px;grid-template-columns:1fr;background:none;box-shadow:none;padding:0"><span class="p" id="aj">Ajouter</span></div><div class="carte pop" id="m1" style="margin-top:12px"><b style="font-size:12px">Camion</b><div class="muted">Lazzeko Nettoyeur laser pulsé 300 W</div></div>',4)},
+ a:function(){taper('#s1',300,function(){q('#s1t').textContent='Lazzeko Nettoyeur laser pulsé 300 W'});taper('#sn',1700,function(c){var m='Camion',i=0;(function f(){c.textContent=m.slice(0,++i);if(i<m.length)apres(110,f)})()});taper('#aj',3200,function(){voir('#m1')})}},
+{d:5600,k:'Étape 2',t:'Décrivez la surface',p:'En trois listes : le matériau, ce qu\'il faut enlever et le type de travail.',l:['Plusieurs choix possibles','« Autre… » pour proposer un nouveau tag'],
+ e:function(){return cadre(etapes(1)+'<div class="h1" style="font-size:16px">Surface décapée</div><div class="carte"><div class="lbl" style="margin-top:2px">Matériau</div><div class="sel" id="t1">+ Ajouter…</div><div class="chips" id="c1"></div><div class="lbl">À enlever</div><div class="sel" id="t2">+ Ajouter…</div><div class="chips" id="c2"></div><div class="lbl">Application</div><div class="sel" id="t3">Choisir…</div><div class="chips" id="c3"></div></div>',1,barre())},
+ a:function(){function puce(z,n){q(z).insertAdjacentHTML('beforeend','<span class="chip pop">'+n+' ×</span>');apres(30,function(){q(z).lastChild.classList.add('v')})}
+  taper('#t1',300,function(){puce('#c1','Acier')});taper('#t2',1600,function(){puce('#c2','Rouille')});taper('#t2',2700,function(){puce('#c2','Peinture')});taper('#t3',3800,function(){puce('#c3','Dérouillage')})}},
+{d:4600,k:'Étape 3',t:'Photo avant',p:'Un gros bouton, une photo : l\'app la compresse toute seule pour l\'envoyer même avec peu de réseau.',l:['Plusieurs photos possibles','Ou depuis la galerie du téléphone'],
+ e:function(){return cadre(etapes(2)+'<div class="h1" style="font-size:16px">Photo avant</div><div class="muted">La surface avant le décapage.</div>'+photo('Photo avant'),1,barre())},
+ a:function(){prendre('Photo avant','linear-gradient(135deg,#6d4c41,#a1887f 60%,#8d6e63)',500)}},
+{d:7600,k:'Étape 4',t:'Recopiez l\'écran de la machine',p:'Le « miroir » reprend exactement l\'écran de la Lazzeko : mêmes réglages, même ordre. Touchez une valeur, ajustez, suivant.',l:['Curseur et boutons − / +, ou clavier','Les champs changent selon le motif de balayage','Énergie, crête et écart calculés automatiquement'],
+ e:function(){return cadre(etapes(3)+'<div class="mir"><div class="logo">LAZZEKO</div><div class="mc"><div class="ml">Puis. laser (%)<span class="pv" id="pw">85</span></div><div class="ml">Larg. imp. (ns)<span class="pv">500</span></div><div class="ml">Fréq. (kHz)<span class="pv" id="fq">20</span></div></div><div class="mc d"><div><div class="ml">Type de balayage<span class="pv sc"><svg width="30" height="18" viewBox="0 0 56 36" fill="none" stroke="#fff" stroke-linecap="round"><rect x="10" y="3" width="36" height="30" stroke-width="2.4"/><path d="M18 4v26M10 13h36" stroke-width="2.4"/></svg></span></div><div class="ml">Longueur (mm)<span class="pv">30</span></div></div><div><div class="ml">Vit. galvo (m/s)<span class="pv">20</span></div><div class="ml">Esp. rempl. (mm)<span class="pv">10</span></div></div></div></div><div class="indic"><div><small>Énergie / imp.</small><b id="en">12.75 mJ</b></div><div><small>Puissance moy.</small><b id="pm">255 W</b></div></div>',1,barre()+'<div class="feuille" id="fe"><b>Puis. laser (%)</b><p>Fixe l\'énergie de chaque impulsion.</p><div class="ctl"><span>−</span><div class="val" id="vv">85</div><span>+</span></div><div class="curseur"><i id="ci"></i><u id="cu"></u></div><div class="bt"><span>‹ Préc.</span><span class="p" id="sv">Suivant ›</span></div></div>')},
+ a:function(){taper('#pw',400,function(c){c.classList.add('sel2');q('#fe').classList.add('up')});
+  apres(1800,function(){var v=85,f=function(){v--;q('#vv').textContent=v;q('#pw').textContent=v;q('#ci').style.width=v+'%';q('#cu').style.left='calc('+v+'% - 8px)';q('#en').textContent=(300*v/100/20).toFixed(2)+' mJ';q('#pm').textContent=Math.round(300*v/100)+' W';if(v>70)apres(70,f)};f()});
+  taper('#sv',3600,function(){q('#pw').classList.remove('sel2');q('#fe').classList.remove('up')});
+  taper('#fq',5200,function(c){c.classList.add('sel2');apres(600,function(){c.classList.remove('sel2')})})}},
+{d:4600,k:'Étape 5',t:'Photo de l\'écran',p:'Une photo de l\'écran de réglage sert de preuve : on vérifie d\'un coup d\'œil que rien n\'a été mal recopié.',l:['Gardée avec la fiche','Visible par la communauté'],
+ e:function(){return cadre(etapes(4)+'<div class="h1" style="font-size:16px">Photo de l\'écran machine</div><div class="muted">Elle sert de preuve et de vérification.</div>'+photo('Photo écran'),1,barre())},
+ a:function(){prendre('Photo écran','linear-gradient(135deg,#cfd8e8,#e2e8f3 50%,#5a6b8e)',500)}},
+{d:6200,k:'Étape 6',t:'Photo après et note',p:'La photo du résultat, une note de 1 à 5 étoiles, un commentaire : la fiche est enregistrée.',l:['Le brouillon est gardé si vous fermez l\'app','Reprise là où vous en étiez'],
+ e:function(){return cadre(etapes(5)+'<div class="h1" style="font-size:16px">Résultat</div><div class="galerie" style="margin-top:0"><div class="thumb" style="background:linear-gradient(135deg,#90a4ae,#eceff1)"></div></div><div class="lbl">Votre note</div><div class="etoiles" id="et"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></div><div class="lbl">Titre</div><div class="champ">Acier · Rouille</div>',1,barre('Enregistrer')+'<div class="toast" id="to">✓ Fiche enregistrée</div>')},
+ a:function(){var et=E.querySelectorAll('#et i');taper('#et i:nth-child(5)',400,function(){et.forEach(function(x,i){apres(i*120,function(){x.classList.add('on')})})});taper('.barre .p',2600,function(){q('#to').classList.add('v')})}},
+{d:6400,k:'Communauté',t:'Profitez des réglages des autres',p:'Tous les réglages sont mis en commun. Par défaut, vous voyez les meilleurs : 4 étoiles et plus, pour votre machine.',l:['Filtres matériau, à enlever, application','Notez un réglage après l\'avoir testé','« Dupliquer » pour partir d\'un bon réglage'],
+ e:function(){return cadre('<div class="h1">Communauté</div><div class="seg"><span class="on2">★ 4 et plus</span><span>Tous</span></div>'+fiche('Rouille sur acier',['Acier','Rouille'],5,'c')+fiche('Peinture sur alu',['Aluminium','Peinture'],5,'b')+fiche('Oxyde inox',['Inox','Oxyde'],4)+'<div class="barre" style="position:static;margin-top:6px;grid-template-columns:1fr;background:none;box-shadow:none;padding:0"><span class="p pop" id="du">Dupliquer ce réglage</span></div>',2)},
+ a:function(){E.querySelectorAll('.fiche').forEach(function(x,i){apres(250+i*300,function(){x.classList.add('v')})});apres(1600,function(){voir('#du')});taper('#du',2600)}},
+{d:6000,k:'Aide',t:'Comprendre chaque réglage',p:'Un menu Aide explique simplement la puissance, la fréquence, la largeur d\'impulsion, la vitesse… avec de petites animations.',l:['Les bases pour bien commencer','Le simulateur complet reste sur notre site'],
+ e:function(){return cadre('<div class="h1">Aide</div><div class="acc">Par où commencer ?</div><div class="acc" id="a1">Puis. laser (%)</div><div class="acc" id="a2">Fréq. (kHz)</div><div class="acc">Larg. imp. (ns)</div><div class="acc">Vit. galvo (m/s)</div>',3)},
+ a:function(){function ouvrir(sel,txt,trains){taper(sel,0,function(c){E.querySelectorAll('.acc.ouv').forEach(function(x){x.classList.remove('ouv');x.innerHTML=x.dataset.t});c.dataset.t=c.textContent;c.classList.add('ouv');
+   c.innerHTML=c.dataset.t+'<p>'+txt+'</p>'+trains.map(function(t){return '<div class="train"><div>'+Array.from({length:30},function(){return '<i style="height:'+t[0]+'px;margin-right:'+t[1]+'px"></i>'}).join('')+'</div></div>'}).join('')})}
+  apres(300,function(){ouvrir('#a1','Basse = impulsions faibles · haute = impulsions fortes.',[[7,14],[20,14]])});
+  apres(3000,function(){ouvrir('#a2','Basse = peu d\'impulsions fortes · haute = beaucoup d\'impulsions douces.',[[22,34],[6,6]])})}},
+{d:7000,k:'C\'est parti',t:'Prêt pour le chantier',p:'Ouvrez l\'app sur votre téléphone, connectez-vous avec l\'identifiant fourni par Lazzeko, puis « Ajouter à l\'écran d\'accueil » pour l\'avoir comme une vraie application.',l:['Aucune installation depuis un store','Vos fiches vous suivent sur tous vos appareils'],
+ cta:true,
+ e:function(){return '<div class="intro"><div class="ic pop">'+CAM.replace('<svg','<svg width="40" height="40" style="color:#fff"')+'</div><h3 class="pop">app.lazzeko.com</h3><p class="pop">Enregistrez votre premier réglage aujourd\'hui.</p></div><div class="doigt"></div>'},
+ a:function(){E.querySelectorAll('.pop').forEach(function(x,i){apres(200+i*350,function(){x.classList.add('v')})})}}
+];
+
+var P=document.getElementById('lzpPoints');
+SCENES.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Étape '+(i+1)+' : '+s.t);b.onclick=function(){aller(i)};P.appendChild(b)});
+
+function afficher(){
+ stop();cancelAnimationFrame(raf);var s=SCENES[idx];
+ S.classList.remove('on');
+ T.innerHTML='<div class="kick">'+s.k+'</div><h2>'+s.t+'</h2><p>'+s.p+'</p><ul>'+s.l.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'+(s.cta?'<a class="cta" href="'+APP_URL+'" target="_blank" rel="noopener">Ouvrir l\'app</a>':'');
+ E.innerHTML=s.e();
+ [].forEach.call(P.children,function(b,i){b.classList.toggle('on',i===idx)});
+ requestAnimationFrame(function(){S.classList.add('on')});
+ s.a();
+ debut=performance.now();
+ if(lecture){apres(s.d,function(){aller((idx+1)%SCENES.length)});progres()}else document.getElementById('lzpProg').style.width='0';
+}
+function progres(){var s=SCENES[idx];raf=requestAnimationFrame(function f(t){document.getElementById('lzpProg').style.width=Math.min(100,(t-debut)/s.d*100)+'%';if(t-debut<s.d&&lecture)raf=requestAnimationFrame(f)})}
+function aller(i){idx=(i+SCENES.length)%SCENES.length;afficher()}
+document.getElementById('lzpPrec').onclick=function(){aller(idx-1)};
+document.getElementById('lzpSuiv').onclick=function(){aller(idx+1)};
+var L=document.getElementById('lzpLect');
+L.onclick=function(){lecture=!lecture;L.textContent=lecture?'❚❚ Pause':'▶ Lecture';afficher()};
+/* démarre quand le bloc devient visible à l'écran */
+var lance=false;function go(){if(!lance){lance=true;afficher()}}
+if('IntersectionObserver' in window){new IntersectionObserver(function(en,o){if(en[0].isIntersecting){go();o.disconnect()}},{threshold:.25}).observe(R)}else go();
+})();
+</script>
+</div>
