@@ -17,6 +17,7 @@ export default function AdminFiches() {
   const [err, setErr] = useState<unknown>();
   const userId = qs.get('userId') ?? '';
   const etat = qs.get('masquee') ?? '';
+  const photosOk = qs.get('photos') === 'oui';
   const changer = (k: string, v: string) => {
     const n = new URLSearchParams(qs);
     if (v) n.set(k, v);
@@ -34,13 +35,14 @@ export default function AdminFiches() {
     if (tags.length) p.set('tags', tags.join(','));
     if (userId) p.set('userId', userId);
     if (etat) p.set('masquee', etat);
+    if (photosOk) p.set('photosUtilisables', 'oui');
     return api<PageFiches>(`/admin/fiches?${p}`).then(setData).catch(setErr);
   };
   useEffect(() => {
     const h = setTimeout(charger, 250);
     return () => clearTimeout(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, tags, userId, etat]);
+  }, [q, tags, userId, etat, photosOk]);
 
   const basculer = async (f: Fiche) => {
     if (!f.masquee && !confirm(`Masquer « ${f.titre} » ? Elle ne sera plus visible que par son auteur et les admins.`)) return;
@@ -62,6 +64,7 @@ export default function AdminFiches() {
           </select>
         </label>
         <div className="seg">
+          <button type="button" className={photosOk ? 'on' : ''} onClick={() => changer('photos', photosOk ? '' : 'oui')}>📷 Photos utilisables</button>
           {[['', 'Toutes'], ['non', 'Visibles'], ['oui', 'Masquées']].map(([v, l]) => (
             <button key={v} type="button" className={etat === v ? 'on' : ''} onClick={() => changer('masquee', v)}>{l}</button>
           ))}
@@ -87,6 +90,7 @@ export default function AdminFiches() {
                       <div className="muted petit">{f.machine.nom} · {date(f.createdAt)}</div>
                       <NoteResume moyenne={f.note.moyenne} nombre={f.note.nombre} />
                       {f.masquee && <span className="badge-masquee">Masquée</span>}
+                      {f.accordPhotos && f.photos.length > 0 && <span className="badge-accord">📷 Photos utilisables</span>}
                     </div>
                   </Link>
                   <button type="button" className="btn petit" onClick={() => basculer(f)}>{f.masquee ? 'Réafficher' : 'Masquer'}</button>

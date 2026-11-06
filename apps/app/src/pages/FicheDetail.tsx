@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur, Etoiles, Galerie, Indicateurs } from '../components/Composants';
+import { MiniatureMachine } from '../components/MiniatureMachine';
 import { Miroir } from '../components/Miroir';
 import { completer } from '@decapage/machine-kit';
 import { Avis, api, chargerVersion, Fiche, Version } from '../lib/api';
@@ -15,6 +16,10 @@ export default function FicheDetail() {
   const [err, setErr] = useState<unknown>();
   const { moi } = useAuth();
   const admin = moi?.role === 'ADMIN';
+  const [aideActive, setAideActive] = useState(false);
+  useEffect(() => {
+    api<{ aideSupport: boolean }>('/parametres').then((p) => setAideActive(p.aideSupport)).catch(() => {});
+  }, []);
 
   const charger = useCallback(async () => {
     const fiche = await api<Fiche>(`/fiches/${id}`);
@@ -84,9 +89,12 @@ export default function FicheDetail() {
           Enregistrée par <b>{f.auteurAdmin.nom || f.auteurAdmin.identifiant}</b> ({f.auteurAdmin.identifiant})
         </p>
       )}
-      <p className="muted petit">
-        {f.machine.nom} · {f.estAuteur ? 'vous' : f.auteur} · {date(f.createdAt)}
-      </p>
+      <div className="entete-machine">
+        <MiniatureMachine url={f.machine.imageUrl} badge={f.machine.varianteNom} taille={48} />
+        <p className="muted petit" style={{ margin: 0 }}>
+          {f.machine.nom} · {f.estAuteur ? 'vous' : f.auteur} · {date(f.createdAt)}
+        </p>
+      </div>
       {f.parent && <p className="petit">Dupliquée de <Link to={`/fiches/${f.parent.id}`}>{f.parent.titre}</Link></p>}
       <div className="puces">{f.tags.map((t) => <span key={t.id} className="puce">{t.nom}</span>)}</div>
 
@@ -125,6 +133,8 @@ export default function FicheDetail() {
           </div>
         ))}
       </div>
+
+      {aideActive && <DemandeAide ficheId={f.id} />}
 
       <div className="actions">
         <Link to={`/fiches/nouvelle?depuis=${f.id}`} className="btn prim">Dupliquer ce réglage</Link>
@@ -197,6 +207,49 @@ function MonAvis({ existant, onPublier, onSupprimer }: { existant?: Avis; onPubl
         </button>
       </div>
       {!note && <small className="muted">Choisissez d'abord une note.</small>}
+    </div>
+  );
+}
+
+/** « Demander de l'aide à Lazzeko » : le support reçoit le réglage, les photos et le message. */
+function DemandeAide({ ficheId }: { ficheId: string }) {
+  const [ouvert, setOuvert] = useState(false);
+  const [message, setMessage] = useState('');
+  const [etat, setEtat] = useState<'' | 'envoi' | 'ok'>('');
+  const [err, setErr] = useState<unknown>();
+  if (etat === 'ok') return <div className="succes">Demande envoyée : l'équipe Lazzeko reçoit ce réglage, ses photos et votre message.</div>;
+  if (!ouvert)
+    return (
+      <button type="button" className="btn large" style={{ marginTop: 16 }} onClick={() => setOuvert(true)}>
+        🛟 Demander de l'aide à Lazzeko
+      </button>
+    );
+  return (
+    <div className="aide-support">
+      <b>Demander de l'aide à Lazzeko</b>
+      <span className="muted petit">Le réglage, les photos et votre message sont transmis à l'équipe : pas besoin de tout réexpliquer.</span>
+      <textarea rows={4} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Décrivez le problème : la pièce noircit, la rouille ne part pas…" />
+      <Erreur e={err} />
+      <div className="actions-avis">
+        <button type="button" className="btn petit" onClick={() => setOuvert(false)}>Annuler</button>
+        <button
+          type="button"
+          className="btn prim"
+          disabled={message.trim().length < 3 || etat === 'envoi'}
+          onClick={async () => {
+            setEtat('envoi');
+            try {
+              await api(`/fiches/${ficheId}/aide`, { method: 'POST', json: { message } });
+              setEtat('ok');
+            } catch (e) {
+              setErr(e);
+              setEtat('');
+            }
+          }}
+        >
+          {etat === 'envoi' ? 'Envoi…' : 'Envoyer'}
+        </button>
+      </div>
     </div>
   );
 }

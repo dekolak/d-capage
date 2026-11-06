@@ -8,7 +8,7 @@ interface Webhook { id: string; nom: string; url: string; evenements: string[]; 
 interface Livraison { id: string; evenement: string; statut: string; tentatives: number; dernierCode: number | null; derniereErreur: string | null; createdAt: string }
 
 const NOMS: Record<string, string> = {
-  'fiche.creee': 'Nouvelle fiche', 'fiche.modifiee': 'Fiche modifiée', 'avis.publie': 'Nouvel avis', 'avis.modifie': 'Avis modifié',
+  'fiche.creee': 'Nouvelle fiche', 'fiche.modifiee': 'Fiche modifiée', 'avis.publie': 'Nouvel avis', 'avis.modifie': 'Avis modifié', 'aide.demandee': 'Demande d\'aide',
 };
 
 /**

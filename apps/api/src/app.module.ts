@@ -12,6 +12,8 @@ import { FichesModule } from './fiches/fiches.module';
 import { HealthController } from './health.controller';
 import { MachinesModule } from './machines/machines.module';
 import { PhotosModule } from './photos/photos.module';
+import { ParametresModule } from './parametres/parametres.module';
+import { StockageModule } from './stockage/stockage.module';
 import { TagsModule } from './tags/tags.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -25,6 +27,8 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     ...(existsSync(APP_DIST) ? [ServeStaticModule.forRoot({ rootPath: APP_DIST, exclude: ['/api/{*chemin}'] })] : []),
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    StockageModule,
+    ParametresModule,
     AuthModule,
     ApiKeysModule,
     UsersModule,

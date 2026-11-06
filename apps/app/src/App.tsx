@@ -3,6 +3,7 @@ import { Chargement } from './components/Composants';
 import { useAuth } from './lib/auth';
 import Admin from './pages/Admin';
 import AdminAvis from './pages/AdminAvis';
+import AdminCatalogue from './pages/AdminCatalogue';
 import AdminFiches from './pages/AdminFiches';
 import AdminWebhooks from './pages/AdminWebhooks';
 import Aide from './pages/Aide';
@@ -13,6 +14,7 @@ import FicheDetail from './pages/FicheDetail';
 import FicheEditeur from './pages/FicheEditeur';
 import Fiches from './pages/Fiches';
 import Machines from './pages/Machines';
+import Top from './pages/Top';
 
 export default function App() {
   const { moi, pret } = useAuth();
@@ -28,12 +30,14 @@ export default function App() {
           <Route path="/fiches/:id/modifier" element={<FicheEditeur />} />
           <Route path="/fiches/:id" element={<FicheDetail />} />
           <Route path="/communaute" element={<Communaute />} />
+          <Route path="/top" element={<Top />} />
           <Route path="/machines" element={<Machines />} />
           <Route path="/compte" element={<Compte />} />
           <Route path="/aide" element={<Aide />} />
           {moi.role === 'ADMIN' && <Route path="/admin" element={<Admin />} />}
           {moi.role === 'ADMIN' && <Route path="/admin/fiches" element={<AdminFiches />} />}
           {moi.role === 'ADMIN' && <Route path="/admin/avis" element={<AdminAvis />} />}
+          {moi.role === 'ADMIN' && <Route path="/admin/catalogue" element={<AdminCatalogue />} />}
           {moi.role === 'ADMIN' && <Route path="/admin/webhooks" element={<AdminWebhooks />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

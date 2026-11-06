@@ -192,4 +192,55 @@ describe('Parcours complet', () => {
     await http.delete(`/api/admin/webhooks/${wh.id}`).set(auth(admin)).expect(200);
     srv.close();
   });
+
+  it('miniature machine, accord photos, top réglages, demande d\'aide masquée', async () => {
+    // --- miniature : l'admin envoie un PNG, tout le monde voit l'image ---
+    const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    const cat0 = (await http.get('/api/catalogue').set(auth(alice))).body;
+    const modele = cat0.find((f: any) => f.slug === 'lazzeko').modeles[0];
+    expect((await http.post(`/api/catalogue/modeles/${modele.id}/image`).set(auth(bob)).attach('image', PNG, 'm.png')).status).toBe(403);
+    expect((await http.post(`/api/catalogue/modeles/${modele.id}/image`).set(auth(admin)).attach('image', Buffer.from('pas une image'), 'm.png')).status).toBe(400);
+    await http.post(`/api/catalogue/modeles/${modele.id}/image`).set(auth(admin)).attach('image', PNG, 'm.png').expect(201);
+    const cat = (await http.get('/api/catalogue').set(auth(alice))).body;
+    const url = cat.find((f: any) => f.slug === 'lazzeko').modeles[0].variantes[0].imageUrl;
+    expect(url).toMatch(/^\/api\/catalogue\/modeles\/.+\/image\?v=\d+$/);
+    const img = await http.get(url); // publique, sans jeton
+    expect(img.status).toBe(200);
+    expect(img.headers['content-type']).toBe('image/png');
+    expect((await http.get('/api/moi/machines').set(auth(alice))).body[0].imageUrl).toBe(url);
+    expect((await http.get(`/api/fiches/${fiche}`).set(auth(alice))).body.machine.imageUrl).toBe(url);
+
+    // --- accord photos : filtre admin « photos utilisables » ---
+    const sans = (await http.get('/api/admin/fiches?photosUtilisables=oui&parPage=50').set(auth(admin))).body;
+    expect(sans.fiches.some((x: any) => x.id === fiche)).toBe(false);
+    expect((await http.patch(`/api/fiches/${fiche}`).set(auth(alice)).send({ accordPhotos: true })).body.accordPhotos).toBe(true);
+    const avec = (await http.get('/api/admin/fiches?photosUtilisables=oui&parPage=50').set(auth(admin))).body;
+    expect(avec.fiches.some((x: any) => x.id === fiche)).toBe(true);
+
+    // --- top réglages : la fiche notée apparaît sous ses tags ---
+    // tag propre à ce test (la base de dev contient d'autres fiches « Acier »)
+    const groupes = (await http.get('/api/tags').set(auth(alice))).body;
+    const tagTest = (await http.post('/api/tags').set(auth(alice)).send({ groupeId: groupes.find((g: any) => g.slug === 'materiau').id, nom: `Test ${id}` })).body;
+    await http.patch(`/api/fiches/${fiche}`).set(auth(alice)).send({ tagIds: [tagAcier, tagRouille, tagTest.id] }).expect(200);
+    const top = (await http.get(`/api/top?varianteId=${varianteId}`).set(auth(bob))).body;
+    const mat = top.find((g: any) => g.slug === 'materiau');
+    expect(mat.tags.find((t: any) => t.id === tagTest.id).fiches.map((x: any) => x.id)).toEqual([fiche]);
+    const acier = mat.tags.find((t: any) => t.id === tagAcier);
+    expect(acier.fiches.length).toBeLessThanOrEqual(3);
+    const notes = acier.fiches.map((x: any) => x.note.moyenne);
+    expect([...notes].sort((x: number, y: number) => y - x)).toEqual(notes); // du mieux noté au moins bien noté
+
+    // --- demande d'aide : désactivée par défaut, puis activée par l'admin ---
+    expect((await http.get('/api/parametres').set(auth(bob))).body.aideSupport).toBe(false);
+    expect((await http.post(`/api/fiches/${fiche}/aide`).set(auth(alice)).send({ message: 'Ça noircit la pièce' })).status).toBe(403);
+    expect((await http.patch('/api/admin/parametres').set(auth(bob)).send({ aideSupport: true })).status).toBe(403);
+    await http.patch('/api/admin/parametres').set(auth(admin)).send({ aideSupport: true }).expect(200);
+    await http.post(`/api/fiches/${fiche}/aide`).set(auth(alice)).send({ message: 'Ça noircit la pièce' }).expect(201);
+    const demandes = (await http.get('/api/admin/aide?traitee=non').set(auth(admin))).body;
+    const d = demandes.find((x: any) => x.message === 'Ça noircit la pièce');
+    expect(d.fiche.id).toBe(fiche);
+    await http.patch(`/api/admin/aide/${d.id}`).set(auth(admin)).send({ traitee: true }).expect(200);
+    await http.patch('/api/admin/parametres').set(auth(admin)).send({ aideSupport: false }).expect(200);
+    await http.delete(`/api/catalogue/modeles/${modele.id}/image`).set(auth(admin)).expect(200);
+  });
 });

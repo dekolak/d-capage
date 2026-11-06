@@ -2,7 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { Prisma, Role, StatutAvis, Visibilite } from '@prisma/client';
 import { completer, technologie, validerValeurs } from '@decapage/machine-kit';
 import { Principal } from '../auth/decorators';
-import { CatalogueService, nomMachine } from '../catalogue/catalogue.service';
+import { CatalogueService, imageMachine, nomMachine } from '../catalogue/catalogue.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { CreerFicheDto, EvaluerDto, FiltresDto, ModifierFicheDto } from './fiches.dto';
@@ -114,6 +114,7 @@ export class FichesService {
           estAuteur: f.userId === moi.id,
           auteur: f.user.nom || f.user.identifiant,
           masquee: f.masquee,
+          accordPhotos: f.accordPhotos,
           // Réservé aux admins : savoir précisément qui a fait l'enregistrement.
           ...(moi.role === Role.ADMIN ? { auteurAdmin: { id: f.user.id, identifiant: f.user.identifiant, nom: f.user.nom } } : {}),
           machine: {
@@ -122,6 +123,8 @@ export class FichesService {
             varianteId: f.versionInterface.varianteId,
             modeleId: f.versionInterface.variante.modeleId,
             nom: nomMachine(f.versionInterface.variante),
+            varianteNom: f.versionInterface.variante.nom,
+            imageUrl: imageMachine(f.versionInterface.variante),
           },
           version: { id: f.versionInterface.id, numero: f.versionInterface.numero },
           tags: f.tags.map((t) => ({ id: t.tag.id, slug: t.tag.slug, nom: t.tag.nom, groupe: t.tag.groupe.slug })),
@@ -173,15 +176,86 @@ export class FichesService {
     return this.page({ ...this.where(f), visibilite: Visibilite.PARTAGEE, masquee: false }, { tri: 'note', ...f }, moi);
   }
 
+  // ---------- top réglages ----------
+
+  /**
+   * Les meilleurs réglages par tag (matériau, à enlever, application) : 3 par tag,
+   * triés par note moyenne puis nombre de notes. Fiches partagées, non masquées, déjà notées.
+   */
+  async top(moi: Principal, f: { varianteId?: string; parTag?: number }) {
+    const parTag = f.parTag ?? 3;
+    const candidates = await this.prisma.fiche.findMany({
+      where: {
+        visibilite: Visibilite.PARTAGEE, masquee: false, noteMoyenne: { not: null },
+        ...(f.varianteId ? { versionInterface: { varianteId: f.varianteId } } : {}),
+      },
+      include: INCLUDE,
+      orderBy: [{ noteMoyenne: 'desc' }, { nbNotes: 'desc' }, { createdAt: 'desc' }],
+      take: 500,
+    });
+    const groupes = await this.prisma.groupeTag.findMany({ orderBy: { ordre: 'asc' } });
+    const parTagId = new Map<string, { tag: { id: string; nom: string }; groupe: string; fiches: FicheComplete[] }>();
+    for (const fi of candidates)
+      for (const t of fi.tags) {
+        const e = parTagId.get(t.tag.id) ?? { tag: { id: t.tag.id, nom: t.tag.nom }, groupe: t.tag.groupe.slug, fiches: [] };
+        if (e.fiches.length < parTag) e.fiches.push(fi);
+        parTagId.set(t.tag.id, e);
+      }
+    const utiles = [...new Map([...parTagId.values()].flatMap((e) => e.fiches).map((x) => [x.id, x])).values()];
+    const vues = new Map((await this.vues(utiles, moi)).map((v) => [v.id, v]));
+    return groupes
+      .map((g) => ({
+        slug: g.slug,
+        nom: g.nom,
+        tags: [...parTagId.values()]
+          .filter((e) => e.groupe === g.slug)
+          .sort((a, b) => (b.fiches[0].noteMoyenne ?? 0) - (a.fiches[0].noteMoyenne ?? 0) || a.tag.nom.localeCompare(b.tag.nom))
+          .map((e) => ({ ...e.tag, fiches: e.fiches.map((x) => vues.get(x.id)!) })),
+      }))
+      .filter((g) => g.tags.length);
+  }
+
+  // ---------- demande d'aide (bouton masqué tant que le paramètre aideSupport est désactivé) ----------
+
+  async demanderAide(id: string, moi: Principal, message: string) {
+    const f = await this.charger(id, moi);
+    const d = await this.prisma.demandeAide.create({ data: { ficheId: id, userId: moi.id, message: message.trim() } });
+    const u = await this.prisma.user.findUnique({ where: { id: moi.id }, select: { id: true, identifiant: true, nom: true } });
+    void this.chargeFiche(id).then((c) =>
+      this.webhooks.emettre('aide.demandee', {
+        ...c,
+        demande: { id: d.id, message: d.message, demandeur: u, creeLe: d.createdAt },
+        valeurs: f.valeurs,
+        photos: f.photos.map((p) => ({ id: p.id, type: p.type, url: this.lien(`/api/photos/${p.id}`) })),
+      }),
+    );
+    return { ok: true, id: d.id };
+  }
+
+  async demandesAide(traitee?: boolean) {
+    return this.prisma.demandeAide.findMany({
+      where: traitee === undefined ? {} : { traitee },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      include: { user: { select: { id: true, identifiant: true, nom: true } }, fiche: { select: { id: true, titre: true } } },
+    });
+  }
+
+  async traiterAide(id: string, traitee: boolean) {
+    await this.prisma.demandeAide.update({ where: { id }, data: { traitee } });
+    return { ok: true };
+  }
+
   // ---------- administration ----------
 
   /** Toutes les fiches (masquées comprises), filtrables par auteur et par état. */
-  adminFiches(moi: Principal, f: FiltresDto & { userId?: string; masquee?: string }) {
+  adminFiches(moi: Principal, f: FiltresDto & { userId?: string; masquee?: string; photosUtilisables?: string }) {
     return this.page(
       {
         ...this.where(f),
         ...(f.userId ? { userId: f.userId } : {}),
         ...(f.masquee === 'oui' ? { masquee: true } : f.masquee === 'non' ? { masquee: false } : {}),
+        ...(f.photosUtilisables === 'oui' ? { accordPhotos: true, photos: { some: {} } } : {}),
       },
       { tri: 'recent', ...f },
       moi,
@@ -275,6 +349,8 @@ export class FichesService {
         valeurs,
         visibilite: dto.visibilite ?? Visibilite.PARTAGEE, // mise en commun par défaut
         parentId: dto.parentId ?? null,
+        accordPhotos: !!dto.accordPhotos,
+        accordPhotosLe: dto.accordPhotos ? new Date() : null,
         tags: { create: tagIds.map((tagId) => ({ tagId })) },
       },
     });
@@ -296,6 +372,10 @@ export class FichesService {
     if (dto.titre !== undefined) data.titre = dto.titre.trim();
     if (dto.commentaire !== undefined) data.commentaire = dto.commentaire.trim() || null;
     if (dto.visibilite) data.visibilite = dto.visibilite;
+    if (dto.accordPhotos !== undefined && dto.accordPhotos !== f.accordPhotos) {
+      data.accordPhotos = dto.accordPhotos;
+      data.accordPhotosLe = dto.accordPhotos ? new Date() : null;
+    }
     // Les valeurs restent validées contre la version d'origine de la fiche.
     if (dto.valeurs) data.valeurs = await this.valider(f.versionInterfaceId, dto.valeurs);
     if (dto.tagIds) {

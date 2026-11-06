@@ -57,6 +57,20 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 | PATCH | `/api/admin/avis/:id` `{statut, raison?}` | admin **ou clé API** |
 | PATCH | `/api/admin/fiches/:id` `{masquee, raison?}` | admin **ou clé API** |
 | GET · POST · PATCH · DELETE | `/api/admin/webhooks` (+ `/:id/test`, `/:id/livraisons`) | admin |
+| GET | `/api/catalogue/modeles/:id/image`, `/api/catalogue/variantes/:id/image` | public (miniature) |
+| POST · DELETE | idem, champ multipart `image` (PNG conseillé, 5 Mo max) | admin |
+| GET | `/api/top?varianteId=` (3 meilleurs réglages par tag) | connecté |
+| GET · PATCH | `/api/parametres`, `/api/admin/parametres` `{aideSupport}` | connecté · admin |
+| POST | `/api/fiches/:id/aide` `{message}` (si `aideSupport` activé) | connecté |
+| GET · PATCH | `/api/admin/aide`, `/api/admin/aide/:id` `{traitee}` | admin **ou clé API** |
+
+## Miniatures des machines
+Administration → **Machines** : envoyer un PNG par modèle (machine entière, fond transparent ou clair, ~800 × 800 px).
+Une variante peut avoir sa propre image, sinon elle reprend celle du modèle. Sans image, l'app affiche une illustration par défaut.
+
+## Accord pour les photos
+À l'enregistrement d'une fiche avec photos, l'auteur peut cocher « J'accepte que Lazzeko utilise mes photos ». Filtre admin : Toutes les fiches → **📷 Photos utilisables**.
+À compléter dans vos conditions d'utilisation / politique de confidentialité (usage des photos, retrait de l'accord).
 
 ## Modération et envoi vers une API (IA)
 - Chaque **nouvelle fiche**, **fiche modifiée**, **nouvel avis** ou **avis modifié** peut être envoyé en `POST` JSON à une ou plusieurs adresses (Administration → *Envoi vers une API*).

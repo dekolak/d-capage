@@ -50,24 +50,25 @@ model User {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  machines    UserMachine[]
-  fiches      Fiche[]
-  evaluations Evaluation[]
-  apiKeys     ApiKey[]
+  machines     UserMachine[]
+  fiches       Fiche[]
+  evaluations  Evaluation[]
+  apiKeys      ApiKey[]
+  demandesAide DemandeAide[]
 }
 
 /// Clé API pour créer des comptes depuis un autre système (site, CRM…).
 /// Seul le hash est stocké ; la clé en clair n'est montrée qu'une fois.
 model ApiKey {
-  id          String    @id @default(cuid())
-  nom         String
-  prefixe     String    @unique
-  hash        String
-  creeParId   String?
-  creePar     User?     @relation(fields: [creeParId], references: [id])
+  id                  String    @id @default(cuid())
+  nom                 String
+  prefixe             String    @unique
+  hash                String
+  creeParId           String?
+  creePar             User?     @relation(fields: [creeParId], references: [id])
   derniereUtilisation DateTime?
-  revoqueeLe  DateTime?
-  createdAt   DateTime  @default(now())
+  revoqueeLe          DateTime?
+  createdAt           DateTime  @default(now())
 }
 
 // ---------- Catalogue machines ----------
@@ -94,6 +95,9 @@ model Modele {
   fabricant     Fabricant   @relation(fields: [fabricantId], references: [id])
   technologieId String
   technologie   Technologie @relation(fields: [technologieId], references: [id])
+  /// Miniature de la machine (clé de stockage) : envoyée par l'admin, PNG de préférence.
+  imageCle      String?
+  imageMaj      DateTime?
   variantes     Variante[]
 
   @@unique([fabricantId, slug])
@@ -101,14 +105,17 @@ model Modele {
 
 /// Ex. 300 W. Une variante a une ou plusieurs versions d'interface.
 model Variante {
-  id        String             @id @default(cuid())
-  slug      String
-  nom       String
-  modeleId  String
-  modele    Modele             @relation(fields: [modeleId], references: [id])
-  actif     Boolean            @default(true)
-  versions  VersionInterface[]
-  machines  UserMachine[]
+  id       String             @id @default(cuid())
+  slug     String
+  nom      String
+  modeleId String
+  modele   Modele             @relation(fields: [modeleId], references: [id])
+  actif    Boolean            @default(true)
+  /// Miniature propre à la variante (sinon celle du modèle).
+  imageCle String?
+  imageMaj DateTime?
+  versions VersionInterface[]
+  machines UserMachine[]
 
   @@unique([modeleId, slug])
 }
@@ -190,6 +197,9 @@ model Fiche {
   moderePar          String?
   noteMoyenne        Float?
   nbNotes            Int              @default(0)
+  /// Accord de l'auteur pour que Lazzeko réutilise ses photos (site, réseaux, documentation).
+  accordPhotos       Boolean          @default(false)
+  accordPhotosLe     DateTime?
   /// Fiche d'origine quand on duplique le réglage d'un autre.
   parentId           String?
   parent             Fiche?           @relation("Duplication", fields: [parentId], references: [id], onDelete: SetNull)
@@ -197,9 +207,10 @@ model Fiche {
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
-  tags        FicheTag[]
-  photos      Photo[]
-  evaluations Evaluation[]
+  tags         FicheTag[]
+  photos       Photo[]
+  evaluations  Evaluation[]
+  demandesAide DemandeAide[]
 
   @@index([versionInterfaceId, visibilite])
   @@index([visibilite, noteMoyenne])
@@ -237,19 +248,19 @@ enum StatutAvis {
 /// Note 1 à 5 + avis : un par utilisateur et par fiche (l'auteur note aussi sa propre fiche).
 /// Pas de réponses : on évite les discussions.
 model Evaluation {
-  id        String   @id @default(cuid())
-  ficheId   String
-  fiche     Fiche    @relation(fields: [ficheId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  note      Int
-  avis      String?
+  id               String     @id @default(cuid())
+  ficheId          String
+  fiche            Fiche      @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  note             Int
+  avis             String?
   statut           StatutAvis @default(VISIBLE)
   moderationRaison String?
   moderePar        String?
   modereLe         DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   @@unique([ficheId, userId])
   @@index([statut, updatedAt])
@@ -293,4 +304,27 @@ model WebhookLivraison {
   envoyeLe       DateTime?
 
   @@index([statut, prochainEssai])
+}
+
+// ---------- Paramètres et demandes d'aide ----------
+
+/// Réglages de l'app modifiables par l'admin (ex. aideSupport = afficher le bouton d'aide).
+model Parametre {
+  cle    String   @id
+  valeur Json
+  maj    DateTime @updatedAt
+}
+
+/// « Demander de l'aide à Lazzeko » depuis une fiche (bouton masqué tant que aideSupport est désactivé).
+model DemandeAide {
+  id        String   @id @default(cuid())
+  ficheId   String
+  fiche     Fiche    @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  traitee   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([traitee, createdAt])
 }
