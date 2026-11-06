@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CarteFiche } from '../components/CarteFiche';
 import { Chargement, Erreur, FiltreTags } from '../components/Composants';
 import { api, Fabricant, GroupeTag, MaMachine, PageFiches } from '../lib/api';
@@ -41,6 +42,10 @@ export default function Communaute() {
   return (
     <div className="page">
       <h1>Communauté</h1>
+      <Link to="/top" className="bandeau lien-bandeau lien-top">
+        <span><b>🏆 Top réglages</b> : les meilleurs par matériau</span>
+        <span>›</span>
+      </Link>
       <div className="filtres">
         <select value={varianteId} onChange={(e) => setVariante(e.target.value)}>
           <option value="">Toutes les machines</option>

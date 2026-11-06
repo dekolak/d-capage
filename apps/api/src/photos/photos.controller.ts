@@ -23,7 +23,7 @@ import { randomUUID } from 'node:crypto';
 import { Moi, Principal } from '../auth/decorators';
 import { FichesService } from '../fiches/fiches.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { StockageService } from './stockage.service';
+import { formatImage, MIME_IMAGE as MIME, StockageService } from '../stockage/stockage.service';
 
 const MAX_PHOTOS = 12;
 const MAX_OCTETS = 8 * 1024 * 1024;
@@ -38,14 +38,7 @@ class ModifierPhotoDto {
   @IsOptional() @IsInt() @Min(0) ordre?: number;
 }
 
-/** Vérifie la signature binaire (ne pas se fier au type annoncé par le client). */
-function formatImage(b: Buffer): 'jpg' | 'png' | 'webp' | null {
-  if (b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'jpg';
-  if (b.length > 8 && b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'png';
-  if (b.length > 12 && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP') return 'webp';
-  return null;
-}
-const MIME = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' } as const;
+
 
 @Controller()
 export class PhotosController {

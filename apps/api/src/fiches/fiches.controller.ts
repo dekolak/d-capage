@@ -1,12 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { IsBoolean } from 'class-validator';
+import { ParametresService } from '../parametres/parametres.service';
 import { Role } from '@prisma/client';
 import { AutoriseCleApi, Moi, Principal, Roles } from '../auth/decorators';
-import { CreerFicheDto, EvaluerDto, FiltresAdminDto, FiltresAvisDto, FiltresDto, MasquerDto, ModererAvisDto, ModifierFicheDto } from './fiches.dto';
+import { CreerFicheDto, DemandeAideDto, EvaluerDto, FiltresAdminDto, FiltresAvisDto, FiltresDto, MasquerDto, ModererAvisDto, ModifierFicheDto } from './fiches.dto';
 import { FichesService } from './fiches.service';
+
+class TraiterAideDto {
+  @IsBoolean() traitee!: boolean;
+}
 
 @Controller()
 export class FichesController {
-  constructor(private fiches: FichesService) {}
+  constructor(private fiches: FichesService, private parametres: ParametresService) {}
 
   @Get('fiches')
   mesFiches(@Moi() moi: Principal, @Query() f: FiltresDto) {
@@ -47,6 +53,33 @@ export class FichesController {
   @Delete('fiches/:id/evaluation')
   retirerEvaluation(@Moi() moi: Principal, @Param('id') id: string) {
     return this.fiches.retirerEvaluation(id, moi);
+  }
+
+  /** Les meilleurs réglages par matériau / à enlever / application. */
+  @Get('top')
+  top(@Moi() moi: Principal, @Query('varianteId') varianteId?: string) {
+    return this.fiches.top(moi, { varianteId: varianteId || undefined });
+  }
+
+  /** « Demander de l'aide à Lazzeko » : refusé tant que le paramètre aideSupport est désactivé. */
+  @Post('fiches/:id/aide')
+  async demanderAide(@Moi() moi: Principal, @Param('id') id: string, @Body() dto: DemandeAideDto) {
+    if (!(await this.parametres.valeur('aideSupport'))) throw new ForbiddenException('Fonction désactivée');
+    return this.fiches.demanderAide(id, moi, dto.message);
+  }
+
+  @Get('admin/aide')
+  @Roles(Role.ADMIN)
+  @AutoriseCleApi()
+  demandesAide(@Query('traitee') traitee?: string) {
+    return this.fiches.demandesAide(traitee === 'oui' ? true : traitee === 'non' ? false : undefined);
+  }
+
+  @Patch('admin/aide/:id')
+  @Roles(Role.ADMIN)
+  @AutoriseCleApi()
+  traiterAide(@Param('id') id: string, @Body() dto: TraiterAideDto) {
+    return this.fiches.traiterAide(id, dto.traitee);
   }
 
   // --- administration ---

@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { completer, technologie, validerValeurs } from '@decapage/machine-kit';
 import { ChoixTags, Chargement, Erreur, Etoiles, Galerie, Indicateurs, LIBELLE_PHOTO } from '../components/Composants';
+import { MiniatureMachine } from '../components/MiniatureMachine';
 import { Miroir } from '../components/Miroir';
 import { api, chargerVersion, envoyerPhoto, Fiche, GroupeTag, MaMachine, PhotoRef, Tag, TypePhoto, Version } from '../lib/api';
 import { compresser } from '../lib/image';
 import {
   Brouillon, brouillonUtile, ecrireBrouillon, ecrirePhotosBrouillon, effacerBrouillon, lireBrouillon, lirePhotosBrouillon,
 } from '../lib/brouillon';
-import { nomMachine } from '../lib/util';
 
 interface NouvellePhoto { type: TypePhoto; fichier: Blob; miniature: Blob; apercu: string }
 const ETAPES = ['Machine', 'Surface', 'Avant', 'Réglages', 'Écran', 'Résultat'] as const;
@@ -51,7 +51,7 @@ export default function FicheEditeur() {
         setB({
           userMachineId: f.machine.userMachineId ?? '', valeurs: completer(v.config, f.valeurs),
           tagIds: f.tags.map((t) => t.id), titre: f.titre, commentaire: f.commentaire ?? '',
-          note: f.note.maNote, etape: 1,
+          note: f.note.maNote, etape: 1, accordPhotos: f.accordPhotos,
         });
       } else if (depuis) {
         const p = await api<Fiche>(`/fiches/${depuis}`);
@@ -151,7 +151,7 @@ export default function FicheEditeur() {
     try {
       setEnvoi('Enregistrement…');
       const corps = {
-        titre: b.titre, commentaire: b.commentaire, valeurs: validation.valeurs, tagIds: b.tagIds,
+        titre: b.titre, commentaire: b.commentaire, valeurs: validation.valeurs, tagIds: b.tagIds, accordPhotos: !!b.accordPhotos,
       };
       const f = modif
         ? await api<Fiche>(`/fiches/${ficheId}`, { method: 'PATCH', json: corps })
@@ -258,11 +258,13 @@ export default function FicheEditeur() {
       {e === 0 && (
         <section>
           <h2>Quelle machine ?</h2>
-          <div className="liste-choix">
+          <div className="cartes-machines">
             {machines.map((m) => (
-              <button key={m.id} type="button" className={'choix' + (b.userMachineId === m.id ? ' on' : '')}
+              <button key={m.id} type="button" className={'carte-machine' + (b.userMachineId === m.id ? ' on' : '')}
                 onClick={() => maj({ userMachineId: m.id, ...(m.varianteId !== machine?.varianteId && !parent ? { valeurs: null } : {}) })}>
-                {nomMachine(m)}
+                <MiniatureMachine url={m.imageUrl} badge={m.varianteNom} taille={96} />
+                <span>{m.surnom || m.nom}</span>
+                {m.surnom && <small>{m.nom}</small>}
               </button>
             ))}
           </div>
@@ -306,6 +308,15 @@ export default function FicheEditeur() {
             Commentaire
             <textarea rows={4} value={b.commentaire} onChange={(ev) => maj({ commentaire: ev.target.value })} placeholder="Nombre de passages, distance, remarques…" />
           </label>
+          {(photos.length > 0 || existantes.length > 0) && (
+            <label className="interrupteur accord">
+              <input type="checkbox" checked={!!b.accordPhotos} onChange={(ev) => maj({ accordPhotos: ev.target.checked })} />
+              <span>
+                J'accepte que Lazzeko utilise mes photos (site, réseaux sociaux, documentation).
+                <small className="muted"> Facultatif, modifiable à tout moment.</small>
+              </span>
+            </label>
+          )}
           {validation && !validation.ok && (
             <div className="alerte">Réglages à corriger : {validation.erreurs.map((x) => `${x.key ?? ''} ${x.message}`).join(', ')}</div>
           )}

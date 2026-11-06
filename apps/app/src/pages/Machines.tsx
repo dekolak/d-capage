@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Chargement, Erreur } from '../components/Composants';
+import { MiniatureMachine } from '../components/MiniatureMachine';
 import { api, Fabricant, MaMachine } from '../lib/api';
 
 export default function Machines() {
@@ -43,7 +44,8 @@ export default function Machines() {
           {mes.length === 0 && <p className="muted">Aucune machine. Ajoutez la vôtre ci-dessous.</p>}
           {mes.map((m) => (
             <div key={m.id} className="carte ligne-machine">
-              <div>
+              <MiniatureMachine url={m.imageUrl} badge={m.varianteNom} taille={56} />
+              <div style={{ flex: 1 }}>
                 <b>{m.surnom || m.nom}</b>
                 {m.surnom && <div className="muted petit">{m.nom}</div>}
               </div>
@@ -55,17 +57,21 @@ export default function Machines() {
 
       <h2>Ajouter une machine</h2>
       <div className="form">
-        <label>
-          Modèle
-          <select value={varianteId} onChange={(e) => setVariante(e.target.value)}>
-            <option value="">Choisir dans le catalogue…</option>
+        <div>
+          <b className="petit">Modèle</b>
+          <div className="cartes-machines" style={{ marginTop: 6 }}>
             {catalogue.flatMap((f) =>
               f.modeles.flatMap((mo) =>
-                mo.variantes.map((v) => <option key={v.id} value={v.id}>{`${f.nom} ${mo.nom} ${v.nom}`}</option>),
+                mo.variantes.map((v) => (
+                  <button key={v.id} type="button" className={'carte-machine' + (varianteId === v.id ? ' on' : '')} onClick={() => setVariante(v.id)}>
+                    <MiniatureMachine url={v.imageUrl} badge={v.nom} taille={84} />
+                    <span>{f.nom} {mo.nom}</span>
+                  </button>
+                )),
               ),
             )}
-          </select>
-        </label>
+          </div>
+        </div>
         <label>
           Surnom (facultatif)
           <input value={surnom} maxLength={60} onChange={(e) => setSurnom(e.target.value)} placeholder="ex. Atelier, Camion 2" />

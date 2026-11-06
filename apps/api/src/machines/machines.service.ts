@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { CatalogueService, nomMachine } from '../catalogue/catalogue.service';
+import { CatalogueService, imageMachine, nomMachine } from '../catalogue/catalogue.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const INCLUDE = { variante: { include: { modele: { include: { fabricant: true, technologie: true } } } } } as const;
@@ -22,6 +22,8 @@ export class MachinesService {
       varianteId: m.varianteId,
       modeleId: m.variante.modeleId,
       nom: nomMachine(m.variante),
+      varianteNom: m.variante.nom,
+      imageUrl: imageMachine(m.variante),
       technologie: m.variante.modele.technologie.slug,
       version,
     };

@@ -42,10 +42,10 @@ export async function api<T = unknown>(chemin: string, opts: RequestInit & { jso
 
 // ---------- types renvoyés par l'API ----------
 export interface Moi { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER' }
-export interface Variante { id: string; slug: string; nom: string; version: { id: string; numero: number } }
-export interface Fabricant { id: string; nom: string; modeles: { id: string; nom: string; technologie: string; variantes: Variante[] }[] }
+export interface Variante { id: string; slug: string; nom: string; version: { id: string; numero: number }; imageUrl: string | null; imagePropre: boolean }
+export interface Fabricant { id: string; nom: string; modeles: { id: string; nom: string; technologie: string; imageUrl: string | null; variantes: Variante[] }[] }
 export interface MaMachine {
-  id: string; surnom: string | null; varianteId: string; modeleId: string; nom: string; technologie: string;
+  id: string; surnom: string | null; varianteId: string; modeleId: string; nom: string; varianteNom: string; imageUrl: string | null; technologie: string;
   version: { id: string; numero: number } | null;
 }
 export interface Tag { id: string; slug: string; nom: string; groupe?: string }
@@ -57,7 +57,8 @@ export interface Fiche {
   createdAt: string; estAuteur: boolean; auteur: string; masquee: boolean;
   /** Présent uniquement pour les admins. */
   auteurAdmin?: { id: string; identifiant: string; nom: string | null };
-  machine: { userMachineId: string | null; surnom: string | null; varianteId: string; modeleId: string; nom: string };
+  machine: { userMachineId: string | null; surnom: string | null; varianteId: string; modeleId: string; nom: string; varianteNom: string; imageUrl: string | null };
+  accordPhotos: boolean;
   version: { id: string; numero: number }; tags: Tag[]; photos: PhotoRef[];
   note: { moyenne: number | null; nombre: number; maNote: number | null };
   parent: { id: string; titre: string } | null; nbCopies: number; indicateurs: Indicateur[];

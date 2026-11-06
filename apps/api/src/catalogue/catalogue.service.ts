@@ -35,9 +35,10 @@ export class CatalogueService {
         slug: m.slug,
         nom: m.nom,
         technologie: m.technologie.slug,
+        imageUrl: imageMachine({ id: '', imageCle: null, imageMaj: null, modele: m }),
         variantes: m.variantes
           .filter((v) => v.versions.length)
-          .map((v) => ({ id: v.id, slug: v.slug, nom: v.nom, version: v.versions[0] })),
+          .map((v) => ({ id: v.id, slug: v.slug, nom: v.nom, version: v.versions[0], imageUrl: imageMachine({ ...v, modele: m }), imagePropre: !!v.imageCle })),
       })),
     }));
   }
@@ -80,4 +81,16 @@ export class CatalogueService {
 
 export function nomMachine(v: { nom: string; modele: { nom: string; fabricant: { nom: string } } }) {
   return `${v.modele.fabricant.nom} ${v.modele.nom} ${v.nom}`;
+}
+
+type AvecImage = { id: string; imageCle: string | null; imageMaj: Date | null };
+
+/**
+ * Adresse de la miniature d'une machine : celle de la variante, sinon celle du modèle, sinon null
+ * (l'app affiche alors une illustration par défaut). ?v= force le rafraîchissement après un nouvel envoi.
+ */
+export function imageMachine(v: AvecImage & { modele: AvecImage }): string | null {
+  if (v.imageCle) return `/api/catalogue/variantes/${v.id}/image?v=${v.imageMaj?.getTime() ?? 0}`;
+  if (v.modele.imageCle) return `/api/catalogue/modeles/${v.modele.id}/image?v=${v.modele.imageMaj?.getTime() ?? 0}`;
+  return null;
 }

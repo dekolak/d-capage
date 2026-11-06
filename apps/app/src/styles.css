@@ -346,3 +346,28 @@ textarea { resize: vertical; }
 .actions-avis { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .ma-note textarea { min-height: 70px; }
 .ok { color: var(--ok); } .ko { color: var(--ko); } .carte.inactif { opacity: 0.55; }
+/* ---------- miniature machine ---------- */
+.miniature { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 14px; background: linear-gradient(160deg, #fff, #f0f0f3); box-shadow: inset 0 0 0 1px var(--bord); color: #b7b9c3; overflow: visible; }
+.miniature img { width: 88%; height: 88%; object-fit: contain; }
+.miniature svg { width: 62%; height: 62%; }
+.mini-badge { position: absolute; right: -4px; bottom: -4px; background: var(--t); color: #fff; font-size: 10px; font-weight: 800; border-radius: 99px; padding: 2px 6px; box-shadow: 0 2px 6px rgba(20,20,30,.2); white-space: nowrap; }
+.cartes-machines { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.carte-machine { display: grid; justify-items: center; gap: 8px; text-align: center; padding: 14px 10px 12px; border-radius: var(--r); background: var(--carte); border: 1px solid var(--bord); box-shadow: var(--ombre); cursor: pointer; font-weight: 650; font-size: 14px; color: var(--t); }
+.carte-machine small { font-weight: 500; color: var(--g); font-size: 12px; }
+.carte-machine.on { border-color: var(--o); box-shadow: var(--anneau), var(--ombre); }
+.entete-machine { display: flex; align-items: center; gap: 10px; margin: -4px 0 10px; }
+.vignette-wrap { position: relative; flex: none; }
+.vignette-wrap .miniature { position: absolute; left: -4px; bottom: -4px; border-radius: 9px; box-shadow: 0 2px 6px rgba(20,20,30,.15); }
+.ligne-machine .miniature { margin-right: 10px; }
+.accord { align-items: flex-start !important; font-weight: 500 !important; font-size: 13px !important; } .accord input { margin-top: 2px; flex: none; }
+/* ---------- top réglages ---------- */
+.top-ligne { display: flex; align-items: center; gap: 8px; }
+.top-ligne .carte-fiche { flex: 1; min-width: 0; }
+.podium { flex: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; background: #ebebef; color: var(--g); }
+.podium.p1 { background: #f5a623; color: #fff; box-shadow: 0 3px 10px rgba(245,166,35,.4); }
+.podium.p2 { background: #b8bec9; color: #fff; }
+.podium.p3 { background: #c98b5a; color: #fff; }
+.lien-top { margin-bottom: 12px; }
+/* ---------- demande d'aide ---------- */
+.aide-support { background: var(--carte); border-radius: var(--r); box-shadow: var(--ombre); padding: 14px; display: grid; gap: 8px; margin-top: 16px; }
+.badge-accord { justify-self: start; background: #e8f5ec; color: #14532d; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }

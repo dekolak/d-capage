@@ -26,16 +26,23 @@ export class CreerFicheDto {
   @IsOptional() @IsEnum(Visibilite) visibilite?: Visibilite;
   /** Note de l'auteur (1 à 5). */
   @IsOptional() @IsInt() @Min(1) @Max(5) note?: number;
+  /** Accord pour que Lazzeko réutilise les photos de la fiche. */
+  @IsOptional() @IsBoolean() accordPhotos?: boolean;
   /** Fiche d'origine en cas de duplication. */
   @IsOptional() @IsString() parentId?: string;
 }
 
 export class ModifierFicheDto {
+  @IsOptional() @IsBoolean() accordPhotos?: boolean;
   @IsOptional() @IsString() @MinLength(1) @MaxLength(120) titre?: string;
   @IsOptional() @IsString() @MaxLength(4000) commentaire?: string;
   @IsOptional() @IsObject() valeurs?: Record<string, unknown>;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) tagIds?: string[];
   @IsOptional() @IsEnum(Visibilite) visibilite?: Visibilite;
+}
+
+export class DemandeAideDto {
+  @IsString() @MinLength(3) @MaxLength(2000) message!: string;
 }
 
 export class EvaluerDto {
@@ -60,6 +67,8 @@ export class FiltresDto {
 export class FiltresAdminDto extends FiltresDto {
   @IsOptional() @IsString() userId?: string;
   @IsOptional() @IsIn(['oui', 'non']) masquee?: 'oui' | 'non';
+  /** oui = seulement les fiches avec photos dont l'auteur a donné son accord. */
+  @IsOptional() @IsIn(['oui']) photosUtilisables?: 'oui';
 }
 
 export class MasquerDto {

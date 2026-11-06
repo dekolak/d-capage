@@ -68,6 +68,10 @@ export default function Admin() {
         <span><b>Toutes les fiches</b> : voir qui les a faites, masquer</span>
         <span>›</span>
       </Link>
+      <Link to="/admin/catalogue" className="bandeau lien-bandeau">
+        <span><b>Machines</b> : miniatures (image PNG)</span>
+        <span>›</span>
+      </Link>
       <Link to="/admin/avis" className="bandeau lien-bandeau">
         <span><b>Avis</b> : masquer ceux qui ne conviennent pas</span>
         <span>›</span>
@@ -76,6 +80,8 @@ export default function Admin() {
         <span><b>Envoi vers une API</b> : fiches et avis (modération IA)</span>
         <span>›</span>
       </Link>
+
+      <AideSupport />
 
       <h2>Créer un utilisateur</h2>
       <form className="form" onSubmit={creerUser}>
@@ -153,5 +159,51 @@ export default function Admin() {
         ))}
       </div>
     </div>
+  );
+}
+
+interface Demande { id: string; message: string; traitee: boolean; createdAt: string; user: { identifiant: string; nom: string | null }; fiche: { id: string; titre: string } }
+
+/** Bouton « Demander de l'aide à Lazzeko » : masqué par défaut, activable ici ; liste des demandes reçues. */
+function AideSupport() {
+  const [actif, setActif] = useState<boolean>();
+  const [demandes, setDemandes] = useState<Demande[]>([]);
+  const charger = () => {
+    api<{ aideSupport: boolean }>('/parametres').then((p) => setActif(p.aideSupport));
+    api<Demande[]>('/admin/aide?traitee=non').then(setDemandes);
+  };
+  useEffect(charger, []);
+  return (
+    <>
+      <h2>Demandes d'aide</h2>
+      <div className="carte">
+        <label className="interrupteur">
+          <input
+            type="checkbox"
+            checked={!!actif}
+            onChange={async (e) => {
+              const v = e.target.checked;
+              setActif(v); // affichage immédiat
+              await api('/admin/parametres', { method: 'PATCH', json: { aideSupport: v } }).catch(() => setActif(!v));
+            }}
+          />
+          <span>Afficher le bouton « Demander de l'aide à Lazzeko » sur les fiches</span>
+        </label>
+        <p className="muted petit">Désactivé par défaut. Chaque demande est aussi envoyée aux adresses configurées dans « Envoi vers une API » (événement « Demande d'aide »).</p>
+        {demandes.length === 0 ? (
+          <p className="muted petit">Aucune demande en cours.</p>
+        ) : (
+          demandes.map((d) => (
+            <div key={d.id} className="sous-bloc">
+              <div className="avis-h">
+                <span className="petit"><b>{d.user.nom || d.user.identifiant}</b> sur <Link to={`/fiches/${d.fiche.id}`}>{d.fiche.titre}</Link> · {date(d.createdAt)}</span>
+                <button type="button" className="btn petit" onClick={async () => { await api(`/admin/aide/${d.id}`, { method: 'PATCH', json: { traitee: true } }); charger(); }}>Traitée</button>
+              </div>
+              <p className="mon-texte petit" style={{ margin: '4px 0 0' }}>{d.message}</p>
+            </div>
+          ))
+        )}
+      </div>
+    </>
   );
 }
