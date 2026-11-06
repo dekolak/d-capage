@@ -154,7 +154,35 @@
 #lzp .moy{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700}
 #lzp .ex{position:absolute;top:20px;right:24px;font-size:8px;font-weight:700;color:var(--g);background:#ebebef;border-radius:99px;padding:1px 6px;z-index:3}
 #lzp .note-ex{text-align:center;font-size:11px;color:var(--g);margin-top:10px}
+/* scène « communauté » mise en valeur */
+#lzp .scene{transition:background .5s,padding .5s;border-radius:28px}
+#lzp .scene.fond{background:radial-gradient(120% 120% at 0% 0%,#fff 0%,#fff1ea 45%,#ffd9c4 100%);padding:28px 32px}
+#lzp .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px;max-width:460px}
+#lzp .trio div{background:#fff;border-radius:16px;padding:12px 10px;text-align:center;box-shadow:0 4px 14px rgba(241,90,33,.12)}
+#lzp .trio b{display:block;font-size:22px;line-height:1}
+#lzp .trio span{display:block;font-size:12px;font-weight:700;margin-top:6px}
+#lzp .trio small{display:block;font-size:11px;color:var(--g);margin-top:2px}
+#lzp .reseau{position:relative;height:222px;margin:2px -4px 6px}
+#lzp .reseau svg{position:absolute;inset:0;width:100%;height:100%}
+#lzp .reseau line{stroke:#f6a98a;stroke-width:1.6;stroke-dasharray:120;stroke-dashoffset:120;transition:stroke-dashoffset .7s}
+#lzp .reseau line.v{stroke-dashoffset:0}
+#lzp .noyau{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:20px;background:var(--o);box-shadow:0 0 0 0 rgba(241,90,33,.45);display:flex;align-items:center;justify-content:center;animation:lzpulse 2s infinite}
+@keyframes lzpulse{70%{box-shadow:0 0 0 18px rgba(241,90,33,0)}100%{box-shadow:0 0 0 0 rgba(241,90,33,0)}}
+#lzp .av{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(20,20,30,.18);border:2px solid #fff;opacity:0;transform:scale(.4);transition:opacity .35s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+#lzp .av.v{opacity:1;transform:none}
+#lzp .plus1{position:absolute;font-size:9px;font-weight:800;color:var(--od);background:#fff;border-radius:99px;padding:1px 6px;box-shadow:0 2px 6px rgba(20,20,30,.12);opacity:0;white-space:nowrap}
+#lzp .plus1.go{animation:lzmonte 1.4s ease-out forwards}
+@keyframes lzmonte{0%{opacity:0;transform:translate(-50%,0)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-26px)}}
+#lzp .classement{position:relative;height:156px}
+#lzp .rang{position:absolute;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:0 10px;box-shadow:0 2px 8px rgba(20,20,30,.07);transition:top .7s cubic-bezier(.3,1.2,.5,1),box-shadow .4s}
+#lzp .rang .n{width:20px;height:20px;border-radius:50%;background:#ebebef;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+#lzp .rang.top{box-shadow:0 0 0 2px var(--o),0 6px 16px rgba(241,90,33,.25)}
+#lzp .rang.top .n{background:var(--o);color:#fff}
+#lzp .rang b{font-size:11px;flex:1}
+#lzp .rang em{font-style:normal;font-size:11px;font-weight:800;color:#f5a623}
 @media (max-width:800px){
+ #lzp .scene.fond{padding:20px 14px}
+ #lzp .trio{margin:18px auto 0}
  #lzp .scene{grid-template-columns:1fr;gap:20px;min-height:0}
  #lzp .txt{text-align:center}#lzp .txt p{margin:0 auto}#lzp .txt ul{justify-items:center}#lzp .txt h2{font-size:26px}
  #lzp .txt li{text-align:left}
@@ -241,6 +269,17 @@ var SCENES=[
   A.forEach(function(x,i){apres(500+i*900,function(){q('#av').insertAdjacentHTML('beforeend','<div class="avis pop"><b>'+x[0]+'</b> <span class="st">'+x[1]+'</span><p>'+x[2]+'</p></div>');var d=q('#av').lastChild;apres(30,function(){d.classList.add('v')})})});
   var et=E.querySelectorAll('#et i');taper('#et i:nth-child(5)',3600,function(){et.forEach(function(x,i){apres(i*110,function(){x.classList.add('on')})})});
   taper('#cm',4800);taperTexte('#cm','Testé ce matin sur une remorque : même résultat, merci !',5400)}},
+{d:9800,fond:true,k:'La force du collectif',t:'Ensemble, on règle mieux',p:'Chaque fiche enregistrée profite à tous ceux qui ont la même machine. Vous testez, vous notez, vous partagez : les meilleurs réglages remontent d\'eux-mêmes en tête.',l:['Tous les réglages sont mis en commun','Même machine, mêmes réglages : des résultats comparables','Fini de repartir de zéro à chaque chantier'],
+ trio:'<div class="trio"><div><b>📸</b><span>Partager</span><small>vos essais</small></div><div><b>★</b><span>Noter</span><small>ce qui marche</small></div><div><b>🚀</b><span>Progresser</span><small>tous ensemble</small></div></div>',
+ e:function(){var P=[[50,9],[87,27],[87,73],[50,91],[13,73],[13,27]],C=['#5a6b8e','#1f8a44','#d9480f','#7c3aed','#0e7490','#b45309'],I=['MA','SO','KA','LU','JB','EL'];
+  return cadre('<div class="ex">Exemple</div><div class="h1" style="margin-bottom:0">Communauté</div><div class="reseau"><svg viewBox="0 0 100 100" preserveAspectRatio="none">'+P.map(function(p){return '<line x1="50" y1="50" x2="'+p[0]+'" y2="'+p[1]+'" vector-effect="non-scaling-stroke"/>'}).join('')+'</svg><div class="noyau"><svg width="34" height="34" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"><path d="M32 52V14M32 52 18 22M32 52 46 22M32 52 12 36M32 52 52 36"/></svg></div>'+P.map(function(p,i){return '<div class="av" style="left:'+p[0]+'%;top:'+p[1]+'%;background:'+C[i]+'">'+I[i]+'</div><span class="plus1" style="left:'+p[0]+'%;top:calc('+p[1]+'% - 30px)">+1 réglage</span>'}).join('')+'</div><div class="lbl" style="margin-top:0">Les mieux notés passent devant</div><div class="classement"><div class="rang" id="r1" style="top:0"><span class="n">1</span><b>Oxyde sur inox</b><em>★ 4,1</em></div><div class="rang" id="r2" style="top:54px"><span class="n">2</span><b>Peinture sur alu</b><em>★ 4,7</em></div><div class="rang" id="r3" style="top:108px"><span class="n">3</span><b>Rouille sur acier</b><em>★ 4,9</em></div></div>',2)},
+ a:function(){var av=E.querySelectorAll('.av'),li=E.querySelectorAll('.reseau line'),pl=E.querySelectorAll('.plus1');
+  av.forEach(function(x,i){apres(300+i*380,function(){li[i].classList.add('v');x.classList.add('v')});apres(700+i*380,function(){pl[i].classList.add('go')})});
+  /* les notes arrivent : le classement se réordonne */
+  apres(3600,function(){q('#r3').style.top='0';q('#r2').style.top='54px';q('#r1').style.top='108px';
+   apres(750,function(){q('#r3 .n').textContent='1';q('#r2 .n').textContent='2';q('#r1 .n').textContent='3';q('#r3').classList.add('top')})});
+  apres(5600,function(){pl.forEach(function(x,i){apres(i*150,function(){x.classList.remove('go');void x.offsetWidth;x.classList.add('go')})})});
+  bulle('Les réglages de chacun profitent à tous : le meilleur remonte en tête.',486,6600)}},
 {d:6000,k:'Aide',t:'Comprendre chaque réglage',p:'Un menu Aide explique simplement la puissance, la fréquence, la largeur d\'impulsion, la vitesse… avec de petites animations.',l:['Les bases pour bien commencer','Le simulateur complet reste sur notre site'],
  e:function(){return cadre('<div class="h1">Aide</div><div class="acc">Par où commencer ?</div><div class="acc" id="a1">Puis. laser (%)</div><div class="acc" id="a2">Fréq. (kHz)</div><div class="acc">Larg. imp. (ns)</div><div class="acc">Vit. galvo (m/s)</div>',3)},
  a:function(){function ouvrir(sel,txt,trains){taper(sel,0,function(c){E.querySelectorAll('.acc.ouv').forEach(function(x){x.classList.remove('ouv');x.innerHTML=x.dataset.t});c.dataset.t=c.textContent;c.classList.add('ouv');
@@ -259,9 +298,10 @@ SCENES.forEach(function(s,i){var b=document.createElement('button');b.type='butt
 function afficher(){
  stop();cancelAnimationFrame(raf);var s=SCENES[idx];
  S.classList.remove('on');
- T.innerHTML='<div class="kick">'+s.k+'</div><h2>'+s.t+'</h2><p>'+s.p+'</p><ul>'+s.l.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'+(s.cta?'<a class="cta" href="'+APP_URL+'" target="_blank" rel="noopener">Ouvrir l\'app</a>':'');
+ T.innerHTML='<div class="kick">'+s.k+'</div><h2>'+s.t+'</h2><p>'+s.p+'</p><ul>'+s.l.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'+(s.trio||'')+(s.cta?'<a class="cta" href="'+APP_URL+'" target="_blank" rel="noopener">Ouvrir l\'app</a>':'');
  E.innerHTML=s.e();
  [].forEach.call(P.children,function(b,i){b.classList.toggle('on',i===idx)});
+ S.classList.toggle('fond',!!s.fond);
  requestAnimationFrame(function(){S.classList.add('on')});
  s.a();
  debut=performance.now();
