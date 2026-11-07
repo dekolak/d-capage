@@ -388,3 +388,27 @@ textarea { resize: vertical; }
 .choix-accord { text-align: left; width: 100%; background: var(--carte); border-radius: var(--r-sm); padding: 12px; box-shadow: var(--ombre); font-weight: 500 !important; font-size: 14px !important; align-items: flex-start !important; }
 .choix-accord input { flex: none; margin-top: 2px; }
 .choix-accord.obligatoire { border: 1px solid #fbd0bd; }
+/* ---------- messages (bulles) ---------- */
+.annonces { display: grid; gap: 8px; margin-bottom: 14px; }
+.bulle-annonce { display: flex; gap: 10px; align-items: flex-start; background: var(--carte); border-radius: var(--r); padding: 12px 14px; box-shadow: var(--ombre); border-left: 5px solid #5a6b8e; animation: entree 0.3s ease-out; text-align: left; }
+.bulle-annonce.conseil { border-left-color: #f5a623; background: linear-gradient(90deg, #fffaf0, #fff 40%); }
+.bulle-annonce.info { border-left-color: #2f6fed; background: linear-gradient(90deg, #f1f6ff, #fff 40%); }
+.bulle-annonce.important { border-left-color: var(--ko); background: linear-gradient(90deg, #fff1f0, #fff 40%); }
+.ba-ic { font-size: 22px; line-height: 1.1; flex: none; }
+.ba-corps { flex: 1; min-width: 0; }
+.ba-corps b { display: block; font-size: 15px; }
+.ba-corps p { margin: 3px 0 8px; font-size: 14px; color: #3f414a; white-space: pre-wrap; }
+.ba-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+@keyframes entree { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.annonce-fond { position: fixed; inset: 0; z-index: 120; background: rgba(20, 20, 30, 0.55); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.annonce-fond .bulle-annonce { max-width: 440px; width: 100%; padding: 18px; }
+.annonce-fond .ba-ic { font-size: 30px; }
+.annonce-fond .ba-corps b { font-size: 18px; }
+.deux { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ligne-inline { display: flex !important; flex-wrap: wrap; align-items: center; gap: 8px !important; }
+.etat-annonce { font-size: 11px; font-weight: 700; border-radius: 99px; padding: 2px 8px; background: #ebebef; color: var(--g); }
+.etat-annonce.en_cours { background: #e8f5ec; color: #14532d; }
+.etat-annonce.programme { background: #eef2ff; color: #312e81; }
+input[type='datetime-local'], input[type='number'] { width: 100%; min-height: 48px; border: 1px solid var(--bord-fort); border-radius: var(--r-sm); padding: 8px 12px; background: var(--carte); font-size: 15px; }
+@media (max-width: 600px) { .deux { grid-template-columns: 1fr; } }
+.badge-client { margin-left: 6px; font-size: 10.5px; font-weight: 700; border-radius: 99px; padding: 1px 7px; background: var(--o-doux); color: var(--od); } .badge-client.autre { background: #ebebef; color: var(--g); }

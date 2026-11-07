@@ -44,6 +44,8 @@ model User {
   passwordHash            String
   nom                     String?
   role                    Role          @default(USER)
+  /// Client Lazzeko (oui) ou utilisateur d'une autre marque (non) : sert au ciblage des messages.
+  clientLazzeko           Boolean       @default(true)
   /// Conditions d'utilisation acceptées (version) : partage communautaire obligatoire.
   conditionsVersion       Int?
   conditionsAccepteesLe   DateTime?
@@ -56,11 +58,12 @@ model User {
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt
 
-  machines     UserMachine[]
-  fiches       Fiche[]
-  evaluations  Evaluation[]
-  apiKeys      ApiKey[]
-  demandesAide DemandeAide[]
+  machines         UserMachine[]
+  fiches           Fiche[]
+  evaluations      Evaluation[]
+  apiKeys          ApiKey[]
+  lecturesAnnonces AnnonceLecture[]
+  demandesAide     DemandeAide[]
 }
 
 /// Clé API pour créer des comptes depuis un autre système (site, CRM…).
@@ -330,4 +333,62 @@ model DemandeAide {
   createdAt DateTime @default(now())
 
   @@index([traitee, createdAt])
+}
+
+// ---------- Messages (bulles d'information à l'ouverture de l'app) ----------
+
+enum NiveauAnnonce {
+  CONSEIL
+  INFO
+  IMPORTANT // affiché en grand, à fermer pour continuer
+}
+
+enum Recurrence {
+  AUCUNE
+  JOURS
+  SEMAINES
+  MOIS
+}
+
+enum CibleClient {
+  TOUS
+  LAZZEKO
+  AUTRES
+}
+
+/// Message de l'admin vers les utilisateurs (pas de réponse possible).
+model Annonce {
+  id           String           @id @default(cuid())
+  titre        String
+  texte        String
+  niveau       NiveauAnnonce    @default(INFO)
+  lienUrl      String?
+  lienTexte    String?
+  debut        DateTime         @default(now())
+  fin          DateTime?
+  actif        Boolean          @default(true)
+  /// Message périodique : réapparaît tous les `intervalle` jours / semaines / mois après « J'ai compris ».
+  recurrence   Recurrence       @default(AUCUNE)
+  intervalle   Int              @default(1)
+  /// Ciblage (listes vides = toutes les machines).
+  cibleClient  CibleClient      @default(TOUS)
+  fabricantIds String[]
+  modeleIds    String[]
+  varianteIds  String[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  lectures     AnnonceLecture[]
+}
+
+/// Vu / compris par utilisateur et par occurrence (0 pour un message ponctuel, n° de période sinon).
+model AnnonceLecture {
+  annonceId  String
+  annonce    Annonce   @relation(fields: [annonceId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occurrence Int
+  vueLe      DateTime  @default(now())
+  compriseLe DateTime?
+
+  @@id([annonceId, userId, occurrence])
 }

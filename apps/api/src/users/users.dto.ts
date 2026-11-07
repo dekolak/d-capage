@@ -11,12 +11,16 @@ export class CreerUserDto {
   @IsOptional() @IsString() @MaxLength(120) nom?: string;
 
   @IsOptional() @IsEnum(Role) role?: Role;
+
+  /** Client Lazzeko (par défaut) ou utilisateur d'une autre marque. */
+  @IsOptional() @IsBoolean() clientLazzeko?: boolean;
 }
 
 export class ModifierUserDto {
   @IsOptional() @IsString() @MaxLength(120) nom?: string;
   @IsOptional() @IsEnum(Role) role?: Role;
   @IsOptional() @IsBoolean() actif?: boolean;
+  @IsOptional() @IsBoolean() clientLazzeko?: boolean;
   @IsOptional() @IsString() @MinLength(8) @MaxLength(128) motDePasse?: string;
 }
 
