@@ -4,7 +4,7 @@ import { Erreur } from '../components/Composants';
 import { api, Fabricant, MaMachine } from '../lib/api';
 import { date } from '../lib/util';
 
-interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; conditionsVersion: number | null; accordPhotosMarketing: boolean; clientLazzeko: boolean }
+interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; conditionsVersion: number | null; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null }
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
 interface TagAValider { id: string; nom: string; groupe: { nom: string } }
 
@@ -17,7 +17,8 @@ export default function Admin() {
   const [selection, setSelection] = useState<U | null>(null);
   const [machinesSel, setMachinesSel] = useState<MaMachine[]>([]);
   const [err, setErr] = useState<unknown>();
-  const [f, setF] = useState({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true });
+  const [f, setF] = useState({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true, numeroOdoo: '' });
+  const [recherche, setRecherche] = useState('');
 
   const charger = () =>
     Promise.all([api<U[]>('/users'), api<Cle[]>('/admin/cles-api'), api<TagAValider[]>('/tags/a-valider')])
@@ -35,8 +36,8 @@ export default function Admin() {
     e.preventDefault();
     setErr(undefined);
     try {
-      await api('/users', { method: 'POST', json: { ...f, nom: f.nom || undefined } });
-      setF({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true });
+      await api('/users', { method: 'POST', json: { ...f, nom: f.nom || undefined, numeroOdoo: f.numeroOdoo.trim() || undefined } });
+      setF({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true, numeroOdoo: '' });
       charger();
     } catch (x) { setErr(x); }
   };
@@ -94,6 +95,7 @@ export default function Admin() {
         <label>Identifiant<input value={f.identifiant} autoCapitalize="none" onChange={(e) => setF({ ...f, identifiant: e.target.value })} required /></label>
         <label>Mot de passe (8 min.)<input value={f.motDePasse} minLength={8} onChange={(e) => setF({ ...f, motDePasse: e.target.value })} required /></label>
         <label>Nom<input value={f.nom} onChange={(e) => setF({ ...f, nom: e.target.value })} /></label>
+        <label>N° client Odoo (facultatif)<input value={f.numeroOdoo} maxLength={40} onChange={(e) => setF({ ...f, numeroOdoo: e.target.value })} placeholder="ex. C00123" /></label>
         <label>Rôle
           <select value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })}>
             <option value="USER">Utilisateur</option>
@@ -110,17 +112,23 @@ export default function Admin() {
       </form>
 
       <h2>Utilisateurs ({users.length})</h2>
+      <input className="recherche" placeholder="Rechercher (identifiant, nom, n° Odoo)…" value={recherche} onChange={(e) => setRecherche(e.target.value)} />
       <div className="liste">
-        {users.map((u) => (
+        {users.filter((u) => {
+          const q = recherche.trim().toLowerCase();
+          return !q || [u.identifiant, u.nom ?? '', u.numeroOdoo ?? ''].some((x) => x.toLowerCase().includes(q));
+        }).map((u) => (
           <div key={u.id} className={'carte ligne-machine' + (u.actif ? '' : ' inactif')}>
             <button type="button" className="lien-bloc" onClick={() => setSelection(selection?.id === u.id ? null : u)}>
               <b>{u.nom || u.identifiant}</b> <span className="muted petit">{u.identifiant} · {u.role === 'ADMIN' ? 'admin' : 'utilisateur'} · {date(u.createdAt)}</span>
               {u.role !== 'ADMIN' && <span className="petit"> {u.conditionsVersion ? `✓ conditions v${u.conditionsVersion}` : '· conditions non acceptées'}{u.accordPhotosMarketing ? ' · 📷 accord photos' : ''}</span>}
               {u.role !== 'ADMIN' && <span className={'badge-client' + (u.clientLazzeko ? '' : ' autre')}>{u.clientLazzeko ? 'Client Lazzeko' : 'Autre marque'}</span>}
+              {u.numeroOdoo && <span className="badge-odoo">Odoo {u.numeroOdoo}</span>}
             </button>
             <button type="button" className="btn petit" onClick={() => basculerActif(u)}>{u.actif ? 'Désactiver' : 'Réactiver'}</button>
             {selection?.id === u.id && (
               <div className="sous-bloc">
+                <NumeroOdoo u={u} onMaj={charger} />
                 {u.role !== 'ADMIN' && (
                   <label className="interrupteur petit">
                     <input type="checkbox" checked={u.clientLazzeko} onChange={async (e) => { await api(`/users/${u.id}`, { method: 'PATCH', json: { clientLazzeko: e.target.checked } }); charger(); }} />
@@ -268,5 +276,24 @@ function ConditionsAdmin() {
         {ok && <div className="succes">{ok}</div>}
       </div>
     </>
+  );
+}
+
+/** N° client Odoo d'un compte, modifiable en ligne. */
+function NumeroOdoo({ u, onMaj }: { u: { id: string; numeroOdoo: string | null }; onMaj: () => void }) {
+  const [v, setV] = useState(u.numeroOdoo ?? '');
+  const [ok, setOk] = useState(false);
+  return (
+    <div className="ba-libre" style={{ margin: '6px 0' }}>
+      <input value={v} maxLength={40} placeholder="N° client Odoo" onChange={(e) => { setV(e.target.value); setOk(false); }} />
+      <button
+        type="button"
+        className="btn petit"
+        disabled={v.trim() === (u.numeroOdoo ?? '')}
+        onClick={async () => { await api(`/users/${u.id}`, { method: 'PATCH', json: { numeroOdoo: v.trim() || null } }); setOk(true); onMaj(); }}
+      >
+        {ok ? '✓' : 'Enregistrer'}
+      </button>
+    </div>
   );
 }

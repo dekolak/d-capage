@@ -351,4 +351,28 @@ describe('Parcours complet', () => {
     expect(await ids(alice)).not.toContain(o.id);
     for (const x of [q, n, o]) await http.delete(`/api/admin/annonces/${x.id}`).set(auth(admin)).expect(200);
   });
+
+  it('n° client Odoo : création, recherche, ciblage d\'un message', async () => {
+    const num = `C-${id}`;
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'odoo' })).body.cle;
+    // création depuis Odoo avec le n° client
+    const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `dave-${id}`, motDePasse: 'motdepasse1', numeroOdoo: ` ${num} ` })).body;
+    expect(u.numeroOdoo).toBe(num);
+    // recherche par n° (clé API) et par recherche libre (admin)
+    expect((await http.get(`/api/users?numeroOdoo=${num}`).set('X-Api-Key', cle)).body.map((x: any) => x.id)).toEqual([u.id]);
+    expect((await http.get(`/api/users?q=${num.toLowerCase()}`).set(auth(admin))).body.some((x: any) => x.id === u.id)).toBe(true);
+    // modification / effacement du n°
+    const aliceId = (await http.get('/api/moi').set(auth(alice))).body.id;
+    expect((await http.patch(`/api/users/${aliceId}`).set(auth(admin)).send({ numeroOdoo: num })).body.numeroOdoo).toBe(num);
+    // message ciblé sur ce n° : 2 comptes (dave, alice), bob ne le voit pas
+    expect((await http.post('/api/admin/annonces/cible').set(auth(admin)).send({ numerosOdoo: [num] })).body.utilisateurs).toBe(2);
+    const a = (await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: `Pour ${num}`, texte: 'Message ciblé', numerosOdoo: [num, ' ', num], debut: new Date(Date.now() - 60000) })).body;
+    expect(a.numerosOdoo).toEqual([num]);
+    const voit = async (t: string) => (await http.get('/api/annonces').set(auth(t))).body.some((x: any) => x.id === a.id);
+    expect(await voit(alice)).toBe(true);
+    expect(await voit(bob)).toBe(false);
+    await http.patch(`/api/users/${aliceId}`).set(auth(admin)).send({ numeroOdoo: null }).expect(200);
+    expect(await voit(alice)).toBe(false);
+    await http.delete(`/api/admin/annonces/${a.id}`).set(auth(admin)).expect(200);
+  });
 });

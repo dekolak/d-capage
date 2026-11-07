@@ -10,6 +10,7 @@ export interface Ciblage {
   fabricantIds?: string[];
   modeleIds?: string[];
   varianteIds?: string[];
+  numerosOdoo?: string[];
 }
 
 /** N° de période en cours : 0 pour un message ponctuel ; sinon nombre de périodes écoulées depuis le début. */
@@ -71,6 +72,7 @@ export function utilisateursVises(c: Ciblage): Prisma.UserWhereInput {
     actif: true,
     ...(c.cibleClient === CibleClient.LAZZEKO ? { clientLazzeko: true } : c.cibleClient === CibleClient.AUTRES ? { clientLazzeko: false } : {}),
     ...(machines.length ? { machines: { some: { OR: machines } } } : {}),
+    ...(c.numerosOdoo?.length ? { numeroOdoo: { in: c.numerosOdoo } } : {}),
   };
 }
 
@@ -83,7 +85,7 @@ export class AnnoncesService {
     const now = new Date();
     const u = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true, clientLazzeko: true, machines: { select: { varianteId: true, variante: { select: { modeleId: true, modele: { select: { fabricantId: true } } } } } } },
+      select: { role: true, clientLazzeko: true, numeroOdoo: true, machines: { select: { varianteId: true, variante: { select: { modeleId: true, modele: { select: { fabricantId: true } } } } } } },
     });
     if (!u || u.role !== Role.USER) return [];
     const actives = await this.prisma.annonce.findMany({
@@ -92,6 +94,7 @@ export class AnnoncesService {
     const vise = (a: Annonce) => {
       if (a.cibleClient === CibleClient.LAZZEKO && !u.clientLazzeko) return false;
       if (a.cibleClient === CibleClient.AUTRES && u.clientLazzeko) return false;
+      if (a.numerosOdoo.length && !(u.numeroOdoo && a.numerosOdoo.includes(u.numeroOdoo))) return false;
       if (!a.fabricantIds.length && !a.modeleIds.length && !a.varianteIds.length) return true;
       return u.machines.some(
         (m) => a.varianteIds.includes(m.varianteId) || a.modeleIds.includes(m.variante.modeleId) || a.fabricantIds.includes(m.variante.modele.fabricantId),

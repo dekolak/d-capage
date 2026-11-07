@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreerUserDto, ModifierUserDto } from './users.dto';
 
 export const USER_PUBLIC = {
-  id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true, clientLazzeko: true,
+  id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true, clientLazzeko: true, numeroOdoo: true,
   conditionsVersion: true, conditionsAccepteesLe: true, accordPhotosMarketing: true, accordPhotosMarketingLe: true,
 } as const;
 
@@ -23,6 +23,7 @@ export class UsersService {
           nom: dto.nom,
           role: dto.role ?? 'USER',
           clientLazzeko: dto.clientLazzeko ?? true,
+          numeroOdoo: dto.numeroOdoo?.trim() || null,
         },
         select: USER_PUBLIC,
       });
@@ -33,8 +34,19 @@ export class UsersService {
     }
   }
 
-  lister() {
-    return this.prisma.user.findMany({ select: { ...USER_PUBLIC, _count: { select: { fiches: true } } }, orderBy: { createdAt: 'desc' } });
+  /** Liste (admin), filtrable par n° client Odoo ou par recherche libre (identifiant, nom, n° Odoo). */
+  lister(f: { numeroOdoo?: string; q?: string } = {}) {
+    const q = f.q?.trim();
+    return this.prisma.user.findMany({
+      where: {
+        ...(f.numeroOdoo ? { numeroOdoo: f.numeroOdoo.trim() } : {}),
+        ...(q
+          ? { OR: [{ identifiant: { contains: q, mode: 'insensitive' } }, { nom: { contains: q, mode: 'insensitive' } }, { numeroOdoo: { contains: q, mode: 'insensitive' } }] }
+          : {}),
+      },
+      select: { ...USER_PUBLIC, _count: { select: { fiches: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async trouver(id: string) {
@@ -45,10 +57,14 @@ export class UsersService {
 
   async modifier(id: string, dto: ModifierUserDto) {
     await this.trouver(id);
-    const { motDePasse, ...reste } = dto;
+    const { motDePasse, numeroOdoo, ...reste } = dto;
     return this.prisma.user.update({
       where: { id },
-      data: { ...reste, ...(motDePasse ? { passwordHash: await AuthService.hasher(motDePasse) } : {}) },
+      data: {
+        ...reste,
+        ...(numeroOdoo !== undefined ? { numeroOdoo: numeroOdoo?.trim() || null } : {}),
+        ...(motDePasse ? { passwordHash: await AuthService.hasher(motDePasse) } : {}),
+      },
       select: USER_PUBLIC,
     });
   }
