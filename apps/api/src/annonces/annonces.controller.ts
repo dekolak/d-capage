@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { CibleClient, NiveauAnnonce, Recurrence, Role } from '@prisma/client';
+import { Body, Controller, Delete, Get, Header, Param, Patch, Post, Query } from '@nestjs/common';
+import { CibleClient, NiveauAnnonce, Recurrence, Role, TypeQuestion } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsDate, IsEnum, IsInt, IsOptional, IsString, IsUrl, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsDate, IsEnum, IsInt, IsOptional, IsString, IsUrl, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
 import { AutoriseCleApi, Moi, Principal, Roles } from '../auth/decorators';
 import { AnnoncesService } from './annonces.service';
 
@@ -23,6 +23,16 @@ class AnnonceDto extends CiblageDto {
   @IsOptional() @IsBoolean() actif?: boolean;
   @IsOptional() @IsEnum(Recurrence) recurrence?: Recurrence;
   @IsOptional() @IsInt() @Min(1) @Max(365) intervalle?: number;
+  @IsOptional() @IsEnum(TypeQuestion) questionType?: TypeQuestion;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(300) question?: string | null;
+  @IsOptional() @IsArray() @ArrayMaxSize(5) @IsString({ each: true }) @MaxLength(80, { each: true }) options?: string[];
+  @IsOptional() @IsBoolean() autreOption?: boolean;
+  @IsOptional() @IsBoolean() reponseObligatoire?: boolean;
+}
+
+class ReponseDto {
+  @IsString() @MinLength(1) @MaxLength(1000) valeur!: string;
+  @IsOptional() @IsString() @MaxLength(300) autre?: string;
 }
 
 class ModifierAnnonceDto extends AnnonceDto {
@@ -30,8 +40,9 @@ class ModifierAnnonceDto extends AnnonceDto {
   @IsOptional() @IsString() @MinLength(2) @MaxLength(2000) declare texte: string;
 }
 
-const nettoyer = <T extends { lienUrl?: string | null; lienTexte?: string | null }>(d: T) => ({
+const nettoyer = <T extends { lienUrl?: string | null; lienTexte?: string | null; options?: string[] }>(d: T) => ({
   ...d,
+  ...(d.options !== undefined ? { options: d.options.map((o) => o.trim()).filter(Boolean) } : {}),
   ...(d.lienUrl !== undefined ? { lienUrl: d.lienUrl || null } : {}),
   ...(d.lienTexte !== undefined ? { lienTexte: d.lienTexte || null } : {}),
 });
@@ -52,7 +63,29 @@ export class AnnoncesController {
     return this.annonces.compris(id, moi.id);
   }
 
+  /** Réponse à la question du message (masque aussi le message pour la période). */
+  @Post('annonces/:id/reponse')
+  repondre(@Moi() moi: Principal, @Param('id') id: string, @Body() dto: ReponseDto) {
+    return this.annonces.repondre(id, moi.id, dto.valeur, dto.autre);
+  }
+
   // --- administration (admin, ou clé API pour programmer des messages depuis Odoo) ---
+  @Get('admin/annonces/:id/reponses')
+  @Roles(Role.ADMIN)
+  @AutoriseCleApi()
+  resultats(@Param('id') id: string, @Query('occurrence') occurrence?: string) {
+    return this.annonces.resultats(id, occurrence !== undefined && occurrence !== '' ? Number(occurrence) : undefined);
+  }
+
+  @Get('admin/annonces/:id/reponses.csv')
+  @Roles(Role.ADMIN)
+  @AutoriseCleApi()
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  @Header('Content-Disposition', 'attachment; filename="reponses.csv"')
+  csv(@Param('id') id: string) {
+    return this.annonces.csv(id);
+  }
+
   @Get('admin/annonces')
   @Roles(Role.ADMIN)
   @AutoriseCleApi()
