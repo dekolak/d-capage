@@ -1,8 +1,10 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { Annonces } from './components/Annonces';
 import { Chargement } from './components/Composants';
 import { useAuth } from './lib/auth';
 import Accueil from './pages/Accueil';
 import Admin from './pages/Admin';
+import AdminAnnonces from './pages/AdminAnnonces';
 import AdminAvis from './pages/AdminAvis';
 import AdminCatalogue from './pages/AdminCatalogue';
 import AdminFiches from './pages/AdminFiches';
@@ -27,6 +29,7 @@ export default function App() {
   return (
     <>
       <main>
+        {moi.role !== 'ADMIN' && <Annonces />}
         <Routes>
           <Route path="/" element={<Fiches />} />
           <Route path="/fiches/nouvelle" element={<FicheEditeur />} />
@@ -41,6 +44,7 @@ export default function App() {
           {moi.role === 'ADMIN' && <Route path="/admin" element={<Admin />} />}
           {moi.role === 'ADMIN' && <Route path="/admin/fiches" element={<AdminFiches />} />}
           {moi.role === 'ADMIN' && <Route path="/admin/avis" element={<AdminAvis />} />}
+          {moi.role === 'ADMIN' && <Route path="/admin/messages" element={<AdminAnnonces />} />}
           {moi.role === 'ADMIN' && <Route path="/admin/catalogue" element={<AdminCatalogue />} />}
           {moi.role === 'ADMIN' && <Route path="/admin/webhooks" element={<AdminWebhooks />} />}
           <Route path="*" element={<Navigate to="/" replace />} />

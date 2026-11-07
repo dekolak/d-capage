@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreerUserDto, ModifierUserDto } from './users.dto';
 
 export const USER_PUBLIC = {
-  id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true,
+  id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true, clientLazzeko: true,
   conditionsVersion: true, conditionsAccepteesLe: true, accordPhotosMarketing: true, accordPhotosMarketingLe: true,
 } as const;
 
@@ -22,6 +22,7 @@ export class UsersService {
           passwordHash: await AuthService.hasher(dto.motDePasse),
           nom: dto.nom,
           role: dto.role ?? 'USER',
+          clientLazzeko: dto.clientLazzeko ?? true,
         },
         select: USER_PUBLIC,
       });

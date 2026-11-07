@@ -4,7 +4,7 @@ import { Erreur } from '../components/Composants';
 import { api, Fabricant, MaMachine } from '../lib/api';
 import { date } from '../lib/util';
 
-interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; conditionsVersion: number | null; accordPhotosMarketing: boolean }
+interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; conditionsVersion: number | null; accordPhotosMarketing: boolean; clientLazzeko: boolean }
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
 interface TagAValider { id: string; nom: string; groupe: { nom: string } }
 
@@ -17,7 +17,7 @@ export default function Admin() {
   const [selection, setSelection] = useState<U | null>(null);
   const [machinesSel, setMachinesSel] = useState<MaMachine[]>([]);
   const [err, setErr] = useState<unknown>();
-  const [f, setF] = useState({ identifiant: '', motDePasse: '', nom: '', role: 'USER' });
+  const [f, setF] = useState({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true });
 
   const charger = () =>
     Promise.all([api<U[]>('/users'), api<Cle[]>('/admin/cles-api'), api<TagAValider[]>('/tags/a-valider')])
@@ -36,7 +36,7 @@ export default function Admin() {
     setErr(undefined);
     try {
       await api('/users', { method: 'POST', json: { ...f, nom: f.nom || undefined } });
-      setF({ identifiant: '', motDePasse: '', nom: '', role: 'USER' });
+      setF({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true });
       charger();
     } catch (x) { setErr(x); }
   };
@@ -64,6 +64,10 @@ export default function Admin() {
     <div className="page">
       <h1>Administration</h1>
       <Erreur e={err} />
+      <Link to="/admin/messages" className="bandeau lien-bandeau">
+        <span><b>💬 Messages</b> : bulles d'info à l'ouverture de l'app</span>
+        <span>›</span>
+      </Link>
       <Link to="/admin/fiches" className="bandeau lien-bandeau">
         <span><b>Toutes les fiches</b> : voir qui les a faites, masquer</span>
         <span>›</span>
@@ -96,6 +100,12 @@ export default function Admin() {
             <option value="ADMIN">Admin</option>
           </select>
         </label>
+        {f.role === 'USER' && (
+          <label className="interrupteur">
+            <input type="checkbox" checked={f.clientLazzeko} onChange={(e) => setF({ ...f, clientLazzeko: e.target.checked })} />
+            <span>Client Lazzeko <small className="muted">(décocher pour un utilisateur d'une autre marque)</small></span>
+          </label>
+        )}
         <button className="btn prim">Créer</button>
       </form>
 
@@ -106,10 +116,17 @@ export default function Admin() {
             <button type="button" className="lien-bloc" onClick={() => setSelection(selection?.id === u.id ? null : u)}>
               <b>{u.nom || u.identifiant}</b> <span className="muted petit">{u.identifiant} · {u.role === 'ADMIN' ? 'admin' : 'utilisateur'} · {date(u.createdAt)}</span>
               {u.role !== 'ADMIN' && <span className="petit"> {u.conditionsVersion ? `✓ conditions v${u.conditionsVersion}` : '· conditions non acceptées'}{u.accordPhotosMarketing ? ' · 📷 accord photos' : ''}</span>}
+              {u.role !== 'ADMIN' && <span className={'badge-client' + (u.clientLazzeko ? '' : ' autre')}>{u.clientLazzeko ? 'Client Lazzeko' : 'Autre marque'}</span>}
             </button>
             <button type="button" className="btn petit" onClick={() => basculerActif(u)}>{u.actif ? 'Désactiver' : 'Réactiver'}</button>
             {selection?.id === u.id && (
               <div className="sous-bloc">
+                {u.role !== 'ADMIN' && (
+                  <label className="interrupteur petit">
+                    <input type="checkbox" checked={u.clientLazzeko} onChange={async (e) => { await api(`/users/${u.id}`, { method: 'PATCH', json: { clientLazzeko: e.target.checked } }); charger(); }} />
+                    Client Lazzeko
+                  </label>
+                )}
                 <Link to={`/admin/fiches?userId=${u.id}`} className="lien">Voir ses fiches ({u._count?.fiches ?? 0}) ›</Link>
                 <br />
                 <b>Machines</b>

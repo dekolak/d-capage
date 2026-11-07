@@ -64,6 +64,14 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 | GET · POST | `/api/conditions` · `/api/moi/conditions` `{version, accordPhotosMarketing?}` | connecté |
 | PATCH | `/api/moi/preferences` `{accordPhotosMarketing}` | connecté |
 | POST | `/api/admin/conditions` `{texte}` (nouvelle version) | admin |
+| GET · POST | `/api/annonces`, `/api/annonces/:id/compris` | connecté |
+| GET · POST · PATCH · DELETE | `/api/admin/annonces` (+ `POST /api/admin/annonces/cible` : nombre d'utilisateurs visés) | admin **ou clé API** |
+
+## Messages (bulles à l'ouverture de l'app)
+- Administration → **💬 Messages** : titre, texte, niveau (💡 Conseil, ℹ️ Info, ⚠️ Important = affiché en grand), lien facultatif, dates de début / fin.
+- **Une fois** ou **périodique** : revient tous les N jours / semaines / mois après « J'ai compris » (ex. « Pensez à nettoyer la lentille » chaque mois).
+- **Ciblage** : tous, clients Lazzeko ou autres marques (case « Client Lazzeko » à la création du compte, ou `clientLazzeko` via l'API), et/ou par machine (modèle, variante). Nombre d'utilisateurs touchés affiché avant publication.
+- Statistiques par message : visés, vus, « compris » (période en cours pour un message périodique). Pas de réponse possible : ce n'est pas une messagerie.
 | POST | `/api/fiches/:id/aide` `{message}` (si `aideSupport` activé) | connecté |
 | GET · PATCH | `/api/admin/aide`, `/api/admin/aide/:id` `{traitee}` | admin **ou clé API** |
 

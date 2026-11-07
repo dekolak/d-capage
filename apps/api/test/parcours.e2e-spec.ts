@@ -272,4 +272,43 @@ describe('Parcours complet', () => {
     // l'admin n'est jamais bloqué
     expect((await http.get('/api/catalogue').set(auth(admin))).status).toBe(200);
   });
+
+  it('messages : ciblage, « J\'ai compris », retour périodique', async () => {
+    const vus = async (t: string) => (await http.get('/api/annonces').set(auth(t))).body.map((a: any) => a.titre);
+    const T = `Pensez à nettoyer la lentille ${id}`;
+    await accepter(bob); // le test précédent a publié une nouvelle version des conditions
+    // bob devient « autre marque » ; alice reste cliente Lazzeko (défaut)
+    const bobId = (await http.get('/api/moi').set(auth(bob))).body.id;
+    expect((await http.patch(`/api/users/${bobId}`).set(auth(admin)).send({ clientLazzeko: false })).body.clientLazzeko).toBe(false);
+
+    // ciblage clients Lazzeko + variante : aperçu du nombre puis création
+    const n = (await http.post('/api/admin/annonces/cible').set(auth(admin)).send({ cibleClient: 'LAZZEKO', varianteIds: [varianteId] })).body.utilisateurs;
+    expect(n).toBeGreaterThan(0);
+    expect((await http.post('/api/admin/annonces').set(auth(bob)).send({ titre: 'x', texte: 'yy' })).status).toBe(403);
+    const a = (await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: T, texte: 'Chaque mois, un coup de chiffon.', niveau: 'CONSEIL', cibleClient: 'LAZZEKO', varianteIds: [varianteId], recurrence: 'JOURS', intervalle: 1, debut: new Date(Date.now() - 1.5 * 86400000) })).body;
+    expect(await vus(alice)).toContain(T);
+    expect(await vus(bob)).not.toContain(T); // pas client Lazzeko
+
+    // « J'ai compris » : disparaît pour cette période
+    await http.post(`/api/annonces/${a.id}/compris`).set(auth(alice)).expect(201);
+    expect(await vus(alice)).not.toContain(T);
+    // période suivante (on recule le début d'un jour) : il revient
+    await http.patch(`/api/admin/annonces/${a.id}`).set(auth(admin)).send({ debut: new Date(Date.now() - 2.5 * 86400000) }).expect(200);
+    expect(await vus(alice)).toContain(T);
+
+    // statistiques, pause, programmé, terminé
+    const liste = (await http.get('/api/admin/annonces').set(auth(admin))).body;
+    const st = liste.find((x: any) => x.id === a.id);
+    expect(st).toMatchObject({ etat: 'EN_COURS', stats: { occurrence: 2 } });
+    expect(st.prochaine).toBeTruthy();
+    await http.patch(`/api/admin/annonces/${a.id}`).set(auth(admin)).send({ actif: false }).expect(200);
+    expect(await vus(alice)).not.toContain(T);
+    await http.patch(`/api/admin/annonces/${a.id}`).set(auth(admin)).send({ actif: true, debut: new Date(Date.now() + 86400000) }).expect(200);
+    expect(await vus(alice)).not.toContain(T); // programmé pour demain
+    // message ponctuel important pour tous, avec une fin passée : invisible
+    const b = (await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: `Fin ${id}`, texte: 'terminé', niveau: 'IMPORTANT', fin: new Date(Date.now() - 1000), debut: new Date(Date.now() - 86400000) })).body;
+    expect(await vus(bob)).not.toContain(`Fin ${id}`);
+    await http.delete(`/api/admin/annonces/${a.id}`).set(auth(admin)).expect(200);
+    await http.delete(`/api/admin/annonces/${b.id}`).set(auth(admin)).expect(200);
+  });
 });

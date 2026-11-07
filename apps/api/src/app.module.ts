@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { AnnoncesModule } from './annonces/annonces.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
@@ -35,6 +36,7 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     CatalogueModule,
     MachinesModule,
     TagsModule,
+    AnnoncesModule,
     WebhooksModule,
     FichesModule,
     PhotosModule,
