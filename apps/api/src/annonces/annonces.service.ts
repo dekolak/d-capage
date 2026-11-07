@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Annonce, CibleClient, Prisma, Recurrence, Role } from '@prisma/client';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Annonce, CibleClient, Prisma, Recurrence, Role, TypeQuestion } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 const JOUR = 86_400_000;
@@ -23,6 +23,27 @@ export function occurrence(a: Pick<Annonce, 'recurrence' | 'intervalle' | 'debut
   }
   const duree = (a.recurrence === Recurrence.SEMAINES ? 7 : 1) * n * JOUR;
   return Math.floor(Math.max(0, maintenant.getTime() - a.debut.getTime()) / duree);
+}
+
+/** Date de début d'une période donnée. */
+export function debutPeriode(a: Pick<Annonce, 'recurrence' | 'intervalle' | 'debut'>, k: number): Date {
+  if (a.recurrence === Recurrence.AUCUNE) return a.debut;
+  const n = Math.max(1, a.intervalle);
+  if (a.recurrence === Recurrence.MOIS) {
+    const d = new Date(a.debut);
+    d.setMonth(d.getMonth() + k * n);
+    return d;
+  }
+  return new Date(a.debut.getTime() + k * (a.recurrence === Recurrence.SEMAINES ? 7 : 1) * n * JOUR);
+}
+
+function verifierQuestion(d: Prisma.AnnonceCreateInput) {
+  const t = d.questionType ?? TypeQuestion.AUCUNE;
+  if (t === TypeQuestion.AUCUNE) return;
+  if (!d.question || !String(d.question).trim()) throw new BadRequestException('Écrivez la question');
+  const opts = (Array.isArray(d.options) ? d.options : (d.options as { set?: string[] } | undefined)?.set) ?? [];
+  if (t === TypeQuestion.CHOIX && (opts.length < 2 || opts.length > 5 || opts.some((o) => !o.trim())))
+    throw new BadRequestException('Entre 2 et 5 réponses possibles');
 }
 
 /** Date de la prochaine réapparition d'un message périodique. */
@@ -95,12 +116,18 @@ export class AnnoncesService {
     );
     return a_afficher
       .sort((x, y) => POIDS[x.a.niveau] - POIDS[y.a.niveau] || y.a.debut.getTime() - x.a.debut.getTime())
-      .map(({ a }) => ({ id: a.id, titre: a.titre, texte: a.texte, niveau: a.niveau, lienUrl: a.lienUrl, lienTexte: a.lienTexte }));
+      .map(({ a }) => ({
+        id: a.id, titre: a.titre, texte: a.texte, niveau: a.niveau, lienUrl: a.lienUrl, lienTexte: a.lienTexte,
+        ...(a.questionType !== TypeQuestion.AUCUNE
+          ? { question: { type: a.questionType, texte: a.question, options: a.options, autre: a.autreOption, obligatoire: a.reponseObligatoire } }
+          : {}),
+      }));
   }
 
   async compris(id: string, userId: string) {
     const a = await this.prisma.annonce.findUnique({ where: { id } });
     if (!a) throw new NotFoundException();
+    if (a.questionType !== TypeQuestion.AUCUNE && a.reponseObligatoire) throw new BadRequestException('Une réponse est attendue');
     const occ = occurrence(a);
     await this.prisma.annonceLecture.upsert({
       where: { annonceId_userId_occurrence: { annonceId: id, userId, occurrence: occ } },
@@ -108,6 +135,81 @@ export class AnnoncesService {
       create: { annonceId: id, userId, occurrence: occ, compriseLe: new Date() },
     });
     return { ok: true };
+  }
+
+  /** Réponse à la question : une par personne et par période (modifiable tant que la période dure). */
+  async repondre(id: string, userId: string, valeur: string, autre?: string) {
+    const a = await this.prisma.annonce.findUnique({ where: { id } });
+    if (!a || a.questionType === TypeQuestion.AUCUNE) throw new NotFoundException('Pas de question pour ce message');
+    const v = valeur.trim();
+    const ok =
+      a.questionType === TypeQuestion.OUI_NON ? ['oui', 'non'].includes(v)
+      : a.questionType === TypeQuestion.NOTE ? /^[1-5]$/.test(v)
+      : a.questionType === TypeQuestion.CHOIX ? a.options.includes(v) || (a.autreOption && v === 'Autre')
+      : v.length >= 1 && v.length <= 1000;
+    if (!ok) throw new BadRequestException('Réponse invalide');
+    const occ = occurrence(a);
+    const precision = a.questionType === TypeQuestion.CHOIX && v === 'Autre' ? autre?.trim().slice(0, 300) || null : null;
+    await this.prisma.$transaction([
+      this.prisma.annonceReponse.upsert({
+        where: { annonceId_userId_occurrence: { annonceId: id, userId, occurrence: occ } },
+        update: { valeur: v, autre: precision },
+        create: { annonceId: id, userId, occurrence: occ, valeur: v, autre: precision },
+      }),
+      this.prisma.annonceLecture.upsert({
+        where: { annonceId_userId_occurrence: { annonceId: id, userId, occurrence: occ } },
+        update: { compriseLe: new Date() },
+        create: { annonceId: id, userId, occurrence: occ, compriseLe: new Date() },
+      }),
+    ]);
+    return { ok: true };
+  }
+
+  /** Résultats d'une question : par période (la période en cours par défaut). */
+  async resultats(id: string, occ?: number) {
+    const a = await this.trouver(id);
+    const enCours = occurrence(a);
+    const o = occ ?? enCours;
+    const parPeriode = await this.prisma.annonceReponse.groupBy({ by: ['occurrence'], where: { annonceId: id }, _count: true, orderBy: { occurrence: 'desc' } });
+    const reponses = await this.prisma.annonceReponse.findMany({
+      where: { annonceId: id, occurrence: o },
+      orderBy: { updatedAt: 'desc' },
+      include: { user: { select: { identifiant: true, nom: true, clientLazzeko: true } } },
+    });
+    const choix =
+      a.questionType === TypeQuestion.OUI_NON ? ['oui', 'non']
+      : a.questionType === TypeQuestion.NOTE ? ['5', '4', '3', '2', '1']
+      : a.questionType === TypeQuestion.CHOIX ? [...a.options, ...(a.autreOption ? ['Autre'] : [])]
+      : [];
+    const compte = (v: string) => reponses.filter((r) => r.valeur === v).length;
+    const notes = a.questionType === TypeQuestion.NOTE ? reponses.map((r) => Number(r.valeur)) : [];
+    return {
+      type: a.questionType, question: a.question, occurrence: o, occurrenceEnCours: enCours,
+      periodes: parPeriode.map((p) => ({ occurrence: p.occurrence, nombre: p._count, debut: debutPeriode(a, p.occurrence) })),
+      total: reponses.length,
+      resume: choix.map((v) => ({ valeur: v, nombre: compte(v) })),
+      moyenne: notes.length ? +(notes.reduce((x, y) => x + y, 0) / notes.length).toFixed(2) : null,
+      reponses: reponses.map((r) => ({ valeur: r.valeur, autre: r.autre, date: r.updatedAt, user: r.user })),
+    };
+  }
+
+  /** Export CSV (séparateur « ; » pour Excel en français). */
+  async csv(id: string) {
+    const a = await this.trouver(id);
+    const rs = await this.prisma.annonceReponse.findMany({
+      where: { annonceId: id },
+      orderBy: [{ occurrence: 'asc' }, { createdAt: 'asc' }],
+      include: { user: { select: { identifiant: true, nom: true, clientLazzeko: true } } },
+    });
+    const c = (x: unknown) => `"${String(x ?? '').replace(/"/g, '""')}"`;
+    const lignes = [
+      ['Période', 'Début de période', 'Identifiant', 'Nom', 'Client Lazzeko', 'Réponse', 'Précision', 'Date'].map(c).join(';'),
+      ...rs.map((r) =>
+        [r.occurrence + 1, debutPeriode(a, r.occurrence).toISOString().slice(0, 10), r.user.identifiant, r.user.nom, r.user.clientLazzeko ? 'oui' : 'non', r.valeur, r.autre, r.updatedAt.toISOString()]
+          .map(c).join(';'),
+      ),
+    ];
+    return '\uFEFF' + lignes.join('\r\n'); // BOM : accents corrects dans Excel
   }
 
   // ---------- administration ----------
@@ -121,23 +223,26 @@ export class AnnoncesService {
     return Promise.all(
       liste.map(async (a) => {
         const occ = occurrence(a, now);
-        const [cible, vues, comprises] = await Promise.all([
+        const [cible, vues, comprises, reponses] = await Promise.all([
           this.compterCible(a),
           this.prisma.annonceLecture.count({ where: { annonceId: a.id, occurrence: occ } }),
           this.prisma.annonceLecture.count({ where: { annonceId: a.id, occurrence: occ, compriseLe: { not: null } } }),
+          this.prisma.annonceReponse.count({ where: { annonceId: a.id, occurrence: occ } }),
         ]);
         const etat = !a.actif ? 'PAUSE' : a.debut > now ? 'PROGRAMME' : a.fin && a.fin <= now ? 'TERMINE' : 'EN_COURS';
-        return { ...a, etat, cible, stats: { occurrence: occ, vues, comprises }, prochaine: prochaine(a, now) };
+        return { ...a, etat, cible, stats: { occurrence: occ, vues, comprises, reponses }, prochaine: prochaine(a, now) };
       }),
     );
   }
 
   creer(d: Prisma.AnnonceCreateInput) {
+    verifierQuestion(d);
     return this.prisma.annonce.create({ data: d });
   }
 
   async modifier(id: string, d: Prisma.AnnonceUpdateInput) {
-    await this.trouver(id);
+    const a = await this.trouver(id);
+    verifierQuestion({ questionType: a.questionType, question: a.question, options: a.options, ...d } as Prisma.AnnonceCreateInput);
     return this.prisma.annonce.update({ where: { id }, data: d });
   }
 

@@ -412,3 +412,22 @@ textarea { resize: vertical; }
 input[type='datetime-local'], input[type='number'] { width: 100%; min-height: 48px; border: 1px solid var(--bord-fort); border-radius: var(--r-sm); padding: 8px 12px; background: var(--carte); font-size: 15px; }
 @media (max-width: 600px) { .deux { grid-template-columns: 1fr; } }
 .badge-client { margin-left: 6px; font-size: 10.5px; font-weight: 700; border-radius: 99px; padding: 1px 7px; background: var(--o-doux); color: var(--od); } .badge-client.autre { background: #ebebef; color: var(--g); }
+/* ---------- question dans un message ---------- */
+.ba-question { display: grid; gap: 8px; background: rgba(255,255,255,.75); border-radius: var(--r-sm); padding: 10px; margin: 0 0 8px; box-shadow: inset 0 0 0 1px var(--bord); }
+.ba-question b { font-size: 14px; }
+.ba-choix { display: grid; gap: 6px; }
+.ba-choix.deux-col { grid-template-columns: 1fr 1fr; }
+.ba-choix button { min-height: 42px; border: 1px solid var(--bord-fort); background: var(--carte); border-radius: 11px; font-weight: 650; font-size: 14px; cursor: pointer; text-align: left; padding: 0 12px; }
+.ba-choix.deux-col button { text-align: center; }
+.ba-choix button:active { background: var(--o-doux); border-color: var(--o); }
+.ba-etoiles { display: flex; gap: 4px; }
+.ba-etoiles button { border: 0; background: none; font-size: 32px; color: #dcdce2; cursor: pointer; padding: 0 2px; line-height: 1; }
+.ba-etoiles:hover button { color: #f5a623; }
+.ba-etoiles button:hover ~ button { color: #dcdce2; }
+.ba-libre { display: flex; gap: 6px; }
+.ba-libre input { min-height: 42px; flex: 1; }
+.merci { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 130; background: #1f8a44; color: #fff; font-weight: 700; padding: 10px 16px; border-radius: 99px; box-shadow: var(--ombre); animation: entree .3s ease-out; }
+.barres { display: grid; gap: 6px; }
+.barre-res { display: grid; grid-template-columns: minmax(80px, 30%) 1fr auto; gap: 8px; align-items: center; font-size: 13px; }
+.barre-res .jauge { height: 12px; border-radius: 6px; background: #ebebef; overflow: hidden; }
+.barre-res .jauge i { display: block; height: 100%; background: var(--o); border-radius: 6px; }

@@ -311,4 +311,44 @@ describe('Parcours complet', () => {
     await http.delete(`/api/admin/annonces/${a.id}`).set(auth(admin)).expect(200);
     await http.delete(`/api/admin/annonces/${b.id}`).set(auth(admin)).expect(200);
   });
+
+  it('messages : question avec réponses, résultats et export CSV', async () => {
+    const ids = async (t: string) => (await http.get('/api/annonces').set(auth(t))).body.map((a: any) => a.id);
+    // validation côté admin
+    expect((await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: 'Q', texte: 'Sondage', questionType: 'CHOIX', question: 'Quoi ?', options: ['Seul'] })).status).toBe(400);
+    const q = (await http.post('/api/admin/annonces').set(auth(admin)).send({
+      titre: `Sondage ${id}`, texte: 'Une question rapide', questionType: 'CHOIX', question: 'Quel matériau décapez-vous le plus ?',
+      options: ['Acier', 'Aluminium', 'Bois'], autreOption: true, reponseObligatoire: true, debut: new Date(Date.now() - 60000),
+    })).body;
+    const vue = (await http.get('/api/annonces').set(auth(alice))).body.find((a: any) => a.id === q.id);
+    expect(vue.question).toMatchObject({ type: 'CHOIX', options: ['Acier', 'Aluminium', 'Bois'], autre: true, obligatoire: true });
+    // obligatoire : « J'ai compris » refusé ; réponse invalide refusée
+    expect((await http.post(`/api/annonces/${q.id}/compris`).set(auth(alice))).status).toBe(400);
+    expect((await http.post(`/api/annonces/${q.id}/reponse`).set(auth(alice)).send({ valeur: 'Granit' })).status).toBe(400);
+    await http.post(`/api/annonces/${q.id}/reponse`).set(auth(alice)).send({ valeur: 'Autre', autre: 'Pierre de taille' }).expect(201);
+    await http.post(`/api/annonces/${q.id}/reponse`).set(auth(bob)).send({ valeur: 'Acier' }).expect(201);
+    expect(await ids(alice)).not.toContain(q.id); // répondu → masqué
+    // résultats
+    const r = (await http.get(`/api/admin/annonces/${q.id}/reponses`).set(auth(admin))).body;
+    expect(r.total).toBe(2);
+    expect(r.resume).toEqual(expect.arrayContaining([{ valeur: 'Acier', nombre: 1 }, { valeur: 'Autre', nombre: 1 }]));
+    expect(r.reponses.find((x: any) => x.valeur === 'Autre')).toMatchObject({ autre: 'Pierre de taille', user: { identifiant: `alice-${id}` } });
+    const csv = await http.get(`/api/admin/annonces/${q.id}/reponses.csv`).set(auth(admin));
+    expect(csv.headers['content-type']).toContain('text/csv');
+    expect(csv.text).toContain(`alice-${id}`);
+    expect(csv.text).toContain('Pierre de taille');
+    expect((await http.get(`/api/admin/annonces/${q.id}/reponses`).set(auth(bob))).status).toBe(403);
+
+    // note 1 à 5 : moyenne
+    const n = (await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: `Note ${id}`, texte: 'Satisfait ?', questionType: 'NOTE', question: 'Votre note ?', debut: new Date(Date.now() - 60000) })).body;
+    expect((await http.post(`/api/annonces/${n.id}/reponse`).set(auth(alice)).send({ valeur: '6' })).status).toBe(400);
+    await http.post(`/api/annonces/${n.id}/reponse`).set(auth(alice)).send({ valeur: '5' }).expect(201);
+    await http.post(`/api/annonces/${n.id}/reponse`).set(auth(bob)).send({ valeur: '2' }).expect(201);
+    expect((await http.get(`/api/admin/annonces/${n.id}/reponses`).set(auth(admin))).body.moyenne).toBe(3.5);
+    // facultative : on peut passer
+    const o = (await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: `Oui ${id}`, texte: 'Petit rappel', questionType: 'OUI_NON', question: 'Lentille nettoyée ?', debut: new Date(Date.now() - 60000) })).body;
+    await http.post(`/api/annonces/${o.id}/compris`).set(auth(alice)).expect(201);
+    expect(await ids(alice)).not.toContain(o.id);
+    for (const x of [q, n, o]) await http.delete(`/api/admin/annonces/${x.id}`).set(auth(admin)).expect(200);
+  });
 });

@@ -64,7 +64,8 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 | GET · POST | `/api/conditions` · `/api/moi/conditions` `{version, accordPhotosMarketing?}` | connecté |
 | PATCH | `/api/moi/preferences` `{accordPhotosMarketing}` | connecté |
 | POST | `/api/admin/conditions` `{texte}` (nouvelle version) | admin |
-| GET · POST | `/api/annonces`, `/api/annonces/:id/compris` | connecté |
+| GET · POST | `/api/annonces`, `/api/annonces/:id/compris`, `/api/annonces/:id/reponse` `{valeur, autre?}` | connecté |
+| GET | `/api/admin/annonces/:id/reponses[?occurrence=]`, `/api/admin/annonces/:id/reponses.csv` | admin **ou clé API** |
 | GET · POST · PATCH · DELETE | `/api/admin/annonces` (+ `POST /api/admin/annonces/cible` : nombre d'utilisateurs visés) | admin **ou clé API** |
 
 ## Messages (bulles à l'ouverture de l'app)
@@ -72,6 +73,8 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 - **Une fois** ou **périodique** : revient tous les N jours / semaines / mois après « J'ai compris » (ex. « Pensez à nettoyer la lentille » chaque mois).
 - **Ciblage** : tous, clients Lazzeko ou autres marques (case « Client Lazzeko » à la création du compte, ou `clientLazzeko` via l'API), et/ou par machine (modèle, variante). Nombre d'utilisateurs touchés affiché avant publication.
 - Statistiques par message : visés, vus, « compris » (période en cours pour un message périodique). Pas de réponse possible : ce n'est pas une messagerie.
+- **Question (facultative)**, une par message : Oui / Non, choix unique (2 à 5 réponses, + « Autre… » avec précision), note 1 à 5 ★, texte libre court. Réponse en un toucher dans la bulle ; « Passer » sauf si la réponse est obligatoire. Une réponse par personne et par période (sondage mensuel possible).
+- Résultats : barres en %, moyenne des notes, détail par personne (client Lazzeko ou autre), par période ; export CSV (`GET /api/admin/annonces/:id/reponses.csv`, séparateur « ; »).
 | POST | `/api/fiches/:id/aide` `{message}` (si `aideSupport` activé) | connecté |
 | GET · PATCH | `/api/admin/aide`, `/api/admin/aide/:id` `{traitee}` | admin **ou clé API** |
 

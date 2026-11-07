@@ -63,6 +63,7 @@ model User {
   evaluations      Evaluation[]
   apiKeys          ApiKey[]
   lecturesAnnonces AnnonceLecture[]
+  reponsesAnnonces AnnonceReponse[]
   demandesAide     DemandeAide[]
 }
 
@@ -343,6 +344,15 @@ enum NiveauAnnonce {
   IMPORTANT // affiché en grand, à fermer pour continuer
 }
 
+/// Question facultative posée dans un message (une seule par message).
+enum TypeQuestion {
+  AUCUNE
+  OUI_NON
+  CHOIX
+  NOTE
+  TEXTE
+}
+
 enum Recurrence {
   AUCUNE
   JOURS
@@ -358,26 +368,33 @@ enum CibleClient {
 
 /// Message de l'admin vers les utilisateurs (pas de réponse possible).
 model Annonce {
-  id           String           @id @default(cuid())
-  titre        String
-  texte        String
-  niveau       NiveauAnnonce    @default(INFO)
-  lienUrl      String?
-  lienTexte    String?
-  debut        DateTime         @default(now())
-  fin          DateTime?
-  actif        Boolean          @default(true)
+  id                 String           @id @default(cuid())
+  titre              String
+  texte              String
+  niveau             NiveauAnnonce    @default(INFO)
+  lienUrl            String?
+  lienTexte          String?
+  debut              DateTime         @default(now())
+  fin                DateTime?
+  actif              Boolean          @default(true)
   /// Message périodique : réapparaît tous les `intervalle` jours / semaines / mois après « J'ai compris ».
-  recurrence   Recurrence       @default(AUCUNE)
-  intervalle   Int              @default(1)
+  recurrence         Recurrence       @default(AUCUNE)
+  intervalle         Int              @default(1)
   /// Ciblage (listes vides = toutes les machines).
-  cibleClient  CibleClient      @default(TOUS)
-  fabricantIds String[]
-  modeleIds    String[]
-  varianteIds  String[]
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  lectures     AnnonceLecture[]
+  cibleClient        CibleClient      @default(TOUS)
+  fabricantIds       String[]
+  modeleIds          String[]
+  varianteIds        String[]
+  /// Question (facultative) : réponse en un toucher dans la bulle, une par personne et par période.
+  questionType       TypeQuestion     @default(AUCUNE)
+  question           String?
+  options            String[]
+  autreOption        Boolean          @default(false)
+  reponseObligatoire Boolean          @default(false)
+  reponses           AnnonceReponse[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  lectures           AnnonceLecture[]
 }
 
 /// Vu / compris par utilisateur et par occurrence (0 pour un message ponctuel, n° de période sinon).
@@ -391,4 +408,21 @@ model AnnonceLecture {
   compriseLe DateTime?
 
   @@id([annonceId, userId, occurrence])
+}
+
+/// Réponse à la question d'un message : valeur = « oui » / « non », texte de l'option, « 1 » à « 5 », ou texte libre.
+model AnnonceReponse {
+  id         String   @id @default(cuid())
+  annonceId  String
+  annonce    Annonce  @relation(fields: [annonceId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occurrence Int
+  valeur     String
+  /// Précision quand l'utilisateur choisit « Autre ».
+  autre      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([annonceId, userId, occurrence])
 }
