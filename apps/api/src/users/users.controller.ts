@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { AutoriseCleApi, Moi, Principal, Roles, SansConditions } from '../auth/decorators';
 import { ParametresService } from '../parametres/parametres.service';
@@ -21,8 +21,10 @@ export class UsersController {
 
   @Get('users')
   @Roles(Role.ADMIN)
-  lister() {
-    return this.users.lister();
+  @AutoriseCleApi()
+  /** ?numeroOdoo=… pour retrouver un compte depuis Odoo ; ?q=… recherche libre. */
+  lister(@Query('numeroOdoo') numeroOdoo?: string, @Query('q') q?: string) {
+    return this.users.lister({ numeroOdoo, q });
   }
 
   @Get('users/:id')

@@ -11,13 +11,13 @@ type Cible = 'TOUS' | 'LAZZEKO' | 'AUTRES';
 interface Annonce {
   id: string; titre: string; texte: string; niveau: Niveau; lienUrl: string | null; lienTexte: string | null;
   debut: string; fin: string | null; actif: boolean; recurrence: Rec; intervalle: number; cibleClient: Cible;
-  fabricantIds: string[]; modeleIds: string[]; varianteIds: string[];
+  fabricantIds: string[]; modeleIds: string[]; varianteIds: string[]; numerosOdoo: string[];
   questionType: TypeQuestion; question: string | null; options: string[]; autreOption: boolean; reponseObligatoire: boolean;
   etat: 'EN_COURS' | 'PROGRAMME' | 'TERMINE' | 'PAUSE'; cible: number; stats: { occurrence: number; vues: number; comprises: number; reponses: number }; prochaine: string | null;
 }
 const VIDE = {
   titre: '', texte: '', niveau: 'CONSEIL' as Niveau, lienUrl: '', lienTexte: '', debut: '', fin: '',
-  recurrence: 'AUCUNE' as Rec, intervalle: 1, cibleClient: 'TOUS' as Cible, machines: [] as string[],
+  recurrence: 'AUCUNE' as Rec, intervalle: 1, cibleClient: 'TOUS' as Cible, machines: [] as string[], numeros: '',
   questionType: 'AUCUNE' as TypeQuestion, question: '', options: ['', ''], autreOption: false, reponseObligatoire: false,
 };
 type Form = typeof VIDE;
@@ -28,7 +28,8 @@ const local = (d: string | null) => (d ? new Date(d).toISOString().slice(0, 16) 
 /** Les machines ciblées sont codées « f:id », « m:id » ou « v:id » (fabricant, modèle, variante). */
 function versCiblage(f: Form) {
   const pick = (p: string) => f.machines.filter((x) => x.startsWith(p)).map((x) => x.slice(2));
-  return { cibleClient: f.cibleClient, fabricantIds: pick('f:'), modeleIds: pick('m:'), varianteIds: pick('v:') };
+  const numerosOdoo = [...new Set(f.numeros.split(/[\s,;]+/).map((x) => x.trim()).filter(Boolean))];
+  return { cibleClient: f.cibleClient, fabricantIds: pick('f:'), modeleIds: pick('m:'), varianteIds: pick('v:'), numerosOdoo };
 }
 
 /** Admin : messages affichés en bulle à l'ouverture de l'app (pas de messagerie, pas de réponse). */
@@ -52,7 +53,7 @@ export default function AdminAnnonces() {
     if (!ouvert) return;
     const h = setTimeout(() => api<{ utilisateurs: number }>('/admin/annonces/cible', { method: 'POST', json: versCiblage(f) }).then((r) => setNb(r.utilisateurs)).catch(() => {}), 200);
     return () => clearTimeout(h);
-  }, [ouvert, f.cibleClient, f.machines.join()]);
+  }, [ouvert, f.cibleClient, f.machines.join(), f.numeros]);
 
   const nouveau = () => { setF(VIDE); setEdition(null); setOuvert(true); window.scrollTo(0, 0); };
   const modifier = (a: Annonce) => {
@@ -60,6 +61,7 @@ export default function AdminAnnonces() {
       titre: a.titre, texte: a.texte, niveau: a.niveau, lienUrl: a.lienUrl ?? '', lienTexte: a.lienTexte ?? '',
       debut: local(a.debut), fin: local(a.fin), recurrence: a.recurrence, intervalle: a.intervalle, cibleClient: a.cibleClient,
       machines: [...a.fabricantIds.map((x) => 'f:' + x), ...a.modeleIds.map((x) => 'm:' + x), ...a.varianteIds.map((x) => 'v:' + x)],
+      numeros: a.numerosOdoo.join('\n'),
       questionType: a.questionType, question: a.question ?? '', options: a.options.length ? a.options : ['', ''],
       autreOption: a.autreOption, reponseObligatoire: a.reponseObligatoire,
     });
@@ -182,6 +184,11 @@ export default function AdminAnnonces() {
               )}
             </div>
           </div>
+          <label>
+            N° clients Odoo (facultatif)
+            <textarea rows={2} value={f.numeros} onChange={(e) => setF({ ...f, numeros: e.target.value })} placeholder="ex. C00123, C00456 (séparés par une virgule, un espace ou un retour à la ligne)" />
+            <small className="muted">Rempli : seuls ces clients reçoivent le message (en plus des autres critères).</small>
+          </label>
           <div className="succes" style={{ margin: 0 }}>Ce message touchera <b>{nb ?? '…'}</b> utilisateur{nb === 1 ? '' : 's'}.</div>
 
           <b className="petit">Aperçu</b>
@@ -207,6 +214,7 @@ export default function AdminAnnonces() {
               {' · '}dès le {date(a.debut)}{a.fin ? ` jusqu'au ${date(a.fin)}` : ''}
               {' · '}{a.cibleClient === 'TOUS' ? 'tous' : a.cibleClient === 'LAZZEKO' ? 'clients Lazzeko' : 'autres marques'}
               {a.modeleIds.length + a.varianteIds.length + a.fabricantIds.length ? ' · machines ciblées' : ''}
+              {a.numerosOdoo.length ? ` · ${a.numerosOdoo.length} n° Odoo` : ''}
             </div>
             <div className="petit" style={{ margin: '6px 0' }}>
               👥 {a.cible} visé{a.cible > 1 ? 's' : ''} · 👁 {a.stats.vues} vu{a.stats.vues > 1 ? 's' : ''} · ✓ {a.stats.comprises} « compris »

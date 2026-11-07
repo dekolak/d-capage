@@ -46,6 +46,8 @@ model User {
   role                    Role          @default(USER)
   /// Client Lazzeko (oui) ou utilisateur d'une autre marque (non) : sert au ciblage des messages.
   clientLazzeko           Boolean       @default(true)
+  /// N° de client dans Odoo (plusieurs comptes peuvent partager le même n°, ex. une entreprise).
+  numeroOdoo              String?
   /// Conditions d'utilisation acceptées (version) : partage communautaire obligatoire.
   conditionsVersion       Int?
   conditionsAccepteesLe   DateTime?
@@ -65,6 +67,8 @@ model User {
   lecturesAnnonces AnnonceLecture[]
   reponsesAnnonces AnnonceReponse[]
   demandesAide     DemandeAide[]
+
+  @@index([numeroOdoo])
 }
 
 /// Clé API pour créer des comptes depuis un autre système (site, CRM…).
@@ -385,6 +389,8 @@ model Annonce {
   fabricantIds       String[]
   modeleIds          String[]
   varianteIds        String[]
+  /// Ciblage par n° de client Odoo (vide = pas de restriction).
+  numerosOdoo        String[]
   /// Question (facultative) : réponse en un toucher dans la bulle, une par personne et par période.
   questionType       TypeQuestion     @default(AUCUNE)
   question           String?

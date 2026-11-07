@@ -10,6 +10,8 @@ class CiblageDto {
   @IsOptional() @IsArray() @IsString({ each: true }) fabricantIds?: string[];
   @IsOptional() @IsArray() @IsString({ each: true }) modeleIds?: string[];
   @IsOptional() @IsArray() @IsString({ each: true }) varianteIds?: string[];
+  /** N° clients Odoo visés (vide = pas de restriction). */
+  @IsOptional() @IsArray() @ArrayMaxSize(1000) @IsString({ each: true }) @MaxLength(40, { each: true }) numerosOdoo?: string[];
 }
 
 class AnnonceDto extends CiblageDto {
@@ -40,8 +42,9 @@ class ModifierAnnonceDto extends AnnonceDto {
   @IsOptional() @IsString() @MinLength(2) @MaxLength(2000) declare texte: string;
 }
 
-const nettoyer = <T extends { lienUrl?: string | null; lienTexte?: string | null; options?: string[] }>(d: T) => ({
+const nettoyer = <T extends { lienUrl?: string | null; lienTexte?: string | null; options?: string[]; numerosOdoo?: string[] }>(d: T) => ({
   ...d,
+  ...(d.numerosOdoo !== undefined ? { numerosOdoo: [...new Set(d.numerosOdoo.map((n) => n.trim()).filter(Boolean))] } : {}),
   ...(d.options !== undefined ? { options: d.options.map((o) => o.trim()).filter(Boolean) } : {}),
   ...(d.lienUrl !== undefined ? { lienUrl: d.lienUrl || null } : {}),
   ...(d.lienTexte !== undefined ? { lienTexte: d.lienTexte || null } : {}),

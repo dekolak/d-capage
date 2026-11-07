@@ -41,8 +41,8 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 |---|---|---|
 | POST | `/api/auth/connexion` `{identifiant, motDePasse}` | public |
 | GET · POST | `/api/moi`, `/api/moi/mot-de-passe` | connecté |
-| POST | `/api/users` `{identifiant, motDePasse, nom?, role?}` | admin **ou clé API** |
-| GET · PATCH | `/api/users`, `/api/users/:id` | admin |
+| POST | `/api/users` `{identifiant, motDePasse, nom?, role?, clientLazzeko?, numeroOdoo?}` | admin **ou clé API** |
+| GET · PATCH | `/api/users[?numeroOdoo=&q=]`, `/api/users/:id` | admin (GET aussi par clé API) |
 | GET · POST | `/api/users/:id/machines` `{varianteId, surnom?}` | admin **ou clé API** |
 | POST · GET · DELETE | `/api/admin/cles-api` | admin |
 | GET | `/api/catalogue`, `/api/catalogue/versions/:id` | connecté |
@@ -71,6 +71,7 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 ## Messages (bulles à l'ouverture de l'app)
 - Administration → **💬 Messages** : titre, texte, niveau (💡 Conseil, ℹ️ Info, ⚠️ Important = affiché en grand), lien facultatif, dates de début / fin.
 - **Une fois** ou **périodique** : revient tous les N jours / semaines / mois après « J'ai compris » (ex. « Pensez à nettoyer la lentille » chaque mois).
+- **Ciblage par n° client Odoo** : liste de numéros (champ « N° client Odoo » du compte, saisi à la création ou envoyé par Odoo via `numeroOdoo`).
 - **Ciblage** : tous, clients Lazzeko ou autres marques (case « Client Lazzeko » à la création du compte, ou `clientLazzeko` via l'API), et/ou par machine (modèle, variante). Nombre d'utilisateurs touchés affiché avant publication.
 - Statistiques par message : visés, vus, « compris » (période en cours pour un message périodique). Pas de réponse possible : ce n'est pas une messagerie.
 - **Question (facultative)**, une par message : Oui / Non, choix unique (2 à 5 réponses, + « Autre… » avec précision), note 1 à 5 ★, texte libre court. Réponse en un toucher dans la bulle ; « Passer » sauf si la réponse est obligatoire. Une réponse par personne et par période (sondage mensuel possible).
