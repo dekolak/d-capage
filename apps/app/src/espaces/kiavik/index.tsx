@@ -11,7 +11,7 @@ import Recherche from './Recherche';
  */
 export const kiavik: AppEspace = {
   onglets: [
-    { to: '/guides', label: 'Guides', icone: ICONES.livre },
+    { to: '/guides', label: 'Accueil', icone: ICONES.accueil },
     { to: '/procedures', label: 'Procédures', icone: ICONES.etapes },
     { to: '/recherche', label: 'Rechercher', icone: ICONES.recherche },
     { to: '/compte', label: 'Compte', icone: ICONES.compte },
