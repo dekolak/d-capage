@@ -1,4 +1,6 @@
-# Déploiement : Coolify + Traefik n8n + domaine OVH (app.lazzeko.com)
+# Déploiement : Coolify + Traefik n8n + domaines OVH
+
+Une seule app sert `app.lazzeko.com` (Lazzeko) et `app.kiavikcopilot.ovh` (Kiavik).
 
 ## Contexte du VPS
 Le VPS fait déjà tourner **n8n avec son propre Traefik** (`n8n-compose-traefik-1`) sur les ports 80/443,
@@ -25,6 +27,8 @@ La base PostgreSQL est incluse dans ce compose (service `db`) : pas besoin de re
 | `JWT_SECRET` | longue chaîne aléatoire — ne plus la changer ensuite |
 | `ADMIN_PASSWORD` | mot de passe du 1er compte admin (8 caractères min.) |
 | `ADMIN_IDENTIFIANT` | facultatif, `admin` par défaut |
+| `PUBLIC_URL` | facultatif, `https://app.lazzeko.com` par défaut (liens envoyés aux webhooks) |
+| `MODERATION_PREALABLE_AVIS` | facultatif, `true` = avis avec texte en attente jusqu'à validation |
 
 Le compte admin n'est créé qu'au premier démarrage.
 
@@ -46,7 +50,9 @@ pg_dump -U decapage decapage > /var/lib/postgresql/data/sauvegarde.sql
 ou sauvegarde des volumes `decapage_db` et `decapage_uploads` au niveau du VPS.
 
 ## Mises à jour
-Merge sur `main` → **Redeploy** (ou *Auto Deploy*). Ajouter une machine = un JSON dans `machines/` + redéployer.
+Merge sur `main` → **Redeploy** (ou *Auto Deploy*). Au démarrage : migrations, seed (idempotent), API.
+Ajouter une machine = un JSON dans `machines/` + redéployer.
+Après une mise à jour avec migration : faire une sauvegarde **avant** le Redeploy.
 
 ## Deuxième adresse : Kiavik (app.kiavikcopilot.ovh)
 La même app sert les deux espaces : l'adresse choisit la marque (nom, couleur, icône).
