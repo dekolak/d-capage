@@ -459,3 +459,38 @@ model AnnonceReponse {
 
   @@unique([annonceId, userId, occurrence])
 }
+
+/// Procédure Kiavik (pas à pas), créée et modifiée par l'admin depuis l'app.
+model Procedure {
+  id        String           @id @default(cuid())
+  /// Clé fixe des procédures livrées par le seed (kit-guides/procedures.json) ; null si créée dans l'app.
+  cle       String?          @unique
+  titre     String
+  categorie String           @default("Impression")
+  resume    String?
+  /// Module requis pour la voir.
+  module    String           @default("procedures-kiavik")
+  publiee   Boolean          @default(false)
+  ordre     Int              @default(0)
+  etapes    EtapeProcedure[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+/// Étape d'une procédure : texte, avertissement, photo et lien vers une pastille d'un guide, tous facultatifs sauf le texte.
+model EtapeProcedure {
+  id            String    @id @default(cuid())
+  procedureId   String
+  procedure     Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  ordre         Int
+  texte         String
+  avertissement String?
+  photoCle      String?
+  photoMaj      DateTime?
+  /// Lien vers une pastille : guide (slug), écran (id), pastille (id).
+  guide         String?
+  ecran         String?
+  pastille      String?
+
+  @@index([procedureId, ordre])
+}

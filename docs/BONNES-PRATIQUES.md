@@ -67,6 +67,10 @@
 2. Nouveau guide : module `guide-<slug>` dans l'espace Kiavik (`espaces.ts`), sinon l'API refuse de démarrer.
 3. Redéployer (les fichiers sont lus au démarrage), vérifier sur téléphone.
 
+### Procédures Kiavik
+- Elles se créent dans l'app (Administration → Procédures) : rien à déployer.
+- `kit-guides/procedures.json` ne sert qu'au départ (base vide) : modifier ce fichier ne change pas une procédure déjà créée.
+
 ### Ajouter un espace
 1. Entrée dans `ESPACES` (`espaces.ts`) : slug, noms, adresse, couleurs, icônes, communauté, modules.
 2. Icônes dans `apps/app/public/espaces/<slug>/` (`icone.svg`, `icone-192.png`, `icone-512.png`).

@@ -12,6 +12,7 @@ import { CatalogueModule } from './catalogue/catalogue.module';
 import { EspacesModule } from './espaces/espaces.module';
 import { FichesModule } from './fiches/fiches.module';
 import { GuidesModule } from './guides/guides.module';
+import { ProceduresModule } from './procedures/procedures.module';
 import { HealthController } from './health.controller';
 import { MachinesModule } from './machines/machines.module';
 import { PhotosModule } from './photos/photos.module';
@@ -44,6 +45,7 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     FichesModule,
     PhotosModule,
     GuidesModule,
+    ProceduresModule,
   ],
   controllers: [HealthController],
   // Toutes les routes sont protégées par défaut (@Public() pour ouvrir).

@@ -1,0 +1,87 @@
+{
+  "_note": "Procédures de départ, chargées par le seed seulement si elles n'existent pas encore (clé `cle`). Ensuite, elles se modifient dans l'app (Administration → Procédures) : le seed ne les écrase jamais. Étapes reprises des animations du prototype. Lien d'une étape : guide / écran / pastille.",
+  "procedures": [
+    {
+      "cle": "fp-couleur-simple",
+      "titre": "Imprimer en couleur simple (sans blanc)",
+      "categorie": "Impression",
+      "resume": "De l'image au fichier RIPé, sans blanc, puis impression avec DXonJet.",
+      "publiee": true,
+      "etapes": [
+        { "texte": "Dans FlexiPRINT, cliquez sur le bouton Travail pour ajouter une image.", "lien": ["flexiprint", "m0", "0.2"] },
+        { "texte": "Choisissez le fichier à imprimer dans la liste, puis cliquez sur Ajout. Les cases à droite restent décochées.", "lien": ["flexiprint", "m0a", "a.8"] },
+        { "texte": "Le travail apparaît dans la file : double-cliquez dessus pour ouvrir ses propriétés.", "lien": ["flexiprint", "m0", "0.11"] },
+        { "texte": "Onglet T1 : vérifiez la taille de l'image. Gardez « Proportionnel » coché et ne cochez pas « Adapter au support ».", "avertissement": "Agrandir beaucoup l'image peut la pixeliser.", "lien": ["flexiprint", "t1", "1.4"] },
+        { "texte": "Onglet T3 : choisissez le profil, c'est-à-dire le nombre de passes. Tout le reste se règle automatiquement.", "lien": ["flexiprint", "t3", "3.2"] },
+        { "texte": "Onglet T4 : ouvrez le menu du blanc sur la ligne Spot_1 et choisissez « Aucun » (impression couleur simple).", "lien": ["flexiprint", "t4", "4.1"] },
+        { "texte": "Tout est prêt : cliquez sur Envoyer, en bas de la fenêtre.", "lien": ["flexiprint", "t4", "E"] },
+        { "texte": "Renommez le fichier RIPé si besoin, puis cliquez sur Enregistrer : le RIP se lance et crée le fichier.", "lien": ["flexiprint", "tenv", "e.5"] },
+        { "texte": "Ouvrez le fichier RIPé dans le logiciel DXonJet pour imprimer sur le mur.", "lien": ["dxonjet", "d1", "1.2"] }
+      ]
+    },
+    {
+      "cle": "fp-couleur-blanc",
+      "titre": "Imprimer en couleur + blanc",
+      "categorie": "Impression",
+      "resume": "Avec une couche de blanc, par exemple sur un mur foncé : choisir entre Support et Sous-uni, puis vérifier le blanc.",
+      "publiee": true,
+      "etapes": [
+        { "texte": "Dans FlexiPRINT, cliquez sur le bouton Travail.", "lien": ["flexiprint", "m0", "0.2"] },
+        { "texte": "Choisissez le fichier, puis cliquez sur Ajout.", "lien": ["flexiprint", "m0a", "a.8"] },
+        { "texte": "Double-cliquez sur le travail dans la file pour ouvrir ses propriétés.", "lien": ["flexiprint", "m0", "0.11"] },
+        { "texte": "Onglet T1 : vérifiez la taille, en gardant « Proportionnel » coché.", "lien": ["flexiprint", "t1", "1.4"] },
+        { "texte": "Onglet T3 : choisissez le profil (le nombre de passes).", "lien": ["flexiprint", "t3", "3.2"] },
+        { "texte": "Onglet T4 : ouvrez le menu du blanc sur la ligne Spot_1. Support = du blanc sous toute l'image (photo, visuel rectangulaire). Sous-uni = du blanc seulement sous la couleur, le mur reste visible autour (logo, dessin détouré).", "lien": ["flexiprint", "t4", "4.1"] },
+        { "texte": "Onglet T9 : cochez « Aperçu canaux de sortie », puis cliquez sur Spot_1, le canal du blanc. Le noir montre où le blanc sera imprimé.", "lien": ["flexiprint", "t9", "9.1"] },
+        { "texte": "Cliquez sur Envoyer, en bas de la fenêtre.", "lien": ["flexiprint", "t9", "E"] },
+        { "texte": "Renommez le fichier si besoin, puis cliquez sur Enregistrer.", "lien": ["flexiprint", "tenv", "e.5"] },
+        { "texte": "Ouvrez le fichier RIPé dans DXonJet : la machine imprimera le blanc puis la couleur.", "lien": ["dxonjet", "d1", "1.2"] }
+      ]
+    },
+    {
+      "cle": "dx-reprendre-impression",
+      "titre": "Reprendre une impression stoppée",
+      "categorie": "Impression",
+      "resume": "À compléter par Teddy.",
+      "publiee": false,
+      "etapes": [
+        { "texte": "Bouton « Reprendre l'impression » : redémarre une impression stoppée. Procédure détaillée à compléter.", "lien": ["dxonjet", "dc", "B.5"] }
+      ]
+    },
+    {
+      "cle": "dx-modifier-pendant-impression",
+      "titre": "Modifier un réglage pendant l'impression",
+      "categorie": "Réglages",
+      "resume": "Distance du mur ou vitesse de l'axe Z : ces réglages se font à l'arrêt.",
+      "publiee": false,
+      "etapes": [
+        { "texte": "Mettez l'impression en pause.", "lien": ["dxonjet", "dc", "P.3"] },
+        { "texte": "Reculez la tête.", "avertissement": "À compléter par Teddy (comment reculer la tête)." },
+        { "texte": "Modifiez le réglage : distance du mur ou vitesse de l'axe Z.", "lien": ["dxonjet", "d3a", "a.4"] },
+        { "texte": "Validez avec Appliquer.", "lien": ["dxonjet", "d3a", "a.8"] },
+        { "texte": "Remettez la tête en automatique.", "avertissement": "À compléter par Teddy." },
+        { "texte": "Relancez l'impression.", "lien": ["dxonjet", "dc", "B.5"] }
+      ]
+    },
+    {
+      "cle": "dx-mode-voyage",
+      "titre": "Mode voyage et nettoyage toutes les 72 h",
+      "categorie": "Entretien",
+      "resume": "À compléter par Teddy.",
+      "publiee": false,
+      "etapes": [
+        { "texte": "Activez le mode voyage : nettoyage partiellement automatique, puis un nettoyage toutes les 72 h.", "avertissement": "Vérifiez que la bouteille n'est pas trop pleine.", "lien": ["dxonjet", "dc", "P.6"] }
+      ]
+    },
+    {
+      "cle": "dx-wkcmy-kcmyw",
+      "titre": "Choisir entre WKCMY et KCMYW",
+      "categorie": "Réglages",
+      "resume": "À compléter par Teddy.",
+      "publiee": false,
+      "etapes": [
+        { "texte": "Mode d'impression : KCMY = couleur seule ; WKCMY = d'abord le blanc, ensuite les couleurs ; KCMYW = d'abord les couleurs, ensuite le blanc. Quand choisir l'un ou l'autre : à compléter.", "lien": ["dxonjet", "dc", "B.6"] }
+      ]
+    }
+  ]
+}

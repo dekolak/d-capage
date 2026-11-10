@@ -2,19 +2,19 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
-import { useAuth } from '../../lib/auth';
 import { ResumeGuide } from './guides';
+import { useProcedures } from './donneesProcedures';
+import { ListeProcedures } from './Procedures';
 import './guides.css';
 
 /** Accueil Kiavik : les guides du compte côte à côte en haut, les procédures en dessous. */
 export default function Guides() {
-  const { moi } = useAuth();
+  const { liste: procedures, acces: accesProcedures } = useProcedures();
   const [guides, setGuides] = useState<ResumeGuide[]>();
   const [erreur, setErreur] = useState<unknown>();
   useEffect(() => {
     api<ResumeGuide[]>('/guides').then(setGuides).catch(setErreur);
   }, []);
-  const procedures = moi?.role === 'ADMIN' || moi?.modules.includes('procedures-kiavik');
   if (erreur) return <div className="page"><Erreur e={erreur} /></div>;
   if (!guides) return <Chargement />;
   return (
@@ -22,6 +22,11 @@ export default function Guides() {
       {guides.length > 0 && (
         <>
           <h1>Logiciels</h1>
+          {guides.length > 1 && (
+            <div className="gx-chemin" aria-label="Le chemin d'une impression">
+              <span>🖼️ Image</span>›<span>1. {guides[0].nom.split(' ')[0]}</span>›<span>Fichier RIPé</span>›<span>2. {guides[1].nom.split(' ')[0]}</span>›<span>🧱 Mur</span>
+            </div>
+          )}
           <div className={`gx-tuiles ${guides.length === 1 ? 'une' : ''}`}>
             {guides.map((g, i) => (
               <Link key={g.slug} to={`/guides/${g.slug}`} className="carte gx-tuile">
@@ -33,13 +38,19 @@ export default function Guides() {
           </div>
         </>
       )}
-      {procedures && (
+      {accesProcedures && (
         <>
           <h2>Procédures</h2>
-          <div className="carte"><span className="muted">Les procédures arrivent bientôt.</span></div>
+          {!procedures ? (
+            <Chargement />
+          ) : procedures.length ? (
+            <ListeProcedures liste={procedures} />
+          ) : (
+            <div className="carte"><span className="muted">Aucune procédure pour l'instant.</span></div>
+          )}
         </>
       )}
-      {!guides.length && !procedures && <p className="muted">Aucun guide n'est activé sur votre compte.</p>}
+      {!guides.length && !accesProcedures && <p className="muted">Aucun guide n'est activé sur votre compte.</p>}
     </div>
   );
 }

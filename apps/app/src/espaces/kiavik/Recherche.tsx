@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { chargerGuide, Guide, ResumeGuide } from './guides';
-import { rechercher } from './recherche';
+import { useProcedures } from './donneesProcedures';
+import { normaliser, rechercher } from './recherche';
 import './guides.css';
 
 /** Recherche par mot-clé dans les guides du compte : un résultat ouvre l'écran sur le bon repère. */
@@ -23,6 +24,15 @@ export default function Recherche() {
   }, []);
 
   const resultats = useMemo(() => (guides ? rechercher(guides, q) : []), [guides, q]);
+  const { liste: procedures } = useProcedures();
+  const procs = useMemo(() => {
+    const mots = normaliser(q).split(' ').filter(Boolean);
+    if (!mots.length) return [];
+    return (procedures ?? []).filter((p) => {
+      const t = normaliser(`${p.titre} ${p.categorie} ${p.resume ?? ''} ${p.textes.join(' ')}`).split(' ');
+      return mots.every((m) => t.some((w) => w.startsWith(m)));
+    });
+  }, [procedures, q]);
   const plusieurs = (guides?.length ?? 0) > 1;
 
   return (
@@ -44,12 +54,25 @@ export default function Recherche() {
       ) : !guides ? (
         <Chargement />
       ) : !q.trim() ? (
-        <p className="muted">Tapez un mot : nom d'un bouton, d'un réglage ou un problème. Les résultats ouvrent l'écran sur le bon repère.</p>
-      ) : !resultats.length ? (
+        <p className="muted">Tapez un mot : nom d'un bouton, d'un réglage ou un problème. Les résultats ouvrent l'écran sur le bon repère, ou la procédure.</p>
+      ) : !resultats.length && !procs.length ? (
         <p className="muted">Aucun résultat pour « {q} ».</p>
       ) : (
         <>
-          <h4>Boutons et réglages · {resultats.length}{resultats.length === 50 ? '+' : ''}</h4>
+          {procs.length > 0 && (
+            <>
+              <h4>Procédures · {procs.length}</h4>
+              <div className="gx-resultats">
+                {procs.map((p) => (
+                  <Link key={p.id} className="carte gx-resultat" to={`/procedures/${p.id}`}>
+                    <b>📋 {p.titre}</b>
+                    {p.resume && <span className="muted petit">{p.resume}</span>}
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+          {resultats.length > 0 && <h4>Boutons et réglages · {resultats.length}{resultats.length === 50 ? '+' : ''}</h4>}
           <div className="gx-resultats">
             {resultats.map((r) => (
               <Link key={`${r.guide}/${r.ecran}/${r.pastille}`} className="carte gx-resultat" to={`/guides/${r.guide}/${r.ecran}?p=${encodeURIComponent(r.pastille)}`}>

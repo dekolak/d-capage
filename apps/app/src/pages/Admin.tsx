@@ -86,6 +86,12 @@ export default function Admin() {
         <span><b>Avis</b> : masquer ceux qui ne conviennent pas</span>
         <span>›</span>
       </Link>
+      {espaceOuvert.modules.some((m) => m.slug === 'procedures-kiavik') && (
+        <Link to="/admin/procedures" className="bandeau lien-bandeau">
+          <span><b>📋 Procédures</b> : créer, modifier, publier</span>
+          <span>›</span>
+        </Link>
+      )}
       <Link to="/admin/webhooks" className="bandeau lien-bandeau">
         <span><b>Envoi vers une API</b> : fiches et avis (modération IA)</span>
         <span>›</span>

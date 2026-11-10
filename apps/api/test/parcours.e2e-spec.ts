@@ -458,4 +458,49 @@ describe('Parcours complet', () => {
     expect((await http.patch(`/api/users/${emma.id}`).set(auth(admin)).send({ modules: ['reglages-decapage'] })).body.espaces).toEqual(['lazzeko']);
     for (const a of [mk, ml]) await http.delete(`/api/admin/annonces/${a.id}`).set(auth(admin)).expect(200);
   });
+
+  it('procédures Kiavik : admin crée, client lit les publiées, liens vers les guides', async () => {
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'procedures' })).body.cle;
+    await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `paul-${id}`, motDePasse: 'motdepasse1', modules: ['procedures-kiavik', 'guide-flexiprint'] }).expect(201);
+    const tp = (await http.post('/api/auth/connexion').send({ identifiant: `paul-${id}`, motDePasse: 'motdepasse1' })).body.jeton;
+    const P = { ...auth(tp), 'X-Espace': 'kiavik' };
+    const { version } = (await http.get('/api/conditions?espace=kiavik').set(P)).body;
+    await http.post('/api/moi/conditions').set(P).send({ version }).expect(201);
+
+    // procédures livrées par le seed (reprises du prototype)
+    const depart = (await http.get('/api/procedures').set(P)).body;
+    const simple = depart.find((p: any) => p.titre.startsWith('Imprimer en couleur simple'));
+    expect(simple.liens).toContainEqual({ guide: 'flexiprint', ecran: 't4', pastille: '4.1' });
+    expect(depart.every((p: any) => p.publiee)).toBe(true); // brouillons invisibles
+
+    // création par l'admin (brouillon), étapes, ordre, lien, photo
+    const p = (await http.post('/api/admin/procedures').set(auth(admin)).send({ titre: `Test ${id}`, categorie: 'Entretien' })).body;
+    expect(p.publiee).toBe(false);
+    expect((await http.post(`/api/admin/procedures/${p.id}/etapes`).set(auth(admin)).send({ texte: 'Lien faux', guide: 'flexiprint', ecran: 't4', pastille: '99' })).status).toBe(400);
+    await http.post(`/api/admin/procedures/${p.id}/etapes`).set(auth(admin)).send({ texte: 'Première', guide: 'flexiprint', ecran: 't4', pastille: '4.1' }).expect(201);
+    const d = (await http.post(`/api/admin/procedures/${p.id}/etapes`).set(auth(admin)).send({ texte: 'Deuxième', avertissement: 'Attention', guide: 'flexiprint', ecran: 't1', pastille: 'E' })).body;
+    const e2 = d.etapes[1].id;
+    const apres = (await http.post(`/api/admin/procedures/etapes/${e2}/deplacer`).set(auth(admin)).send({ sens: -1 })).body;
+    expect(apres.etapes.map((e: any) => e.texte)).toEqual(['Deuxième', 'Première']);
+    const ph = await http.post(`/api/admin/procedures/etapes/${e2}/photo`).set(auth(admin)).attach('photo', JPEG, 'a.jpg');
+    expect(ph.status).toBe(201);
+    const urlPhoto = ph.body.etapes[0].photo;
+    expect(urlPhoto).toContain(`/procedures/etapes/${e2}/photo`);
+
+    // le client ne voit pas le brouillon, ni sa photo ; ne peut pas modifier
+    expect((await http.get(`/api/procedures/${p.id}`).set(P)).status).toBe(404);
+    expect((await http.get(`/api${urlPhoto}`).set(P)).status).toBe(404);
+    expect((await http.post('/api/admin/procedures').set(P).send({ titre: 'pirate' })).status).toBe(403);
+    await http.patch(`/api/admin/procedures/${p.id}`).set(auth(admin)).send({ publiee: true }).expect(200);
+    const lu = (await http.get(`/api/procedures/${p.id}`).set(P)).body;
+    expect(lu.etapes[0]).toMatchObject({ texte: 'Deuxième', avertissement: 'Attention', guide: 'flexiprint', ecran: 't1', pastille: 'E' });
+    expect((await http.get(`/api${urlPhoto}`).set(P)).headers['content-type']).toBe('image/jpeg');
+
+    // module requis
+    const refus = await http.get('/api/procedures').set({ ...auth(alice), 'X-Espace': 'kiavik' });
+    expect(refus.body.code).toBe('MODULE_NON_AUTORISE');
+
+    await http.delete(`/api/admin/procedures/${p.id}`).set(auth(admin)).expect(200);
+    expect((await http.get(`/api/procedures/${p.id}`).set(P)).status).toBe(404);
+  });
 });
