@@ -771,7 +771,21 @@
           "texte": "Remet l'image à sa taille d'origine (annule l'échantillon).",
           "etat": "actif"
         }
-      ]
+      ],
+      "interactif": {
+        "type": "echantillon",
+        "zone": {
+          "x": 689,
+          "y": 289,
+          "largeur": 464,
+          "hauteur": 348
+        },
+        "taille_cm": [
+          90.311,
+          67.733
+        ],
+        "remise": "5.7"
+      }
     },
     {
       "id": "t6",
@@ -1012,7 +1026,72 @@
           "texte": "Affiche le canal sélectionné.",
           "etat": "actif"
         }
-      ]
+      ],
+      "interactif": {
+        "type": "canaux",
+        "case": {
+          "x": 100,
+          "y": 179,
+          "largeur": 190,
+          "hauteur": 17
+        },
+        "ligne": {
+          "x": 104,
+          "largeur": 314,
+          "hauteur": 17
+        },
+        "lignes": [
+          {
+            "nom": "Cyan",
+            "canal": "c",
+            "y": 236
+          },
+          {
+            "nom": "Magenta",
+            "canal": "m",
+            "y": 253
+          },
+          {
+            "nom": "Jaune",
+            "canal": "y",
+            "y": 270
+          },
+          {
+            "nom": "Noir",
+            "canal": "k",
+            "y": 287
+          },
+          {
+            "nom": "Spot_1 (blanc)",
+            "canal": "w",
+            "y": 304
+          },
+          {
+            "nom": "Spot_2",
+            "y": 321
+          },
+          {
+            "nom": "Spot_3",
+            "y": 338
+          },
+          {
+            "nom": "Spot_4",
+            "y": 355
+          }
+        ],
+        "apercu": {
+          "x": 666,
+          "y": 332,
+          "largeur": 517,
+          "hauteur": 389
+        },
+        "images": {
+          "c": "images/ch_c.png",
+          "m": "images/ch_m.png",
+          "y": "images/ch_y.png",
+          "k": "images/ch_k.png"
+        }
+      }
     },
     {
       "id": "t10",

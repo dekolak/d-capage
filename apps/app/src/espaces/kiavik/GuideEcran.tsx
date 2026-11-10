@@ -3,8 +3,9 @@ import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } 
 import { Chargement, Erreur } from '../../components/Composants';
 import { useAuth } from '../../lib/auth';
 import { Fenetre } from './Fenetres';
+import { CANAUX_DEPART, CommandesInteractif, EtatCanaux, Interactif } from './Interactifs';
 import { useProcedures } from './donneesProcedures';
-import { ecranCite, Ecran, groupes, Guide, Pastille, PastilleNav, pastillesNavigation, useGuide } from './guides';
+import { choisirModeBlanc, ecranCite, Ecran, groupes, Guide, modeBlancChoisi, Pastille, PastilleNav, pastillesNavigation, useGuide } from './guides';
 import './guides.css';
 
 const CLE_REPERES = 'kiavik.reperes';
@@ -42,7 +43,12 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
   const i = guide.ecrans.indexOf(e);
   const [prec, suiv] = [guide.ecrans[i - 1], guide.ecrans[i + 1]];
   const aller = (id: string, p?: string) => nav(`/guides/${guide.slug}/${id}${p ? `?p=${encodeURIComponent(p)}` : ''}`);
-  const choisir = (id: string | null) => setParams(id ? { p: id } : {}, { replace: true });
+  const [remise, setRemise] = useState(0);
+  const [canaux, setCanaux] = useState<EtatCanaux>(CANAUX_DEPART);
+  const choisir = (id: string | null) => {
+    if (id && e.interactif?.type === 'echantillon' && id === e.interactif.remise) setRemise((n) => n + 1);
+    setParams(id ? { p: id } : {}, { replace: true });
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -89,6 +95,7 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
               </div>
             ) : null,
           )}
+          <Interactif guide={guide} e={e} remise={remise} canaux={canaux} setCanaux={setCanaux} />
           {reperes && (
             <>
               <div className="gx-filigrane">{e.code}</div>
@@ -121,6 +128,8 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
           ))}
         </div>
       </div>
+
+      <CommandesInteractif guide={guide} e={e} remise={remise} canaux={canaux} setCanaux={setCanaux} />
 
       <div className="gx-suite">
         {prec ? <button type="button" className="btn petit" onClick={() => aller(prec.id)}>← {prec.code}</button> : <span />}
@@ -231,7 +240,11 @@ function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: P
 /** Les modes de blanc (T4 / 4.1) ; pour les plus utilisés, la fenêtre « Quel blanc choisir ? ». */
 function MenuBlanc({ modes }: { modes: NonNullable<Guide['modesBlanc']> }) {
   const plus = modes.plus_utilises ?? [];
-  const [choix, setChoix] = useState(plus[0] ?? modes.modes[0].nom);
+  const [choix, setChoix0] = useState(() => modeBlancChoisi(plus[0] ?? modes.modes[0].nom));
+  const setChoix = (n: string) => {
+    setChoix0(n);
+    choisirModeBlanc(n); // repris par l'aperçu du blanc en T9
+  };
   const m = modes.modes.find((x) => x.nom === choix) ?? modes.modes[0];
   return (
     <div className="gx-blanc">

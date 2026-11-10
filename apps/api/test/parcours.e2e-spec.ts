@@ -419,6 +419,7 @@ describe('Parcours complet', () => {
     const fp = (await http.get('/api/guides/flexiprint').set(K)).body;
     expect(fp.ecrans.find((e: any) => e.id === 't3').pastilles.length).toBeGreaterThan(0);
     expect(fp.modesBlanc.modes).toHaveLength(7);
+    expect(fp.ecrans.find((e: any) => e.id === 't9').interactif.images.c).toMatch(/^\/api\/guides\/images\/ch_c/);
     expect(fp.animations.map((a: any) => a.id)).toEqual(['couleur-simple', 'couleur-blanc', 'reglages-blanc']);
     const dxRefus = await http.get('/api/guides/dxonjet').set(K);
     expect(dxRefus.status).toBe(403);

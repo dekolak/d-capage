@@ -56,7 +56,7 @@ Liste extensible (ajouter un module = une ligne en base ou dans le seed, pas de 
 
 ### Format (voir les JSON)
 - `ecrans[]` : `id`, `code` (filigrane, ex. `T3`, `D3-a`), `titre`, `groupe` (menu repliable), `intro`, `type` (`capture` ou `fenetre_recreee`), `image`, `largeur`, `hauteur`, `pastilles[]`.
-- `pastilles[]` : `id` (ex. `3.2`, `B.5`), `x`, `y` **en pixels de l'image** (afficher en % : x/largeur, y/hauteur), `titre`, `texte`, `conseil` (facultatif), `niveau`, `etat`, `zone` (facultatif), `special` (facultatif), `mots_cles` (facultatif, liste de mots pour la recherche).
+- `pastilles[]` : `id` (ex. `3.2`, `B.5`), `x`, `y` **en pixels de l'image** (afficher en % : x/largeur, y/hauteur), `titre`, `texte`, `conseil` (facultatif), `niveau`, `etat`, `zone` (facultatif), `special` (facultatif), `mots_cles` (facultatif, liste de mots pour la recherche). Écran : `interactif` facultatif (T5 `echantillon`, T9 `canaux`).
   - `etat` : `actif` (pastille bleue), `non_utilise` (pastille grise), `preregle` (grise, réglage automatique).
   - `zone` : rectangle voilé sur la capture (gris pour non utilisé, orange léger pour préréglé) avec son `libelle`.
   - `niveau` du conseil : `avertissement` (encadré rouge ⚠️), `astuce` (💡), `a_completer` (bleu — **visible seulement par l'admin**).
@@ -123,4 +123,4 @@ Voix off selon les règles de Teddy : `speechSynthesis` fr-FR ; voix « Google f
 - **Fait** : phase 3 (guides FlexiPRINT et DXonJet : `apps/api/src/guides/`, `apps/app/src/espaces/kiavik/`). Les JSON restent dans `kit-guides/guides/` (pas de table `Guide`, lus au démarrage) ; les images sont servies par `/api/guides/images/`.
 - **Fait** : recherche (onglet Rechercher) ; phase 4 (procédures). Pas de table `ProcedureLien` : les liens d'une procédure sont ceux de ses étapes. Procédures de départ reprises du prototype dans `kit-guides/procedures.json`.
 - **Fait** : animations (phase 5) : les 3 du prototype dans `kit-guides/animations.json`, voix off selon §6.
-- **À faire** : écrans interactifs T5 / T9. Pas d'exercices (décision novembre 2026). Logo et couleurs Kiavik à fournir (couleur provisoire `#1d6fb8`).
+- **Fait** : écrans interactifs T5 (échantillon à taille réelle, Remise) et T9 (aperçu canal par canal, blanc selon T4), décrits par `interactif` dans `flexiprint.json`. Pas d'exercices (décision novembre 2026). Logo et couleurs Kiavik à fournir (couleur provisoire `#1d6fb8`).
