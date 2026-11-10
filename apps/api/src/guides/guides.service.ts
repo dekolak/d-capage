@@ -121,6 +121,16 @@ export class GuidesService implements OnModuleInit {
     };
   }
 
+  /** Le lien guide / écran / pastille existe-t-il ? (pastille d'écran ou bouton de navigation, ex. E, D8) */
+  lienValide(guide: string, ecran: string, pastille?: string | null): boolean {
+    const g = this.guides.find((x) => x.slug === guide);
+    const e = g?.ecrans.find((x) => x.id === ecran);
+    if (!g || !e) return false;
+    if (!pastille || e.pastilles.some((p) => p.id === pastille)) return true;
+    const n = (g.navigation ?? {}) as { boutons_bas?: Record<string, unknown>; menus_haut?: { boutons: { code: string }[] } };
+    return Object.keys(n.boutons_bas ?? {}).some((k) => k !== 'reference' && k === pastille) || !!n.menus_haut?.boutons.some((b) => b.code === pastille);
+  }
+
   /** Chemin d'une image du kit (null si en dehors du dossier ou absente). */
   cheminImage(relatif: string): string | null {
     const base = join(this.racine, 'images');

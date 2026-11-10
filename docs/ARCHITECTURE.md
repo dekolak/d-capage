@@ -74,6 +74,12 @@ docs/                       documentation
 - App (`apps/app/src/espaces/kiavik/`) : `/guides` = accueil (guides côte à côte dans l'ordre des modules de `espaces.ts`, procédures en dessous), `/guides/<guide>/<écran>?p=<pastille>`. Capture + pastilles (en % de l'image), zones voilées, pastilles de navigation tirées de `navigation` (onglets T1–T11, boutons E / A, menus D1–D8 et sous-menus), fiche en bas d'écran, zoom 240 %, menu repliable par groupe, liste des repères, fenêtres Windows recréées (`Fenetres.tsx`). Admin : option « afficher les repères » (filigrane du code écran).
 - **Recherche** (`/recherche`, `recherche.ts`) : sur le téléphone, dans les guides du compte (titre, `mots_cles`, texte et conseil des pastilles, titre de l'écran). Sans accents, début de mot, une faute de frappe tolérée. Un résultat ouvre l'écran sur le repère (`?p=`). Plus tard : procédures et animations dans les résultats.
 
+## Procédures Kiavik (module `procedures-kiavik`)
+- Tables `Procedure` (titre, catégorie, résumé, publiée, ordre, `cle` pour celles du seed) et `EtapeProcedure` (texte, avertissement, photo, lien `guide` / `ecran` / `pastille`, tous facultatifs sauf le texte). Les liens d'une procédure vers les guides = ceux de ses étapes.
+- Procédures de départ dans `kit-guides/procedures.json` (reprises des animations du prototype + 4 brouillons DXonJet) : le seed les crée **seulement si leur clé n'existe pas**, puis elles se modifient dans l'app (jamais écrasées).
+- API `apps/api/src/procedures/` : lecture (`/procedures`, publiées seulement pour les clients), admin (`/admin/procedures`, étapes, ordre, photo). Un lien vers un bouton inexistant est refusé.
+- App : accueil (procédures sous les logiciels), onglet Procédures (par catégorie), détail (étapes à cocher gardées sur le téléphone, photos agrandissables, « Voir le bouton »), « 📋 Voir la procédure » dans la fiche d'une pastille, procédures dans la recherche, Administration → Procédures (`AdminProcedures.tsx`).
+
 ## Données (apps/api/prisma/schema.prisma)
 | Table | Rôle |
 |---|---|
@@ -84,6 +90,7 @@ docs/                       documentation
 | `UserMachine` | machines d'un utilisateur (variante + surnom facultatif, pas de n° de série) |
 | `GroupeTag`, `Tag` | tags par groupe (Matériau, À enlever, Application), administrables ; `valide=false` = proposé par un utilisateur |
 | `Fiche` | réglage : version d'interface, `valeurs` (JSON), titre, commentaire, `PRIVEE`/`PARTAGEE`, `parentId` (duplication) |
+| `Procedure`, `EtapeProcedure` | procédures Kiavik (voir plus haut) |
 | `FicheTag`, `Photo` (`AVANT`/`APRES`/`INTERFACE`/`AUTRE`), `Evaluation` (note 1–5, une par utilisateur et par fiche) |
 
 ## Machines des clients
@@ -122,5 +129,5 @@ docs/                       documentation
 4. ✅ Photos : compression côté téléphone, stockage local derrière une interface.
 5. ✅ Communauté : partage, notes des autres, duplication, tri par note (moyenne dénormalisée).
 6. ✅ Espaces Lazzeko / Kiavik (modules, conditions, marque par adresse).
-7. Kiavik : ✅ guides FlexiPRINT et DXonJet (`kit-guides/`) ; à venir : procédures, animations.
+7. Kiavik : ✅ guides FlexiPRINT et DXonJet (`kit-guides/`), recherche, procédures ; à venir : animations.
 8. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran, mode hors ligne complet (file d'envoi).

@@ -2,17 +2,20 @@
  * Seed idempotent (relançable sans risque) :
  *  1. compte admin (ADMIN_IDENTIFIANT / ADMIN_PASSWORD) s'il n'existe pas ;
  *  2. catalogue : chaque fichier machines/<fabricant>/<variante>/v<N>.json est validé puis publié ;
- *  3. groupes de tags et tags de départ.
+ *  3. groupes de tags et tags de départ ;
+ *  4. procédures Kiavik de départ (kit-guides/procedures.json), créées seulement si leur clé n'existe pas
+ *     (elles se modifient ensuite dans l'app : le seed ne les écrase jamais).
  */
 import 'dotenv/config';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { chargerConfig } from '@decapage/machine-kit';
 import * as bcrypt from 'bcryptjs';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const prisma = new PrismaClient();
 const RACINE_MACHINES = join(__dirname, '../../../machines');
+const RACINE_KIT = join(__dirname, '../../../kit-guides');
 
 const TAGS: { slug: string; nom: string; tags: [string, string][] }[] = [
   {
@@ -112,9 +115,36 @@ async function tags() {
   console.log(`Tags : ${TAGS.reduce((n, g) => n + g.tags.length, 0)}`);
 }
 
+interface EtapeSeed { texte: string; avertissement?: string; lien?: [string, string, string] }
+interface ProcedureSeed { cle: string; titre: string; categorie: string; resume?: string; publiee?: boolean; etapes: EtapeSeed[] }
+
+async function procedures() {
+  const fichier = join(RACINE_KIT, 'procedures.json');
+  if (!existsSync(fichier)) return;
+  const liste: ProcedureSeed[] = JSON.parse(readFileSync(fichier, 'utf8')).procedures;
+  let crees = 0;
+  for (const [i, p] of liste.entries()) {
+    if (await prisma.procedure.findUnique({ where: { cle: p.cle } })) continue;
+    await prisma.procedure.create({
+      data: {
+        cle: p.cle, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee ?? false, ordre: i,
+        etapes: {
+          create: p.etapes.map((e, n) => ({
+            ordre: n, texte: e.texte, avertissement: e.avertissement,
+            guide: e.lien?.[0], ecran: e.lien?.[1], pastille: e.lien?.[2],
+          })),
+        },
+      },
+    });
+    crees++;
+  }
+  console.log(`Procédures : ${crees} créée(s), ${liste.length - crees} déjà présente(s)`);
+}
+
 admin()
   .then(catalogue)
   .then(tags)
+  .then(procedures)
   .catch((e) => {
     console.error(e);
     process.exitCode = 1;

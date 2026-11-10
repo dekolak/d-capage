@@ -39,5 +39,13 @@ Administration → **💬 Messages**.
 - **Machines** : miniature PNG par modèle (machine entière, fond transparent ou clair, ~800 × 800 px). Une variante peut avoir la sienne.
 - **Envoi vers une API** : webhooks pour une modération automatique (voir [API.md](API.md)).
 
+## Kiavik : procédures
+Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procédures → « Gérer les procédures »).
+- **Créer** : un titre, puis ajouter les étapes une par une (texte, avertissement facultatif, photo prise avec le téléphone).
+- **Lier un bouton** : sur une étape, choisir le logiciel, l'écran puis le bouton. Le client voit « 👆 Voir le bouton » dans l'étape, et « 📋 Voir la procédure » quand il touche ce bouton dans le guide.
+- **Ordre** : flèches ↑ ↓. **Publier** : case en haut (brouillon = visible seulement par l'admin).
+- Les clients doivent avoir le module **Procédures** (case à cocher sur leur compte).
+- Au départ : 2 procédures FlexiPRINT publiées (reprises du prototype) et 4 brouillons DXonJet à compléter.
+
 ## Clés API
 Pour Odoo ou un service externe. Copier la clé à sa création (elle ne sera plus affichée). Révoquer une clé qui ne sert plus.

@@ -65,6 +65,15 @@ Sans `modules` à la création, le compte reçoit `["reglages-decapage"]`.
 
 Les conseils `niveau: "a_completer"` (notes internes) ne sont envoyés qu'à l'admin.
 
+### Procédures Kiavik (module `procedures-kiavik`)
+| Méthode | Route | Accès |
+|---|---|---|
+| GET | `/procedures` (publiées ; admin : toutes) → titre, catégorie, `nbEtapes`, `liens` vers les guides | module |
+| GET | `/procedures/:id` (étapes), `/procedures/etapes/:id/photo` | module |
+| POST · PATCH · DELETE | `/admin/procedures[/:id]` `{titre, categorie?, resume?, publiee?, ordre?}` | admin |
+| POST | `/admin/procedures/:id/etapes` `{texte, avertissement?, guide?, ecran?, pastille?}` | admin |
+| PATCH · DELETE | `/admin/procedures/etapes/:id` ; POST `…/deplacer {sens: -1\|1}` ; POST · DELETE `…/photo` (multipart `photo`) | admin |
+
 ### Administration
 | Méthode | Route | Accès |
 |---|---|---|

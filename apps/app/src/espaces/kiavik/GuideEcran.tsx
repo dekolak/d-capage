@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } 
 import { Chargement, Erreur } from '../../components/Composants';
 import { useAuth } from '../../lib/auth';
 import { Fenetre } from './Fenetres';
+import { useProcedures } from './donneesProcedures';
 import { ecranCite, Ecran, groupes, Guide, Pastille, PastilleNav, pastillesNavigation, useGuide } from './guides';
 import './guides.css';
 
@@ -187,6 +188,8 @@ function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: P
   const off = p.etat === 'non_utilise' ? ' · non utilisé' : p.etat === 'preregle' ? ' · préréglé' : '';
   const conseil = p.conseil ?? (p.etat === 'preregle' ? 'Préréglé : ne pas toucher.' : undefined);
   const lien = ecranCite(guide, p.texte, e.id);
+  const { liste } = useProcedures();
+  const liees = (liste ?? []).filter((x) => x.liens.some((l) => l.guide === guide.slug && l.ecran === e.id && l.pastille === p.id));
   return (
     <>
       <span className={`gx-ref ${off ? 'off' : ''}`}>{e.code} · {p.id}{off}</span>
@@ -205,6 +208,13 @@ function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: P
         <button type="button" className="btn prim petit gx-ouvrir" onClick={() => onOuvrir(lien.id)}>
           Ouvrir l'écran {lien.code}
         </button>
+      )}
+      {liees.length > 0 && (
+        <div className="gx-proc-lies">
+          {liees.map((x) => (
+            <Link key={x.id} to={`/procedures/${x.id}`} className="btn petit">📋 Voir la procédure : {x.titre}</Link>
+          ))}
+        </div>
       )}
     </>
   );

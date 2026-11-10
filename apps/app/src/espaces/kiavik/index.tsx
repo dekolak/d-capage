@@ -2,6 +2,8 @@ import { Navigate, Route } from 'react-router-dom';
 import { AppEspace, ICONES } from '../types';
 import GuideEcran from './GuideEcran';
 import Guides from './Guides';
+import { AdminProcedure, AdminProcedures } from './AdminProcedures';
+import ProcedureDetail from './ProcedureDetail';
 import Procedures from './Procedures';
 import Recherche from './Recherche';
 
@@ -22,6 +24,9 @@ export const kiavik: AppEspace = {
       <Route path="/guides" element={<Guides />} />
       <Route path="/guides/:slug/:ecran?" element={<GuideEcran />} />
       <Route path="/procedures" element={<Procedures />} />
+      <Route path="/procedures/:id" element={<ProcedureDetail />} />
+      <Route path="/admin/procedures" element={<AdminProcedures />} />
+      <Route path="/admin/procedures/:id" element={<AdminProcedure />} />
       <Route path="/recherche" element={<Recherche />} />
     </>
   ),
