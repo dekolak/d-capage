@@ -1,6 +1,8 @@
-# Architecture — App réglages décapage
+# Architecture
 
-## But
+Voir aussi : [BONNES-PRATIQUES.md](BONNES-PRATIQUES.md) (règles et recettes), [API.md](API.md), [DEPLOIEMENT.md](DEPLOIEMENT.md).
+
+## But (espace Lazzeko)
 Un client enregistre ses réglages machine depuis son téléphone : il choisit sa machine, ajoute des tags (surface, ce qu'il enlève, application), prend des photos avant / après / de l'écran machine, recopie les réglages dans un **miroir de l'interface machine** et donne une note.
 Les fiches partagées alimentent une **section communautaire** : mêmes machines + mêmes tags = comparaison des réglages de chacun.
 
@@ -54,10 +56,14 @@ Nouvelle technologie (sablage, aérogommage…) = un fichier + une ligne dans `c
 
 ## Structure du repo
 ```
-apps/api               NestJS + Prisma + PostgreSQL
-apps/app               PWA React mobile (Vite) — servie par l'API en production
-packages/machine-kit   schéma des configs, validation, calculs (partagé api / app / site)
-machines/              configs JSON des machines
+apps/api                    NestJS + Prisma + PostgreSQL
+  src/espaces/espaces.ts    espaces et modules
+apps/app                    PWA React mobile (Vite) — servie par l'API en production
+  src/espaces/<espace>/     écrans et barre du bas propres à un espace
+packages/machine-kit        schéma des configs, validation, calculs (partagé api / app / site)
+machines/                   configs JSON des machines
+kit-guides/                 cahier des charges et données des guides Kiavik
+docs/                       documentation
 ```
 
 ## Données (apps/api/prisma/schema.prisma)
@@ -81,6 +87,8 @@ machines/              configs JSON des machines
 - `POST /api/auth/connexion` → jeton JWT.
 - Toutes les routes sont protégées par défaut (`@Public()` pour ouvrir, `@Roles()` pour restreindre).
 - Clé API (`X-Api-Key: dk_…`) acceptée uniquement sur les routes marquées `@AutoriseCleApi()` (création de comptes). Une clé ne peut pas créer d'admin ni d'autre clé.
+- `@ModuleRequis('<module>')` : route réservée aux comptes qui ont ce module ; `@SansConditions()` : route du compte accessible avant d'accepter les conditions.
+- L'admin a accès à tout, dans tous les espaces.
 
 ## App mobile (apps/app)
 - PWA installable (manifeste + service worker : l'app démarre hors ligne, l'API reste en ligne).
@@ -106,5 +114,5 @@ machines/              configs JSON des machines
 4. ✅ Photos : compression côté téléphone, stockage local derrière une interface.
 5. ✅ Communauté : partage, notes des autres, duplication, tri par note (moyenne dénormalisée).
 6. ✅ Espaces Lazzeko / Kiavik (modules, conditions, marque par adresse).
-7. Kiavik : guides (kit-guides/), procédures, animations.
+7. Kiavik : guides (`kit-guides/`), procédures, animations.
 8. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran, mode hors ligne complet (file d'envoi).

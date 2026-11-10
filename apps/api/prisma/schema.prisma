@@ -1,4 +1,4 @@
-// Schéma de données — voir ARCHITECTURE.md.
+// Schéma de données — voir docs/ARCHITECTURE.md.
 // Principe : les valeurs de réglage sont en JSON, validées par @decapage/machine-kit
 // selon la version d'interface de la machine. Ajouter une machine ne modifie pas ce schéma.
 
