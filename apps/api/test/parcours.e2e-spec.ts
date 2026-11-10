@@ -427,6 +427,7 @@ describe('Parcours complet', () => {
     const aCompleter = (g: any) => g.ecrans.flatMap((e: any) => e.pastilles).filter((p: any) => p.niveau === 'a_completer');
     expect(aCompleter((await http.get('/api/guides/dxonjet').set(auth(admin))).body).length).toBeGreaterThan(0);
     await http.patch(`/api/users/${emma.id}`).set(auth(admin)).send({ modules: ['guide-flexiprint', 'guide-dxonjet'] }).expect(200);
+    expect((await http.get('/api/guides').set(K)).body.map((g: any) => g.slug)).toEqual(['flexiprint', 'dxonjet']);
     const dx = (await http.get('/api/guides/dxonjet').set(K)).body;
     expect(aCompleter(dx)).toEqual([]);
     expect(dx.ecrans[0].image).toMatch(/^\/api\/guides\/images\//);

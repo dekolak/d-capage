@@ -117,3 +117,11 @@
 .gx-resultat { display: grid; gap: 3px; text-decoration: none; color: inherit; justify-items: start; }
 .gx-resultat b { font-size: 16px; }
 .gx-extrait { color: var(--t); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Accueil : guides côte à côte */
+.gx-tuiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gx-tuiles.une { grid-template-columns: 1fr; }
+.gx-tuile { position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 150px; padding: 14px; text-decoration: none; color: inherit; border: 2px solid transparent; }
+.gx-tuile:active { border-color: var(--o); transform: scale(0.99); }
+.gx-tuile b { font-size: 17px; line-height: 1.2; }
+.gx-etape { width: 28px; height: 28px; border-radius: 9px; background: var(--o); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; }

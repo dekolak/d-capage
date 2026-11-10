@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
-import { espaceDuModule } from '../espaces/espaces';
+import { espaceDuModule, TOUS_MODULES } from '../espaces/espaces';
 
 /**
  * Guides Kiavik : un guide = un fichier JSON dans kit-guides/guides/ (écrans, pastilles, navigation).
@@ -91,7 +91,9 @@ export class GuidesService implements OnModuleInit {
             })),
           },
         };
-      });
+      })
+      // même ordre que les modules dans espaces.ts (FlexiPRINT avant DXonJet : on prépare, puis on imprime)
+      .sort((a, b) => TOUS_MODULES.indexOf(a.module) - TOUS_MODULES.indexOf(b.module));
   }
 
   /** Guides accessibles avec ces modules (admin : tous). */
