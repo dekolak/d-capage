@@ -57,6 +57,7 @@ export interface Animation {
   type: 'ecrans' | 'blanc';
   liens?: [string, string][];
   scenes: unknown[];
+  photos?: Record<string, { image: string; largeur: number; hauteur: number }>;
 }
 
 const URL_IMAGES = '/api/guides/images/';
@@ -103,7 +104,13 @@ export class GuidesService implements OnModuleInit {
             : {}),
         }));
         const blanc = annexes.find((a) => ecrans.some((e) => e.id === a.ecran));
-        const animations = anims.animations.filter((a) => a.guide === j.slug).map((a) => ({ ...a, image: urlImage(a.image) }));
+        const animations = anims.animations
+          .filter((a) => a.guide === j.slug)
+          .map((a) => ({
+            ...a,
+            image: urlImage(a.image),
+            ...(a.photos ? { photos: Object.fromEntries(Object.entries(a.photos).map(([k, ph]) => [k, { ...ph, image: urlImage(ph.image)! }])) } : {}),
+          }));
         return {
           ...j,
           module,

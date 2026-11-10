@@ -46,13 +46,18 @@ export interface ResumeGuide { slug: string; nom: string; description?: string; 
 export interface EtapeAnim {
   cur?: [number, number]; sel?: string; fx?: number; fy?: number; ring?: number; click?: number;
   go?: string; eff?: string; val?: string; hl?: number; cap?: string; d?: number;
+  /** Effet « texte » : rectangle [x, y, largeur, hauteur] où la valeur `val` apparaît (valeur tapée dans une case). */
+  zone?: [number, number, number, number];
 }
-export interface EtatAnim { f?: string | null; j?: number; a?: number; wm?: string; t9?: number }
+export interface TexteAnim { zone: [number, number, number, number]; val: string }
+export interface EtatAnim { f?: string | null; j?: number; a?: number; wm?: string; t9?: number; textes?: TexteAnim[] }
 export interface SceneEcrans { titre: string; ecran: string; etat: EtatAnim; etapes: EtapeAnim[] }
 export interface SceneBlanc { titre: string; mode: string | null; cap: string }
 export interface Animation extends ResumeAnimation {
   guide: string; type: 'ecrans' | 'blanc'; liens?: [string, string][];
   scenes: (SceneEcrans | SceneBlanc)[];
+  /** Photos utilisables comme écran d'une scène : `ecran: "photo:<clé>"` (coordonnées en pixels de la photo). */
+  photos?: Record<string, { image: string; largeur: number; hauteur: number }>;
 }
 
 interface Reference { largeur: number; hauteur: number }

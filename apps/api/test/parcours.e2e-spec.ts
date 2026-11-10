@@ -427,11 +427,15 @@ describe('Parcours complet', () => {
     expect((await http.get('/api/guides').set(auth(alice))).body).toEqual([]);
     expect((await http.get('/api/guides/flexiprint').set(auth(alice))).body.code).toBe('MODULE_NON_AUTORISE');
     const aCompleter = (g: any) => g.ecrans.flatMap((e: any) => e.pastilles).filter((p: any) => p.niveau === 'a_completer');
-    expect(aCompleter((await http.get('/api/guides/dxonjet').set(auth(admin))).body).length).toBeGreaterThan(0);
+    const notesAdmin = aCompleter((await http.get('/api/guides/dxonjet').set(auth(admin))).body).length; // peut tomber à 0 quand tout est complété
     await http.patch(`/api/users/${emma.id}`).set(auth(admin)).send({ modules: ['guide-flexiprint', 'guide-dxonjet'] }).expect(200);
     expect((await http.get('/api/guides').set(K)).body.map((g: any) => g.slug)).toEqual(['flexiprint', 'dxonjet']);
     const dx = (await http.get('/api/guides/dxonjet').set(K)).body;
+    const offre = dx.animations.find((a: any) => a.id === 'offre-composition');
+    expect(offre.liens).toContainEqual(['d4a', 'a.6']);
+    expect(offre.photos.decalee.image).toMatch(/^\/api\/guides\/images\/dx\/offre_/);
     expect(aCompleter(dx)).toEqual([]);
+    expect(notesAdmin).toBeGreaterThanOrEqual(aCompleter(dx).length);
     expect(dx.ecrans[0].image).toMatch(/^\/api\/guides\/images\//);
     const img = await http.get(dx.ecrans[0].image);
     expect(img.status).toBe(200);

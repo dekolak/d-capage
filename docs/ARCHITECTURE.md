@@ -81,6 +81,7 @@ docs/                       documentation
 ## Animations Kiavik
 - `kit-guides/animations.json` : les 3 animations du prototype (couleur simple, couleur + blanc, réglages du blanc), extraites telles quelles (scènes, étapes, sous-titres, durées) + `liens` vers les boutons concernés. Servies avec leur guide (`GET /guides/:slug` → `animations`), donc même droit d'accès.
 - App : `Animation.tsx` (`/guides/<guide>/animation/<id>`) rejoue les scènes sur les vraies captures (curseur, cercle, clic, menus, fenêtre « Quel blanc choisir ? », aperçu T9) ; `voix.ts` : voix off `speechSynthesis` fr selon les règles du cahier §6 (choix de voix, débit selon la vitesse, la voix pilote le temps avec reprise de sécurité, Pause coupe, Lecture relit la phrase).
+- Une scène peut se passer sur une **photo** (`photos` de l'animation, `ecran: "photo:<clé>"`) et afficher une **valeur tapée** (effet `texte` avec `zone` et `val`). Exemple : « Régler l'Offre » (DXonJet D4 · a.6), photos tirées de la vidéo de Teddy.
 - Accès : cartes sur l'accueil, « 🎬 Voir l'animation » dans la fiche des boutons liés, recherche.
 
 ## Procédures Kiavik (module `procedures-kiavik`)
