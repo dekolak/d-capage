@@ -24,6 +24,19 @@ export default function Recherche() {
   }, []);
 
   const resultats = useMemo(() => (guides ? rechercher(guides, q) : []), [guides, q]);
+  const anims = useMemo(() => {
+    const mots = normaliser(q).split(' ').filter(Boolean);
+    if (!mots.length || !guides) return [];
+    return guides.flatMap((g) =>
+      (g.animations ?? [])
+        .filter((a) => {
+          const caps = a.scenes.map((s) => ('cap' in s ? s.cap : s.etapes.map((e) => e.cap ?? '').join(' ')));
+          const t = normaliser(`${a.titre} ${a.resume ?? ''} ${a.scenes.map((s) => s.titre).join(' ')} ${caps.join(' ')}`).split(' ');
+          return mots.every((m) => t.some((w) => w.startsWith(m)));
+        })
+        .map((a) => ({ ...a, slug: g.slug })),
+    );
+  }, [guides, q]);
   const { liste: procedures } = useProcedures();
   const procs = useMemo(() => {
     const mots = normaliser(q).split(' ').filter(Boolean);
@@ -55,7 +68,7 @@ export default function Recherche() {
         <Chargement />
       ) : !q.trim() ? (
         <p className="muted">Tapez un mot : nom d'un bouton, d'un réglage ou un problème. Les résultats ouvrent l'écran sur le bon repère, ou la procédure.</p>
-      ) : !resultats.length && !procs.length ? (
+      ) : !resultats.length && !procs.length && !anims.length ? (
         <p className="muted">Aucun résultat pour « {q} ».</p>
       ) : (
         <>
@@ -67,6 +80,19 @@ export default function Recherche() {
                   <Link key={p.id} className="carte gx-resultat" to={`/procedures/${p.id}`}>
                     <b>📋 {p.titre}</b>
                     {p.resume && <span className="muted petit">{p.resume}</span>}
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+          {anims.length > 0 && (
+            <>
+              <h4>Animations · {anims.length}</h4>
+              <div className="gx-resultats">
+                {anims.map((a) => (
+                  <Link key={a.id} className="carte gx-resultat" to={`/guides/${a.slug}/animation/${a.id}`}>
+                    <b>🎬 {a.titre}</b>
+                    {a.resume && <span className="muted petit">{a.resume}</span>}
                   </Link>
                 ))}
               </div>

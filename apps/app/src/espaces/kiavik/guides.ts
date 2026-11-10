@@ -20,8 +20,25 @@ export interface Guide {
   slug: string; nom: string; description?: string; module: string; ecrans: Ecran[];
   navigation?: Navigation;
   modesBlanc?: { ecran: string; pastille: string; convention?: string; plus_utilises?: string[]; modes: ModeBlanc[] };
+  animations?: Animation[];
+  /** Textes de la fenêtre « Quel blanc choisir ? » (par mode). */
+  fenetreBlanc?: Record<string, { titre: string; usage: string; resultat: string }>;
 }
-export interface ResumeGuide { slug: string; nom: string; description?: string; module: string; ecrans: number }
+export interface ResumeAnimation { id: string; titre: string; resume?: string; image?: string }
+export interface ResumeGuide { slug: string; nom: string; description?: string; module: string; ecrans: number; animations: ResumeAnimation[] }
+
+/** Étape d'une animation sur les écrans (format du prototype, voir kit-guides/animations.json). */
+export interface EtapeAnim {
+  cur?: [number, number]; sel?: string; fx?: number; fy?: number; ring?: number; click?: number;
+  go?: string; eff?: string; val?: string; hl?: number; cap?: string; d?: number;
+}
+export interface EtatAnim { f?: string | null; j?: number; a?: number; wm?: string; t9?: number }
+export interface SceneEcrans { titre: string; ecran: string; etat: EtatAnim; etapes: EtapeAnim[] }
+export interface SceneBlanc { titre: string; mode: string | null; cap: string }
+export interface Animation extends ResumeAnimation {
+  guide: string; type: 'ecrans' | 'blanc'; liens?: [string, string][];
+  scenes: (SceneEcrans | SceneBlanc)[];
+}
 
 interface Reference { largeur: number; hauteur: number }
 interface BoutonInfo { titre: string; texte: string; x: number; y: number }
