@@ -74,6 +74,10 @@ docs/                       documentation
 - App (`apps/app/src/espaces/kiavik/`) : `/guides` = accueil (guides côte à côte dans l'ordre des modules de `espaces.ts`, procédures en dessous), `/guides/<guide>/<écran>?p=<pastille>`. Capture + pastilles (en % de l'image), zones voilées, pastilles de navigation tirées de `navigation` (onglets T1–T11, boutons E / A, menus D1–D8 et sous-menus), fiche en bas d'écran, zoom 240 %, menu repliable par groupe, liste des repères, fenêtres Windows recréées (`Fenetres.tsx`). Admin : option « afficher les repères » (filigrane du code écran).
 - **Recherche** (`/recherche`, `recherche.ts`) : sur le téléphone, dans les guides du compte (titre, `mots_cles`, texte et conseil des pastilles, titre de l'écran). Sans accents, début de mot, une faute de frappe tolérée. Un résultat ouvre l'écran sur le repère (`?p=`). Plus tard : procédures et animations dans les résultats.
 
+## Écrans interactifs (T5, T9)
+- Champ `interactif` d'un écran dans le JSON du guide (zones en pixels de l'image) : `echantillon` (T5 : poignées d'angle, taille réelle en cm, `remise` = pastille qui annule) et `canaux` (T9 : case, lignes des canaux, zone d'aperçu, images `ch_*` ; le blanc suit le mode choisi en T4, gardé sur le téléphone).
+- App : `Interactifs.tsx`. Sur T9, gros boutons sous la capture (les cases de la capture sont trop petites au doigt).
+
 ## Animations Kiavik
 - `kit-guides/animations.json` : les 3 animations du prototype (couleur simple, couleur + blanc, réglages du blanc), extraites telles quelles (scènes, étapes, sous-titres, durées) + `liens` vers les boutons concernés. Servies avec leur guide (`GET /guides/:slug` → `animations`), donc même droit d'accès.
 - App : `Animation.tsx` (`/guides/<guide>/animation/<id>`) rejoue les scènes sur les vraies captures (curseur, cercle, clic, menus, fenêtre « Quel blanc choisir ? », aperçu T9) ; `voix.ts` : voix off `speechSynthesis` fr selon les règles du cahier §6 (choix de voix, débit selon la vitesse, la voix pilote le temps avec reprise de sécurité, Pause coupe, Lecture relit la phrase).
@@ -134,5 +138,5 @@ docs/                       documentation
 4. ✅ Photos : compression côté téléphone, stockage local derrière une interface.
 5. ✅ Communauté : partage, notes des autres, duplication, tri par note (moyenne dénormalisée).
 6. ✅ Espaces Lazzeko / Kiavik (modules, conditions, marque par adresse).
-7. Kiavik : ✅ guides FlexiPRINT et DXonJet (`kit-guides/`), recherche, procédures, animations ; à venir : écrans interactifs T5 / T9.
+7. Kiavik : ✅ guides FlexiPRINT et DXonJet (`kit-guides/`), recherche, procédures, animations, écrans interactifs T5 / T9.
 8. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran, mode hors ligne complet (file d'envoi).

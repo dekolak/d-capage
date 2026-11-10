@@ -156,3 +156,24 @@
 .gx-publier input { width: 22px; height: 22px; }
 .gx-chemin { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: -6px 0 12px; font-size: 12px; color: var(--g); }
 .gx-chemin span { background: var(--carte); border: 1px solid var(--bord); border-radius: 999px; padding: 3px 9px; color: var(--t); font-weight: 600; }
+
+/* Écrans interactifs (T5 échantillon, T9 canaux) */
+.ix-zone { position: absolute; z-index: 2; overflow: hidden; pointer-events: none; }
+.ix-sel { position: absolute; border: 2px dashed #e8541e; box-shadow: 0 0 0 2000px rgba(20, 20, 30, 0.55); box-sizing: border-box; }
+.ix-lab { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max-content; max-width: 96%; background: #000a; color: #fff; font-size: max(8px, 1cqw); line-height: 1.25; padding: 3px 6px; border-radius: 4px; text-align: center; }
+.ix-lab.ko { background: #c62828; }
+.ix-poignees { position: absolute; z-index: 4; pointer-events: none; }
+.ix-coin { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; background: #e8541e; border: 2px solid #fff; border-radius: 4px; cursor: nwse-resize; touch-action: none; pointer-events: auto; box-shadow: 0 1px 4px #0006; }
+.ix-coin::before { content: ''; position: absolute; inset: -12px; } /* zone tactile élargie */
+.ix-coin.ne, .ix-coin.sw { cursor: nesw-resize; }
+.ix-milieu { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; background: #999; border: 1px solid #fff; cursor: not-allowed; pointer-events: auto; touch-action: none; }
+.ix-case, .ix-ligne { position: absolute; z-index: 2; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.ix-case i, .ix-ligne i { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: max(9px, 1cqw); height: max(9px, 1cqw); background: #fff; border: 1px solid #333; font-style: normal; font-size: max(8px, 0.9cqw); line-height: 1; display: flex; align-items: center; justify-content: center; color: #0a0; }
+.ix-case:active, .ix-ligne:active { background: #1f6feb22; }
+.ix-ligne.on { background: #1f6feb33; }
+.ix-ligne.off { cursor: default; background: #ffffff99; }
+.ix-apercu { position: absolute; z-index: 2; background: #fff; }
+.ix-apercu img { width: 100%; height: 100%; display: block; }
+.ix-apercu span { position: absolute; left: 4px; right: 4px; bottom: 4px; background: #000b; color: #fff; font-size: max(9px, 1cqw); padding: 3px 6px; border-radius: 3px; }
+.ix-indice { position: absolute; z-index: 2; color: #e8541e; font-weight: 700; font-size: max(9px, 1.1cqw); display: flex; align-items: center; pointer-events: none; }
+.ix-commandes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }

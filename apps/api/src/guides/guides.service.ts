@@ -32,6 +32,8 @@ export interface Ecran {
   largeur: number;
   hauteur: number;
   pastilles: Pastille[];
+  /** Zone interactive (T5 : échantillon à taille réelle ; T9 : aperçu canal par canal). */
+  interactif?: { type: string; images?: Record<string, string> } & Record<string, unknown>;
 }
 export interface Guide {
   slug: string;
@@ -93,7 +95,13 @@ export class GuidesService implements OnModuleInit {
       .map((j): Guide => {
         const module = `guide-${j.slug}`;
         if (!espaceDuModule(module)) throw new Error(`Guide ${j.slug} : module ${module} absent de espaces.ts`);
-        const ecrans: Ecran[] = j.ecrans.map((e: Ecran) => ({ ...e, image: urlImage(e.image) }));
+        const ecrans: Ecran[] = j.ecrans.map((e: Ecran) => ({
+          ...e,
+          image: urlImage(e.image),
+          ...(e.interactif?.images
+            ? { interactif: { ...e.interactif, images: Object.fromEntries(Object.entries(e.interactif.images).map(([k, v]) => [k, urlImage(v)!])) } }
+            : {}),
+        }));
         const blanc = annexes.find((a) => ecrans.some((e) => e.id === a.ecran));
         const animations = anims.animations.filter((a) => a.guide === j.slug).map((a) => ({ ...a, image: urlImage(a.image) }));
         return {

@@ -14,7 +14,22 @@ export interface Ecran {
   id: string; code: string; titre: string; groupe: string; intro?: string;
   type: 'capture' | 'fenetre_recreee'; image?: string; fenetre?: string;
   largeur: number; hauteur: number; pastilles: Pastille[];
+  interactif?: Interactif;
 }
+export interface Rect { x: number; y: number; largeur: number; hauteur: number }
+/** T5 : échantillon à taille réelle (poignées d'angle) ; `remise` = pastille qui annule l'échantillon. */
+export interface InteractifEchantillon { type: 'echantillon'; zone: Rect; taille_cm: [number, number]; remise?: string }
+/** T9 : aperçu canal par canal ; le canal `w` (blanc) suit le mode de blanc choisi en T4. */
+export interface InteractifCanaux {
+  type: 'canaux'; case: Rect; ligne: { x: number; largeur: number; hauteur: number };
+  lignes: { nom: string; canal?: string; y: number }[]; apercu: Rect; images: Record<string, string>;
+}
+export type Interactif = InteractifEchantillon | InteractifCanaux;
+
+/** Mode de blanc choisi en T4 (gardé sur le téléphone, utilisé par l'aperçu T9). */
+const CLE_BLANC = 'kiavik.modeBlanc';
+export const modeBlancChoisi = (defaut: string) => localStorage.getItem(CLE_BLANC) ?? defaut;
+export const choisirModeBlanc = (nom: string) => localStorage.setItem(CLE_BLANC, nom);
 export interface ModeBlanc { nom: string; image_canal: string; image_mur: string; texte: string }
 export interface Guide {
   slug: string; nom: string; description?: string; module: string; ecrans: Ecran[];
