@@ -59,7 +59,7 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
       <div className="gx-barre">
         <button type="button" className="gx-ic" aria-label="Menu des écrans" onClick={() => setMenu(true)}>☰</button>
         <div className="gx-titre"><small>{guide.nom}</small>{e.code} · {e.titre}</div>
-        <button type="button" className={`gx-ic ${zoom ? 'on' : ''}`} aria-label="Zoom" onClick={() => setZoom(!zoom)}>🔍</button>
+        <button type="button" className={`gx-ic ${zoom ? 'on' : ''}`} aria-label="Zoom" onClick={() => setZoom(!zoom)}>⤢</button>
       </div>
 
       {e.intro && <p className="gx-intro">{e.intro}</p>}
