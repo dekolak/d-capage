@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { langue } from '../../lib/i18n';
 
 /**
- * Voix off des animations (speechSynthesis, fr-FR), règles de Teddy :
+ * Voix off des animations (speechSynthesis) dans la langue de l'app. Règles de Teddy (français) :
  * voix « Google français » d'abord, puis Julie, puis Natural / Online / Neural (Denise, Henri), puis toute voix fr ;
+ * dans une autre langue : voix Google, puis Natural / Online / Neural, puis toute voix de la langue ;
  * liste rechargée sur `voiceschanged` ; débit 0,6–1,6 selon la vitesse ×0,25–×2.
  */
 const CLE_VOIX = 'kiavik.voix';
@@ -10,7 +12,7 @@ const CLE_ACTIVE = 'kiavik.voixOff';
 
 function rang(v: SpeechSynthesisVoice): number {
   const n = v.name.toLowerCase();
-  if (n.includes('google') && n.includes('fran')) return 0;
+  if (n.includes('google')) return 0;
   if (n.includes('julie')) return 1;
   if (/natural|online|neural/.test(n)) return /denise|henri/.test(n) ? 2 : 3;
   return 4;
@@ -36,9 +38,11 @@ export function useVoix() {
   useEffect(() => {
     if (!dispo) return;
     const charger = () => {
-      const fr = speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith('fr'));
-      fr.sort((a, b) => rang(a) - rang(b) || Number(b.lang === 'fr-FR') - Number(a.lang === 'fr-FR'));
-      setVoix(fr);
+      const l = langue();
+      const principale = l === 'fr' ? 'fr-FR' : l === 'en' ? 'en-GB' : '';
+      const liste = speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith(l));
+      liste.sort((a, b) => rang(a) - rang(b) || Number(b.lang === principale) - Number(a.lang === principale));
+      setVoix(liste);
     };
     charger();
     speechSynthesis.addEventListener('voiceschanged', charger);
@@ -95,5 +99,5 @@ export function useVoix() {
     [dispo, active, choisie],
   );
 
-  return { dispo, voix, choisie, choisir, active, activer, dire, arreter, sansVoixFr: dispo && voix.length === 0 };
+  return { dispo, voix, choisie, choisir, active, activer, dire, arreter, sansVoix: dispo && voix.length === 0 };
 }

@@ -51,6 +51,8 @@ model User {
   /// Accord facultatif pour que Lazzeko réutilise les photos (site, réseaux, documentation).
   accordPhotosMarketing   Boolean       @default(false)
   accordPhotosMarketingLe DateTime?
+  /// Langue de l'app pour ce compte (fr, en…) ; null = langue du téléphone.
+  langue                  String?
   actif                   Boolean       @default(true)
   organisationId          String?
   organisation            Organisation? @relation(fields: [organisationId], references: [id])

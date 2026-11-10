@@ -14,10 +14,10 @@ import Recherche from './Recherche';
  */
 export const kiavik: AppEspace = {
   onglets: [
-    { to: '/guides', label: 'Accueil', icone: ICONES.accueil },
-    { to: '/procedures', label: 'Procédures', icone: ICONES.etapes },
-    { to: '/recherche', label: 'Rechercher', icone: ICONES.recherche },
-    { to: '/compte', label: 'Compte', icone: ICONES.compte },
+    { to: '/guides', label: 'onglets.accueil', icone: ICONES.accueil },
+    { to: '/procedures', label: 'onglets.procedures', icone: ICONES.etapes },
+    { to: '/recherche', label: 'onglets.rechercher', icone: ICONES.recherche },
+    { to: '/compte', label: 'onglets.compte', icone: ICONES.compte },
   ],
   routes: () => (
     <>

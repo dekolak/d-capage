@@ -19,8 +19,8 @@ export function CarteFiche({ f, montrerAuteur }: { f: Fiche; montrerAuteur?: boo
           {montrerAuteur ? ` · ${f.auteur}` : ''} · {date(f.createdAt)}
         </div>
         <div className="puces mini">
-          {f.tags.slice(0, 4).map((t) => (
-            <span key={t.id} className="puce">{t.nom}</span>
+          {f.tags.slice(0, 4).map((tag) => (
+            <span key={tag.id} className="puce">{tag.nom}</span>
           ))}
         </div>
         <NoteResume moyenne={f.note.moyenne} nombre={f.note.nombre} />

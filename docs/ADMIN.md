@@ -1,6 +1,6 @@
 # Guide de l'administration
 
-Compte → **Administration**. L'admin a accès à tout, dans les deux espaces (Compte → **Mes espaces** pour passer de Lazzeko à Kiavik).
+Compte → **Administration** (en français ; les écrans clients peuvent être traduits, voir [TRADUCTION.md](TRADUCTION.md)). L'admin a accès à tout, dans les deux espaces (Compte → **Mes espaces** pour passer de Lazzeko à Kiavik).
 
 ## Comptes clients
 - **Créer** : identifiant, mot de passe (8 caractères min.), nom, n° client Odoo (facultatif).
@@ -10,6 +10,7 @@ Compte → **Administration**. L'admin a accès à tout, dans les deux espaces (
   - Un client peut avoir des accès dans les deux espaces.
 - **Client Lazzeko** (si accès Lazzeko) : décocher pour un utilisateur d'une autre marque. Sert à cibler les messages.
 - Dans la liste : recherche (identifiant, nom, n° Odoo), filtre par espace, badges d'espace, conditions acceptées, accord photos.
+- **Langue** : par défaut celle du téléphone du client. Dès qu'une deuxième langue existe (anglais prévu), elle se choisit sur le compte (ou par le client dans Compte, ou depuis Odoo avec `langue`).
 - Toucher un compte : modifier ses accès, son n° Odoo, voir ses fiches, lui attribuer une machine. **Désactiver** bloque la connexion sans rien supprimer.
 - Comptes créés par Odoo : voir [API.md](API.md).
 

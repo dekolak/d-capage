@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n';
 /**
  * Petites animations en boucle pour comprendre les réglages du laser pulsé.
  * Chaque animation compare deux valeurs (bas / haut) d'un même réglage.
@@ -44,40 +45,40 @@ function Ligne({ titre, note, children }: { titre: string; note: string; childre
 const ANIMATIONS: Record<string, () => React.ReactNode> = {
   pwr: () => (
     <>
-      <Ligne titre="Puissance basse" note="impulsions faibles">
+      <Ligne titre={t('lazzeko.anim.puissanceBasse')} note={t('lazzeko.anim.puissanceBasseNote')}>
         <Impulsions periode={30} largeur={8} hauteur={14} />
       </Ligne>
-      <Ligne titre="Puissance haute" note="impulsions fortes">
+      <Ligne titre={t('lazzeko.anim.puissanceHaute')} note={t('lazzeko.anim.puissanceHauteNote')}>
         <Impulsions periode={30} largeur={8} hauteur={44} />
       </Ligne>
     </>
   ),
   freq: () => (
     <>
-      <Ligne titre="Fréquence basse" note="peu d'impulsions, fortes">
+      <Ligne titre={t('lazzeko.anim.frequenceBasse')} note={t('lazzeko.anim.frequenceBasseNote')}>
         <Impulsions periode={60} largeur={8} hauteur={44} />
       </Ligne>
-      <Ligne titre="Fréquence haute" note="beaucoup d'impulsions, douces">
+      <Ligne titre={t('lazzeko.anim.frequenceHaute')} note={t('lazzeko.anim.frequenceHauteNote')}>
         <Impulsions periode={15} largeur={5} hauteur={12} />
       </Ligne>
     </>
   ),
   pw: () => (
     <>
-      <Ligne titre="Impulsion courte" note="pic élevé, enlève sans chauffer">
+      <Ligne titre={t('lazzeko.anim.impulsionCourte')} note={t('lazzeko.anim.impulsionCourteNote')}>
         <Impulsions periode={60} largeur={4} hauteur={46} />
       </Ligne>
-      <Ligne titre="Impulsion longue" note="même énergie, plus de chaleur">
+      <Ligne titre={t('lazzeko.anim.impulsionLongue')} note={t('lazzeko.anim.impulsionLongueNote')}>
         <Impulsions periode={60} largeur={24} hauteur={12} couleur="#f59e0b" />
       </Ligne>
     </>
   ),
   speed: () => (
     <>
-      <Ligne titre="Vitesse lente" note="les impacts se recouvrent">
+      <Ligne titre={t('lazzeko.anim.vitesseLente')} note={t('lazzeko.anim.vitesseLenteNote')}>
         <Taches ecart={10} />
       </Ligne>
-      <Ligne titre="Vitesse rapide" note="impacts séparés">
+      <Ligne titre={t('lazzeko.anim.vitesseRapide')} note={t('lazzeko.anim.vitesseRapideNote')}>
         <Taches ecart={30} />
       </Ligne>
     </>

@@ -1,4 +1,6 @@
 import type { ConfigMachine, Indicateur, Valeurs } from '@decapage/machine-kit';
+import fr from '../textes/fr';
+import { Cle, langue, t as tr } from './i18n';
 
 const BASE = (import.meta.env.VITE_API_URL ?? '') + '/api';
 const CLE_JETON = 'decapage.jeton';
@@ -29,12 +31,15 @@ export async function api<T = unknown>(chemin: string, opts: RequestInit & { jso
   const t = jeton.get();
   if (t) headers.set('Authorization', `Bearer ${t}`);
   if (espaceCourant) headers.set('X-Espace', espaceCourant);
+  headers.set('Accept-Language', langue()); // pour traduire plus tard les messages de l'API
   let body = opts.body;
   if (opts.json !== undefined) {
     headers.set('Content-Type', 'application/json');
     body = JSON.stringify(opts.json);
   }
-  const r = await fetch(BASE + chemin, { ...opts, headers, body });
+  const r = await fetch(BASE + chemin, { ...opts, headers, body }).catch(() => {
+    throw new ErreurApi(0, tr('erreur.reseau'));
+  });
   if (r.status === 401 && t) {
     jeton.set(null);
     surDeconnexion();
@@ -42,11 +47,23 @@ export async function api<T = unknown>(chemin: string, opts: RequestInit & { jso
   if (!r.ok) {
     const e = await r.json().catch(() => ({}));
     if (r.status === 403 && e.code === 'CONDITIONS_A_ACCEPTER') surConditions();
-    const msg = Array.isArray(e.message) ? e.message.join(', ') : e.message || `Erreur ${r.status}`;
-    throw new ErreurApi(r.status, msg, e.erreurs);
+    throw new ErreurApi(r.status, messageErreur(r.status, e), e.erreurs);
   }
   const type = r.headers.get('content-type') ?? '';
   return (type.includes('json') ? r.json() : r.blob()) as Promise<T>;
+}
+
+/**
+ * Message d'erreur affiché. Les messages de l'API sont en français : en français on les garde (plus précis),
+ * dans une autre langue on affiche le texte traduit du code ou du statut HTTP.
+ */
+function messageErreur(statut: number, e: { message?: string | string[]; code?: string }): string {
+  const parCode = e.code ? (`erreur.${e.code}` as Cle) : null;
+  if (parCode && parCode in fr) return tr(parCode);
+  const serveur = Array.isArray(e.message) ? e.message.join(', ') : e.message;
+  if (serveur && langue() === 'fr') return serveur;
+  const parStatut = `erreur.${statut >= 500 ? 500 : statut}` as Cle;
+  return parStatut in fr ? tr(parStatut) : serveur || tr('erreur.statut', { n: statut });
 }
 
 // ---------- types renvoyés par l'API ----------
@@ -57,6 +74,8 @@ export interface Moi {
   /** Conditions acceptées, par espace. */
   conditions: Record<string, { version: number; accepteeLe: string }>;
   accordPhotosMarketing: boolean;
+  /** Langue choisie pour le compte (null = langue du téléphone). */
+  langue: string | null;
   modules: string[];
   /** Espaces accessibles (tous pour l'admin). */
   espaces: { slug: string; conditionsAJour: boolean }[];

@@ -6,6 +6,7 @@ import { chargerGuide, Guide, ResumeGuide } from './guides';
 import { useProcedures } from './donneesProcedures';
 import { normaliser, rechercher } from './recherche';
 import './guides.css';
+import { t } from '../../lib/i18n';
 
 /** Recherche par mot-clé dans les guides du compte : un résultat ouvre l'écran sur le bon repère. */
 export default function Recherche() {
@@ -50,16 +51,16 @@ export default function Recherche() {
 
   return (
     <div className="page gx">
-      <h1>Rechercher</h1>
+      <h1>{t('kiavik.recherche.titre')}</h1>
       <div className="gx-recherche">
         <input
           ref={champ}
           type="search"
           enterKeyHint="search"
-          placeholder="Ex. blanc, pause, résolution…"
+          placeholder={t('kiavik.recherche.exemple')}
           value={q}
           onChange={(e) => setParams(e.target.value ? { q: e.target.value } : {}, { replace: true })}
-          aria-label="Rechercher dans les guides"
+          aria-label={t('kiavik.recherche.champ')}
         />
       </div>
       {erreur ? (
@@ -67,14 +68,14 @@ export default function Recherche() {
       ) : !guides ? (
         <Chargement />
       ) : !q.trim() ? (
-        <p className="muted">Tapez un mot : nom d'un bouton, d'un réglage ou un problème. Les résultats ouvrent l'écran sur le bon repère, ou la procédure.</p>
+        <p className="muted">{t('kiavik.recherche.aide')}</p>
       ) : !resultats.length && !procs.length && !anims.length ? (
-        <p className="muted">Aucun résultat pour « {q} ».</p>
+        <p className="muted">{t('kiavik.recherche.aucun', { q })}</p>
       ) : (
         <>
           {procs.length > 0 && (
             <>
-              <h4>Procédures · {procs.length}</h4>
+              <h4>{t('kiavik.recherche.procedures', { n: procs.length })}</h4>
               <div className="gx-resultats">
                 {procs.map((p) => (
                   <Link key={p.id} className="carte gx-resultat" to={`/procedures/${p.id}`}>
@@ -87,7 +88,7 @@ export default function Recherche() {
           )}
           {anims.length > 0 && (
             <>
-              <h4>Animations · {anims.length}</h4>
+              <h4>{t('kiavik.recherche.animations', { n: anims.length })}</h4>
               <div className="gx-resultats">
                 {anims.map((a) => (
                   <Link key={a.id} className="carte gx-resultat" to={`/guides/${a.slug}/animation/${a.id}`}>
@@ -98,7 +99,7 @@ export default function Recherche() {
               </div>
             </>
           )}
-          {resultats.length > 0 && <h4>Boutons et réglages · {resultats.length}{resultats.length === 50 ? '+' : ''}</h4>}
+          {resultats.length > 0 && <h4>{t('kiavik.recherche.boutons', { n: `${resultats.length}${resultats.length === 50 ? '+' : ''}` })}</h4>}
           <div className="gx-resultats">
             {resultats.map((r) => (
               <Link key={`${r.guide}/${r.ecran}/${r.pastille}`} className="carte gx-resultat" to={`/guides/${r.guide}/${r.ecran}?p=${encodeURIComponent(r.pastille)}`}>

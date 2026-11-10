@@ -9,7 +9,8 @@ import {
   Section,
   Valeurs,
 } from '@decapage/machine-kit';
-import { t } from '../lib/util';
+import { libelle } from '../lib/util';
+import { langue, t } from '../lib/i18n';
 
 /**
  * Miroir de l'interface machine, construit uniquement à partir de la config JSON.
@@ -71,7 +72,7 @@ export function Miroir({
         <div className="m-nav">
           {config.pages.map((p) => (
             <button key={p.id} type="button" className={p.id === page ? 'on' : ''} onClick={() => setPage(p.id)}>
-              {t(p.label)}
+              {libelle(p.label)}
             </button>
           ))}
         </div>
@@ -83,7 +84,7 @@ export function Miroir({
             {s.champs.filter((c) => estVisible(c, valeurs)).map((c) => (
               <button key={c.key} type="button" className={'m-tuile' + (valeurs[c.key] ? ' on' : '')} onClick={() => ouvrir(c)} disabled={lecture}>
                 <span className="m-ic" />
-                {t(c.label)}
+                {libelle(c.label)}
               </button>
             ))}
           </div>
@@ -99,7 +100,7 @@ export function Miroir({
                     onClick={() => ouvrir(c)}
                     disabled={lecture}
                   >
-                    <span className="m-lab">{t(c.label)}</span>
+                    <span className="m-lab">{libelle(c.label)}</span>
                     <ValeurAffichee champ={c} v={valeurs[c.key]} />
                   </button>
                 ))}
@@ -120,9 +121,9 @@ export function Miroir({
                 if ('paramNo' in valeurs) v.paramNo = p.no;
                 onChange!(v);
               }}
-              title={p.exemple ? 'Valeurs d\'exemple' : 'Valeurs lues sur la machine'}
+              title={p.exemple ? t('lazzeko.miroir.exemple') : t('lazzeko.miroir.lues')}
             >
-              {t(p.label)}
+              {libelle(p.label)}
             </button>
           ))}
         </div>
@@ -173,7 +174,7 @@ function ValeurAffichee({ champ: c, v }: { champ: Champ; v: unknown }) {
       const o = c.options.find((x) => String(x.valeur) === String(v));
       if (c.affichage === 'icones' && o?.icone)
         return (
-          <span className="m-sc" title={t(o.label)}>
+          <span className="m-sc" title={libelle(o.label)}>
             <Icone svg={o.icone} />
           </span>
         );
@@ -200,15 +201,15 @@ function Panneau({
   onSuivant(): void;
 }) {
   return (
-    <div className="m-pnl" role="dialog" aria-label={t(c.label)}>
+    <div className="m-pnl" role="dialog" aria-label={libelle(c.label)}>
       <div className="m-pnl-h">
         <div>
-          <b>{t(c.label)}</b>
-          {c.label.en && <small> · {c.label.en}</small>}
+          <b>{libelle(c.label)}</b>
+          {c.label.en && langue() !== 'en' && <small> · {c.label.en}</small>}
         </div>
-        <button type="button" className="m-x" onClick={onFermer} aria-label="Fermer">×</button>
+        <button type="button" className="m-x" onClick={onFermer} aria-label={t('commun.fermer')}>×</button>
       </div>
-      {c.aide && <p className="m-aide">{t(c.aide)}</p>}
+      {c.aide && <p className="m-aide">{libelle(c.aide)}</p>}
       {c.type === 'nombre' && <SaisieNombre key={c.key} champ={c} valeur={Number(valeur)} onChange={onChange} onValider={onSuivant} />}
       {c.type === 'choix' && <SaisieChoix champ={c} valeur={valeur} onChange={onChange} />}
       {c.type === 'texte' && (
@@ -222,8 +223,8 @@ function Panneau({
       )}
       {erreur && <p className="m-erreur">{erreur}</p>}
       <div className="m-pnl-b">
-        <button type="button" onClick={onPrecedent}>‹ Préc.</button>
-        <button type="button" className="prim" onClick={onSuivant}>Suivant ›</button>
+        <button type="button" onClick={onPrecedent}>{t('lazzeko.miroir.precedent')}</button>
+        <button type="button" className="prim" onClick={onSuivant}>{t('lazzeko.miroir.suivant')}</button>
       </div>
     </div>
   );
@@ -260,7 +261,7 @@ function SaisieNombre({
   return (
     <div className="m-ctl">
       <div className="m-ctl-l">
-        <button type="button" onClick={() => onChange(borne(valeur - pas))} aria-label="moins">−</button>
+        <button type="button" onClick={() => onChange(borne(valeur - pas))} aria-label={t('lazzeko.miroir.moins')}>−</button>
         <input
           ref={ref}
           className="m-input m-num"
@@ -280,7 +281,7 @@ function SaisieNombre({
             }
           }}
         />
-        <button type="button" onClick={() => onChange(borne(valeur + pas))} aria-label="plus">+</button>
+        <button type="button" onClick={() => onChange(borne(valeur + pas))} aria-label={t('lazzeko.miroir.plus')}>+</button>
         {c.unite && <span className="m-unite">{c.unite}</span>}
       </div>
       <input
@@ -307,7 +308,7 @@ function SaisieChoix({ champ: c, valeur, onChange }: { champ: ChampChoix; valeur
         return (
           <button key={String(o.valeur)} type="button" className={on ? 'on' : ''} onClick={() => onChange(o.valeur)}>
             {c.affichage === 'icones' && o.icone && <Icone svg={o.icone} couleur={on ? '#fff' : '#1d2433'} />}
-            <span>{t(o.label)}</span>
+            <span>{libelle(o.label)}</span>
           </button>
         );
       })}

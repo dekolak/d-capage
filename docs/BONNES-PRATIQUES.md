@@ -4,7 +4,7 @@
 1. **Une seule app** pour Lazzeko et Kiavik : une base, un admin. On ne duplique pas, on ajoute un espace ou un module.
 2. **Piloté par la configuration** : une machine = un fichier JSON, un espace / module = une entrée dans `espaces.ts`. Pas de cas particulier écrit en dur dans le code.
 3. **Même code partout** : la validation et les calculs des réglages sont dans `packages/machine-kit`, utilisés par l'API et l'app.
-4. **Simple pour le client** : écrans mobiles, gros boutons, textes courts en français, pas de jargon.
+4. **Simple pour le client** : écrans mobiles, gros boutons, textes courts, pas de jargon. Français de référence, app prête à être traduite.
 5. **Rien n'est perdu** : migrations qui reprennent les données, brouillon local des fiches, file d'envoi des webhooks en base.
 
 ## Organisation du code
@@ -48,6 +48,7 @@
 - Nom de la société via `useEspace().espace.nom`, pas « Lazzeko » écrit en dur dans un écran commun.
 - Cases à cocher qui enregistrent tout de suite : mise à jour **optimiste** (affichage immédiat, retour arrière si erreur).
 - Photos : compressées sur le téléphone avant envoi (les métadonnées GPS sont supprimées).
+- **Textes** : aucun texte en dur dans un écran client. Ajouter la clé dans `src/textes/fr.ts` (groupée par écran) et utiliser `t()` / `tn()` (pluriel) / `tr()` (avec un lien ou du gras) ; dates avec `dateCourte()` / `dateHeure()`. Voir [TRADUCTION.md](TRADUCTION.md). Les écrans d'administration restent en français.
 
 ## Recettes
 ### Ajouter une machine

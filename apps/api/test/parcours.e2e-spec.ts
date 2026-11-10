@@ -505,4 +505,19 @@ describe('Parcours complet', () => {
     await http.delete(`/api/admin/procedures/${p.id}`).set(auth(admin)).expect(200);
     expect((await http.get(`/api/procedures/${p.id}`).set(P)).status).toBe(404);
   });
+
+  it('langue du compte : choisie par le client, par l\'admin ou à la création (clé API)', async () => {
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'langue' })).body.cle;
+    const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `lea-${id}`, motDePasse: 'motdepasse1', langue: 'en' })).body;
+    expect(u.langue).toBe('en');
+    expect((await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `zz2-${id}`, motDePasse: 'motdepasse1', langue: 'xx' })).status).toBe(400);
+    // sans langue : celle du téléphone (null)
+    expect((await http.get('/api/moi').set(auth(alice))).body.langue).toBeNull();
+    expect((await http.patch('/api/moi/preferences').set(auth(alice)).send({ langue: 'en' })).body.langue).toBe('en');
+    const moi = (await http.patch('/api/moi/preferences').set(auth(alice)).send({ langue: null })).body;
+    expect(moi.langue).toBeNull();
+    expect(moi.accordPhotosMarketing).toBeDefined(); // l'accord photos n'est pas touché
+    expect((await http.patch('/api/moi/preferences').set(auth(alice)).send({ langue: 'xx' })).status).toBe(400);
+    expect((await http.patch(`/api/users/${u.id}`).set(auth(admin)).send({ langue: 'fr' })).body.langue).toBe('fr');
+  });
 });

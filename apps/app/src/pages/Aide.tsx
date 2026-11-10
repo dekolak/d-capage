@@ -4,7 +4,8 @@ import { Chargement, Erreur } from '../components/Composants';
 import { AnimationReglage } from '../components/AnimationsLaser';
 import { Icone } from '../components/Miroir';
 import { api, chargerVersion, Fabricant, MaMachine, Version } from '../lib/api';
-import { t } from '../lib/util';
+import { libelle } from '../lib/util';
+import { langue, t } from '../lib/i18n';
 
 /**
  * Aide simple pour comprendre les réglages. Le contenu vient de la config de la machine
@@ -43,8 +44,8 @@ export default function Aide() {
 
   return (
     <div className="page aide">
-      <h1>Aide</h1>
-      <p className="muted">Comprendre chaque réglage en quelques mots.</p>
+      <h1>{t('aide.titre')}</h1>
+      <p className="muted">{t('aide.intro')}</p>
       {choix.length > 1 && (
         <select value={versionId} onChange={(e) => setVersionId(e.target.value)}>
           {choix.map((c) => <option key={c.versionId} value={c.versionId}>{c.nom}</option>)}
@@ -57,18 +58,18 @@ export default function Aide() {
         <>
           {cfg.guide.length > 0 && (
             <>
-              <h2>Les bases</h2>
+              <h2>{t('aide.bases')}</h2>
               <div className="accordeon">
                 {cfg.guide.map((g, i) => (
-                  <Rubrique key={i} {...r(`guide-${i}`)} titre={t(g.titre)}>
-                    <p>{t(g.texte)}</p>
+                  <Rubrique key={i} {...r(`guide-${i}`)} titre={libelle(g.titre)}>
+                    <p>{libelle(g.texte)}</p>
                   </Rubrique>
                 ))}
               </div>
             </>
           )}
 
-          <h2>Les réglages</h2>
+          <h2>{t('aide.reglages')}</h2>
           <div className="accordeon">
             {champs.map((c) => (
               <Rubrique
@@ -76,17 +77,16 @@ export default function Aide() {
                 {...r(c.key)}
                 titre={
                   <>
-                    <span>{t(c.label)}</span>
-                    {c.label.en && <small>{c.label.en}</small>}
+                    <span>{libelle(c.label)}</span>
+                    {c.label.en && langue() !== 'en' && <small>{c.label.en}</small>}
                   </>
                 }
               >
-                <p>{t(c.aide)}</p>
+                <p>{libelle(c.aide)}</p>
                 {cfg.technologie === 'laser-pulse' && <AnimationReglage k={c.key} />}
                 {c.type === 'nombre' && (
                   <p className="plage">
-                    De {c.min} à {c.max}
-                    {c.unite ? ` ${c.unite}` : ''}
+                    {t('aide.plage', { min: c.min, max: c.max, unite: c.unite ? ` ${c.unite}` : '' })}
                   </p>
                 )}
                 {c.type === 'choix' && c.affichage === 'icones' && (
@@ -94,7 +94,7 @@ export default function Aide() {
                     {c.options.map((o) => (
                       <div key={String(o.valeur)}>
                         {o.icone && <span className="m-sc"><Icone svg={o.icone} /></span>}
-                        <small>{t(o.label)}</small>
+                        <small>{libelle(o.label)}</small>
                       </div>
                     ))}
                   </div>
@@ -103,20 +103,16 @@ export default function Aide() {
             ))}
           </div>
 
-          <h2>Les indicateurs</h2>
+          <h2>{t('aide.indicateurs')}</h2>
           <div className="accordeon">
-            <Rubrique {...r('indicateurs')} titre="Énergie, crête, écart…">
-              <p>
-                Sous les réglages, l'app calcule quelques repères à partir de vos valeurs : la puissance moyenne, l'énergie de
-                chaque impulsion, la puissance crête et l'écart entre deux impulsions. Ce sont des calculs simples pour comparer
-                des réglages entre eux ; une valeur marquée d'une étoile (*) dépend d'une estimation (taille du spot).
-              </p>
+            <Rubrique {...r('indicateurs')} titre={t('aide.indicateursTitre')}>
+              <p>{t('aide.indicateursTexte')}</p>
             </Rubrique>
           </div>
 
           {cfg.lienAide && (
             <a href={cfg.lienAide} target="_blank" rel="noreferrer" className="bandeau lien-bandeau">
-              <span><b>Aller plus loin</b> : simulateur et exercices sur le site</span>
+              <span><b>{t('aide.plusLoin')}</b>{t('aide.plusLoinDetail')}</span>
               <span>›</span>
             </a>
           )}

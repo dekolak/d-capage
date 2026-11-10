@@ -15,6 +15,7 @@ import AdminWebhooks from './pages/AdminWebhooks';
 import Compte from './pages/Compte';
 import Conditions from './pages/Conditions';
 import Connexion from './pages/Connexion';
+import { t } from './lib/i18n';
 
 /**
  * Une seule app, plusieurs espaces (Lazzeko, Kiavik) : chaque espace a ses écrans et sa barre du bas (src/espaces/),
@@ -36,9 +37,9 @@ export default function App() {
   if (!acces)
     return autre ? <Chargement /> : (
       <div className="accueil">
-        <h1>Aucun accès</h1>
-        <p className="muted">Votre compte n'a encore accès à aucune fonction. Contactez {espace.nom}.</p>
-        <button type="button" className="btn large" onClick={deconnexion}>Se déconnecter</button>
+        <h1>{t('app.aucunAcces.titre')}</h1>
+        <p className="muted">{t('app.aucunAcces.texte', { societe: espace.nom })}</p>
+        <button type="button" className="btn large" onClick={deconnexion}>{t('commun.deconnexion')}</button>
       </div>
     );
   if (!acces.conditionsAJour) return <Accueil key={espace.slug} />;
@@ -66,11 +67,11 @@ export default function App() {
         {app.onglets.map((o) =>
           o.plus ? (
             <NavLink key={o.to} to={o.to} className="plus">
-              <span>+</span>{o.label}
+              <span>+</span>{t(o.label)}
             </NavLink>
           ) : (
             <NavLink key={o.to} to={o.to} end={o.end}>
-              <Ic d={o.icone!} />{o.label}
+              <Ic d={o.icone!} />{t(o.label)}
             </NavLink>
           ),
         )}

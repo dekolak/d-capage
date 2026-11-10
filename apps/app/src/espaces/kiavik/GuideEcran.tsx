@@ -7,6 +7,7 @@ import { CANAUX_DEPART, CommandesInteractif, EtatCanaux, Interactif } from './In
 import { useProcedures } from './donneesProcedures';
 import { choisirModeBlanc, ecranCite, Ecran, groupes, Guide, modeBlancChoisi, Pastille, PastilleNav, pastillesNavigation, useGuide } from './guides';
 import './guides.css';
+import { t } from '../../lib/i18n';
 
 const CLE_REPERES = 'kiavik.reperes';
 const pct = (v: number, total: number) => `${(v / total) * 100}%`;
@@ -19,7 +20,7 @@ const pct = (v: number, total: number) => `${(v / total) * 100}%`;
 export default function GuideEcran() {
   const { slug = '', ecran: idEcran } = useParams();
   const { guide, erreur } = useGuide(slug);
-  if (erreur) return <div className="page"><Erreur e={erreur} /><Link to="/guides">← Guides</Link></div>;
+  if (erreur) return <div className="page"><Erreur e={erreur} /><Link to="/guides">{t('kiavik.guide.retour')}</Link></div>;
   if (!guide) return <Chargement />;
   const e = guide.ecrans.find((x) => x.id === idEcran);
   if (!e) return <Navigate to={`/guides/${slug}/${guide.ecrans[0].id}`} replace />;
@@ -64,9 +65,9 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
   return (
     <div className="page gx">
       <div className="gx-barre">
-        <button type="button" className="gx-ic" aria-label="Menu des écrans" onClick={() => setMenu(true)}>☰</button>
+        <button type="button" className="gx-ic" aria-label={t('kiavik.guide.menu')} onClick={() => setMenu(true)}>☰</button>
         <div className="gx-titre"><small>{guide.nom}</small>{e.code} · {e.titre}</div>
-        <button type="button" className={`gx-ic ${zoom ? 'on' : ''}`} aria-label="Zoom" onClick={() => setZoom(!zoom)}>⤢</button>
+        <button type="button" className={`gx-ic ${zoom ? 'on' : ''}`} aria-label={t('kiavik.guide.zoom')} onClick={() => setZoom(!zoom)}>⤢</button>
       </div>
 
       {e.intro && <p className="gx-intro">{e.intro}</p>}
@@ -91,7 +92,7 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
                 className={`gx-zone ${p.etat === 'preregle' ? 'pre' : ''}`}
                 style={{ left: pct(p.zone.x, e.largeur), top: pct(p.zone.y, e.hauteur), width: pct(p.zone.largeur, e.largeur), height: pct(p.zone.hauteur, e.hauteur) }}
               >
-                <span>{p.zone.libelle ?? (p.etat === 'preregle' ? 'préréglé' : 'non utilisé')}</span>
+                <span>{p.zone.libelle ?? (p.etat === 'preregle' ? t('kiavik.guide.preregle') : t('kiavik.guide.nonUtilise'))}</span>
               </div>
             ) : null,
           )}
@@ -136,13 +137,13 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
         {suiv && <button type="button" className="btn petit" onClick={() => aller(suiv.id)}>{suiv.code} →</button>}
       </div>
 
-      <h4>Repères</h4>
+      <h4>{t('kiavik.guide.reperes')}</h4>
       <div className="gx-liste">
         {e.pastilles.map((p) => (
           <button type="button" key={p.id} className={`gx-item ${p.etat && p.etat !== 'actif' ? 'off' : ''} ${sel === p.id ? 'on' : ''}`} onClick={() => choisir(p.id)}>
             <b>{p.id}</b>{p.titre}
-            {p.etat === 'non_utilise' && <i> (non utilisé)</i>}
-            {p.etat === 'preregle' && <i> (préréglé)</i>}
+            {p.etat === 'non_utilise' && <i>{t('kiavik.guide.nonUtiliseListe')}</i>}
+            {p.etat === 'preregle' && <i>{t('kiavik.guide.preregleListe')}</i>}
           </button>
         ))}
       </div>
@@ -151,7 +152,7 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
         <>
           <div className="gx-masque" onClick={() => choisir(null)} />
           <div className="gx-fiche" role="dialog" aria-label={pastille.titre}>
-            <button type="button" className="gx-fermer" aria-label="Fermer" onClick={() => choisir(null)}>✕</button>
+            <button type="button" className="gx-fermer" aria-label={t('commun.fermer')} onClick={() => choisir(null)}>✕</button>
             <FichePastille guide={guide} e={e} p={pastille} onOuvrir={(id) => aller(id)} />
           </div>
         </>
@@ -163,9 +164,9 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
           <div className="gx-menu">
             <div className="gx-menu-tete">
               <b>{guide.nom}</b>
-              <button type="button" className="gx-ic" aria-label="Fermer" onClick={() => setMenu(false)}>✕</button>
+              <button type="button" className="gx-ic" aria-label={t('commun.fermer')} onClick={() => setMenu(false)}>✕</button>
             </div>
-            <Link to="/guides" className="gx-autres">← Tous les guides</Link>
+            <Link to="/guides" className="gx-autres">{t('kiavik.guide.tousLesGuides')}</Link>
             {groupes(guide).map(([g, ecrans]) => (
               <details key={g} className="gx-groupe" open={ecrans.includes(e) || ecrans.length === 1}>
                 <summary>{g}<span>{ecrans.length}</span></summary>
@@ -183,7 +184,7 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
                   checked={reperes}
                   onChange={(ev) => (setReperes(ev.target.checked), localStorage.setItem(CLE_REPERES, ev.target.checked ? '1' : '0'))}
                 />
-                Afficher les repères d'écran (admin)
+                {t('kiavik.guide.afficherReperes')}
               </label>
             )}
           </div>
@@ -194,8 +195,8 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
 }
 
 function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: Pastille; onOuvrir(id: string): void }) {
-  const off = p.etat === 'non_utilise' ? ' · non utilisé' : p.etat === 'preregle' ? ' · préréglé' : '';
-  const conseil = p.conseil ?? (p.etat === 'preregle' ? 'Préréglé : ne pas toucher.' : undefined);
+  const off = p.etat === 'non_utilise' ? t('kiavik.guide.refNonUtilise') : p.etat === 'preregle' ? t('kiavik.guide.refPreregle') : '';
+  const conseil = p.conseil ?? (p.etat === 'preregle' ? t('kiavik.guide.preregleConseil') : undefined);
   const lien = ecranCite(guide, p.texte, e.id);
   const { liste } = useProcedures();
   const anims = (guide.animations ?? []).filter((a) => a.liens?.some(([ec, id]) => ec === e.id && id === p.id));
@@ -207,7 +208,7 @@ function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: P
       <p>{p.texte}</p>
       {conseil &&
         (p.niveau === 'a_completer' ? (
-          <div className="gx-todo">À compléter (visible par l'admin seulement) : {conseil}</div>
+          <div className="gx-todo">{t('kiavik.guide.aCompleter', { texte: conseil })}</div>
         ) : p.niveau === 'avertissement' ? (
           <div className="gx-warn">⚠️ {conseil}</div>
         ) : (
@@ -216,20 +217,20 @@ function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: P
       {p.special === 'menu_blanc' && guide.modesBlanc && <MenuBlanc modes={guide.modesBlanc} />}
       {lien && (
         <button type="button" className="btn prim petit gx-ouvrir" onClick={() => onOuvrir(lien.id)}>
-          Ouvrir l'écran {lien.code}
+          {t('kiavik.guide.ouvrirEcran', { code: lien.code })}
         </button>
       )}
       {(liees.length > 0 || anims.length > 0) && (
         <div className="gx-proc-lies">
           {anims.map((a) => (
-            <Link key={a.id} to={`/guides/${guide.slug}/animation/${a.id}`} className="btn petit">🎬 Voir l'animation : {a.titre}</Link>
+            <Link key={a.id} to={`/guides/${guide.slug}/animation/${a.id}`} className="btn petit">{t('kiavik.guide.voirAnimation', { titre: a.titre })}</Link>
           ))}
         </div>
       )}
       {liees.length > 0 && (
         <div className="gx-proc-lies">
           {liees.map((x) => (
-            <Link key={x.id} to={`/procedures/${x.id}`} className="btn petit">📋 Voir la procédure : {x.titre}</Link>
+            <Link key={x.id} to={`/procedures/${x.id}`} className="btn petit">{t('kiavik.guide.voirProcedure', { titre: x.titre })}</Link>
           ))}
         </div>
       )}
@@ -252,21 +253,21 @@ function MenuBlanc({ modes }: { modes: NonNullable<Guide['modesBlanc']> }) {
         {modes.modes.map((x) => (
           <button type="button" key={x.nom} className={x.nom === choix ? 'on' : ''} onClick={() => setChoix(x.nom)}>
             {x.nom}
-            {plus.includes(x.nom) && <i>le plus utilisé</i>}
+            {plus.includes(x.nom) && <i>{t('kiavik.guide.plusUtilise')}</i>}
           </button>
         ))}
       </div>
       {plus.includes(m.nom) ? (
         <div className="gx-choisir">
-          <b>Quel blanc choisir ?</b>
+          <b>{t('kiavik.guide.quelBlanc')}</b>
           <div className="gx-onglets">
             {plus.map((n) => (
               <button type="button" key={n} className={n === m.nom ? 'on' : ''} onClick={() => setChoix(n)}>{n}</button>
             ))}
           </div>
           <div className="gx-blanc-imgs">
-            <figure><img src={m.image_canal} alt="" /><figcaption>Aperçu dans le logiciel (noir = blanc)</figcaption></figure>
-            <figure><img src={m.image_mur} alt="" /><figcaption>Résultat sur un mur foncé</figcaption></figure>
+            <figure><img src={m.image_canal} alt="" /><figcaption>{t('kiavik.guide.apercuLogiciel')}</figcaption></figure>
+            <figure><img src={m.image_mur} alt="" /><figcaption>{t('kiavik.guide.resultatMur')}</figcaption></figure>
           </div>
           <p><b>{m.nom}</b> : {m.texte}</p>
         </div>

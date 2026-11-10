@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
+import { t } from '../../lib/i18n';
 
 /**
  * Fenêtres Windows recréées (repris du prototype) : dossiers neutres, fichier d'exemple smiley.jpg.
@@ -77,7 +78,7 @@ export function Fenetre({ fenetre, largeur, hauteur, onFermer, fichier }: Props)
             <div key={n} className="fr"><span><Fichier c="#e8541e" />{n}</span><span /><span>{d}</span></div>
           ))}
         </div>
-        <div className="btn9" style={{ top: 80 }} onClick={() => onFermer(true, 'Fichier RIPé enregistré. Il reste à l\'ouvrir dans le logiciel DXonJet pour imprimer.')}>Enregistrer</div>
+        <div className="btn9" style={{ top: 80 }} onClick={() => onFermer(true, t('kiavik.fenetre.enregistre'))}>Enregistrer</div>
         <div className="btn9" style={{ top: 116 }} onClick={() => onFermer(false)}>Annuler</div>
         <div className="row" style={{ top: 450 }}><b>Nom du fichier :</b><div className="sel" style={{ width: 400, borderColor: '#0078d7' }}>smiley<span>⌄</span></div></div>
         <div className="row" style={{ top: 488 }}><b>Type :</b><div className="sel" style={{ width: 400 }}>Fichier d'impression DXonJet <span>⌄</span></div></div>
@@ -92,20 +93,20 @@ export function Fenetre({ fenetre, largeur, hauteur, onFermer, fichier }: Props)
       <Cote />
       <div className="files">
         <div className="fh"><span>Nom</span><span>Statut</span><span>Modifié le</span></div>
-        {FICHIERS.map(([t, n, d]) => (
+        {FICHIERS.map(([type, n, d]) => (
           <div
             key={n}
             className={`fr ${choix === n ? 's' : ''}`}
-            onClick={() => (t === 'd' ? setToast('Dossier d\'exemple : choisissez plutôt le fichier smiley.jpg.') : (setChoix(n), setToast('')))}
+            onClick={() => (type === 'd' ? setToast(t('kiavik.fenetre.dossierExemple')) : (setChoix(n), setToast('')))}
           >
-            <span>{t === 'd' ? <Dossier /> : <Fichier />}{n}</span><span /><span>{d}</span>
+            <span>{type === 'd' ? <Dossier /> : <Fichier />}{n}</span><span /><span>{d}</span>
           </div>
         ))}
       </div>
       <div
         className="btn9"
         style={{ top: 80 }}
-        onClick={() => (choix ? onFermer(true, `Travail « ${choix} » ajouté dans la file.`) : setToast('Sélectionnez d\'abord un fichier dans la liste.'))}
+        onClick={() => (choix ? onFermer(true, t('kiavik.fenetre.ajoute', { nom: choix })) : setToast(t('kiavik.fenetre.choisirFichier')))}
       >
         Ajout
       </div>

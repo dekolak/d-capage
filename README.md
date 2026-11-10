@@ -15,6 +15,7 @@ Une seule app mobile (PWA), une seule base, un seul admin, **deux espaces** :
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Développement | Structure, données, espaces, machines |
 | [docs/BONNES-PRATIQUES.md](docs/BONNES-PRATIQUES.md) | Développement | Règles du projet : branches, migrations, tests, ajouter une machine / un module |
 | [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md) | Mise en ligne | VPS, Coolify, Traefik, DNS OVH, sauvegardes |
+| [docs/TRADUCTION.md](docs/TRADUCTION.md) | Développement | Textes de l'app, langue du compte, ajouter l'anglais, contenus à traduire |
 | [kit-guides/](kit-guides/) | Développement Kiavik | Cahier des charges et données des guides |
 | [docs/presentation-app.html](docs/presentation-app.html) | Clients | Présentation animée de l'app Lazzeko |
 

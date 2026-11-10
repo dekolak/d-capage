@@ -6,7 +6,8 @@ import { z } from 'zod';
  * Ajouter une machine = ajouter un JSON qui respecte ce schéma, sans toucher au code.
  */
 
-export const I18nSchema = z.object({ fr: z.string().min(1), en: z.string().optional() });
+/** Texte traduit : `fr` obligatoire, autres langues facultatives (en, es…). */
+export const I18nSchema = z.object({ fr: z.string().min(1), en: z.string().optional() }).catchall(z.string());
 export type I18n = z.infer<typeof I18nSchema>;
 
 const Valeur = z.union([z.string(), z.number(), z.boolean()]);

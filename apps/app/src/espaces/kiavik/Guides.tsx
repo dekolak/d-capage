@@ -7,6 +7,7 @@ import { useProcedures } from './donneesProcedures';
 import { ListeProcedures } from './Procedures';
 import './guides.css';
 import './animations.css';
+import { t } from '../../lib/i18n';
 
 /** Accueil Kiavik : les guides du compte côte à côte en haut, les procédures en dessous. */
 export default function Guides() {
@@ -22,10 +23,10 @@ export default function Guides() {
     <div className="page">
       {guides.length > 0 && (
         <>
-          <h1>Logiciels</h1>
+          <h1>{t('kiavik.accueil.logiciels')}</h1>
           {guides.length > 1 && (
             <div className="gx-chemin" aria-label="Le chemin d'une impression">
-              <span>🖼️ Image</span>›<span>1. {guides[0].nom.split(' ')[0]}</span>›<span>Fichier RIPé</span>›<span>2. {guides[1].nom.split(' ')[0]}</span>›<span>🧱 Mur</span>
+              <span>{t('kiavik.accueil.image')}</span>›<span>1. {guides[0].nom.split(' ')[0]}</span>›<span>{t('kiavik.accueil.fichierRip')}</span>›<span>2. {guides[1].nom.split(' ')[0]}</span>›<span>{t('kiavik.accueil.mur')}</span>
             </div>
           )}
           <div className={`gx-tuiles ${guides.length === 1 ? 'une' : ''}`}>
@@ -41,7 +42,7 @@ export default function Guides() {
       )}
       {guides.some((g) => g.animations.length) && (
         <>
-          <h2>Animations</h2>
+          <h2>{t('kiavik.accueil.animations')}</h2>
           <div className="an-cartes">
             {guides.flatMap((g) =>
               g.animations.map((a) => (
@@ -57,17 +58,17 @@ export default function Guides() {
       )}
       {accesProcedures && (
         <>
-          <h2>Procédures</h2>
+          <h2>{t('kiavik.accueil.procedures')}</h2>
           {!procedures ? (
             <Chargement />
           ) : procedures.length ? (
             <ListeProcedures liste={procedures} />
           ) : (
-            <div className="carte"><span className="muted">Aucune procédure pour l'instant.</span></div>
+            <div className="carte"><span className="muted">{t('kiavik.accueil.aucuneProcedure')}</span></div>
           )}
         </>
       )}
-      {!guides.length && !accesProcedures && <p className="muted">Aucun guide n'est activé sur votre compte.</p>}
+      {!guides.length && !accesProcedures && <p className="muted">{t('kiavik.accueil.aucunGuide')}</p>}
     </div>
   );
 }

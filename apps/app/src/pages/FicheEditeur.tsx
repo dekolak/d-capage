@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { completer, technologie, validerValeurs } from '@decapage/machine-kit';
-import { ChoixTags, Chargement, Erreur, Etoiles, Galerie, Indicateurs, LIBELLE_PHOTO } from '../components/Composants';
+import { ChoixTags, Chargement, Erreur, Etoiles, Galerie, Indicateurs, libellePhoto } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
 import { Miroir } from '../components/Miroir';
 import { api, chargerVersion, envoyerPhoto, Fiche, GroupeTag, MaMachine, PhotoRef, Tag, TypePhoto, Version } from '../lib/api';
@@ -9,9 +9,10 @@ import { compresser } from '../lib/image';
 import {
   Brouillon, brouillonUtile, ecrireBrouillon, ecrirePhotosBrouillon, effacerBrouillon, lireBrouillon, lirePhotosBrouillon,
 } from '../lib/brouillon';
+import { dateHeure, t, tn } from '../lib/i18n';
 
 interface NouvellePhoto { type: TypePhoto; fichier: Blob; miniature: Blob; apercu: string }
-const ETAPES = ['Machine', 'Surface', 'Avant', 'Réglages', 'Écran', 'Résultat'] as const;
+const ETAPES = ['machine', 'surface', 'avant', 'reglages', 'ecran', 'resultat'] as const;
 
 /** Création (avec brouillon local), duplication (?depuis=id) et modification (/fiches/:id/modifier). */
 export default function FicheEditeur() {
@@ -91,7 +92,7 @@ export default function FicheEditeur() {
   }, [photos, avecBrouillon, pret]);
 
   const recommencer = async () => {
-    if (!confirm('Effacer le brouillon et recommencer une fiche vide ?')) return;
+    if (!confirm(t('lazzeko.editeur.recommencerConfirm'))) return;
     await effacerBrouillon();
     setPhotos([]);
     setRepris(null);
@@ -130,13 +131,13 @@ export default function FicheEditeur() {
   };
 
   const proposerTag = async (groupeId: string, nom: string) => {
-    const t = await api<Tag>('/tags', { method: 'POST', json: { groupeId, nom } });
-    setGroupes((gs) => gs.map((g) => (g.id === groupeId && !g.tags.some((x) => x.id === t.id) ? { ...g, tags: [...g.tags, t] } : g)));
-    maj({ tagIds: [...new Set([...b.tagIds, t.id])] });
+    const tag = await api<Tag>('/tags', { method: 'POST', json: { groupeId, nom } });
+    setGroupes((gs) => gs.map((g) => (g.id === groupeId && !g.tags.some((x) => x.id === tag.id) ? { ...g, tags: [...g.tags, tag] } : g)));
+    maj({ tagIds: [...new Set([...b.tagIds, tag.id])] });
   };
 
   const titreSuggere = () =>
-    groupes.flatMap((g) => g.tags).filter((t) => b.tagIds.includes(t.id)).map((t) => t.nom).slice(0, 3).join(' · ');
+    groupes.flatMap((g) => g.tags).filter((tag) => b.tagIds.includes(tag.id)).map((tag) => tag.nom).slice(0, 3).join(' · ');
 
   const aller = (e: number) => {
     if (e === 5 && !b.titre) maj({ etape: e, titre: titreSuggere() });
@@ -146,10 +147,10 @@ export default function FicheEditeur() {
 
   const enregistrer = async () => {
     if (!validation?.ok) return aller(3);
-    if (!b.titre.trim()) return setErr(new Error('Donnez un titre à la fiche'));
+    if (!b.titre.trim()) return setErr(new Error(t('lazzeko.editeur.titreManquant')));
     setErr(undefined);
     try {
-      setEnvoi('Enregistrement…');
+      setEnvoi(t('lazzeko.editeur.enregistrement'));
       const corps = {
         titre: b.titre, commentaire: b.commentaire, valeurs: validation.valeurs, tagIds: b.tagIds,
       };
@@ -162,7 +163,7 @@ export default function FicheEditeur() {
       if (modif && b.note && b.note !== noteInitiale)
         await api(`/fiches/${f.id}/evaluation`, { method: 'POST', json: { note: b.note } });
       for (const [i, p] of photos.entries()) {
-        setEnvoi(`Envoi des photos ${i + 1}/${photos.length}…`);
+        setEnvoi(t('lazzeko.editeur.envoiPhotos', { i: i + 1, n: photos.length }));
         await envoyerPhoto(f.id, p.type, p);
       }
       if (avecBrouillon) await effacerBrouillon();
@@ -174,7 +175,7 @@ export default function FicheEditeur() {
   };
 
   const supprimerExistante = async (p: PhotoRef) => {
-    if (!confirm('Supprimer cette photo ?')) return;
+    if (!confirm(t('lazzeko.editeur.supprimerPhotoConfirm'))) return;
     await api(`/photos/${p.id}`, { method: 'DELETE' }).catch(setErr);
     setExistantes((x) => x.filter((y) => y.id !== p.id));
   };
@@ -183,14 +184,14 @@ export default function FicheEditeur() {
   if (!machines.length && !modif)
     return (
       <div className="page vide-etat">
-        <h1>Nouvelle fiche</h1>
-        <p>Ajoutez d'abord votre machine.</p>
-        <Link to="/machines" className="btn prim">Ajouter une machine</Link>
+        <h1>{t('lazzeko.editeur.nouvelle')}</h1>
+        <p>{t('lazzeko.editeur.machineDabord')}</p>
+        <Link to="/machines" className="btn prim">{t('lazzeko.editeur.ajouterMachine')}</Link>
       </div>
     );
 
   const e = b.etape;
-  const NOM_PHOTO: Record<TypePhoto, string> = { AVANT: 'Photo avant', APRES: 'Photo après', INTERFACE: 'Photo écran', AUTRE: 'Photo' };
+  const nomPhoto = (type: TypePhoto) => t(`lazzeko.editeur.photo.${type}`);
   const blocPhotos = (type: TypePhoto, conseil: string) => {
     const nb = photos.filter((p) => p.type === type).length + existantes.filter((p) => p.type === type).length;
     return (
@@ -203,13 +204,13 @@ export default function FicheEditeur() {
             <circle cx="12" cy="13.5" r="3.8" />
           </svg>
           <span className="bp-texte">
-            <b>{nb ? `+ ${NOM_PHOTO[type]}` : NOM_PHOTO[type]}</b>
-            <small>{nb ? `${nb} photo${nb > 1 ? 's' : ''} ✓ · toucher pour en ajouter` : 'Toucher pour prendre la photo'}</small>
+            <b>{nb ? `+ ${nomPhoto(type)}` : nomPhoto(type)}</b>
+            <small>{nb ? tn('lazzeko.editeur.photosPrises', nb) : t('lazzeko.editeur.prendrePhoto')}</small>
           </span>
           <input type="file" accept="image/*" capture="environment" hidden onChange={(ev) => ajouterPhoto(type, ev.target.files)} />
         </label>
         <label className="btn">
-          Choisir dans la galerie
+          {t('lazzeko.editeur.galerie')}
           <input type="file" accept="image/*" multiple hidden onChange={(ev) => ajouterPhoto(type, ev.target.files)} />
         </label>
       </div>
@@ -219,8 +220,8 @@ export default function FicheEditeur() {
           p.type === type ? (
             <figure key={i}>
               <img src={p.apercu} alt="" />
-              <figcaption>{LIBELLE_PHOTO[type]}</figcaption>
-              <button type="button" className="suppr" onClick={() => setPhotos(photos.filter((_, j) => j !== i))} aria-label="Retirer">×</button>
+              <figcaption>{libellePhoto(type)}</figcaption>
+              <button type="button" className="suppr" onClick={() => setPhotos(photos.filter((_, j) => j !== i))} aria-label={t('lazzeko.editeur.retirer')}>×</button>
             </figure>
           ) : null,
         )}
@@ -231,15 +232,15 @@ export default function FicheEditeur() {
 
   return (
     <div className="page editeur">
-      <h1>{modif ? 'Modifier la fiche' : parent ? 'Dupliquer un réglage' : 'Nouvelle fiche'}</h1>
-      {parent && <p className="muted petit">À partir de « {parent.titre} » ({parent.auteur})</p>}
+      <h1>{modif ? t('lazzeko.editeur.modifier') : parent ? t('lazzeko.editeur.dupliquer') : t('lazzeko.editeur.nouvelle')}</h1>
+      {parent && <p className="muted petit">{t('lazzeko.editeur.aPartirDe', { titre: parent.titre, auteur: parent.auteur })}</p>}
 
       <ol className="etapes">
         {ETAPES.map((n, i) => (
           <li key={n} className={(i === e ? 'on ' : '') + (i < e ? 'fait' : '')}>
             <button type="button" onClick={() => aller(i)} disabled={(modif && i === 0) || (i > 0 && !version)}>
               <span>{i + 1}</span>
-              {n}
+              {t(`lazzeko.editeur.etape.${n}`)}
             </button>
           </li>
         ))}
@@ -247,17 +248,17 @@ export default function FicheEditeur() {
 
       {repris && (
         <div className="bandeau">
-          <span>Brouillon du {new Date(repris).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} repris.</span>
-          <button type="button" className="btn-lien" onClick={recommencer}>Recommencer</button>
+          <span>{t('lazzeko.editeur.brouillonRepris', { date: dateHeure(repris) })}</span>
+          <button type="button" className="btn-lien" onClick={recommencer}>{t('lazzeko.editeur.recommencer')}</button>
         </div>
       )}
-      {avecBrouillon && !repris && <p className="muted petit">Enregistré automatiquement sur ce téléphone : vous pouvez reprendre plus tard.</p>}
+      {avecBrouillon && !repris && <p className="muted petit">{t('lazzeko.editeur.autoEnregistre')}</p>}
 
       <Erreur e={err} />
 
       {e === 0 && (
         <section>
-          <h2>Quelle machine ?</h2>
+          <h2>{t('lazzeko.editeur.quelleMachine')}</h2>
           <div className="cartes-machines">
             {machines.map((m) => (
               <button key={m.id} type="button" className={'carte-machine' + (b.userMachineId === m.id ? ' on' : '')}
@@ -268,60 +269,60 @@ export default function FicheEditeur() {
               </button>
             ))}
           </div>
-          <Link to="/machines" className="lien">+ Ajouter une machine</Link>
+          <Link to="/machines" className="lien">{t('lazzeko.editeur.ajouterMachineLien')}</Link>
         </section>
       )}
 
       {e === 1 && (
         <section>
-          <h2>Surface décapée</h2>
+          <h2>{t('lazzeko.editeur.surface')}</h2>
           <ChoixTags groupes={groupes} choisis={b.tagIds} onChange={(tagIds) => maj({ tagIds })} onProposer={proposerTag} />
         </section>
       )}
 
-      {e === 2 && (<><h2>Photo avant</h2>{blocPhotos('AVANT', 'La surface avant le décapage.')}</>)}
+      {e === 2 && (<><h2>{t('lazzeko.editeur.photoAvant')}</h2>{blocPhotos('AVANT', t('lazzeko.editeur.photoAvantConseil'))}</>)}
 
       {e === 3 && version && b.valeurs && (
         <section>
-          <h2>Réglages</h2>
-          <p className="muted petit">Recopiez l'écran de la machine : touchez une valeur pour la modifier.</p>
+          <h2>{t('lazzeko.editeur.reglages')}</h2>
+          <p className="muted petit">{t('lazzeko.editeur.reglagesConseil')}</p>
           <Miroir config={version.config} valeurs={b.valeurs} onChange={(valeurs) => maj({ valeurs })} erreurs={validation?.erreurs} />
           <Indicateurs liste={indicateurs} />
         </section>
       )}
 
-      {e === 4 && (<><h2>Photo de l'écran machine</h2>{blocPhotos('INTERFACE', 'Une photo de l\'écran de réglage : elle sert de preuve et de vérification.')}</>)}
+      {e === 4 && (<><h2>{t('lazzeko.editeur.photoEcran')}</h2>{blocPhotos('INTERFACE', t('lazzeko.editeur.photoEcranConseil'))}</>)}
 
       {e === 5 && (
         <section className="form">
-          <h2>Résultat</h2>
-          {blocPhotos('APRES', 'La surface après le décapage.')}
+          <h2>{t('lazzeko.editeur.resultat')}</h2>
+          {blocPhotos('APRES', t('lazzeko.editeur.photoApresConseil'))}
           <label>
-            Votre note
+            {t('lazzeko.editeur.note')}
             <Etoiles note={b.note} onChange={(note) => maj({ note })} />
           </label>
           <label>
-            Titre
-            <input value={b.titre} maxLength={120} onChange={(ev) => maj({ titre: ev.target.value })} placeholder="ex. Rouille sur acier" />
+            {t('lazzeko.editeur.titre')}
+            <input value={b.titre} maxLength={120} onChange={(ev) => maj({ titre: ev.target.value })} placeholder={t('lazzeko.editeur.titreExemple')} />
           </label>
           <label>
-            Commentaire
-            <textarea rows={4} value={b.commentaire} onChange={(ev) => maj({ commentaire: ev.target.value })} placeholder="Nombre de passages, distance, remarques…" />
+            {t('lazzeko.editeur.commentaire')}
+            <textarea rows={4} value={b.commentaire} onChange={(ev) => maj({ commentaire: ev.target.value })} placeholder={t('lazzeko.editeur.commentaireExemple')} />
           </label>
           {validation && !validation.ok && (
-            <div className="alerte">Réglages à corriger : {validation.erreurs.map((x) => `${x.key ?? ''} ${x.message}`).join(', ')}</div>
+            <div className="alerte">{t('lazzeko.editeur.aCorriger', { liste: validation.erreurs.map((x) => `${x.key ?? ''} ${x.message}`).join(', ') })}</div>
           )}
         </section>
       )}
 
       <div className="barre-etapes">
-        <button type="button" className="btn" disabled={e === (modif ? 1 : 0) || !!envoi} onClick={() => aller(e - 1)}>‹ Retour</button>
+        <button type="button" className="btn" disabled={e === (modif ? 1 : 0) || !!envoi} onClick={() => aller(e - 1)}>{t('lazzeko.editeur.retour')}</button>
         {e < 5 ? (
           <button type="button" className="btn prim" disabled={!version || (e === 0 && !b.userMachineId)} onClick={() => aller(e + 1)}>
-            Suivant ›
+            {t('lazzeko.editeur.suivant')}
           </button>
         ) : (
-          <button type="button" className="btn prim" disabled={!!envoi} onClick={enregistrer}>{envoi || 'Enregistrer'}</button>
+          <button type="button" className="btn prim" disabled={!!envoi} onClick={enregistrer}>{envoi || t('lazzeko.editeur.enregistrer')}</button>
         )}
       </div>
     </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CarteFiche } from '../components/CarteFiche';
 import { Chargement, Erreur } from '../components/Composants';
 import { api, Fabricant, Fiche, MaMachine } from '../lib/api';
+import { t } from '../lib/i18n';
 
 interface GroupeTop { slug: string; nom: string; tags: { id: string; nom: string; fiches: Fiche[] }[] }
 
@@ -27,12 +28,12 @@ export default function Top() {
   const g = data?.find((x) => x.slug === groupe);
   return (
     <div className="page">
-      <p className="petit"><Link to="/communaute">‹ Communauté</Link></p>
-      <h1>🏆 Top réglages</h1>
-      <p className="muted petit">Les 3 réglages les mieux notés pour chaque cas.</p>
+      <p className="petit"><Link to="/communaute">‹ {t('lazzeko.communaute.titre')}</Link></p>
+      <h1>{t('lazzeko.top.titre')}</h1>
+      <p className="muted petit">{t('lazzeko.top.intro')}</p>
       <div className="filtres">
         <select value={varianteId} onChange={(e) => setVariante(e.target.value)}>
-          <option value="">Toutes les machines</option>
+          <option value="">{t('lazzeko.top.toutesMachines')}</option>
           {catalogue.flatMap((f) => f.modeles.flatMap((m) => m.variantes.map((v) => <option key={v.id} value={v.id}>{`${f.nom} ${m.nom} ${v.nom}`}</option>)))}
         </select>
         {data && data.length > 0 && (
@@ -47,13 +48,13 @@ export default function Top() {
       {!data ? (
         <Chargement />
       ) : !g ? (
-        <p className="vide-etat">Pas encore de réglage noté{varianteId ? ' pour cette machine' : ''}.</p>
+        <p className="vide-etat">{varianteId ? t('lazzeko.top.aucunMachine') : t('lazzeko.top.aucun')}</p>
       ) : (
-        g.tags.map((t) => (
-          <section key={t.id} className="top-tag">
-            <h2>{t.nom}</h2>
+        g.tags.map((tag) => (
+          <section key={tag.id} className="top-tag">
+            <h2>{tag.nom}</h2>
             <div className="liste">
-              {t.fiches.map((f, i) => (
+              {tag.fiches.map((f, i) => (
                 <div key={f.id} className="top-ligne">
                   <span className={'podium p' + (i + 1)}>{i + 1}</span>
                   <CarteFiche f={f} montrerAuteur />
