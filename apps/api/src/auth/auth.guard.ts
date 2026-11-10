@@ -6,7 +6,7 @@ import { ApiKeysService } from '../api-keys/api-keys.service';
 import { espaceDeLaRequete, espaceDuModule } from '../espaces/espaces';
 import { ParametresService } from '../parametres/parametres.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { CLE_API, MODULE, Principal, PUBLIC, ROLES, SANS_CONDITIONS } from './decorators';
+import { CLE_API, MODULE, ModuleDeLaRequete, Principal, PUBLIC, ROLES, SANS_CONDITIONS } from './decorators';
 
 /**
  * Garde globale :
@@ -31,7 +31,8 @@ export class AuthGuard implements CanActivate {
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const meta = <T>(k: string) => this.reflector.getAllAndOverride<T>(k, [ctx.getHandler(), ctx.getClass()]);
     const req = ctx.switchToHttp().getRequest();
-    const moduleRequis = meta<string>(MODULE);
+    const m = meta<string | ModuleDeLaRequete>(MODULE);
+    const moduleRequis = typeof m === 'function' ? m(req) : m;
     const esp = (moduleRequis && espaceDuModule(moduleRequis)) || espaceDeLaRequete(req);
     req.espace = esp.slug;
     if (meta<boolean>(PUBLIC)) return true;

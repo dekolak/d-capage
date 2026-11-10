@@ -414,6 +414,27 @@ describe('Parcours complet', () => {
     expect((await http.get('/api/moi').set(K)).body.conditionsAJour).toBe(false);
     await http.post('/api/moi/conditions').set(K).send({ espace: 'kiavik', version: ck.version + 1 }).expect(201);
 
+    // guides : seulement ceux des modules du compte ; notes « à compléter » réservées à l'admin
+    expect((await http.get('/api/guides').set(K)).body.map((g: any) => g.slug)).toEqual(['flexiprint']);
+    const fp = (await http.get('/api/guides/flexiprint').set(K)).body;
+    expect(fp.ecrans.find((e: any) => e.id === 't3').pastilles.length).toBeGreaterThan(0);
+    expect(fp.modesBlanc.modes).toHaveLength(7);
+    const dxRefus = await http.get('/api/guides/dxonjet').set(K);
+    expect(dxRefus.status).toBe(403);
+    expect(dxRefus.body.code).toBe('MODULE_NON_AUTORISE');
+    expect((await http.get('/api/guides').set(auth(alice))).body).toEqual([]);
+    expect((await http.get('/api/guides/flexiprint').set(auth(alice))).body.code).toBe('MODULE_NON_AUTORISE');
+    const aCompleter = (g: any) => g.ecrans.flatMap((e: any) => e.pastilles).filter((p: any) => p.niveau === 'a_completer');
+    expect(aCompleter((await http.get('/api/guides/dxonjet').set(auth(admin))).body).length).toBeGreaterThan(0);
+    await http.patch(`/api/users/${emma.id}`).set(auth(admin)).send({ modules: ['guide-flexiprint', 'guide-dxonjet'] }).expect(200);
+    const dx = (await http.get('/api/guides/dxonjet').set(K)).body;
+    expect(aCompleter(dx)).toEqual([]);
+    expect(dx.ecrans[0].image).toMatch(/^\/api\/guides\/images\//);
+    const img = await http.get(dx.ecrans[0].image);
+    expect(img.status).toBe(200);
+    expect(img.headers['content-type']).toBe('image/jpeg');
+    expect((await http.get('/api/guides/images/..%2F..%2Fpackage.json')).status).toBe(404);
+
     // messages par espace : Kiavik → emma seulement ; « tous » → chacun dans son espace
     const mk = (await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: `Kiavik ${id}`, texte: 'Nouveau guide', espaces: ['kiavik'], lienUrl: '/guides', debut: new Date(Date.now() - 60000) })).body;
     const ml = (await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: `Lazzeko ${id}`, texte: 'Nouveau réglage', espaces: ['lazzeko'], debut: new Date(Date.now() - 60000) })).body;

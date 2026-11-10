@@ -16,8 +16,12 @@ export const AutoriseCleApi = () => SetMetadata(CLE_API, true);
 /** Route accessible avant d'avoir accepté les conditions d'utilisation (compte, conditions…). */
 export const SansConditions = () => SetMetadata(SANS_CONDITIONS, true);
 
-/** Route réservée aux comptes qui ont ce module (ex. reglages-decapage) ; les conditions de son espace doivent être acceptées. */
-export const ModuleRequis = (module: string) => SetMetadata(MODULE, module);
+/**
+ * Route réservée aux comptes qui ont ce module (ex. reglages-decapage) ; les conditions de son espace doivent être acceptées.
+ * Le module peut dépendre de la requête (ex. guide-<slug> selon l'adresse appelée).
+ */
+export type ModuleDeLaRequete = (req: { params: Record<string, string> }) => string;
+export const ModuleRequis = (module: string | ModuleDeLaRequete) => SetMetadata(MODULE, module);
 
 export interface Principal {
   type: 'user' | 'cleApi';

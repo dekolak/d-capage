@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { CatalogueModule } from './catalogue/catalogue.module';
 import { EspacesModule } from './espaces/espaces.module';
 import { FichesModule } from './fiches/fiches.module';
+import { GuidesModule } from './guides/guides.module';
 import { HealthController } from './health.controller';
 import { MachinesModule } from './machines/machines.module';
 import { PhotosModule } from './photos/photos.module';
@@ -42,6 +43,7 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     WebhooksModule,
     FichesModule,
     PhotosModule,
+    GuidesModule,
   ],
   controllers: [HealthController],
   // Toutes les routes sont protégées par défaut (@Public() pour ouvrir).
