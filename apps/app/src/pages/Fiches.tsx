@@ -5,6 +5,7 @@ import { Chargement, Erreur, FiltreTags } from '../components/Composants';
 import { api, GroupeTag, MaMachine, PageFiches } from '../lib/api';
 import { brouillonUtile, lireBrouillon } from '../lib/brouillon';
 import { nomMachine } from '../lib/util';
+import { t, tn } from '../lib/i18n';
 
 /** Mes réglages : recherche texte + filtres machine et tags (combinables). */
 export default function Fiches() {
@@ -37,32 +38,32 @@ export default function Fiches() {
 
   return (
     <div className="page">
-      <h1>Mes réglages</h1>
+      <h1>{t('lazzeko.fiches.titre')}</h1>
       {brouillonUtile(lireBrouillon()) && (
         <Link to="/fiches/nouvelle" className="bandeau lien-bandeau">
-          <span><b>Fiche en cours</b> : reprendre là où vous en étiez</span>
+          <span><b>{t('lazzeko.fiches.enCours')}</b>{t('lazzeko.fiches.reprendre')}</span>
           <span>›</span>
         </Link>
       )}
       <div className="filtres">
-        <input className="recherche" placeholder="Rechercher (titre, commentaire)…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="recherche" placeholder={t('lazzeko.fiches.rechercher')} value={q} onChange={(e) => setQ(e.target.value)} />
         <button type="button" className="btn petit" onClick={() => setOuverts(!ouverts)}>
-          {ouverts ? 'Masquer les filtres' : `Filtres${nbFiltres ? ` (${nbFiltres})` : ''}`}
+          {ouverts ? t('lazzeko.filtres.masquer') : nbFiltres ? t('lazzeko.filtres.titreN', { n: nbFiltres }) : t('lazzeko.filtres.titre')}
         </button>
         {ouverts && (
           <>
             {machines.length > 1 && (
               <label className="champ-tag">
-                <span>Machine</span>
+                <span>{t('lazzeko.filtres.machine')}</span>
                 <select value={machine} onChange={(e) => setMachine(e.target.value)}>
-                  <option value="">Toutes</option>
+                  <option value="">{t('lazzeko.filtres.toutes')}</option>
                   {machines.map((m) => <option key={m.id} value={m.id}>{nomMachine(m)}</option>)}
                 </select>
               </label>
             )}
             <FiltreTags groupes={groupes} tags={tags} onChange={setTags} />
             {nbFiltres > 0 && (
-              <button type="button" className="lien btn-lien" onClick={() => { setTags([]); setMachine(''); }}>Effacer les filtres</button>
+              <button type="button" className="lien btn-lien" onClick={() => { setTags([]); setMachine(''); }}>{t('lazzeko.filtres.effacer')}</button>
             )}
           </>
         )}
@@ -72,16 +73,16 @@ export default function Fiches() {
         <Chargement />
       ) : data.fiches.length === 0 ? (
         filtre ? (
-          <p className="vide-etat">Aucun réglage ne correspond.</p>
+          <p className="vide-etat">{t('lazzeko.fiches.aucunResultat')}</p>
         ) : (
           <div className="vide-etat">
-            <p>Aucune fiche pour l'instant.</p>
-            <Link to="/fiches/nouvelle" className="btn prim">Enregistrer un premier réglage</Link>
+            <p>{t('lazzeko.fiches.aucune')}</p>
+            <Link to="/fiches/nouvelle" className="btn prim">{t('lazzeko.fiches.premier')}</Link>
           </div>
         )
       ) : (
         <>
-          {filtre && <p className="muted petit">{data.total} réglage{data.total > 1 ? 's' : ''}</p>}
+          {filtre && <p className="muted petit">{tn('lazzeko.reglages', data.total)}</p>}
           <div className="liste">{data.fiches.map((f) => <CarteFiche key={f.id} f={f} />)}</div>
         </>
       )}

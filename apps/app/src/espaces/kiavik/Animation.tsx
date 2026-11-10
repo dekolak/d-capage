@@ -6,6 +6,7 @@ import { Animation as Anim, EtapeAnim, EtatAnim, Guide, ModeBlanc, SceneBlanc, S
 import { useVoix } from './voix';
 import './animations.css';
 import './guides.css';
+import { t } from '../../lib/i18n';
 
 /**
  * Animations explicatives (reprises du prototype) : un curseur parcourt les écrans du guide, avec sous-titres et voix off.
@@ -15,7 +16,7 @@ import './guides.css';
 export default function Animation() {
   const { slug = '', id } = useParams();
   const { guide, erreur } = useGuide(slug);
-  if (erreur) return <div className="page"><Erreur e={erreur} /><Link to="/guides">← Accueil</Link></div>;
+  if (erreur) return <div className="page"><Erreur e={erreur} /><Link to="/guides">{t('kiavik.anim.retour')}</Link></div>;
   if (!guide) return <Chargement />;
   const a = guide.animations?.find((x) => x.id === id);
   if (!a) return <Navigate to="/guides" replace />;
@@ -39,13 +40,13 @@ function Lecteur({ guide, a }: { guide: Guide; a: Anim }) {
   const [vitesse, setVitesse] = useState(1);
   const relire = useRef(false);
   const haut = useRef<HTMLHeadingElement>(null);
-  const t = temps[pos];
+  const tp = temps[pos];
 
   // sous-titre visible : dernière phrase de la scène jusqu'à l'étape en cours
   const sousTitre = useMemo(() => {
-    for (let i = pos; i >= 0 && temps[i].scene === t.scene; i--) if (temps[i].cap) return temps[i].cap!;
+    for (let i = pos; i >= 0 && temps[i].scene === tp.scene; i--) if (temps[i].cap) return temps[i].cap!;
     return '';
-  }, [pos, t, temps]);
+  }, [pos, tp, temps]);
 
   // moteur : une étape après l'autre, la voix pilote le temps
   useEffect(() => {
@@ -54,12 +55,12 @@ function Lecteur({ guide, a }: { guide: Guide; a: Anim }) {
     const minuteurs: number[] = [];
     const attendre = (ms: number) => new Promise<void>((ok) => minuteurs.push(window.setTimeout(ok, ms)));
     (async () => {
-      setClicFait(!t.click);
-      if (t.click) attendre(250 / vitesse).then(() => !annule && setClicFait(true));
-      const phrase = t.cap ?? (relire.current ? sousTitre : undefined);
+      setClicFait(!tp.click);
+      if (tp.click) attendre(250 / vitesse).then(() => !annule && setClicFait(true));
+      const phrase = tp.cap ?? (relire.current ? sousTitre : undefined);
       relire.current = false;
       const parole = phrase ? voix.dire(phrase, vitesse) : Promise.resolve();
-      await attendre(t.d / vitesse);
+      await attendre(tp.d / vitesse);
       await parole;
       if (annule) return;
       if (pos + 1 >= temps.length) {
@@ -67,7 +68,7 @@ function Lecteur({ guide, a }: { guide: Guide; a: Anim }) {
         setFini(true);
         return;
       }
-      if (temps[pos + 1].scene !== t.scene) await attendre(500 / vitesse);
+      if (temps[pos + 1].scene !== tp.scene) await attendre(500 / vitesse);
       if (!annule) setPos(pos + 1);
     })();
     return () => {
@@ -97,46 +98,46 @@ function Lecteur({ guide, a }: { guide: Guide; a: Anim }) {
 
   return (
     <div className="page gx an">
-      <Link to="/guides" className="btn-lien">← Accueil</Link>
+      <Link to="/guides" className="btn-lien">{t('kiavik.anim.retour')}</Link>
       <h1 ref={haut} className="gx-proc-titre">🎬 {a.titre}</h1>
       {a.resume && <p className="muted">{a.resume}</p>}
 
       {a.type === 'ecrans' ? (
-        <VueEcrans guide={guide} a={a} t={t} clicFait={clicFait} vitesse={vitesse} />
+        <VueEcrans guide={guide} a={a} t={tp} clicFait={clicFait} vitesse={vitesse} />
       ) : (
-        <VueBlanc key={pos} guide={guide} scene={(a.scenes as SceneBlanc[])[t.scene]} vitesse={vitesse} />
+        <VueBlanc key={pos} guide={guide} scene={(a.scenes as SceneBlanc[])[tp.scene]} vitesse={vitesse} />
       )}
       <div className="an-cap" aria-live="polite">{sousTitre}</div>
 
       <div className="an-ctl">
-        <button type="button" className="btn prim" onClick={lecture ? pause : lire}>{lecture ? '⏸ Pause' : fini ? '↺ Revoir' : '▶ Lecture'}</button>
-        <button type="button" className="btn" aria-label="Scène précédente" onClick={() => aller(debutScene(Math.max(0, t.scene - 1)), lecture)}>⏮</button>
-        <button type="button" className="btn" aria-label="Scène suivante" onClick={() => aller(debutScene(Math.min(a.scenes.length - 1, t.scene + 1)), lecture)}>⏭</button>
-        <button type="button" className="btn" onClick={() => aller(0, true)}>↺ Recommencer</button>
+        <button type="button" className="btn prim" onClick={lecture ? pause : lire}>{lecture ? t('kiavik.anim.pause') : fini ? t('kiavik.anim.revoir') : t('kiavik.anim.lecture')}</button>
+        <button type="button" className="btn" aria-label={t('kiavik.anim.precedente')} onClick={() => aller(debutScene(Math.max(0, tp.scene - 1)), lecture)}>⏮</button>
+        <button type="button" className="btn" aria-label={t('kiavik.anim.suivante')} onClick={() => aller(debutScene(Math.min(a.scenes.length - 1, tp.scene + 1)), lecture)}>⏭</button>
+        <button type="button" className="btn" onClick={() => aller(0, true)}>{t('kiavik.anim.recommencer')}</button>
       </div>
       <div className="an-reglages">
         <label>
-          Vitesse ×{vitesse}
+          {t('kiavik.anim.vitesse', { v: vitesse })}
           <input type="range" min={0.25} max={2} step={0.25} value={vitesse} onChange={(e) => setVitesse(+e.target.value)} />
         </label>
         <label className="an-case">
-          <input type="checkbox" checked={voix.active} onChange={(e) => voix.activer(e.target.checked)} /> Voix off
+          <input type="checkbox" checked={voix.active} onChange={(e) => voix.activer(e.target.checked)} /> {t('kiavik.anim.voixOff')}
         </label>
         {voix.active && voix.voix.length > 1 && (
-          <select value={voix.choisie?.name ?? ''} onChange={(e) => voix.choisir(e.target.value)} aria-label="Voix">
+          <select value={voix.choisie?.name ?? ''} onChange={(e) => voix.choisir(e.target.value)} aria-label={t('kiavik.anim.voix')}>
             {voix.voix.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}
           </select>
         )}
       </div>
-      {voix.active && (voix.sansVoixFr || !voix.dispo) && <p className="muted petit">Aucune voix française trouvée. Essayez Edge ou Chrome.</p>}
+      {voix.active && (voix.sansVoix || !voix.dispo) && <p className="muted petit">{t('kiavik.anim.sansVoix')}</p>}
 
-      <h4>Étapes</h4>
+      <h4>{t('kiavik.anim.etapes')}</h4>
       <ol className="an-scenes">
         {a.scenes.map((s, i) => (
           <li key={i}>
             <button
               type="button"
-              className={i === t.scene ? 'on' : ''}
+              className={i === tp.scene ? 'on' : ''}
               onClick={() => {
                 aller(debutScene(i), true);
                 haut.current?.scrollIntoView({ behavior: 'smooth' }); // revenir au lecteur
@@ -172,8 +173,8 @@ const CURSEUR = (
   <svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M3 2l7 19 2.6-7.4L20 11z" fill="#fff" stroke="#000" strokeWidth="1.6" strokeLinejoin="round" /></svg>
 );
 
-function VueEcrans({ guide, a, t, clicFait, vitesse }: { guide: Guide; a: Anim; t: Temps; clicFait: boolean; vitesse: number }) {
-  const scene = (a.scenes as SceneEcrans[])[t.scene];
+function VueEcrans({ guide, a, t: tp, clicFait, vitesse }: { guide: Guide; a: Anim; t: Temps; clicFait: boolean; vitesse: number }) {
+  const scene = (a.scenes as SceneEcrans[])[tp.scene];
   const ref = useRef<HTMLDivElement>(null);
   const [posSel, setPosSel] = useState<[number, number] | null>(null);
 
@@ -181,10 +182,10 @@ function VueEcrans({ guide, a, t, clicFait, vitesse }: { guide: Guide; a: Anim; 
     const e0: EtatAnim = scene.etat;
     const st: Etat = { f: e0.f ?? null, j: e0.j ?? 0, a: e0.a ?? 0, wm: e0.wm ?? 'Aucun', t9: e0.t9 ?? 0, o: 0, hl: 0, pop: null, ecran: scene.ecran };
     scene.etapes.forEach((e, k) => {
-      if (k < t.etape || (k === t.etape && (!e.click || clicFait))) appliquer(st, e);
+      if (k < tp.etape || (k === tp.etape && (!e.click || clicFait))) appliquer(st, e);
     });
     return st;
-  }, [scene, t.etape, clicFait]);
+  }, [scene, tp.etape, clicFait]);
 
   const ecran = guide.ecrans.find((x) => x.id === etat.ecran);
   const W = ecran?.largeur ?? 1210;
@@ -195,9 +196,9 @@ function VueEcrans({ guide, a, t, clicFait, vitesse }: { guide: Guide; a: Anim; 
 
   // curseur : dernière position donnée dans la scène
   const source = useMemo(() => {
-    for (let k = t.etape; k >= 0; k--) if (scene.etapes[k].cur || scene.etapes[k].sel) return scene.etapes[k];
+    for (let k = tp.etape; k >= 0; k--) if (scene.etapes[k].cur || scene.etapes[k].sel) return scene.etapes[k];
     return null;
-  }, [scene, t.etape]);
+  }, [scene, tp.etape]);
   useLayoutEffect(() => {
     if (!source?.sel || !ref.current) {
       setPosSel(null);
@@ -210,7 +211,7 @@ function VueEcrans({ guide, a, t, clicFait, vitesse }: { guide: Guide; a: Anim; 
     setPosSel([((R2.left + R2.width * (source.fx ?? 0.5) - R1.left) / R1.width) * 100, ((R2.top + R2.height * (source.fy ?? 0.5) - R1.top) / R1.height) * 100]);
   }, [source, etat]);
   const curseur: [number, number] | null = source?.cur ? [(source.cur[0] / W) * 100, (source.cur[1] / H) * 100] : source?.sel ? posSel : null;
-  const etape = scene.etapes[t.etape];
+  const etape = scene.etapes[tp.etape];
   const duree = Math.round(700 / vitesse);
   const modes = guide.modesBlanc?.modes ?? [];
   const mode = (nom: string) => modes.find((m) => m.nom === nom);
@@ -219,9 +220,9 @@ function VueEcrans({ guide, a, t, clicFait, vitesse }: { guide: Guide; a: Anim; 
     <div ref={ref} className="an-ecran" style={{ aspectRatio: etat.ecran === 'end' ? '1210 / 600' : `${W} / ${H}` }}>
       {etat.ecran === 'end' ? (
         <div className="aend">
-          <div><b>📄 Fichier RIPé</b><span>smiley</span></div><i>→</i>
-          <div><b>💻 Logiciel DXonJet</b><span>ouvre le fichier</span></div><i>→</i>
-          <div><b>🧱 Le mur</b><span>impression</span></div>
+          <div><b>{t('kiavik.anim.fin.fichier')}</b><span>smiley</span></div><i>→</i>
+          <div><b>{t('kiavik.anim.fin.logiciel')}</b><span>{t('kiavik.anim.fin.ouvre')}</span></div><i>→</i>
+          <div><b>{t('kiavik.anim.fin.mur')}</b><span>{t('kiavik.anim.fin.impression')}</span></div>
         </div>
       ) : ecran?.type === 'capture' && ecran.image ? (
         <img src={ecran.image} alt="" draggable={false} />
@@ -246,7 +247,7 @@ function VueEcrans({ guide, a, t, clicFait, vitesse }: { guide: Guide; a: Anim; 
         <>
           <div className="t9pv" style={pc(666, 332, 517, 389)}>
             <img src={mode(etat.wm)?.image_canal.replace('/pw_', '/w_')} alt="" />
-            <span>Spot_1 = blanc · le noir montre où le blanc sera imprimé</span>
+            <span>{t('kiavik.anim.t9')}</span>
           </div>
           <div className="aaucun" style={{ ...pc(104, 296, 314, 17), background: '#1f6feb33', border: 0, boxShadow: 'none' }} />
           <div className="aaucun an-coche" style={pc(106, 298, 12, 12)}>✓</div>
@@ -255,11 +256,11 @@ function VueEcrans({ guide, a, t, clicFait, vitesse }: { guide: Guide; a: Anim; 
       {etat.pop && <FenetreBlanc guide={guide} onglet={etat.pop} mode={mode(etat.pop)} />}
 
       {etape?.ring && curseur && (
-        <div key={`r${t.scene}-${t.etape}`} className="aring" style={{ left: `${curseur[0]}%`, top: `${curseur[1]}%`, animationDelay: `${duree}ms, ${duree}ms` }} />
+        <div key={`r${tp.scene}-${tp.etape}`} className="aring" style={{ left: `${curseur[0]}%`, top: `${curseur[1]}%`, animationDelay: `${duree}ms, ${duree}ms` }} />
       )}
       {curseur && (
         <div
-          key={`c${t.scene}`}
+          key={`c${tp.scene}`}
           className={`acur ${etape?.click && !clicFait ? 'clk' : ''}`}
           style={{ left: `${curseur[0]}%`, top: `${curseur[1]}%`, transition: `left ${duree}ms ease, top ${duree}ms ease` }}
         >
@@ -277,7 +278,7 @@ function Travail({ images }: { images: Guide }) {
   return (
     <div className="job">
       {smiley && <img src={smiley} style={{ left: '3%' }} alt="" />}
-      {c(210, 'DXonJet-XHS-VP4')}{c(320, 'smiley.jpg')}{c(430, 'En attente')}{c(540, 'PC-atelier')}{c(650, '90,3 × 67,7 cm')}{c(760, '1')}{c(870, 'JPEG')}{c(980, '415,7K')}{c(1090, 'F1 12PASS')}
+      {c(210, 'DXonJet-XHS-VP4')}{c(320, 'smiley.jpg')}{c(430, t('kiavik.anim.enAttente'))}{c(540, 'PC-atelier')}{c(650, '90,3 × 67,7 cm')}{c(760, '1')}{c(870, 'JPEG')}{c(980, '415,7K')}{c(1090, 'F1 12PASS')}
     </div>
   );
 }
@@ -288,11 +289,11 @@ function FenetreBlanc({ guide, onglet, mode }: { guide: Guide; onglet: string; m
   const onglets = Object.keys(guide.fenetreBlanc ?? {}).sort().reverse(); // Sous-uni, Support
   return (
     <div className="wpop">
-      <div className="wph"><b>Quel blanc choisir ?</b><span className="wclose">✕</span></div>
+      <div className="wph"><b>{t('kiavik.guide.quelBlanc')}</b><span className="wclose">✕</span></div>
       <div className="wtabs">{onglets.map((x) => <button type="button" key={x} data-tab={x} className={x === onglet ? 'on' : ''}>{x}</button>)}</div>
       <div className="wbody">
-        <div className="wcol"><img src={mode?.image_canal} alt="" /><small>Aperçu dans le logiciel<br />(noir = blanc)</small></div>
-        <div className="wcol"><img src={mode?.image_mur} alt="" /><small>Résultat sur un mur foncé</small></div>
+        <div className="wcol"><img src={mode?.image_canal} alt="" /><small>{t('kiavik.anim.pop.apercu')}<br />{t('kiavik.anim.pop.noirBlanc')}</small></div>
+        <div className="wcol"><img src={mode?.image_mur} alt="" /><small>{t('kiavik.guide.resultatMur')}</small></div>
         <div className="wtxt"><b>{onglet}</b><p>{txt?.titre}</p><p className="wr">{txt?.resultat}</p><p className="wu">👉 {txt?.usage}</p></div>
       </div>
     </div>
@@ -310,10 +311,10 @@ function VueBlanc({ guide, scene, vitesse }: { guide: Guide; scene: SceneBlanc; 
     return (
       <div className="wa">
         <div className="wintro">
-          <div className="wl"><span className="l1">🎨 Couleur</span><span className="l2">⬜ Blanc (sous-couche)</span><span className="l3">🧱 Mur foncé</span></div>
+          <div className="wl"><span className="l1">{t('kiavik.anim.blanc.couleur')}</span><span className="l2">{t('kiavik.anim.blanc.sousCouche')}</span><span className="l3">{t('kiavik.anim.blanc.murFonce')}</span></div>
           <div className="wcmp">
-            <figure><img src={aucun?.image_mur} alt="" /><figcaption>Sans blanc</figcaption></figure>
-            <figure><img src={parCle('sousuni')?.image_mur} alt="" /><figcaption>Avec blanc</figcaption></figure>
+            <figure><img src={aucun?.image_mur} alt="" /><figcaption>{t('kiavik.anim.blanc.sans')}</figcaption></figure>
+            <figure><img src={parCle('sousuni')?.image_mur} alt="" /><figcaption>{t('kiavik.anim.blanc.avec')}</figcaption></figure>
           </div>
         </div>
       </div>
@@ -322,14 +323,14 @@ function VueBlanc({ guide, scene, vitesse }: { guide: Guide; scene: SceneBlanc; 
   const origine = m?.image_canal.replace(/[^/]+$/, 'o_smiley.png');
   return (
     <div className="wa">
-      <figure><img src={origine} alt="" className="wo1" /><figcaption>1. Image d'origine</figcaption></figure>
+      <figure><img src={origine} alt="" className="wo1" /><figcaption>{t('kiavik.anim.blanc.origine')}</figcaption></figure>
       <span className="warr">→</span>
-      <figure><div className="wwipe"><img src={m?.image_canal} alt="" style={balayage} /></div><figcaption>2. Aperçu dans le logiciel<br /><small>noir = blanc imprimé</small></figcaption></figure>
+      <figure><div className="wwipe"><img src={m?.image_canal} alt="" style={balayage} /></div><figcaption>{t('kiavik.anim.blanc.apercu')}<br /><small>{t('kiavik.anim.blanc.noirBlanc')}</small></figcaption></figure>
       <span className="warr">→</span>
-      <figure><div className="wwipe wres"><img src={aucun?.image_mur} alt="" /><img src={m?.image_mur} alt="" className="top" style={balayage} /></div><figcaption>3. Résultat sur un mur foncé</figcaption></figure>
+      <figure><div className="wwipe wres"><img src={aucun?.image_mur} alt="" /><img src={m?.image_mur} alt="" className="top" style={balayage} /></div><figcaption>{t('kiavik.anim.blanc.resultat')}</figcaption></figure>
       <div className="wname">
         {m?.nom ?? scene.titre}
-        {mb?.plus_utilises?.includes(m?.nom ?? '') && <i className="wt">le plus utilisé</i>}
+        {mb?.plus_utilises?.includes(m?.nom ?? '') && <i className="wt">{t('kiavik.guide.plusUtilise')}</i>}
       </div>
     </div>
   );

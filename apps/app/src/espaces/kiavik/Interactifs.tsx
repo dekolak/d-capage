@@ -1,5 +1,6 @@
 import { CSSProperties, PointerEvent as PE, useEffect, useRef, useState } from 'react';
 import { Ecran, Guide, InteractifCanaux, InteractifEchantillon, modeBlancChoisi, Rect } from './guides';
+import { t } from '../../lib/i18n';
 
 /**
  * Écrans interactifs (repris du prototype) :
@@ -26,7 +27,7 @@ export function CommandesInteractif({ e, canaux, setCanaux }: Props) {
   return (
     <div className="ix-commandes">
       <button type="button" className={`btn petit ${actif ? 'prim' : ''}`} onClick={() => setCanaux({ actif: !actif, canal: canal ?? 'w' })}>
-        {actif ? '✓ ' : ''}Aperçu canaux
+        {actif ? '✓ ' : ''}{t('kiavik.interactif.apercuCanaux')}
       </button>
       {e.interactif.lignes.filter((l) => l.canal).map((l) => (
         <button type="button" key={l.nom} className={`btn petit ${actif && canal === l.canal ? 'prim' : ''}`} onClick={() => setCanaux({ actif: true, canal: l.canal! })}>
@@ -93,21 +94,21 @@ function Echantillon({ e, cfg, remise }: { e: Ecran; cfg: InteractifEchantillon;
         <div className="ix-sel" style={{ left: P(s.x0), top: P(s.y0), width: P(s.x1 - s.x0), height: P(s.y1 - s.y0) }}>
           <div className={`ix-lab ${alerte ? 'ko' : ''}`}>
             {alerte ? (
-              '⚠️ Angles uniquement !'
+              t('kiavik.interactif.anglesSeulement')
             ) : entiere ? (
-              <>Image entière : {cm(L)} × {cm(H)} cm<br /><small>tirez un angle pour faire un échantillon</small></>
+              <>{t('kiavik.interactif.imageEntiere', { l: cm(L), h: cm(H) })}<br /><small>{t('kiavik.interactif.tirerAngle')}</small></>
             ) : (
-              <>Échantillon taille réelle :<br /><b>{cm((s.x1 - s.x0) * L)} × {cm((s.y1 - s.y0) * H)} cm</b></>
+              <>{t('kiavik.interactif.echantillon')}<br /><b>{t('kiavik.interactif.taille', { l: cm((s.x1 - s.x0) * L), h: cm((s.y1 - s.y0) * H) })}</b></>
             )}
           </div>
         </div>
       </div>
       <div className="ix-poignees" style={boite(e, cfg.zone)}>
         {Object.entries(coins).map(([k, [x, y]]) => (
-          <div key={k} className={`ix-coin ${k}`} style={{ left: P(x), top: P(y) }} onPointerDown={tirer(k as keyof typeof coins)} aria-label="Poignée d'angle" />
+          <div key={k} className={`ix-coin ${k}`} style={{ left: P(x), top: P(y) }} onPointerDown={tirer(k as keyof typeof coins)} aria-label={t('kiavik.interactif.poignee')} />
         ))}
         {milieux.map(([x, y], i) => (
-          <div key={i} className="ix-milieu" style={{ left: P(x), top: P(y) }} onPointerDown={milieu} title="Angles uniquement" />
+          <div key={i} className="ix-milieu" style={{ left: P(x), top: P(y) }} onPointerDown={milieu} title={t('kiavik.interactif.angles')} />
         ))}
       </div>
     </>
@@ -119,7 +120,7 @@ function Canaux({ guide, e, cfg, etat, setEtat }: { guide: Guide; e: Ecran; cfg:
   const modes = guide.modesBlanc?.modes ?? [];
   const blanc = modes.find((m) => m.nom === modeBlancChoisi("Couleur d'accompagnement")) ?? modes[0];
   const image = canal === 'w' ? blanc?.image_canal.replace('/pw_', '/w_') : canal ? cfg.images[canal] : undefined;
-  const legende = canal === 'w' ? `Spot_1 = blanc · mode « ${blanc?.nom} » (réglé en T4) · le noir = le blanc imprimé` : cfg.lignes.find((l) => l.canal === canal)?.nom;
+  const legende = canal === 'w' ? t('kiavik.interactif.blanc', { mode: blanc?.nom ?? '' }) : cfg.lignes.find((l) => l.canal === canal)?.nom;
   const ligne = (y: number): Rect => ({ x: cfg.ligne.x, y: y - cfg.ligne.hauteur / 2, largeur: cfg.ligne.largeur, hauteur: cfg.ligne.hauteur });
   return (
     <>
@@ -128,7 +129,7 @@ function Canaux({ guide, e, cfg, etat, setEtat }: { guide: Guide; e: Ecran; cfg:
         className="ix-case"
         style={boite(e, cfg.case)}
         aria-pressed={actif}
-        aria-label="Aperçu canaux de sortie"
+        aria-label={t('kiavik.interactif.apercuCanauxSortie')}
         onClick={() => setEtat({ actif: !actif, canal: canal ?? 'w' })}
       >
         <i>{actif ? '✓' : ''}</i>
@@ -149,12 +150,12 @@ function Canaux({ guide, e, cfg, etat, setEtat }: { guide: Guide; e: Ecran; cfg:
       {actif && image && (
         <div className="ix-apercu" style={boite(e, cfg.apercu)}>
           <img src={image} alt="" />
-          <span>{canal === 'w' ? legende : `Canal ${legende}`}</span>
+          <span>{canal === 'w' ? legende : t('kiavik.interactif.canal', { nom: legende ?? '' })}</span>
         </div>
       )}
       {!actif && (
         <div className="ix-indice" style={boite(e, { x: cfg.ligne.x, y: cfg.lignes[cfg.lignes.length - 1].y + 15, largeur: cfg.ligne.largeur, hauteur: 30 })}>
-          ← cochez d'abord la case
+          {t('kiavik.interactif.cocherCase')}
         </div>
       )}
     </>

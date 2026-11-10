@@ -11,11 +11,11 @@ import { AppEspace, ICONES } from '../types';
 /** Espace Lazzeko : réglages décapage (module reglages-decapage), communauté, aide aux réglages. */
 export const lazzeko: AppEspace = {
   onglets: [
-    { to: '/', label: 'Mes fiches', icone: ICONES.liste, end: true },
-    { to: '/fiches/nouvelle', label: 'Nouvelle', plus: true },
-    { to: '/communaute', label: 'Communauté', icone: ICONES.groupe },
-    { to: '/aide', label: 'Aide', icone: ICONES.aide },
-    { to: '/compte', label: 'Compte', icone: ICONES.compte },
+    { to: '/', label: 'onglets.mesFiches', icone: ICONES.liste, end: true },
+    { to: '/fiches/nouvelle', label: 'onglets.nouvelle', plus: true },
+    { to: '/communaute', label: 'onglets.communaute', icone: ICONES.groupe },
+    { to: '/aide', label: 'onglets.aide', icone: ICONES.aide },
+    { to: '/compte', label: 'onglets.compte', icone: ICONES.compte },
   ],
   routes: () => (
     <>

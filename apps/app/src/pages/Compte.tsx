@@ -4,6 +4,7 @@ import { Erreur } from '../components/Composants';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useEspace } from '../lib/espace';
+import { LANGUES, NOMS_LANGUES, t } from '../lib/i18n';
 
 export default function Compte() {
   const { moi, deconnexion, rafraichir } = useAuth();
@@ -32,18 +33,18 @@ export default function Compte() {
 
   return (
     <div className="page">
-      <h1>Compte</h1>
+      <h1>{t('compte.titre')}</h1>
       <p>
         <b>{moi?.nom || moi?.identifiant}</b> <span className="muted">({moi?.identifiant})</span>
       </p>
       <div className="actions">
-        {reglages && <Link to="/machines" className="btn">Mes machines</Link>}
-        {moi?.role === 'ADMIN' && <Link to="/admin" className="btn">Administration</Link>}
+        {reglages && <Link to="/machines" className="btn">{t('compte.mesMachines')}</Link>}
+        {moi?.role === 'ADMIN' && <Link to="/admin" className="btn">{t('compte.administration')}</Link>}
       </div>
 
       {mesEspaces.length > 1 && (
         <>
-          <h2>Mes espaces</h2>
+          <h2>{t('compte.mesEspaces')}</h2>
           <div className="espaces-choix">
             {mesEspaces.map((e) => (
               <button
@@ -54,7 +55,7 @@ export default function Compte() {
                 onClick={() => choisir(e.slug)}
               >
                 <img src={`${e.icones}icone.svg`} alt="" width={36} height={36} />
-                <span><b>{e.nomApp}</b><small>{e.slug === espace.slug ? 'Ouvert' : 'Ouvrir'}</small></span>
+                <span><b>{e.nomApp}</b><small>{e.slug === espace.slug ? t('compte.ouvert') : t('compte.ouvrir')}</small></span>
               </button>
             ))}
           </div>
@@ -62,7 +63,7 @@ export default function Compte() {
       )}
 
       {espace.communaute && <>
-      <h2>Mes photos</h2>
+      <h2>{t('compte.mesPhotos')}</h2>
       <div className="carte">
         <label className="interrupteur choix-accord" style={{ boxShadow: 'none', padding: 0 }}>
           <input
@@ -80,31 +81,51 @@ export default function Compte() {
             }}
           />
           <span>
-            J'accepte que {espace.nom} réutilise mes photos (site, réseaux sociaux, documentation).
-            <small className="muted"> Facultatif. Vos photos restent partagées avec la communauté dans tous les cas.</small>
+            {t('compte.accordPhotos', { societe: espace.nom })}
+            <small className="muted">{t('compte.accordPhotosDetail')}</small>
           </span>
         </label>
-        <Link to="/conditions" className="lien petit">Lire les conditions d'utilisation ›</Link>
+        <Link to="/conditions" className="lien petit">{t('compte.lireConditions')}</Link>
       </div>
       </>}
-      {!espace.communaute && <p><Link to="/conditions" className="lien petit">Lire les conditions d'utilisation ›</Link></p>}
+      {!espace.communaute && <p><Link to="/conditions" className="lien petit">{t('compte.lireConditions')}</Link></p>}
 
-      <h2>Changer de mot de passe</h2>
+      {LANGUES.length > 1 && (
+        <>
+          <h2>{t('compte.langue')}</h2>
+          <select
+            value={moi?.langue ?? ''}
+            aria-label={t('compte.langue')}
+            onChange={async (e) => {
+              try {
+                await rafraichir(await api('/moi/preferences', { method: 'PATCH', json: { langue: e.target.value || null } }));
+              } catch (x) {
+                setErr(x);
+              }
+            }}
+          >
+            <option value="">{t('compte.langueTelephone')}</option>
+            {LANGUES.map((l) => <option key={l} value={l}>{NOMS_LANGUES[l] ?? l}</option>)}
+          </select>
+        </>
+      )}
+
+      <h2>{t('compte.motDePasse')}</h2>
       <form className="form" onSubmit={changer}>
         <label>
-          Mot de passe actuel
+          {t('compte.motDePasseActuel')}
           <input type="password" autoComplete="current-password" value={ancien} onChange={(e) => setAncien(e.target.value)} required />
         </label>
         <label>
-          Nouveau (8 caractères min.)
+          {t('compte.motDePasseNouveau')}
           <input type="password" autoComplete="new-password" minLength={8} value={nouveau} onChange={(e) => setNouveau(e.target.value)} required />
         </label>
-        {ok && <div className="succes">Mot de passe modifié.</div>}
+        {ok && <div className="succes">{t('compte.motDePasseModifie')}</div>}
         <Erreur e={err} />
-        <button className="btn prim">Modifier</button>
+        <button className="btn prim">{t('compte.modifier')}</button>
       </form>
 
-      <button type="button" className="btn danger large" onClick={deconnexion}>Se déconnecter</button>
+      <button type="button" className="btn danger large" onClick={deconnexion}>{t('commun.deconnexion')}</button>
     </div>
   );
 }

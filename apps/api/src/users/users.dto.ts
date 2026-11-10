@@ -1,5 +1,6 @@
 import { Role } from '@prisma/client';
 import { ESPACES, TOUS_MODULES } from '../espaces/espaces';
+import { LANGUES } from '../langues';
 import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsEnum, IsInt, IsOptional, IsString, Matches, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
 
 export class CreerUserDto {
@@ -21,6 +22,9 @@ export class CreerUserDto {
 
   /** Modules accessibles (donnent l'accès aux espaces). Absent : ["reglages-decapage"]. */
   @IsOptional() @IsArray() @ArrayMaxSize(20) @IsIn(TOUS_MODULES, { each: true }) modules?: string[];
+
+  /** Langue de l'app (fr, en…) ; absente = langue du téléphone. */
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsIn(LANGUES, { message: `langue : ${LANGUES.join(', ')}` }) langue?: string | null;
 }
 
 export class ModifierUserDto {
@@ -32,6 +36,8 @@ export class ModifierUserDto {
   @IsOptional() @IsString() @MinLength(8) @MaxLength(128) motDePasse?: string;
   /** Remplace la liste des modules. */
   @IsOptional() @IsArray() @ArrayMaxSize(20) @IsIn(TOUS_MODULES, { each: true }) modules?: string[];
+  /** Langue de l'app (null = langue du téléphone). */
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsIn(LANGUES, { message: `langue : ${LANGUES.join(', ')}` }) langue?: string | null;
 }
 
 export class AccepterConditionsDto {
@@ -42,7 +48,9 @@ export class AccepterConditionsDto {
 }
 
 export class PreferencesDto {
-  @IsBoolean() accordPhotosMarketing!: boolean;
+  @IsOptional() @IsBoolean() accordPhotosMarketing?: boolean;
+  /** Langue de l'app (null = langue du téléphone). */
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsIn(LANGUES, { message: `langue : ${LANGUES.join(', ')}` }) langue?: string | null;
 }
 
 export class ChangerMotDePasseDto {

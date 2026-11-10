@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useEspace } from '../lib/espace';
+import { t } from '../lib/i18n';
 
 export default function Connexion() {
   const { connexion } = useAuth();
@@ -29,15 +30,15 @@ export default function Connexion() {
       <h1>{espace.nomApp}</h1>
       <form onSubmit={soumettre} className="form">
         <label>
-          Identifiant
+          {t('connexion.identifiant')}
           <input autoComplete="username" autoCapitalize="none" value={identifiant} onChange={(e) => setId(e.target.value)} required />
         </label>
         <label>
-          Mot de passe
+          {t('connexion.motDePasse')}
           <input type="password" autoComplete="current-password" value={motDePasse} onChange={(e) => setMdp(e.target.value)} required />
         </label>
         {erreur && <div className="alerte">{erreur}</div>}
-        <button className="btn prim large" disabled={envoi}>{envoi ? 'Connexion…' : 'Se connecter'}</button>
+        <button className="btn prim large" disabled={envoi}>{envoi ? t('connexion.enCours') : t('connexion.bouton')}</button>
       </form>
     </div>
   );

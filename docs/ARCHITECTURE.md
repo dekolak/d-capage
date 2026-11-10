@@ -93,6 +93,7 @@ docs/                       documentation
 | Table | Rôle |
 |---|---|
 | `User` | identifiant + mot de passe (bcrypt), rôle `ADMIN`/`USER`, `organisationId` facultatif (entreprises : plus tard) |
+| `User.langue` | langue de l'app pour le compte (`null` = langue du téléphone) |
 | `UserModule`, `AcceptationConditions` | modules accessibles (→ espaces) ; conditions acceptées par espace |
 | `ApiKey` | création de comptes depuis un autre système ; seul le hash est stocké |
 | `Technologie`, `Fabricant`, `Modele`, `Variante`, `VersionInterface` | catalogue ; la version contient le JSON |
@@ -120,6 +121,7 @@ docs/                       documentation
 - La validation et les indicateurs utilisent le **même code** que l'API (`machine-kit`, importé en source).
 - Photos compressées sur le téléphone (1600 px + miniature 400 px) avant envoi.
 - Brouillon de la fiche en cours conservé localement (hors photos).
+- **Traduction** : textes dans `src/textes/<langue>.ts` (`fr.ts` = référence), `src/lib/i18n.tsx` ; langue du compte (`User.langue`), sinon celle du téléphone, sinon français ; texte manquant → français. Voir [TRADUCTION.md](TRADUCTION.md).
 
 ## Avis et modération
 - Un avis = une note (1 à 5) + un texte facultatif, **un par personne et par réglage**, modifiable et supprimable. Pas de réponses (choix volontaire : pas de discussions).
@@ -139,4 +141,5 @@ docs/                       documentation
 5. ✅ Communauté : partage, notes des autres, duplication, tri par note (moyenne dénormalisée).
 6. ✅ Espaces Lazzeko / Kiavik (modules, conditions, marque par adresse).
 7. Kiavik : ✅ guides FlexiPRINT et DXonJet (`kit-guides/`), recherche, procédures, animations, écrans interactifs T5 / T9.
-8. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran, mode hors ligne complet (file d'envoi).
+8. Traduction : ✅ app prête (textes dans `src/textes/`, langue par compte) ; à venir : anglais, puis les contenus (voir [TRADUCTION.md](TRADUCTION.md)).
+9. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran, mode hors ligne complet (file d'envoi).

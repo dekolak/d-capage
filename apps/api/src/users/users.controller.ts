@@ -67,11 +67,11 @@ export class UsersController {
     return this.moi(moi, courant);
   }
 
-  /** Accord photos (réutilisation par Lazzeko), modifiable à tout moment. */
+  /** Accord photos (réutilisation par Lazzeko) et langue de l'app, modifiables à tout moment. */
   @Patch('moi/preferences')
   @SansConditions()
   async preferences(@Moi() moi: Principal, @Body() dto: PreferencesDto, @EspaceCourant() courant: string) {
-    await this.users.preferences(moi.id, dto.accordPhotosMarketing);
+    await this.users.preferences(moi.id, dto);
     return this.moi(moi, courant);
   }
 

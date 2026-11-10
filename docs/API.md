@@ -12,6 +12,7 @@ JSON en entrée et en sortie. Les erreurs ont la forme `{ statusCode, message, c
 - Créer une clé : Administration → Clés API. Elle n'est affichée qu'une fois (seul son hash est stocké). Révocable.
 - Une clé API ne peut ni créer d'admin ni créer d'autre clé.
 - L'app envoie aussi `X-Espace: lazzeko|kiavik` (espace ouvert). Sans cet en-tête, l'API prend l'espace de l'adresse.
+- Et `Accept-Language` (langue de l'app). Les messages d'erreur de l'API sont pour l'instant en français ; l'app les traduit par `code` / statut (voir [TRADUCTION.md](TRADUCTION.md)).
 
 ### Codes d'erreur utiles
 | Statut | `code` | Signification |
@@ -29,11 +30,11 @@ JSON en entrée et en sortie. Les erreurs ont la forme `{ statusCode, message, c
 | GET | `/espaces`, `/espace`, `/manifest.webmanifest` (selon l'adresse) | public |
 | GET | `/moi` (modules, espaces, `conditionsAJour`) | connecté |
 | POST | `/moi/mot-de-passe` `{ancien, nouveau}` | connecté |
-| PATCH | `/moi/preferences` `{accordPhotosMarketing}` | connecté |
+| PATCH | `/moi/preferences` `{accordPhotosMarketing?, langue?}` (`langue` : `fr`, `en` ou `null` = langue du téléphone) | connecté |
 | GET · POST | `/conditions?espace=` · `/moi/conditions` `{espace?, version, accordPhotosMarketing?}` | connecté |
-| POST | `/users` `{identifiant, motDePasse, nom?, role?, clientLazzeko?, numeroOdoo?, modules?}` | admin **ou clé API** |
+| POST | `/users` `{identifiant, motDePasse, nom?, role?, clientLazzeko?, numeroOdoo?, modules?, langue?}` | admin **ou clé API** |
 | GET | `/users[?numeroOdoo=&q=&espace=&module=]` | admin **ou clé API** |
-| GET · PATCH | `/users/:id` (`modules` remplace la liste, `numeroOdoo: null` l'efface) | admin |
+| GET · PATCH | `/users/:id` (`modules` remplace la liste, `numeroOdoo: null` l'efface, `langue: null` = langue du téléphone) | admin |
 | GET · POST | `/users/:id/machines` `{varianteId, surnom?}` | admin **ou clé API** |
 | POST · GET · DELETE | `/admin/cles-api` | admin |
 

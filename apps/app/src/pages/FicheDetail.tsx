@@ -7,6 +7,7 @@ import { completer } from '@decapage/machine-kit';
 import { Avis, api, chargerVersion, Fiche, Version } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { date } from '../lib/util';
+import { t, tn, tr } from '../lib/i18n';
 
 export default function FicheDetail() {
   const { id } = useParams();
@@ -45,21 +46,21 @@ export default function FicheDetail() {
   };
 
   const supprimerAvis = async () => {
-    if (!confirm('Supprimer votre avis ?')) return;
+    if (!confirm(t('lazzeko.fiche.supprimerAvisConfirm'))) return;
     await api(`/fiches/${f.id}/evaluation`, { method: 'DELETE' }).catch(setErr);
     charger().catch(setErr);
   };
 
   const moderer = async (e: Avis) => {
     const masquer = e.statut === 'VISIBLE';
-    const raison = masquer ? prompt('Raison du masquage (facultatif, visible par l\'auteur de l\'avis)') : null;
+    const raison = masquer ? prompt(t('lazzeko.fiche.raisonMasquage')) : null;
     if (masquer && raison === null) return;
     await api(`/admin/avis/${e.id}`, { method: 'PATCH', json: { statut: masquer ? 'MASQUE' : 'VISIBLE', raison: raison || undefined } }).catch(setErr);
     charger().catch(setErr);
   };
 
   const basculerMasque = async () => {
-    if (!f.masquee && !confirm('Masquer cette fiche ? Elle ne sera plus visible que par son auteur et les admins.')) return;
+    if (!f.masquee && !confirm(t('lazzeko.fiche.masquerConfirm'))) return;
     try {
       setF(await api<Fiche>(`/admin/fiches/${f.id}`, { method: 'PATCH', json: { masquee: !f.masquee } }));
     } catch (e) {
@@ -68,7 +69,7 @@ export default function FicheDetail() {
   };
 
   const supprimer = async () => {
-    if (!confirm('Supprimer définitivement cette fiche ?')) return;
+    if (!confirm(t('lazzeko.fiche.supprimerConfirm'))) return;
     await api(`/fiches/${f.id}`, { method: 'DELETE' });
     nav('/', { replace: true });
   };
@@ -80,52 +81,52 @@ export default function FicheDetail() {
     <div className="page">
       {f.masquee && (
         <div className="bandeau">
-          <span><b>Fiche masquée</b> par l'administrateur : visible seulement par son auteur et les admins.</span>
+          <span><b>{t('lazzeko.fiche.masquee')}</b>{t('lazzeko.fiche.masqueeDetail')}</span>
         </div>
       )}
       <h1>{f.titre}</h1>
       {admin && f.auteurAdmin && (
         <p className="admin-auteur">
-          Enregistrée par <b>{f.auteurAdmin.nom || f.auteurAdmin.identifiant}</b> ({f.auteurAdmin.identifiant})
+          {tr('lazzeko.fiche.enregistreePar', { nom: <b>{f.auteurAdmin.nom || f.auteurAdmin.identifiant}</b>, identifiant: f.auteurAdmin.identifiant })}
         </p>
       )}
       <div className="entete-machine">
         <MiniatureMachine url={f.machine.imageUrl} badge={f.machine.varianteNom} taille={48} />
         <p className="muted petit" style={{ margin: 0 }}>
-          {f.machine.nom} · {f.estAuteur ? 'vous' : f.auteur} · {date(f.createdAt)}
+          {f.machine.nom} · {f.estAuteur ? t('lazzeko.fiche.vous') : f.auteur} · {date(f.createdAt)}
         </p>
       </div>
-      {f.parent && <p className="petit">Dupliquée de <Link to={`/fiches/${f.parent.id}`}>{f.parent.titre}</Link></p>}
-      <div className="puces">{f.tags.map((t) => <span key={t.id} className="puce">{t.nom}</span>)}</div>
+      {f.parent && <p className="petit">{tr('lazzeko.fiche.dupliqueeDe', { lien: <Link to={`/fiches/${f.parent.id}`}>{f.parent.titre}</Link> })}</p>}
+      <div className="puces">{f.tags.map((tag) => <span key={tag.id} className="puce">{tag.nom}</span>)}</div>
 
       <Galerie photos={photos} />
 
-      <h2>Réglages</h2>
+      <h2>{t('lazzeko.fiche.reglages')}</h2>
       <Miroir config={version.config} valeurs={completer(version.config, f.valeurs)} />
       <Indicateurs liste={f.indicateurs} />
 
-      {f.commentaire && (<><h2>Commentaire</h2><p className="commentaire">{f.commentaire}</p></>)}
+      {f.commentaire && (<><h2>{t('lazzeko.fiche.commentaire')}</h2><p className="commentaire">{f.commentaire}</p></>)}
 
-      <h2>Avis</h2>
+      <h2>{t('lazzeko.fiche.avis')}</h2>
       <div className="bloc-note">
         <div className="moyenne">
-          <Etoiles note={f.note.moyenne} taille={20} /> {f.note.nombre ? `${f.note.moyenne?.toFixed(1)} · ${f.note.nombre} note${f.note.nombre > 1 ? 's' : ''}` : 'pas encore noté'}
+          <Etoiles note={f.note.moyenne} taille={20} /> {f.note.nombre ? tn('lazzeko.notes', f.note.nombre, { moyenne: f.note.moyenne?.toFixed(1) ?? '' }) : t('commun.pasNote')}
         </div>
         {f.estAuteur ? (
           <div className="ma-note">
-            <span>{f.note.maNote ? 'Votre note sur ce résultat' : 'Notez votre résultat'}</span>
+            <span>{f.note.maNote ? t('lazzeko.fiche.maNote') : t('lazzeko.fiche.noter')}</span>
             <Etoiles note={f.note.maNote} onChange={(n) => publier(n, null)} />
           </div>
         ) : (
           <MonAvis existant={f.evaluations?.find((e) => e.estMoi)} onPublier={publier} onSupprimer={supprimerAvis} />
         )}
-        {autres.length === 0 && <p className="muted petit">Aucun avis pour l'instant.</p>}
+        {autres.length === 0 && <p className="muted petit">{t('lazzeko.fiche.aucunAvis')}</p>}
         {autres.map((e) => (
           <div key={e.id} className={'avis' + (e.statut !== 'VISIBLE' ? ' avis-masque' : '')}>
             <div className="avis-h">
-              <span><Etoiles note={e.note} taille={14} /> <b>{e.auteur}</b>{e.estAuteurFiche ? ' (auteur)' : ''} · <span className="muted">{date(e.date)}</span></span>
+              <span><Etoiles note={e.note} taille={14} /> <b>{e.auteur}</b>{e.estAuteurFiche ? t('lazzeko.fiche.auteur') : ''} · <span className="muted">{date(e.date)}</span></span>
               {admin && (
-                <button type="button" className="btn petit" onClick={() => moderer(e)}>{e.statut === 'VISIBLE' ? 'Masquer' : 'Réafficher'}</button>
+                <button type="button" className="btn petit" onClick={() => moderer(e)}>{e.statut === 'VISIBLE' ? t('lazzeko.fiche.masquer') : t('lazzeko.fiche.reafficher')}</button>
               )}
             </div>
             {e.avis && <p>{e.avis}</p>}
@@ -137,11 +138,11 @@ export default function FicheDetail() {
       {aideActive && <DemandeAide ficheId={f.id} />}
 
       <div className="actions">
-        <Link to={`/fiches/nouvelle?depuis=${f.id}`} className="btn prim">Dupliquer ce réglage</Link>
-        {f.estAuteur && <Link to={`/fiches/${f.id}/modifier`} className="btn">Modifier</Link>}
-        {(f.estAuteur || admin) && <button type="button" className="btn danger" onClick={supprimer}>Supprimer</button>}
+        <Link to={`/fiches/nouvelle?depuis=${f.id}`} className="btn prim">{t('lazzeko.fiche.dupliquer')}</Link>
+        {f.estAuteur && <Link to={`/fiches/${f.id}/modifier`} className="btn">{t('lazzeko.fiche.modifier')}</Link>}
+        {(f.estAuteur || admin) && <button type="button" className="btn danger" onClick={supprimer}>{t('lazzeko.fiche.supprimer')}</button>}
         {admin && (
-          <button type="button" className="btn" onClick={basculerMasque}>{f.masquee ? 'Réafficher' : 'Masquer'}</button>
+          <button type="button" className="btn" onClick={basculerMasque}>{f.masquee ? t('lazzeko.fiche.reafficher') : t('lazzeko.fiche.masquer')}</button>
         )}
       </div>
       <Erreur e={err} />
@@ -154,7 +155,7 @@ function BadgeStatut({ a }: { a: Avis }) {
   if (a.statut === 'VISIBLE') return null;
   return (
     <p className={'statut-avis ' + a.statut.toLowerCase()}>
-      {a.statut === 'EN_ATTENTE' ? 'En attente de validation' : 'Masqué par la modération'}
+      {a.statut === 'EN_ATTENTE' ? t('lazzeko.fiche.enAttente') : t('lazzeko.fiche.masqueModeration')}
       {a.moderationRaison ? ` : ${a.moderationRaison}` : ''}
     </p>
   );
@@ -175,24 +176,24 @@ function MonAvis({ existant, onPublier, onSupprimer }: { existant?: Avis; onPubl
   if (existant && !edition)
     return (
       <div className="ma-note">
-        <span>Votre avis</span>
+        <span>{t('lazzeko.fiche.votreAvis')}</span>
         <div><Etoiles note={existant.note} taille={18} /></div>
         {existant.avis && <p className="mon-texte">{existant.avis}</p>}
         <BadgeStatut a={existant} />
         <div className="actions-avis">
-          <button type="button" className="btn petit" onClick={() => setEdition(true)}>Modifier</button>
-          <button type="button" className="btn petit danger" onClick={onSupprimer}>Supprimer</button>
+          <button type="button" className="btn petit" onClick={() => setEdition(true)}>{t('lazzeko.fiche.modifier')}</button>
+          <button type="button" className="btn petit danger" onClick={onSupprimer}>{t('lazzeko.fiche.supprimer')}</button>
         </div>
       </div>
     );
 
   return (
     <div className="ma-note">
-      <span>{existant ? 'Modifier votre avis' : 'Testé ? Donnez votre avis'}</span>
+      <span>{existant ? t('lazzeko.fiche.modifierAvis') : t('lazzeko.fiche.donnerAvis')}</span>
       <Etoiles note={note} onChange={setNote} />
-      <textarea rows={3} maxLength={1000} value={texte} onChange={(e) => setTexte(e.target.value)} placeholder="Votre retour : résultat, nombre de passages, support… (facultatif)" />
+      <textarea rows={3} maxLength={1000} value={texte} onChange={(e) => setTexte(e.target.value)} placeholder={t('lazzeko.fiche.avisExemple')} />
       <div className="actions-avis">
-        {existant && <button type="button" className="btn petit" onClick={() => setEdition(false)}>Annuler</button>}
+        {existant && <button type="button" className="btn petit" onClick={() => setEdition(false)}>{t('commun.annuler')}</button>}
         <button
           type="button"
           className="btn prim"
@@ -203,10 +204,10 @@ function MonAvis({ existant, onPublier, onSupprimer }: { existant?: Avis; onPubl
             setEnvoi(false);
           }}
         >
-          {envoi ? 'Publication…' : 'Publier mon avis'}
+          {envoi ? t('lazzeko.fiche.publication') : t('lazzeko.fiche.publier')}
         </button>
       </div>
-      {!note && <small className="muted">Choisissez d'abord une note.</small>}
+      {!note && <small className="muted">{t('lazzeko.fiche.noteDabord')}</small>}
     </div>
   );
 }
@@ -217,21 +218,21 @@ function DemandeAide({ ficheId }: { ficheId: string }) {
   const [message, setMessage] = useState('');
   const [etat, setEtat] = useState<'' | 'envoi' | 'ok'>('');
   const [err, setErr] = useState<unknown>();
-  if (etat === 'ok') return <div className="succes">Demande envoyée : l'équipe Lazzeko reçoit ce réglage, ses photos et votre message.</div>;
+  if (etat === 'ok') return <div className="succes">{t('lazzeko.aide.envoyee')}</div>;
   if (!ouvert)
     return (
       <button type="button" className="btn large" style={{ marginTop: 16 }} onClick={() => setOuvert(true)}>
-        🛟 Demander de l'aide à Lazzeko
+        {t('lazzeko.aide.bouton')}
       </button>
     );
   return (
     <div className="aide-support">
-      <b>Demander de l'aide à Lazzeko</b>
-      <span className="muted petit">Le réglage, les photos et votre message sont transmis à l'équipe : pas besoin de tout réexpliquer.</span>
-      <textarea rows={4} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Décrivez le problème : la pièce noircit, la rouille ne part pas…" />
+      <b>{t('lazzeko.aide.titre')}</b>
+      <span className="muted petit">{t('lazzeko.aide.detail')}</span>
+      <textarea rows={4} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('lazzeko.aide.exemple')} />
       <Erreur e={err} />
       <div className="actions-avis">
-        <button type="button" className="btn petit" onClick={() => setOuvert(false)}>Annuler</button>
+        <button type="button" className="btn petit" onClick={() => setOuvert(false)}>{t('commun.annuler')}</button>
         <button
           type="button"
           className="btn prim"
@@ -247,7 +248,7 @@ function DemandeAide({ ficheId }: { ficheId: string }) {
             }
           }}
         >
-          {etat === 'envoi' ? 'Envoi…' : 'Envoyer'}
+          {etat === 'envoi' ? t('commun.envoi') : t('messages.envoyer')}
         </button>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CarteFiche } from '../components/CarteFiche';
 import { Chargement, Erreur, FiltreTags } from '../components/Composants';
 import { api, Fabricant, GroupeTag, MaMachine, PageFiches } from '../lib/api';
+import { t, tn } from '../lib/i18n';
 
 /** Réglages partagés : même machine + mêmes tags, triés par note. */
 export default function Communaute() {
@@ -41,14 +42,14 @@ export default function Communaute() {
 
   return (
     <div className="page">
-      <h1>Communauté</h1>
+      <h1>{t('lazzeko.communaute.titre')}</h1>
       <Link to="/top" className="bandeau lien-bandeau lien-top">
-        <span><b>🏆 Top réglages</b> : les meilleurs par matériau</span>
+        <span><b>{t('lazzeko.top.titre')}</b>{t('lazzeko.communaute.top')}</span>
         <span>›</span>
       </Link>
       <div className="filtres">
         <select value={varianteId} onChange={(e) => setVariante(e.target.value)}>
-          <option value="">Toutes les machines</option>
+          <option value="">{t('lazzeko.top.toutesMachines')}</option>
           {catalogue.flatMap((f) =>
             f.modeles.flatMap((m) =>
               m.variantes.map((v) => (
@@ -58,19 +59,19 @@ export default function Communaute() {
           )}
         </select>
         <div className="seg">
-          <button type="button" className={meilleurs ? 'on' : ''} onClick={() => setMeilleurs(true)}>★ 4 et plus</button>
-          <button type="button" className={!meilleurs ? 'on' : ''} onClick={() => setMeilleurs(false)}>Tous les réglages</button>
+          <button type="button" className={meilleurs ? 'on' : ''} onClick={() => setMeilleurs(true)}>{t('lazzeko.communaute.quatreEtPlus')}</button>
+          <button type="button" className={!meilleurs ? 'on' : ''} onClick={() => setMeilleurs(false)}>{t('lazzeko.communaute.tous')}</button>
         </div>
         <button type="button" className="btn petit" onClick={() => setOuverts(!ouverts)}>
-          {ouverts ? 'Masquer les filtres' : `Filtres et tri${tags.length || q ? ` (${tags.length + (q ? 1 : 0)})` : ''}`}
+          {ouverts ? t('lazzeko.filtres.masquer') : tags.length || q ? t('lazzeko.communaute.filtresTriN', { n: tags.length + (q ? 1 : 0) }) : t('lazzeko.communaute.filtresTri')}
         </button>
         {ouverts && (
           <>
         <div className="seg">
-          <button type="button" className={tri === 'note' ? 'on' : ''} onClick={() => setTri('note')}>Mieux notés</button>
-          <button type="button" className={tri === 'recent' ? 'on' : ''} onClick={() => setTri('recent')}>Récents</button>
+          <button type="button" className={tri === 'note' ? 'on' : ''} onClick={() => setTri('note')}>{t('lazzeko.communaute.mieuxNotes')}</button>
+          <button type="button" className={tri === 'recent' ? 'on' : ''} onClick={() => setTri('recent')}>{t('lazzeko.communaute.recents')}</button>
         </div>
-        <input className="recherche" placeholder="Rechercher (titre, commentaire)…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="recherche" placeholder={t('lazzeko.fiches.rechercher')} value={q} onChange={(e) => setQ(e.target.value)} />
         <FiltreTags groupes={groupes} tags={tags} onChange={setTags} />
           </>
         )}
@@ -80,12 +81,12 @@ export default function Communaute() {
         <Chargement />
       ) : data.fiches.length === 0 ? (
         <div className="vide-etat">
-          <p>{meilleurs ? 'Aucun réglage noté 4 étoiles ou plus pour ces critères.' : 'Aucun réglage partagé pour ces critères.'}</p>
-          {meilleurs && <button type="button" className="btn" onClick={() => setMeilleurs(false)}>Voir tous les réglages</button>}
+          <p>{meilleurs ? t('lazzeko.communaute.aucunQuatre') : t('lazzeko.communaute.aucun')}</p>
+          {meilleurs && <button type="button" className="btn" onClick={() => setMeilleurs(false)}>{t('lazzeko.communaute.voirTous')}</button>}
         </div>
       ) : (
         <>
-          <p className="muted petit">{data.total} réglage{data.total > 1 ? 's' : ''}</p>
+          <p className="muted petit">{tn('lazzeko.reglages', data.total)}</p>
           <div className="liste">{data.fiches.map((f) => <CarteFiche key={f.id} f={f} montrerAuteur />)}</div>
         </>
       )}

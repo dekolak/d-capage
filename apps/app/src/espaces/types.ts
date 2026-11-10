@@ -1,9 +1,11 @@
 import { ReactElement } from 'react';
+import type { Cle } from '../lib/i18n';
 
 /** Un onglet de la barre du bas. `icone` = tracé SVG (24×24) ; `plus` = gros bouton central. */
 export interface Onglet {
   to: string;
-  label: string;
+  /** Clé du texte (src/textes/fr.ts). */
+  label: Cle;
   icone?: string;
   plus?: boolean;
   end?: boolean;

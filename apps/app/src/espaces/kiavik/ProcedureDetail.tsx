@@ -5,6 +5,7 @@ import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { ImageApi, lienGuide, Procedure } from './donneesProcedures';
 import './guides.css';
+import { t } from '../../lib/i18n';
 
 /** Une procédure : étapes à cocher (gardées sur le téléphone), photos agrandissables, « Voir le bouton ». */
 export default function ProcedureDetail() {
@@ -24,23 +25,23 @@ export default function ProcedureDetail() {
     localStorage.setItem(cle, JSON.stringify(faites));
   }, [cle, faites]);
 
-  if (erreur) return <div className="page"><Erreur e={erreur} /><Link to="/procedures">← Procédures</Link></div>;
+  if (erreur) return <div className="page"><Erreur e={erreur} /><Link to="/procedures">{t('kiavik.procedures.retourListe')}</Link></div>;
   if (!p) return <Chargement />;
   const basculer = (e: string) => setFaites((f) => (f.includes(e) ? f.filter((x) => x !== e) : [...f, e]));
   const fait = p.etapes.filter((e) => faites.includes(e.id)).length;
 
   return (
     <div className="page gx">
-      <button type="button" className="btn-lien" onClick={() => nav(-1)}>← Retour</button>
+      <button type="button" className="btn-lien" onClick={() => nav(-1)}>{t('kiavik.procedures.retour')}</button>
       <h1 className="gx-proc-titre">{p.titre}</h1>
       <p className="muted petit">
         {p.categorie}
-        {!p.publiee && <span className="gx-brouillon">brouillon</span>}
-        {moi?.role === 'ADMIN' && <> · <Link to={`/admin/procedures/${p.id}`}>Modifier</Link></>}
+        {!p.publiee && <span className="gx-brouillon">{t('kiavik.procedures.brouillon')}</span>}
+        {moi?.role === 'ADMIN' && <> · <Link to={`/admin/procedures/${p.id}`}>{t('kiavik.procedures.modifier')}</Link></>}
       </p>
       {p.resume && <p>{p.resume}</p>}
       {p.etapes.length > 0 && (
-        <div className="gx-progres" aria-label={`${fait} étapes faites sur ${p.etapes.length}`}>
+        <div className="gx-progres" aria-label={t('kiavik.procedures.progression', { fait, n: p.etapes.length })}>
           <i style={{ width: `${(fait / p.etapes.length) * 100}%` }} />
         </div>
       )}
@@ -50,7 +51,7 @@ export default function ProcedureDetail() {
           const ok = faites.includes(e.id);
           return (
             <li key={e.id} className={`carte gx-etape-carte ${ok ? 'fait' : ''}`}>
-              <button type="button" className="gx-coche" aria-pressed={ok} aria-label={`Étape ${i + 1} faite`} onClick={() => basculer(e.id)}>
+              <button type="button" className="gx-coche" aria-pressed={ok} aria-label={t('kiavik.procedures.etapeFaite', { n: i + 1 })} onClick={() => basculer(e.id)}>
                 {ok ? '✓' : i + 1}
               </button>
               <div className="gx-etape-corps">
@@ -59,7 +60,7 @@ export default function ProcedureDetail() {
                 {e.photo && <ImageApi chemin={e.photo} className="gx-etape-photo" onClick={() => setGrand(e.photo)} />}
                 {lien && (
                   <Link to={lien} className="btn petit gx-voir">
-                    👆 Voir le bouton{e.pastille ? ` ${e.pastille}` : ''}
+                    {e.pastille ? t('kiavik.procedures.voirBoutonId', { id: e.pastille }) : t('kiavik.procedures.voirBouton')}
                   </Link>
                 )}
               </div>
@@ -68,7 +69,7 @@ export default function ProcedureDetail() {
         })}
       </ol>
       {fait > 0 && (
-        <button type="button" className="btn petit" onClick={() => setFaites([])}>Recommencer (tout décocher)</button>
+        <button type="button" className="btn petit" onClick={() => setFaites([])}>{t('kiavik.procedures.recommencer')}</button>
       )}
       {grand && (
         <div className="gx-plein" onClick={() => setGrand(null)}>

@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { Erreur } from '../components/Composants';
 import { api, Fabricant, MaMachine } from '../lib/api';
 import { useEspace } from '../lib/espace';
+import { LANGUES, NOMS_LANGUES } from '../lib/i18n';
 import { date } from '../lib/util';
 
-interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; modules: string[]; espaces: string[]; conditions: Record<string, { version: number }>; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null }
+interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; modules: string[]; espaces: string[]; conditions: Record<string, { version: number }>; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null; langue: string | null }
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
 interface TagAValider { id: string; nom: string; groupe: { nom: string } }
 
@@ -181,6 +182,15 @@ export default function Admin() {
                   <label className="interrupteur petit">
                     <input type="checkbox" checked={u.clientLazzeko} onChange={async (e) => { await api(`/users/${u.id}`, { method: 'PATCH', json: { clientLazzeko: e.target.checked } }); charger(); }} />
                     Client Lazzeko
+                  </label>
+                )}
+                {LANGUES.length > 1 && (
+                  <label className="petit">
+                    Langue de l'app{' '}
+                    <select value={u.langue ?? ''} onChange={async (e) => { await api(`/users/${u.id}`, { method: 'PATCH', json: { langue: e.target.value || null } }); charger(); }}>
+                      <option value="">Langue du téléphone</option>
+                      {LANGUES.map((l) => <option key={l} value={l}>{NOMS_LANGUES[l] ?? l}</option>)}
+                    </select>
                   </label>
                 )}
                 {lazzeko(u.modules) && <>

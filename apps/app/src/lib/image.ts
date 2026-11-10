@@ -1,3 +1,4 @@
+import { t } from './i18n';
 /**
  * Compression côté téléphone avant envoi : une photo de 4–12 Mo devient ~300 Ko.
  * Retourne l'image (1600 px max) et une miniature (400 px max), en JPEG.
@@ -10,7 +11,7 @@ export async function compresser(f: File | Blob): Promise<{ fichier: Blob; minia
     c.width = Math.round(bmp.width * k);
     c.height = Math.round(bmp.height * k);
     c.getContext('2d')!.drawImage(bmp, 0, 0, c.width, c.height);
-    return new Promise<Blob>((ok, ko) => c.toBlob((b) => (b ? ok(b) : ko(new Error('Compression impossible'))), 'image/jpeg', qualite));
+    return new Promise<Blob>((ok, ko) => c.toBlob((b) => (b ? ok(b) : ko(new Error(t('erreur.compression')))), 'image/jpeg', qualite));
   };
   const fichier = await versJpeg(1600, 0.82);
   const miniature = await versJpeg(400, 0.75);

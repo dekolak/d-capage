@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
+import { t, tn } from '../lib/i18n';
 
 export type TypeQuestion = 'AUCUNE' | 'OUI_NON' | 'CHOIX' | 'NOTE' | 'TEXTE';
 export interface Question { type: TypeQuestion; texte: string | null; options: string[]; autre: boolean; obligatoire: boolean }
@@ -19,41 +20,41 @@ function Repondre({ q, onRepondre, apercu }: { q: Question; onRepondre?: (v: str
   const envoyer = (v: string, a?: string) => !apercu && onRepondre?.(v, a);
   return (
     <div className="ba-question">
-      <b>{q.texte || 'Votre question…'}</b>
+      <b>{q.texte || t('messages.votreQuestion')}</b>
       {q.type === 'OUI_NON' && (
         <div className="ba-choix deux-col">
-          <button type="button" onClick={() => envoyer('oui')}>👍 Oui</button>
-          <button type="button" onClick={() => envoyer('non')}>👎 Non</button>
+          <button type="button" onClick={() => envoyer('oui')}>{t('messages.oui')}</button>
+          <button type="button" onClick={() => envoyer('non')}>{t('messages.non')}</button>
         </div>
       )}
       {q.type === 'CHOIX' && autre === null && (
         <div className="ba-choix">
-          {(q.options.length ? q.options : ['Réponse 1', 'Réponse 2']).map((o, i) => (
-            <button key={i} type="button" onClick={() => envoyer(o)}>{o || `Réponse ${i + 1}`}</button>
+          {(q.options.length ? q.options : [t('messages.reponseN', { n: 1 }), t('messages.reponseN', { n: 2 })]).map((o, i) => (
+            <button key={i} type="button" onClick={() => envoyer(o)}>{o || t('messages.reponseN', { n: i + 1 })}</button>
           ))}
-          {q.autre && <button type="button" onClick={() => setAutre('')}>Autre…</button>}
+          {q.autre && <button type="button" onClick={() => setAutre('')}>{t('messages.autre')}</button>}
         </div>
       )}
       {q.type === 'CHOIX' && autre !== null && (
         <div className="ba-libre">
-          <input autoFocus value={autre} maxLength={300} onChange={(e) => setAutre(e.target.value)} placeholder="Précisez…" />
-          <button type="button" className="btn petit prim" disabled={!autre.trim()} onClick={() => envoyer('Autre', autre)}>Envoyer</button>
+          <input autoFocus value={autre} maxLength={300} onChange={(e) => setAutre(e.target.value)} placeholder={t('messages.precisez')} />
+          <button type="button" className="btn petit prim" disabled={!autre.trim()} onClick={() => envoyer('Autre', autre)}>{t('messages.envoyer')}</button>
         </div>
       )}
       {q.type === 'NOTE' && (
         <div className="ba-etoiles">
           {[1, 2, 3, 4, 5].map((n) => (
-            <button key={n} type="button" aria-label={`${n} étoile${n > 1 ? 's' : ''}`} onClick={() => envoyer(String(n))}>★</button>
+            <button key={n} type="button" aria-label={tn('commun.etoiles', n)} onClick={() => envoyer(String(n))}>★</button>
           ))}
         </div>
       )}
       {q.type === 'TEXTE' && (
         <div className="ba-libre">
-          <input value={texte} maxLength={1000} onChange={(e) => setTexte(e.target.value)} placeholder="Votre réponse…" />
-          <button type="button" className="btn petit prim" disabled={!texte.trim()} onClick={() => envoyer(texte.trim())}>Envoyer</button>
+          <input value={texte} maxLength={1000} onChange={(e) => setTexte(e.target.value)} placeholder={t('messages.votreReponse')} />
+          <button type="button" className="btn petit prim" disabled={!texte.trim()} onClick={() => envoyer(texte.trim())}>{t('messages.envoyer')}</button>
         </div>
       )}
-      <small className="muted">Votre réponse est visible par {espace.nom}.</small>
+      <small className="muted">{t('messages.visiblePar', { societe: espace.nom })}</small>
     </div>
   );
 }
@@ -68,19 +69,19 @@ export function Bulle({ a, onCompris, onRepondre, apercu }: {
     <div className={'bulle-annonce ' + a.niveau.toLowerCase()}>
       <span className="ba-ic">{ICONE[a.niveau]}</span>
       <div className="ba-corps">
-        <b>{a.titre || 'Titre du message'}</b>
-        <p>{a.texte || 'Texte du message…'}</p>
+        <b>{a.titre || t('messages.titreExemple')}</b>
+        <p>{a.texte || t('messages.texteExemple')}</p>
         {q && <Repondre q={q} onRepondre={onRepondre} apercu={apercu} />}
         <div className="ba-actions">
           {a.lienUrl && a.lienUrl.startsWith('/') && (
-            <Link to={a.lienUrl} onClick={apercu ? (e) => e.preventDefault() : onCompris} className="btn petit">{a.lienTexte || 'Voir'}</Link>
+            <Link to={a.lienUrl} onClick={apercu ? (e) => e.preventDefault() : onCompris} className="btn petit">{a.lienTexte || t('messages.voir')}</Link>
           )}
           {a.lienUrl && !a.lienUrl.startsWith('/') && (
-            <a href={a.lienUrl} target="_blank" rel="noreferrer" className="btn petit">{a.lienTexte || 'En savoir plus'}</a>
+            <a href={a.lienUrl} target="_blank" rel="noreferrer" className="btn petit">{a.lienTexte || t('messages.enSavoirPlus')}</a>
           )}
           {(!q || !q.obligatoire) && (
             <button type="button" className={'btn petit' + (q ? '' : ' prim')} onClick={() => !apercu && onCompris?.()}>
-              {q ? 'Passer' : "J'ai compris"}
+              {q ? t('messages.passer') : t('messages.compris')}
             </button>
           )}
         </div>
@@ -122,14 +123,14 @@ export function Annonces() {
   const autres = liste.filter((a) => a.niveau !== 'IMPORTANT');
   return (
     <>
-      {merci && <div className="merci">Merci pour votre réponse !</div>}
+      {merci && <div className="merci">{t('messages.merci')}</div>}
       {autres.length > 0 && (
         <div className="annonces">
           {(tout ? autres : autres.slice(0, 2)).map((a) => (
             <Bulle key={a.id} a={a} onCompris={() => compris(a.id)} onRepondre={(v, x) => repondre(a.id, v, x)} />
           ))}
           {!tout && autres.length > 2 && (
-            <button type="button" className="btn-lien petit" onClick={() => setTout(true)}>Voir les {autres.length - 2} autres messages</button>
+            <button type="button" className="btn-lien petit" onClick={() => setTout(true)}>{tn('messages.voirAutres', autres.length - 2)}</button>
           )}
         </div>
       )}

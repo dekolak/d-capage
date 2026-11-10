@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Indicateur } from '@decapage/machine-kit';
 import { GroupeTag, PhotoRef, urlPhoto } from '../lib/api';
+import { t, tn } from '../lib/i18n';
 
 export function Etoiles({ note, onChange, taille = 26 }: { note: number | null; onChange?: (n: number) => void; taille?: number }) {
   return (
@@ -12,7 +13,7 @@ export function Etoiles({ note, onChange, taille = 26 }: { note: number | null; 
           disabled={!onChange}
           className={note !== null && n <= Math.round(note) ? 'on' : ''}
           onClick={() => onChange?.(n)}
-          aria-label={`${n} étoile${n > 1 ? 's' : ''}`}
+          aria-label={tn('commun.etoiles', n)}
         >
           ★
         </button>
@@ -22,7 +23,7 @@ export function Etoiles({ note, onChange, taille = 26 }: { note: number | null; 
 }
 
 export function NoteResume({ moyenne, nombre }: { moyenne: number | null; nombre: number }) {
-  if (!nombre) return <span className="muted">pas encore noté</span>;
+  if (!nombre) return <span className="muted">{t('commun.pasNote')}</span>;
   return (
     <span className="note-resume">
       <Etoiles note={moyenne} taille={16} /> {moyenne?.toFixed(1)} <span className="muted">({nombre})</span>
@@ -42,7 +43,8 @@ export function ImageProtegee({ id, min, className, onClick }: { id: string; min
   return src ? <img src={src} className={className} onClick={onClick} alt="" /> : <div className={'img-vide ' + (className ?? '')} />;
 }
 
-export const LIBELLE_PHOTO = { AVANT: 'Avant', APRES: 'Après', INTERFACE: 'Écran machine', AUTRE: 'Autre' } as const;
+/** Libellé d'un type de photo. */
+export const libellePhoto = (type: PhotoRef['type']) => t(`commun.photo.${type}`);
 
 export function Galerie({ photos, onSupprimer }: { photos: PhotoRef[]; onSupprimer?: (p: PhotoRef) => void }) {
   const [grand, setGrand] = useState<string | null>(null);
@@ -53,9 +55,9 @@ export function Galerie({ photos, onSupprimer }: { photos: PhotoRef[]; onSupprim
         {photos.map((p) => (
           <figure key={p.id}>
             <ImageProtegee id={p.id} min onClick={() => setGrand(p.id)} />
-            <figcaption>{LIBELLE_PHOTO[p.type]}</figcaption>
+            <figcaption>{libellePhoto(p.type)}</figcaption>
             {onSupprimer && (
-              <button type="button" className="suppr" onClick={() => onSupprimer(p)} aria-label="Supprimer la photo">×</button>
+              <button type="button" className="suppr" onClick={() => onSupprimer(p)} aria-label={t('commun.supprimerPhoto')}>×</button>
             )}
           </figure>
         ))}
@@ -82,7 +84,7 @@ export function Indicateurs({ liste }: { liste: Indicateur[] }) {
           {i.note && <em>{i.note}</em>}
         </div>
       ))}
-      {liste.some((i) => i.hypothese) && <p className="note-hyp">* dépend d'une valeur supposée (taille du spot), à confirmer.</p>}
+      {liste.some((i) => i.hypothese) && <p className="note-hyp">{t('commun.hypothese')}</p>}
     </div>
   );
 }
@@ -106,8 +108,8 @@ export function ChoixTags({
   return (
     <div className="choix-tags">
       {groupes.map((g) => {
-        const pris = g.tags.filter((t) => choisis.includes(t.id));
-        const libres = g.tags.filter((t) => !choisis.includes(t.id));
+        const pris = g.tags.filter((tag) => choisis.includes(tag.id));
+        const libres = g.tags.filter((tag) => !choisis.includes(tag.id));
         return (
           <div key={g.id} className="groupe-tags">
             <label className="champ-tag">
@@ -117,23 +119,23 @@ export function ChoixTags({
                 onChange={async (e) => {
                   const v = e.target.value;
                   if (v === AUTRE) {
-                    const nom = prompt(`Nouveau choix dans « ${g.nom} »`)?.trim();
+                    const nom = prompt(t('commun.tags.nouveau', { groupe: g.nom }))?.trim();
                     if (nom && nom.length >= 2 && onProposer) await onProposer(g.id, nom);
                   } else if (v) onChange([...choisis, v]);
                 }}
               >
-                <option value="">{pris.length ? '+ Ajouter…' : 'Choisir…'}</option>
-                {libres.map((t) => (
-                  <option key={t.id} value={t.id}>{t.nom}</option>
+                <option value="">{pris.length ? t('commun.tags.ajouter') : t('commun.tags.choisir')}</option>
+                {libres.map((tag) => (
+                  <option key={tag.id} value={tag.id}>{tag.nom}</option>
                 ))}
-                {onProposer && <option value={AUTRE}>Autre…</option>}
+                {onProposer && <option value={AUTRE}>{t('commun.tags.autre')}</option>}
               </select>
             </label>
             {pris.length > 0 && (
               <div className="puces">
-                {pris.map((t) => (
-                  <button key={t.id} type="button" className="puce on" onClick={() => onChange(choisis.filter((x) => x !== t.id))} aria-label={`Retirer ${t.nom}`}>
-                    {t.nom} ×
+                {pris.map((tag) => (
+                  <button key={tag.id} type="button" className="puce on" onClick={() => onChange(choisis.filter((x) => x !== tag.id))} aria-label={t('commun.tags.retirer', { nom: tag.nom })}>
+                    {tag.nom} ×
                   </button>
                 ))}
               </div>
@@ -150,20 +152,20 @@ export function FiltreTags({ groupes, tags, onChange }: { groupes: GroupeTag[]; 
   return (
     <>
       {groupes.map((g) => {
-        const actuel = g.tags.find((t) => tags.includes(t.id))?.id ?? '';
+        const actuel = g.tags.find((tag) => tags.includes(tag.id))?.id ?? '';
         return (
           <label key={g.id} className="champ-tag">
             <span>{g.nom}</span>
             <select
               value={actuel}
               onChange={(e) => {
-                const autres = tags.filter((id) => !g.tags.some((t) => t.id === id));
+                const autres = tags.filter((id) => !g.tags.some((tag) => tag.id === id));
                 onChange(e.target.value ? [...autres, e.target.value] : autres);
               }}
             >
-              <option value="">Tous</option>
-              {g.tags.map((t) => (
-                <option key={t.id} value={t.id}>{t.nom}</option>
+              <option value="">{t('commun.tags.tous')}</option>
+              {g.tags.map((tag) => (
+                <option key={tag.id} value={tag.id}>{tag.nom}</option>
               ))}
             </select>
           </label>
@@ -174,7 +176,7 @@ export function FiltreTags({ groupes, tags, onChange }: { groupes: GroupeTag[]; 
 }
 
 export function Chargement() {
-  return <div className="chargement">Chargement…</div>;
+  return <div className="chargement">{t('commun.chargement')}</div>;
 }
 
 export function Erreur({ e }: { e: unknown }) {

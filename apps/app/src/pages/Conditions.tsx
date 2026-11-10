@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Chargement } from '../components/Composants';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
+import { t } from '../lib/i18n';
 
 export default function Conditions() {
   const { espace } = useEspace();
@@ -12,10 +13,10 @@ export default function Conditions() {
   }, [espace.slug]);
   return (
     <div className="page">
-      <p className="petit"><Link to="/compte">‹ Compte</Link></p>
-      <h1>Conditions d'utilisation</h1>
+      <p className="petit"><Link to="/compte">‹ {t('compte.titre')}</Link></p>
+      <h1>{t('conditions.titre')}</h1>
       <p className="muted">{espace.nomApp}</p>
-      {!c ? <Chargement /> : <><p className="muted petit">Version {c.version}</p><div className="texte-conditions">{c.texte}</div></>}
+      {!c ? <Chargement /> : <><p className="muted petit">{t('conditions.version', { n: c.version })}</p><div className="texte-conditions">{c.texte}</div></>}
     </div>
   );
 }

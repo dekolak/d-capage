@@ -8,7 +8,7 @@ import { CreerUserDto, ModifierUserDto } from './users.dto';
 
 export const USER_PUBLIC = {
   id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true, clientLazzeko: true, numeroOdoo: true,
-  accordPhotosMarketing: true, accordPhotosMarketingLe: true,
+  accordPhotosMarketing: true, accordPhotosMarketingLe: true, langue: true,
   modules: { select: { module: true }, orderBy: { module: 'asc' } },
   acceptations: { select: { espace: true, version: true, accepteeLe: true } },
 } satisfies Prisma.UserSelect;
@@ -41,6 +41,7 @@ export class UsersService {
           role: dto.role ?? 'USER',
           clientLazzeko: dto.clientLazzeko ?? true,
           numeroOdoo: dto.numeroOdoo?.trim() || null,
+          langue: dto.langue ?? null,
           // Sans `modules` : réglages décapage (Lazzeko), comme avant les espaces.
           modules: { create: [...new Set(dto.modules ?? (dto.role === 'ADMIN' ? [] : [MODULE_DEFAUT]))].map((module) => ({ module })) },
         },
@@ -113,10 +114,13 @@ export class UsersService {
     });
   }
 
-  async preferences(id: string, accordPhotosMarketing: boolean) {
+  async preferences(id: string, p: { accordPhotosMarketing?: boolean; langue?: string | null }) {
     return this.prisma.user.update({
       where: { id },
-      data: { accordPhotosMarketing, accordPhotosMarketingLe: new Date() },
+      data: {
+        ...(p.accordPhotosMarketing !== undefined ? { accordPhotosMarketing: p.accordPhotosMarketing, accordPhotosMarketingLe: new Date() } : {}),
+        ...(p.langue !== undefined ? { langue: p.langue } : {}),
+      },
       select: USER_PUBLIC,
     }).then(formater);
   }
