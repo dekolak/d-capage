@@ -120,4 +120,5 @@ Voix off selon les règles de Teddy : `speechSynthesis` fr-FR ; voix « Google f
 - Messages : champ `espaces` (vide = tous) ; lien interne autorisé (`/procedures…`).
 - Écrans propres à Kiavik : `apps/app/src/espaces/kiavik/` (Guides et Procédures provisoires).
 - **Fait** : phases 1 et 2 (modules, droits, admin, clé API, ciblage messages, marque par domaine, manifeste, Traefik).
-- **À faire** : phase 3 (guides), 4 (procédures), 5 (animations). Logo et couleurs Kiavik à fournir (couleur provisoire `#1d6fb8`).
+- **Fait** : phase 3 (guides FlexiPRINT et DXonJet : `apps/api/src/guides/`, `apps/app/src/espaces/kiavik/`). Les JSON restent dans `kit-guides/guides/` (pas de table `Guide`, lus au démarrage) ; les images sont servies par `/api/guides/images/`.
+- **À faire** : phase 4 (procédures), 5 (écrans interactifs T5 / T9 et animations). Logo et couleurs Kiavik à fournir (couleur provisoire `#1d6fb8`).

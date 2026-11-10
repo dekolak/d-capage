@@ -5,7 +5,7 @@ Une seule app mobile (PWA), une seule base, un seul admin, **deux espaces** :
 | Espace | Adresse | Contenu |
 |---|---|---|
 | **Lazzeko** | https://app.lazzeko.com | Réglages des nettoyeurs laser (miroir de l'écran machine, photos, note), communauté, aide aux réglages |
-| **Kiavik** | https://app.kiavikcopilot.ovh | Guides machines (Flexiprint, DXonJet) et procédures — en cours |
+| **Kiavik** | https://app.kiavikcopilot.ovh | Guides logiciels FlexiPRINT et DXonJet ; procédures — en cours |
 
 ## Documentation
 | Document | Pour qui | Contenu |

@@ -1,21 +1,30 @@
-import { useAuth } from '../../lib/auth';
-import { useEspace } from '../../lib/espace';
+import { useEffect, useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
+import { Chargement, Erreur } from '../../components/Composants';
+import { api } from '../../lib/api';
+import { ResumeGuide } from './guides';
 
-/** Guides machines (phase 2 : écrans et pastilles depuis kit-guides/guides/*.json). */
+/** Liste des guides du compte (selon ses modules). Un seul guide → ouvert directement. */
 export default function Guides() {
-  const { moi } = useAuth();
-  const { espace } = useEspace();
-  const guides = espace.modules.filter((m) => m.slug.startsWith('guide-') && (moi?.role === 'ADMIN' || moi?.modules.includes(m.slug)));
+  const [guides, setGuides] = useState<ResumeGuide[]>();
+  const [erreur, setErreur] = useState<unknown>();
+  useEffect(() => {
+    api<ResumeGuide[]>('/guides').then(setGuides).catch(setErreur);
+  }, []);
+  if (erreur) return <div className="page"><Erreur e={erreur} /></div>;
+  if (!guides) return <Chargement />;
+  if (guides.length === 1) return <Navigate to={`/guides/${guides[0].slug}`} replace />;
   return (
     <div className="page">
       <h1>Guides</h1>
       {guides.length ? (
         <div className="liste-modules">
           {guides.map((g) => (
-            <div key={g.slug} className="carte module-carte">
+            <Link key={g.slug} to={`/guides/${g.slug}`} className="carte gx-carte">
               <b>{g.nom}</b>
-              <span className="muted petit">Bientôt disponible</span>
-            </div>
+              {g.description && <span className="muted petit">{g.description}</span>}
+              <span className="muted petit">{g.ecrans} écrans</span>
+            </Link>
           ))}
         </div>
       ) : (

@@ -58,6 +58,7 @@ Nouvelle technologie (sablage, aérogommage…) = un fichier + une ligne dans `c
 ```
 apps/api                    NestJS + Prisma + PostgreSQL
   src/espaces/espaces.ts    espaces et modules
+apps/api/src/guides         guides Kiavik (lecture de kit-guides/)
 apps/app                    PWA React mobile (Vite) — servie par l'API en production
   src/espaces/<espace>/     écrans et barre du bas propres à un espace
 packages/machine-kit        schéma des configs, validation, calculs (partagé api / app / site)
@@ -65,6 +66,12 @@ machines/                   configs JSON des machines
 kit-guides/                 cahier des charges et données des guides Kiavik
 docs/                       documentation
 ```
+
+## Guides Kiavik
+- **Un guide = un fichier JSON** dans `kit-guides/guides/` (format : `kit-guides/CAHIER_DES_CHARGES.md` §4), images dans `kit-guides/images/`. Pas de table : l'API lit les fichiers au démarrage (`apps/api/src/guides/`). Ajouter un guide = son JSON + le module `guide-<slug>` dans `espaces.ts`.
+- `GET /api/guides/:slug` exige le module `guide-<slug>` (`@ModuleRequis` accepte une fonction de la requête). Les conseils `a_completer` ne partent qu'à l'admin.
+- `modes-blanc.json` est rattaché à l'écran qu'il cite (`ecran: "t4"`) et renvoyé dans `modesBlanc`.
+- App (`apps/app/src/espaces/kiavik/`) : `/guides` (liste, ouvre directement s'il n'y a qu'un guide), `/guides/<guide>/<écran>?p=<pastille>`. Capture + pastilles (en % de l'image), zones voilées, pastilles de navigation tirées de `navigation` (onglets T1–T11, boutons E / A, menus D1–D8 et sous-menus), fiche en bas d'écran, zoom 240 %, menu repliable par groupe, liste des repères, fenêtres Windows recréées (`Fenetres.tsx`). Admin : option « afficher les repères » (filigrane du code écran).
 
 ## Données (apps/api/prisma/schema.prisma)
 | Table | Rôle |
@@ -114,5 +121,5 @@ docs/                       documentation
 4. ✅ Photos : compression côté téléphone, stockage local derrière une interface.
 5. ✅ Communauté : partage, notes des autres, duplication, tri par note (moyenne dénormalisée).
 6. ✅ Espaces Lazzeko / Kiavik (modules, conditions, marque par adresse).
-7. Kiavik : guides (`kit-guides/`), procédures, animations.
+7. Kiavik : ✅ guides FlexiPRINT et DXonJet (`kit-guides/`) ; à venir : procédures, animations.
 8. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran, mode hors ligne complet (file d'envoi).

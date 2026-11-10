@@ -62,6 +62,11 @@
 4. Test e2e : un compte sans le module reçoit `403 MODULE_NON_AUTORISE`.
 5. L'admin coche le module sur les comptes concernés.
 
+### Ajouter ou corriger un guide Kiavik
+1. Corriger / ajouter `kit-guides/guides/<slug>.json` (images dans `kit-guides/images/`). Pastilles en pixels de l'image.
+2. Nouveau guide : module `guide-<slug>` dans l'espace Kiavik (`espaces.ts`), sinon l'API refuse de démarrer.
+3. Redéployer (les fichiers sont lus au démarrage), vérifier sur téléphone.
+
 ### Ajouter un espace
 1. Entrée dans `ESPACES` (`espaces.ts`) : slug, noms, adresse, couleurs, icônes, communauté, modules.
 2. Icônes dans `apps/app/public/espaces/<slug>/` (`icone.svg`, `icone-192.png`, `icone-512.png`).

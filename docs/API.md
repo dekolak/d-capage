@@ -56,6 +56,15 @@ Sans `modules` à la création, le compte reçoit `["reglages-decapage"]`.
 | GET · PATCH · DELETE | `/photos/:id[?taille=min]` | selon visibilité de la fiche |
 | POST | `/fiches/:id/aide` `{message}` (si `aideSupport` activé) | connecté |
 
+### Guides Kiavik (modules `guide-<slug>`)
+| Méthode | Route | Accès |
+|---|---|---|
+| GET | `/guides` → `[{slug, nom, description, module, ecrans}]` (guides des modules du compte) | connecté |
+| GET | `/guides/:slug` → guide complet (écrans, pastilles, navigation, `modesBlanc`) | module `guide-<slug>` |
+| GET | `/guides/images/<fichier>` (captures du kit) | public |
+
+Les conseils `niveau: "a_completer"` (notes internes) ne sont envoyés qu'à l'admin.
+
 ### Administration
 | Méthode | Route | Accès |
 |---|---|---|
