@@ -1,0 +1,826 @@
+{
+ "_note": "Animations reprises du prototype (kit-guides/prototype). Type ecrans : scènes sur les écrans du guide ; coordonnées en pixels de l’écran ; cur = curseur, sel = élément visé, ring = cercle, click = clic, go = écran suivant, eff = effet (f fichier choisi, j travail dans la file, o menu du blanc ouvert, a blanc choisi (val), pop / popclose fenêtre « Quel blanc choisir ? », t9 / t9w aperçu des canaux), cap = sous-titre (lu par la voix off), d = durée (ms à vitesse ×1). Type blanc : une scène par mode de blanc (modes-blanc.json).",
+ "animations": [
+  {
+   "id": "couleur-simple",
+   "guide": "flexiprint",
+   "titre": "Impression couleur simple",
+   "resume": "Du fichier au fichier RIPé, sans blanc.",
+   "image": "images/m0.jpg",
+   "type": "ecrans",
+   "liens": [
+    [
+     "m0",
+     "0.2"
+    ],
+    [
+     "m0a",
+     "a.8"
+    ],
+    [
+     "t1",
+     "1.4"
+    ],
+    [
+     "t3",
+     "3.2"
+    ],
+    [
+     "t4",
+     "4.1"
+    ],
+    [
+     "tenv",
+     "e.5"
+    ]
+   ],
+   "scenes": [
+    {
+     "titre": "La fenêtre principale",
+     "ecran": "m0",
+     "etat": {
+      "f": null,
+      "j": 0,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        600,
+        430
+       ],
+       "cap": "Voici la fenêtre principale de FlexiPRINT : c'est la file d'attente des travaux.",
+       "d": 2600
+      }
+     ]
+    },
+    {
+     "titre": "Ajouter un travail",
+     "ecran": "m0",
+     "etat": {
+      "f": null,
+      "j": 0,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        198,
+        150
+       ],
+       "ring": 1,
+       "cap": "Pour ajouter une image, on clique sur le bouton Travail.",
+       "d": 1800
+      },
+      {
+       "click": 1,
+       "go": "m0a",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Choisir le fichier",
+     "ecran": "m0a",
+     "etat": {
+      "f": null,
+      "j": 0,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        200,
+        236
+       ],
+       "cap": "On choisit le fichier à imprimer dans la liste…",
+       "d": 1500
+      },
+      {
+       "click": 1,
+       "eff": "f",
+       "d": 900
+      },
+      {
+       "cur": [
+        760,
+        93
+       ],
+       "ring": 1,
+       "cap": "… puis on clique sur Ajout. Les cases à droite restent décochées.",
+       "d": 1800
+      },
+      {
+       "click": 1,
+       "go": "m0",
+       "eff": "j",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Ouvrir les propriétés",
+     "ecran": "m0",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        420,
+        292
+       ],
+       "ring": 1,
+       "cap": "Le travail est dans la file. On double-clique dessus pour ouvrir ses propriétés.",
+       "d": 2200
+      },
+      {
+       "click": 1,
+       "go": "t1",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Vérifier la taille (T1)",
+     "ecran": "t1",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        165,
+        405
+       ],
+       "ring": 1,
+       "cap": "Onglet T1 : on vérifie la taille de l'image. Attention, agrandir beaucoup peut pixeliser l'image.",
+       "d": 3000
+      },
+      {
+       "cur": [
+        290,
+        445
+       ],
+       "ring": 1,
+       "cap": "La case Proportionnel reste cochée, et on ne coche pas Adapter au support.",
+       "d": 2600
+      }
+     ]
+    },
+    {
+     "titre": "Choisir le profil (T3)",
+     "ecran": "t1",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        165,
+        155
+       ],
+       "cap": "On passe à l'onglet Couleur, T3.",
+       "d": 1500
+      },
+      {
+       "click": 1,
+       "go": "t3",
+       "d": 800
+      },
+      {
+       "cur": [
+        300,
+        243
+       ],
+       "ring": 1,
+       "cap": "On choisit le profil, c'est-à-dire le nombre de passes. Tout le reste se règle automatiquement.",
+       "d": 3000
+      }
+     ]
+    },
+    {
+     "titre": "Désactiver le blanc (T4)",
+     "ecran": "t3",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        203,
+        155
+       ],
+       "cap": "On passe à l'onglet T4, le réglage du blanc.",
+       "d": 1500
+      },
+      {
+       "click": 1,
+       "go": "t4",
+       "d": 800
+      },
+      {
+       "cur": [
+        268,
+        367
+       ],
+       "ring": 1,
+       "cap": "On ouvre le menu du blanc, sur la ligne Spot_1.",
+       "d": 1800
+      },
+      {
+       "click": 1,
+       "eff": "o",
+       "d": 1500
+      },
+      {
+       "cur": [
+        222,
+        385
+       ],
+       "cap": "Pour une impression couleur simple, sans blanc, on choisit Aucun.",
+       "d": 2000
+      },
+      {
+       "click": 1,
+       "eff": "a",
+       "val": "Aucun",
+       "d": 2200
+      }
+     ]
+    },
+    {
+     "titre": "Envoyer",
+     "ecran": "t4",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 1
+     },
+     "etapes": [
+      {
+       "cur": [
+        997,
+        812
+       ],
+       "ring": 1,
+       "cap": "Tout est prêt : on clique sur Envoyer, en bas de la fenêtre.",
+       "d": 2000
+      },
+      {
+       "click": 1,
+       "go": "tenv",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Enregistrer le fichier RIPé",
+     "ecran": "tenv",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 1
+     },
+     "etapes": [
+      {
+       "cur": [
+        560,
+        462
+       ],
+       "ring": 1,
+       "cap": "On peut renommer le fichier RIPé ici.",
+       "d": 2000
+      },
+      {
+       "cur": [
+        760,
+        93
+       ],
+       "ring": 1,
+       "cap": "Puis on clique sur Enregistrer : le RIP se lance et crée le fichier.",
+       "d": 2000
+      },
+      {
+       "click": 1,
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Et ensuite ?",
+     "ecran": "end",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 1
+     },
+     "etapes": [
+      {
+       "cap": "Il ne reste plus qu'à ouvrir le fichier RIPé dans le logiciel DXonJet pour imprimer sur le mur.",
+       "d": 3500
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "couleur-blanc",
+   "guide": "flexiprint",
+   "titre": "Impression couleur + blanc",
+   "resume": "Avec une couche de blanc : comparaison Support / Sous-uni, vérification en T9.",
+   "image": "images/t4.jpg",
+   "type": "ecrans",
+   "liens": [
+    [
+     "m0",
+     "0.2"
+    ],
+    [
+     "t4",
+     "4.1"
+    ],
+    [
+     "t9",
+     "9.1"
+    ],
+    [
+     "t9",
+     "9.2"
+    ]
+   ],
+   "scenes": [
+    {
+     "titre": "La fenêtre principale",
+     "ecran": "m0",
+     "etat": {
+      "f": null,
+      "j": 0,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        600,
+        430
+       ],
+       "cap": "Cette fois, on imprime avec une couche de blanc, par exemple sur un mur foncé.",
+       "d": 2800
+      }
+     ]
+    },
+    {
+     "titre": "Ajouter un travail",
+     "ecran": "m0",
+     "etat": {
+      "f": null,
+      "j": 0,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        198,
+        150
+       ],
+       "ring": 1,
+       "cap": "On commence comme d'habitude : bouton Travail.",
+       "d": 1800
+      },
+      {
+       "click": 1,
+       "go": "m0a",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Choisir le fichier",
+     "ecran": "m0a",
+     "etat": {
+      "f": null,
+      "j": 0,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        200,
+        236
+       ],
+       "cap": "On choisit le fichier…",
+       "d": 1400
+      },
+      {
+       "click": 1,
+       "eff": "f",
+       "d": 800
+      },
+      {
+       "cur": [
+        760,
+        93
+       ],
+       "ring": 1,
+       "cap": "… puis Ajout.",
+       "d": 1500
+      },
+      {
+       "click": 1,
+       "go": "m0",
+       "eff": "j",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Ouvrir les propriétés",
+     "ecran": "m0",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        420,
+        292
+       ],
+       "ring": 1,
+       "cap": "On ouvre les propriétés du travail.",
+       "d": 1800
+      },
+      {
+       "click": 1,
+       "go": "t1",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Vérifier la taille (T1)",
+     "ecran": "t1",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        165,
+        405
+       ],
+       "ring": 1,
+       "cap": "On vérifie la taille, en gardant Proportionnel coché.",
+       "d": 2400
+      }
+     ]
+    },
+    {
+     "titre": "Choisir le profil (T3)",
+     "ecran": "t1",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        165,
+        155
+       ],
+       "cap": "Onglet T3…",
+       "d": 1200
+      },
+      {
+       "click": 1,
+       "go": "t3",
+       "d": 800
+      },
+      {
+       "cur": [
+        300,
+        243
+       ],
+       "ring": 1,
+       "cap": "… on choisit le profil, donc le nombre de passes.",
+       "d": 2400
+      }
+     ]
+    },
+    {
+     "titre": "Choisir le blanc (T4)",
+     "ecran": "t3",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 0
+     },
+     "etapes": [
+      {
+       "cur": [
+        203,
+        155
+       ],
+       "cap": "Onglet T4 : le réglage du blanc.",
+       "d": 1400
+      },
+      {
+       "click": 1,
+       "go": "t4",
+       "d": 800
+      },
+      {
+       "cur": [
+        268,
+        367
+       ],
+       "ring": 1,
+       "cap": "On ouvre le menu du blanc sur la ligne Spot_1.",
+       "d": 1800
+      },
+      {
+       "click": 1,
+       "eff": "o",
+       "hl": 5,
+       "d": 1300
+      },
+      {
+       "cap": "Avant de choisir, comparons les deux blancs les plus utilisés.",
+       "eff": "pop",
+       "val": "Support",
+       "d": 2200
+      },
+      {
+       "sel": ".wpop [data-tab=\"Support\"]",
+       "ring": 1,
+       "cap": "Support : du blanc sous la totalité de l'image. Sur un mur foncé, on voit un rectangle blanc. Idéal pour une photo ou un visuel rectangulaire.",
+       "d": 5000
+      },
+      {
+       "sel": ".wpop [data-tab=\"Sous-uni\"]",
+       "cap": "Et maintenant Sous-uni…",
+       "d": 1300
+      },
+      {
+       "click": 1,
+       "eff": "pop",
+       "val": "Sous-uni",
+       "d": 300
+      },
+      {
+       "sel": ".wpop [data-tab=\"Sous-uni\"]",
+       "ring": 1,
+       "cap": "Sous-uni : du blanc seulement sous la couleur. Le mur reste visible autour. Idéal pour un logo ou un dessin détouré.",
+       "d": 5000
+      },
+      {
+       "sel": ".wpop .wclose",
+       "cap": "Ici, notre smiley est détouré : on choisit Sous-uni.",
+       "d": 1600
+      },
+      {
+       "click": 1,
+       "eff": "popclose",
+       "d": 700
+      },
+      {
+       "sel": ".alst div:nth-child(6)",
+       "fx": 0.3,
+       "fy": 0.8,
+       "ring": 1,
+       "d": 1500
+      },
+      {
+       "click": 1,
+       "eff": "a",
+       "val": "Sous-uni",
+       "d": 2000
+      }
+     ]
+    },
+    {
+     "titre": "Vérifier le blanc (T9)",
+     "ecran": "t4",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 1,
+      "wm": "Sous-uni"
+     },
+     "etapes": [
+      {
+       "cur": [
+        396,
+        155
+       ],
+       "cap": "On vérifie où ira le blanc : onglet T9.",
+       "d": 1500
+      },
+      {
+       "click": 1,
+       "go": "t9",
+       "d": 800
+      },
+      {
+       "cur": [
+        110,
+        187
+       ],
+       "ring": 1,
+       "cap": "On coche Aperçu canaux de sortie…",
+       "d": 1600
+      },
+      {
+       "click": 1,
+       "eff": "t9",
+       "d": 900
+      },
+      {
+       "cur": [
+        150,
+        304
+       ],
+       "ring": 1,
+       "cap": "… puis on clique sur Spot_1, le canal du blanc.",
+       "d": 1600
+      },
+      {
+       "click": 1,
+       "eff": "t9w",
+       "d": 900
+      },
+      {
+       "cur": [
+        900,
+        520
+       ],
+       "cap": "Le noir montre où le blanc sera imprimé : sous le smiley, le texte et les bandes, mais pas dans le vide autour.",
+       "d": 4200
+      }
+     ]
+    },
+    {
+     "titre": "Envoyer",
+     "ecran": "t9",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 1,
+      "wm": "Sous-uni",
+      "t9": 2
+     },
+     "etapes": [
+      {
+       "cur": [
+        997,
+        812
+       ],
+       "ring": 1,
+       "cap": "Tout est prêt : on clique sur Envoyer.",
+       "d": 1800
+      },
+      {
+       "click": 1,
+       "go": "tenv",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Enregistrer le fichier RIPé",
+     "ecran": "tenv",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 1,
+      "wm": "Sous-uni"
+     },
+     "etapes": [
+      {
+       "cur": [
+        560,
+        462
+       ],
+       "ring": 1,
+       "cap": "On renomme le fichier si besoin…",
+       "d": 1700
+      },
+      {
+       "cur": [
+        760,
+        93
+       ],
+       "ring": 1,
+       "cap": "… et on clique sur Enregistrer.",
+       "d": 1700
+      },
+      {
+       "click": 1,
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Et ensuite ?",
+     "ecran": "end",
+     "etat": {
+      "f": "smiley.jpg",
+      "j": 1,
+      "a": 1,
+      "wm": "Sous-uni"
+     },
+     "etapes": [
+      {
+       "cap": "On ouvre le fichier RIPé dans le logiciel DXonJet : la machine imprimera le blanc puis la couleur.",
+       "d": 3600
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "reglages-blanc",
+   "guide": "flexiprint",
+   "titre": "Les réglages du blanc",
+   "resume": "Les 7 modes de blanc expliqués simplement, résultat sur un mur foncé.",
+   "image": "images/r_sousuni.png",
+   "type": "blanc",
+   "liens": [
+    [
+     "t4",
+     "4.1"
+    ],
+    [
+     "t11",
+     "11.6"
+    ]
+   ],
+   "scenes": [
+    {
+     "titre": "Introduction",
+     "mode": null,
+     "cap": "Le blanc sert de sous-couche : il permet aux couleurs de bien ressortir sur un mur foncé. Voyons les 7 réglages possibles, choisis en T4."
+    },
+    {
+     "titre": "Aucun",
+     "mode": "aucun",
+     "cap": "Aucun : pas de blanc. Les couleurs se mélangent avec le mur et paraissent sombres."
+    },
+    {
+     "titre": "Support",
+     "mode": "support",
+     "cap": "Support : du blanc sur toute l'image. On voit un rectangle blanc sur le mur, avec l'image dedans."
+    },
+    {
+     "titre": "Sous-uni",
+     "mode": "sousuni",
+     "cap": "Sous-uni : du blanc uniforme sous tous les pixels de couleur. Le mur reste visible autour du dessin."
+    },
+    {
+     "titre": "Sous-couleur",
+     "mode": "souscouleur",
+     "cap": "Sous-couleur : plus la couleur est foncée, plus il y a de blanc dessous."
+    },
+    {
+     "titre": "Couleur de remplissage",
+     "mode": "remplissage",
+     "cap": "Couleur de remplissage : plus la couleur est claire, plus il y a de blanc, y compris dans le fond."
+    },
+    {
+     "titre": "Remplir le substrat",
+     "mode": "substrat",
+     "cap": "Remplir le substrat : plus la couleur est claire, plus il y a de blanc, mais pas là où il y a du vide."
+    },
+    {
+     "titre": "Couleur d'accompagnement",
+     "mode": "accomp",
+     "cap": "Couleur d'accompagnement : permet d'avoir du blanc uniquement là où on le décide. Le blanc vient d'un calque préparé dans Photoshop : c'est le niveau expert."
+    }
+   ]
+  }
+ ],
+ "fenetre_blanc": {
+  "Sous-uni": {
+   "titre": "Blanc sous la couleur uniquement",
+   "usage": "Pour un logo ou un dessin détouré",
+   "resultat": "Le smiley ressort, le mur reste visible autour."
+  },
+  "Support": {
+   "titre": "Blanc sous la totalité de l'image",
+   "usage": "Pour une photo ou un visuel rectangulaire",
+   "resultat": "Un rectangle blanc, avec le smiley dedans."
+  }
+ }
+}

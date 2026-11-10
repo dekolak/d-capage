@@ -122,4 +122,5 @@ Voix off selon les règles de Teddy : `speechSynthesis` fr-FR ; voix « Google f
 - **Fait** : phases 1 et 2 (modules, droits, admin, clé API, ciblage messages, marque par domaine, manifeste, Traefik).
 - **Fait** : phase 3 (guides FlexiPRINT et DXonJet : `apps/api/src/guides/`, `apps/app/src/espaces/kiavik/`). Les JSON restent dans `kit-guides/guides/` (pas de table `Guide`, lus au démarrage) ; les images sont servies par `/api/guides/images/`.
 - **Fait** : recherche (onglet Rechercher) ; phase 4 (procédures). Pas de table `ProcedureLien` : les liens d'une procédure sont ceux de ses étapes. Procédures de départ reprises du prototype dans `kit-guides/procedures.json`.
-- **À faire** : phase 5 (écrans interactifs T5 / T9 et animations). Pas d'exercices (décision novembre 2026). Logo et couleurs Kiavik à fournir (couleur provisoire `#1d6fb8`).
+- **Fait** : animations (phase 5) : les 3 du prototype dans `kit-guides/animations.json`, voix off selon §6.
+- **À faire** : écrans interactifs T5 / T9. Pas d'exercices (décision novembre 2026). Logo et couleurs Kiavik à fournir (couleur provisoire `#1d6fb8`).

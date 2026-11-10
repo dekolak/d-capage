@@ -6,6 +6,7 @@ import { ResumeGuide } from './guides';
 import { useProcedures } from './donneesProcedures';
 import { ListeProcedures } from './Procedures';
 import './guides.css';
+import './animations.css';
 
 /** Accueil Kiavik : les guides du compte côte à côte en haut, les procédures en dessous. */
 export default function Guides() {
@@ -35,6 +36,22 @@ export default function Guides() {
                 {g.description && <span className="muted petit">{g.description}</span>}
               </Link>
             ))}
+          </div>
+        </>
+      )}
+      {guides.some((g) => g.animations.length) && (
+        <>
+          <h2>Animations</h2>
+          <div className="an-cartes">
+            {guides.flatMap((g) =>
+              g.animations.map((a) => (
+                <Link key={`${g.slug}/${a.id}`} to={`/guides/${g.slug}/animation/${a.id}`} className="carte an-carte">
+                  <span className="an-img">{a.image && <img src={a.image} alt="" />}<span className="an-play">▶</span></span>
+                  <b>{a.titre}</b>
+                  {a.resume && <span className="muted petit">{a.resume}</span>}
+                </Link>
+              )),
+            )}
           </div>
         </>
       )}

@@ -67,6 +67,10 @@
 2. Nouveau guide : module `guide-<slug>` dans l'espace Kiavik (`espaces.ts`), sinon l'API refuse de démarrer.
 3. Redéployer (les fichiers sont lus au démarrage), vérifier sur téléphone.
 
+### Animations Kiavik
+- Modifier un sous-titre ou une durée : `kit-guides/animations.json` (champ `cap`, `d` en ms), puis redéployer. Le sous-titre est aussi la phrase lue par la voix off.
+- Lier une animation à un bouton : ajouter `["<écran>", "<pastille>"]` dans ses `liens`.
+
 ### Procédures Kiavik
 - Elles se créent dans l'app (Administration → Procédures) : rien à déployer.
 - `kit-guides/procedures.json` ne sert qu'au départ (base vide) : modifier ce fichier ne change pas une procédure déjà créée.

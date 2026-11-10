@@ -56,10 +56,13 @@ interface Props {
   hauteur: number;
   /** Fermeture : `ok` = validée (Ajout, Enregistrer), sinon annulée. */
   onFermer(ok: boolean, message?: string): void;
+  /** Fichier sélectionné imposé (animations). */
+  fichier?: string | null;
 }
 
-export function Fenetre({ fenetre, largeur, hauteur, onFermer }: Props) {
-  const [choix, setChoix] = useState<string | null>(null);
+export function Fenetre({ fenetre, largeur, hauteur, onFermer, fichier }: Props) {
+  const [choisi, setChoix] = useState<string | null>(null);
+  const choix = fichier !== undefined ? fichier : choisi;
   const [toast, setToast] = useState('');
 
   if (fenetre === 'enregistrer_sous')

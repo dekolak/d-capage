@@ -42,6 +42,19 @@ export interface Guide {
   ecrans: Ecran[];
   navigation?: Record<string, unknown>;
   modesBlanc?: Record<string, unknown>;
+  /** Animations explicatives du guide (kit-guides/animations.json). */
+  animations?: Animation[];
+  fenetreBlanc?: Record<string, unknown>;
+}
+export interface Animation {
+  id: string;
+  guide: string;
+  titre: string;
+  resume?: string;
+  image?: string;
+  type: 'ecrans' | 'blanc';
+  liens?: [string, string][];
+  scenes: unknown[];
 }
 
 const URL_IMAGES = '/api/guides/images/';
@@ -71,6 +84,10 @@ export class GuidesService implements OnModuleInit {
     const json = fichiers.map((f) => JSON.parse(readFileSync(join(dossier, f), 'utf8')));
     // Données annexes rattachées à un écran (ex. modes-blanc.json → écran t4 de FlexiPRINT).
     const annexes = json.filter((j) => !Array.isArray(j.ecrans) && j.ecran && Array.isArray(j.modes));
+    const fichierAnim = join(this.racine, 'animations.json');
+    const anims: { animations: Animation[]; fenetre_blanc?: Record<string, unknown> } = existsSync(fichierAnim)
+      ? JSON.parse(readFileSync(fichierAnim, 'utf8'))
+      : { animations: [] };
     this.guides = json
       .filter((j) => Array.isArray(j.ecrans))
       .map((j): Guide => {
@@ -78,10 +95,13 @@ export class GuidesService implements OnModuleInit {
         if (!espaceDuModule(module)) throw new Error(`Guide ${j.slug} : module ${module} absent de espaces.ts`);
         const ecrans: Ecran[] = j.ecrans.map((e: Ecran) => ({ ...e, image: urlImage(e.image) }));
         const blanc = annexes.find((a) => ecrans.some((e) => e.id === a.ecran));
+        const animations = anims.animations.filter((a) => a.guide === j.slug).map((a) => ({ ...a, image: urlImage(a.image) }));
         return {
           ...j,
           module,
           ecrans,
+          animations,
+          fenetreBlanc: animations.length ? anims.fenetre_blanc : undefined,
           modesBlanc: blanc && {
             ...blanc,
             modes: blanc.modes.map((m: { image_canal?: string; image_mur?: string }) => ({
@@ -100,7 +120,10 @@ export class GuidesService implements OnModuleInit {
   lister(modules: string[] | 'tous') {
     return this.guides
       .filter((g) => modules === 'tous' || modules.includes(g.module))
-      .map(({ slug, nom, description, module, ecrans }) => ({ slug, nom, description, module, ecrans: ecrans.length }));
+      .map(({ slug, nom, description, module, ecrans, animations }) => ({
+        slug, nom, description, module, ecrans: ecrans.length,
+        animations: (animations ?? []).map(({ id, titre, resume, image }) => ({ id, titre, resume, image })),
+      }));
   }
 
   /** Guide complet ; les conseils « à compléter » (notes internes) ne sont envoyés qu'à l'admin. */

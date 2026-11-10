@@ -189,6 +189,7 @@ function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: P
   const conseil = p.conseil ?? (p.etat === 'preregle' ? 'Préréglé : ne pas toucher.' : undefined);
   const lien = ecranCite(guide, p.texte, e.id);
   const { liste } = useProcedures();
+  const anims = (guide.animations ?? []).filter((a) => a.liens?.some(([ec, id]) => ec === e.id && id === p.id));
   const liees = (liste ?? []).filter((x) => x.liens.some((l) => l.guide === guide.slug && l.ecran === e.id && l.pastille === p.id));
   return (
     <>
@@ -208,6 +209,13 @@ function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: P
         <button type="button" className="btn prim petit gx-ouvrir" onClick={() => onOuvrir(lien.id)}>
           Ouvrir l'écran {lien.code}
         </button>
+      )}
+      {(liees.length > 0 || anims.length > 0) && (
+        <div className="gx-proc-lies">
+          {anims.map((a) => (
+            <Link key={a.id} to={`/guides/${guide.slug}/animation/${a.id}`} className="btn petit">🎬 Voir l'animation : {a.titre}</Link>
+          ))}
+        </div>
       )}
       {liees.length > 0 && (
         <div className="gx-proc-lies">

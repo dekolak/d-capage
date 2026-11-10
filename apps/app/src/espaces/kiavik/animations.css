@@ -1,0 +1,84 @@
+/* Animations Kiavik (reprises du prototype kit-guides/prototype). */
+.an { --acc: #e8541e; --ink: #1e2228; --mut: #6b7078; --line: #d9d6cf; }
+.an-ecran { position: relative; width: 100%; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--ombre); container-type: inline-size; user-select: none; -webkit-user-select: none; }
+.an-ecran > img { display: block; width: 100%; height: 100%; object-fit: fill; pointer-events: none; }
+.an-fenetre { position: absolute; inset: 0; background: #3a6ea5; pointer-events: none; }
+.an-cap { background: var(--ink); color: #fff; border-radius: 10px; padding: 12px 14px; margin-top: 10px; font-size: 15px; line-height: 1.4; min-height: 50px; }
+.an-ctl { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.an-ctl .btn { min-height: 44px; }
+.an-reglages { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-top: 10px; font-size: 14px; }
+.an-reglages label { display: flex; gap: 8px; align-items: center; font-weight: 600; }
+.an-reglages select { max-width: 100%; }
+.an-case input { width: 20px; height: 20px; }
+.an-scenes { margin: 0; padding-left: 22px; display: grid; gap: 2px; }
+.an-scenes button { width: 100%; text-align: left; background: none; border: 0; padding: 8px 6px; border-radius: 8px; font-size: 15px; cursor: pointer; }
+.an-scenes button.on { background: var(--o-doux); color: var(--od); font-weight: 700; }
+
+.acur { position: absolute; z-index: 6; width: max(16px, 2.2cqw); height: max(16px, 2.2cqw); margin: -2px 0 0 -3px; pointer-events: none; filter: drop-shadow(0 2px 2px #0006); }
+.acur.clk::after { content: ''; position: absolute; left: -60%; top: -60%; width: 120%; height: 120%; border-radius: 50%; border: 3px solid var(--acc); animation: an-rip 0.5s ease-out forwards; }
+@keyframes an-rip { from { transform: scale(0.3); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+.aring { position: absolute; z-index: 5; width: max(30px, 4.5cqw); height: max(30px, 4.5cqw); margin-left: calc(max(30px, 4.5cqw) / -2); margin-top: calc(max(30px, 4.5cqw) / -2); border: 3px solid var(--acc); border-radius: 50%; pointer-events: none; opacity: 0; animation: an-apparait 0.01s forwards, an-pulse 1.2s ease-in-out infinite; }
+@keyframes an-apparait { to { opacity: 1; } }
+@keyframes an-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+.aaucun { position: absolute; z-index: 4; background: #fff; border: 1px solid #0078d7; font: max(8px, 1cqw) 'Segoe UI', sans-serif; display: flex; align-items: center; padding-left: 4px; box-shadow: 0 0 0 3px #e8541e88; white-space: nowrap; overflow: hidden; }
+.aaucun.an-coche { padding: 0; justify-content: center; color: #0a0; box-shadow: none; border: 1px solid #555; }
+.alst { position: absolute; z-index: 4; background: #fff; border: 1px solid #0078d7; font: max(8px, 1cqw) 'Segoe UI', sans-serif; box-shadow: 0 3px 8px #0004; }
+.alst div { padding: 0 4px; line-height: 1.55; white-space: nowrap; }
+.alst div.h { background: #0078d7; color: #fff; }
+.t9pv { position: absolute; z-index: 2; background: #fff; }
+.t9pv img { width: 100%; height: 100%; display: block; }
+.t9pv span { position: absolute; left: 4px; right: 4px; bottom: 4px; background: #000b; color: #fff; font-size: max(9px, 1cqw); padding: 3px 6px; border-radius: 3px; }
+.job { position: absolute; left: 5.3%; right: 5.3%; top: 33.8%; height: 2.6%; overflow: hidden; background: #cfe6ff; border: 1px solid #7fb2ec; font-size: 0.92cqw; color: #111; }
+.job > * { position: absolute; white-space: nowrap; top: 50%; transform: translateY(-50%); }
+.job img { height: 90%; width: auto; }
+.aend { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 2cqw; background: linear-gradient(135deg, #fff7f0, #eef4ff); }
+.aend div { background: #fff; border: 2px solid var(--line); border-radius: 10px; padding: 2cqw; text-align: center; font-size: max(11px, 1.6cqw); }
+.aend b { display: block; font-size: max(12px, 1.9cqw); }
+.aend i { font-style: normal; font-size: 4cqw; color: var(--acc); }
+
+.wpop { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 86%; background: #fff; border-radius: 10px; box-shadow: 0 10px 40px #0007; z-index: 7; overflow: hidden; border: 1px solid #ccc; font-family: system-ui, sans-serif; }
+.wph { display: flex; align-items: center; justify-content: space-between; background: var(--ink); color: #fff; padding: 1cqw 1.6cqw; font-size: max(11px, 1.7cqw); }
+.wclose { padding: 0 0.6cqw; }
+.wtabs { display: flex; gap: 0.6cqw; padding: 1cqw 1.6cqw 0; border-bottom: 2px solid var(--line); }
+.wtabs button { border: 0; background: #eee; padding: 0.8cqw 2cqw; font-size: max(10px, 1.5cqw); font-weight: 700; border-radius: 6px 6px 0 0; color: #555; }
+.wtabs button.on { background: var(--acc); color: #fff; }
+.wbody { display: grid; grid-template-columns: 15cqw 19cqw 1fr; gap: 1.6cqw; padding: 1.6cqw; align-items: center; }
+.wcol img { width: 100%; display: block; border: 1px solid #ddd; border-radius: 4px; }
+.wcol small { display: block; text-align: center; font-size: max(8px, 1.05cqw); color: var(--mut); margin-top: 0.4cqw; line-height: 1.25; }
+.wtxt b { font-size: max(12px, 2cqw); color: var(--acc); }
+.wtxt p { margin: 0.6cqw 0; font-size: max(9px, 1.45cqw); line-height: 1.35; }
+.wtxt .wr { color: var(--mut); }
+.wtxt .wu { font-weight: 700; }
+
+.wa { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2%; background: #fff; border-radius: 10px; box-shadow: var(--ombre); padding: 16px 8px 46px; container-type: inline-size; }
+.wa figure { margin: 0; text-align: center; width: 28%; }
+.wa figure img { width: 100%; display: block; border-radius: 6px; }
+.wo1 { border: 1px solid var(--line); aspect-ratio: 3 / 4; object-fit: contain; background: #fff; }
+.wa figcaption { font-size: max(11px, 1.3cqw); margin-top: 6px; line-height: 1.3; }
+.wa figcaption small { color: var(--mut); }
+.warr { font-size: max(16px, 3cqw); color: var(--acc); }
+.wwipe { position: relative; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.wwipe img { animation: an-balaye 2.6s ease-out both; }
+.wres { aspect-ratio: 380 / 480; }
+.wres img { height: 100%; object-fit: cover; }
+.wres img:first-child { animation: none; }
+.wres img.top { position: absolute; inset: 0; }
+@keyframes an-balaye { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+.wname { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); font-weight: 800; font-size: max(15px, 2.2cqw); color: var(--acc); white-space: nowrap; }
+.wt { font-style: normal; font-size: 10px; background: var(--acc); color: #fff; padding: 1px 6px; border-radius: 8px; margin-left: 6px; vertical-align: middle; }
+.wintro { display: flex; flex-wrap: wrap; align-items: center; gap: 4%; width: 100%; justify-content: center; }
+.wl { display: flex; flex-direction: column; gap: 6px; width: 34%; }
+.wl span { padding: 10px 6px; border-radius: 6px; font-weight: 700; text-align: center; font-size: max(11px, 1.5cqw); }
+.wl .l1 { background: linear-gradient(90deg, #00aeef, #ec008c, #ffec00); color: #fff; text-shadow: 0 1px 2px #0008; }
+.wl .l2 { background: #fff; border: 2px solid #ccc; }
+.wl .l3 { background: #4e4038; color: #fff; }
+.wcmp { display: flex; gap: 4%; width: 52%; }
+.wcmp figure { width: 48%; }
+
+/* Accueil : cartes d'animation */
+.an-cartes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.an-carte { display: grid; gap: 4px; padding: 8px 8px 10px; text-decoration: none; color: inherit; align-content: start; }
+.an-carte .an-img { position: relative; }
+.an-carte img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 8px; display: block; background: #eee; }
+.an-carte .an-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 50%; background: #e8541ee6; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 3px 10px #0005; }
+.an-carte b { font-size: 14px; line-height: 1.25; }
