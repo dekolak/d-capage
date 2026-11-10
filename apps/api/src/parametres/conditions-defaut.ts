@@ -2,7 +2,7 @@
  * Texte par défaut des conditions d'utilisation (modifiable dans Administration → Conditions).
  * PROJET : à faire relire par un juriste avant la mise en service.
  */
-export const CONDITIONS_DEFAUT = `Bienvenue dans l'application Réglages décapage de Lazzeko.
+export const CONDITIONS_LAZZEKO = `Bienvenue dans l'application Réglages décapage de Lazzeko.
 
 1. Le principe : l'échange
 L'application fonctionne sur le partage. Les fiches que vous enregistrez (réglages, tags, photos, notes et commentaires) sont visibles par les autres utilisateurs de l'application. En contrepartie, vous accédez aux réglages et aux photos de toute la communauté. Ce partage est la condition d'utilisation de l'application.
@@ -21,3 +21,17 @@ L'application conserve votre identifiant, votre nom, vos machines et vos publica
 
 6. Évolution des conditions
 Si ces conditions changent, elles vous seront présentées à nouveau lors de votre prochaine connexion.`;
+
+/** Espace Kiavik : guides et procédures, sans partage communautaire. */
+export const CONDITIONS_KIAVIK = `Bienvenue dans Kiavik Copilot.
+
+1. Le service
+L'application donne accès aux guides des machines et aux procédures Kiavik associés à votre compte. Rien de ce que vous consultez n'est partagé avec d'autres utilisateurs.
+
+2. Utilisation
+Les guides et procédures sont réservés à votre usage et à celui de votre entreprise. Ils ne remplacent pas la documentation officielle du fabricant ni les consignes de sécurité de votre atelier.
+
+3. Vos données
+L'application conserve votre identifiant, votre nom et vos réponses aux messages éventuels pour faire fonctionner le service. Vous pouvez demander la suppression de votre compte en contactant Kiavik.`;
+
+export const CONDITIONS_DEFAUT: Record<string, string> = { lazzeko: CONDITIONS_LAZZEKO, kiavik: CONDITIONS_KIAVIK };

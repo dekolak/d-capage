@@ -3,15 +3,20 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import { ApiKeysService } from '../api-keys/api-keys.service';
+import { espaceDeLaRequete, espaceDuModule } from '../espaces/espaces';
 import { ParametresService } from '../parametres/parametres.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { CLE_API, Principal, PUBLIC, ROLES, SANS_CONDITIONS } from './decorators';
+import { CLE_API, MODULE, Principal, PUBLIC, ROLES, SANS_CONDITIONS } from './decorators';
 
 /**
  * Garde globale :
  *  - @Public() → libre ;
  *  - en-tête X-Api-Key → accepté seulement sur les routes @AutoriseCleApi() ;
- *  - sinon jeton JWT (Authorization: Bearer …) d'un utilisateur actif, puis contrôle @Roles().
+ *  - sinon jeton JWT (Authorization: Bearer …) d'un utilisateur actif, puis :
+ *    - @ModuleRequis() → le compte doit avoir ce module (403 MODULE_NON_AUTORISE) ;
+ *    - conditions d'utilisation de l'espace acceptées (403 CONDITIONS_A_ACCEPTER), sauf @SansConditions() ;
+ *    - @Roles().
+ *  Les admins ont accès à tout.
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -25,8 +30,11 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const meta = <T>(k: string) => this.reflector.getAllAndOverride<T>(k, [ctx.getHandler(), ctx.getClass()]);
-    if (meta<boolean>(PUBLIC)) return true;
     const req = ctx.switchToHttp().getRequest();
+    const moduleRequis = meta<string>(MODULE);
+    const esp = (moduleRequis && espaceDuModule(moduleRequis)) || espaceDeLaRequete(req);
+    req.espace = esp.slug;
+    if (meta<boolean>(PUBLIC)) return true;
 
     const cle = req.headers['x-api-key'];
     if (typeof cle === 'string' && cle) {
@@ -45,15 +53,24 @@ export class AuthGuard implements CanActivate {
     } catch {
       throw new UnauthorizedException();
     }
-    const user = await this.prisma.user.findUnique({ where: { id: sub }, select: { id: true, role: true, actif: true, conditionsVersion: true } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: sub },
+      select: { id: true, role: true, actif: true, modules: { select: { module: true } }, acceptations: { where: { espace: esp.slug }, select: { version: true } } },
+    });
     if (!user?.actif) throw new UnauthorizedException();
     req.principal = { type: 'user', id: user.id, role: user.role } satisfies Principal;
 
-    // Le partage communautaire est la condition d'utilisation : rien n'est accessible avant de l'accepter.
-    if (user.role !== Role.ADMIN && !meta<boolean>(SANS_CONDITIONS)) {
-      const courante = await this.parametres.versionConditions();
-      if ((user.conditionsVersion ?? 0) < courante)
-        throw new ForbiddenException({ message: 'Conditions d\'utilisation à accepter', code: 'CONDITIONS_A_ACCEPTER' });
+    if (user.role !== Role.ADMIN) {
+      const modules = user.modules.map((m) => m.module);
+      if (moduleRequis && !modules.includes(moduleRequis))
+        throw new ForbiddenException({ message: 'Cette fonction n\'est pas activée sur votre compte', code: 'MODULE_NON_AUTORISE' });
+      // Conditions de l'espace (pour Lazzeko : le partage communautaire), si le compte a accès à cet espace.
+      const accesEspace = esp.modules.some((m) => modules.includes(m.slug));
+      if (accesEspace && !meta<boolean>(SANS_CONDITIONS)) {
+        const courante = await this.parametres.versionConditions(esp.slug);
+        if ((user.acceptations[0]?.version ?? 0) < courante)
+          throw new ForbiddenException({ message: 'Conditions d\'utilisation à accepter', code: 'CONDITIONS_A_ACCEPTER', espace: esp.slug });
+      }
     }
 
     const roles = meta<Role[]>(ROLES);

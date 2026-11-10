@@ -1,6 +1,9 @@
 # Décapage — réglages machines
 
-App mobile (PWA) pour enregistrer et partager des réglages de machines de décapage (laser, etc.).
+App mobile (PWA) à deux espaces, une seule app et un seul admin :
+- **Lazzeko** (`app.lazzeko.com`) : enregistrer et partager des réglages de machines de décapage (laser…) ;
+- **Kiavik** (`app.kiavikcopilot.ovh`) : guides machines et procédures (en cours, voir `kit-guides/`).
+
 Voir [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Démarrer en local
@@ -41,8 +44,9 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 |---|---|---|
 | POST | `/api/auth/connexion` `{identifiant, motDePasse}` | public |
 | GET · POST | `/api/moi`, `/api/moi/mot-de-passe` | connecté |
-| POST | `/api/users` `{identifiant, motDePasse, nom?, role?, clientLazzeko?, numeroOdoo?}` | admin **ou clé API** |
-| GET · PATCH | `/api/users[?numeroOdoo=&q=]`, `/api/users/:id` | admin (GET aussi par clé API) |
+| POST | `/api/users` `{identifiant, motDePasse, nom?, role?, clientLazzeko?, numeroOdoo?, modules?}` | admin **ou clé API** |
+| GET · PATCH | `/api/users[?numeroOdoo=&q=&espace=&module=]`, `/api/users/:id` (`modules` remplace la liste) | admin (GET aussi par clé API) |
+| GET | `/api/espaces`, `/api/espace`, `/api/manifest.webmanifest` (selon l'adresse) | public |
 | GET · POST | `/api/users/:id/machines` `{varianteId, surnom?}` | admin **ou clé API** |
 | POST · GET · DELETE | `/api/admin/cles-api` | admin |
 | GET | `/api/catalogue`, `/api/catalogue/versions/:id` | connecté |
@@ -61,15 +65,25 @@ npm run test:e2e     # parcours complet de l'API (base locale, seed lancé)
 | POST · DELETE | idem, champ multipart `image` (PNG conseillé, 5 Mo max) | admin |
 | GET | `/api/top?varianteId=` (3 meilleurs réglages par tag) | connecté |
 | GET · PATCH | `/api/parametres`, `/api/admin/parametres` `{aideSupport}` | connecté · admin |
-| GET · POST | `/api/conditions` · `/api/moi/conditions` `{version, accordPhotosMarketing?}` | connecté |
+| GET · POST | `/api/conditions?espace=` · `/api/moi/conditions` `{espace?, version, accordPhotosMarketing?}` | connecté |
 | PATCH | `/api/moi/preferences` `{accordPhotosMarketing}` | connecté |
-| POST | `/api/admin/conditions` `{texte}` (nouvelle version) | admin |
+| POST | `/api/admin/conditions` `{espace, texte}` (nouvelle version) | admin |
 | GET · POST | `/api/annonces`, `/api/annonces/:id/compris`, `/api/annonces/:id/reponse` `{valeur, autre?}` | connecté |
 | GET | `/api/admin/annonces/:id/reponses[?occurrence=]`, `/api/admin/annonces/:id/reponses.csv` | admin **ou clé API** |
 | GET · POST · PATCH · DELETE | `/api/admin/annonces` (+ `POST /api/admin/annonces/cible` : nombre d'utilisateurs visés) | admin **ou clé API** |
 
+## Espaces (Lazzeko / Kiavik)
+- Définis dans `apps/api/src/espaces/espaces.ts` : nom, adresse, couleurs, icônes, communauté oui/non, **modules**.
+  - Lazzeko : `reglages-decapage`. Kiavik : `guide-flexiprint`, `guide-dxonjet`, `procedures-kiavik`.
+- Un compte a accès à un espace s'il a au moins un de ses modules (Administration → utilisateur → **Accès**, ou `modules` via l'API).
+  Sans `modules` à la création : `["reglages-decapage"]` (l'automatisation Odoo existante continue de marcher).
+- Un compte dans les deux espaces passe de l'un à l'autre dans **Compte → Mes espaces**.
+- Conditions d'utilisation **par espace** ; une route d'un module refuse l'accès avec `403` `code: "MODULE_NON_AUTORISE"`.
+- L'app envoie l'en-tête `X-Espace` ; sans lui, l'API se base sur l'adresse.
+- Code de l'app propre à un espace : `apps/app/src/espaces/<espace>/` (écrans + barre du bas). Compte, messages et admin sont communs.
+
 ## Messages (bulles à l'ouverture de l'app)
-- Administration → **💬 Messages** : titre, texte, niveau (💡 Conseil, ℹ️ Info, ⚠️ Important = affiché en grand), lien facultatif, dates de début / fin.
+- Administration → **💬 Messages** : espace (tous, Lazzeko ou Kiavik), titre, texte, niveau (💡 Conseil, ℹ️ Info, ⚠️ Important = affiché en grand), lien facultatif, dates de début / fin.
 - **Une fois** ou **périodique** : revient tous les N jours / semaines / mois après « J'ai compris » (ex. « Pensez à nettoyer la lentille » chaque mois).
 - **Ciblage par n° client Odoo** : liste de numéros (champ « N° client Odoo » du compte, saisi à la création ou envoyé par Odoo via `numeroOdoo`).
 - **Ciblage** : tous, clients Lazzeko ou autres marques (case « Client Lazzeko » à la création du compte, ou `clientLazzeko` via l'API), et/ou par machine (modèle, variante). Nombre d'utilisateurs touchés affiché avant publication.

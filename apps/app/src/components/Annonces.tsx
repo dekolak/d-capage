@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { useEspace } from '../lib/espace';
 
 export type TypeQuestion = 'AUCUNE' | 'OUI_NON' | 'CHOIX' | 'NOTE' | 'TEXTE';
 export interface Question { type: TypeQuestion; texte: string | null; options: string[]; autre: boolean; obligatoire: boolean }
@@ -13,6 +15,7 @@ export const ICONE = { CONSEIL: '💡', INFO: 'ℹ️', IMPORTANT: '⚠️' } as
 function Repondre({ q, onRepondre, apercu }: { q: Question; onRepondre?: (v: string, autre?: string) => void; apercu?: boolean }) {
   const [autre, setAutre] = useState<string | null>(null);
   const [texte, setTexte] = useState('');
+  const { espace } = useEspace();
   const envoyer = (v: string, a?: string) => !apercu && onRepondre?.(v, a);
   return (
     <div className="ba-question">
@@ -50,7 +53,7 @@ function Repondre({ q, onRepondre, apercu }: { q: Question; onRepondre?: (v: str
           <button type="button" className="btn petit prim" disabled={!texte.trim()} onClick={() => envoyer(texte.trim())}>Envoyer</button>
         </div>
       )}
-      <small className="muted">Votre réponse est visible par Lazzeko.</small>
+      <small className="muted">Votre réponse est visible par {espace.nom}.</small>
     </div>
   );
 }
@@ -69,7 +72,10 @@ export function Bulle({ a, onCompris, onRepondre, apercu }: {
         <p>{a.texte || 'Texte du message…'}</p>
         {q && <Repondre q={q} onRepondre={onRepondre} apercu={apercu} />}
         <div className="ba-actions">
-          {a.lienUrl && (
+          {a.lienUrl && a.lienUrl.startsWith('/') && (
+            <Link to={a.lienUrl} onClick={apercu ? (e) => e.preventDefault() : onCompris} className="btn petit">{a.lienTexte || 'Voir'}</Link>
+          )}
+          {a.lienUrl && !a.lienUrl.startsWith('/') && (
             <a href={a.lienUrl} target="_blank" rel="noreferrer" className="btn petit">{a.lienTexte || 'En savoir plus'}</a>
           )}
           {(!q || !q.obligatoire) && (
@@ -84,7 +90,7 @@ export function Bulle({ a, onCompris, onRepondre, apercu }: {
 }
 
 /**
- * Messages de Lazzeko à l'ouverture de l'app : bulles en haut de l'écran,
+ * Messages de l'admin (Lazzeko ou Kiavik selon l'espace) à l'ouverture de l'app : bulles en haut de l'écran,
  * message « Important » en grand (à fermer pour continuer). Pas de réponse libre au-delà de la question posée.
  */
 export function Annonces() {

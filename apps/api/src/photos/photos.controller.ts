@@ -20,7 +20,7 @@ import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { Response } from 'express';
 import { randomUUID } from 'node:crypto';
-import { Moi, Principal } from '../auth/decorators';
+import { ModuleRequis, Moi, Principal } from '../auth/decorators';
 import { FichesService } from '../fiches/fiches.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, MIME_IMAGE as MIME, StockageService } from '../stockage/stockage.service';
@@ -40,6 +40,8 @@ class ModifierPhotoDto {
 
 
 
+/** Module « Réglages décapage » (espace Lazzeko). */
+@ModuleRequis('reglages-decapage')
 @Controller()
 export class PhotosController {
   constructor(private prisma: PrismaService, private fiches: FichesService, private stockage: StockageService) {}

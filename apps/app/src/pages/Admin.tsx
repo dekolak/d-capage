@@ -2,9 +2,10 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Erreur } from '../components/Composants';
 import { api, Fabricant, MaMachine } from '../lib/api';
+import { useEspace } from '../lib/espace';
 import { date } from '../lib/util';
 
-interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; conditionsVersion: number | null; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null }
+interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; modules: string[]; espaces: string[]; conditions: Record<string, { version: number }>; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null }
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
 interface TagAValider { id: string; nom: string; groupe: { nom: string } }
 
@@ -17,8 +18,12 @@ export default function Admin() {
   const [selection, setSelection] = useState<U | null>(null);
   const [machinesSel, setMachinesSel] = useState<MaMachine[]>([]);
   const [err, setErr] = useState<unknown>();
-  const [f, setF] = useState({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true, numeroOdoo: '' });
+  const { espace: espaceOuvert, espaces } = useEspace();
+  const vide = () => ({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true, numeroOdoo: '', modules: espaceOuvert.modules.slice(0, 1).map((m) => m.slug) });
+  const [f, setF] = useState(vide);
   const [recherche, setRecherche] = useState('');
+  const [filtreEspace, setFiltreEspace] = useState('');
+  const lazzeko = (modules: string[]) => modules.includes('reglages-decapage');
 
   const charger = () =>
     Promise.all([api<U[]>('/users'), api<Cle[]>('/admin/cles-api'), api<TagAValider[]>('/tags/a-valider')])
@@ -36,8 +41,8 @@ export default function Admin() {
     e.preventDefault();
     setErr(undefined);
     try {
-      await api('/users', { method: 'POST', json: { ...f, nom: f.nom || undefined, numeroOdoo: f.numeroOdoo.trim() || undefined } });
-      setF({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true, numeroOdoo: '' });
+      await api('/users', { method: 'POST', json: { ...f, nom: f.nom || undefined, numeroOdoo: f.numeroOdoo.trim() || undefined, modules: f.role === 'ADMIN' ? [] : f.modules } });
+      setF(vide());
       charger();
     } catch (x) { setErr(x); }
   };
@@ -103,6 +108,12 @@ export default function Admin() {
           </select>
         </label>
         {f.role === 'USER' && (
+          <div>
+            <b className="petit">Accès</b>
+            <CasesModules valeur={f.modules} onChange={(modules) => setF({ ...f, modules })} />
+          </div>
+        )}
+        {f.role === 'USER' && lazzeko(f.modules) && (
           <label className="interrupteur">
             <input type="checkbox" checked={f.clientLazzeko} onChange={(e) => setF({ ...f, clientLazzeko: e.target.checked })} />
             <span>Client Lazzeko <small className="muted">(décocher pour un utilisateur d'une autre marque)</small></span>
@@ -113,16 +124,34 @@ export default function Admin() {
 
       <h2>Utilisateurs ({users.length})</h2>
       <input className="recherche" placeholder="Rechercher (identifiant, nom, n° Odoo)…" value={recherche} onChange={(e) => setRecherche(e.target.value)} />
+      <select value={filtreEspace} onChange={(e) => setFiltreEspace(e.target.value)} style={{ marginBottom: 10 }}>
+        <option value="">Tous les espaces</option>
+        {espaces.map((e) => <option key={e.slug} value={e.slug}>{e.nom}</option>)}
+      </select>
       <div className="liste">
         {users.filter((u) => {
           const q = recherche.trim().toLowerCase();
+          if (filtreEspace && !u.espaces.includes(filtreEspace)) return false;
           return !q || [u.identifiant, u.nom ?? '', u.numeroOdoo ?? ''].some((x) => x.toLowerCase().includes(q));
         }).map((u) => (
           <div key={u.id} className={'carte ligne-machine' + (u.actif ? '' : ' inactif')}>
             <button type="button" className="lien-bloc" onClick={() => setSelection(selection?.id === u.id ? null : u)}>
               <b>{u.nom || u.identifiant}</b> <span className="muted petit">{u.identifiant} · {u.role === 'ADMIN' ? 'admin' : 'utilisateur'} · {date(u.createdAt)}</span>
-              {u.role !== 'ADMIN' && <span className="petit"> {u.conditionsVersion ? `✓ conditions v${u.conditionsVersion}` : '· conditions non acceptées'}{u.accordPhotosMarketing ? ' · 📷 accord photos' : ''}</span>}
-              {u.role !== 'ADMIN' && <span className={'badge-client' + (u.clientLazzeko ? '' : ' autre')}>{u.clientLazzeko ? 'Client Lazzeko' : 'Autre marque'}</span>}
+              {u.role !== 'ADMIN' && (
+                <span className="petit">
+                  {u.espaces.map((s) => {
+                    const e = espaces.find((x) => x.slug === s);
+                    return ` · ${e?.nom ?? s} : ${u.conditions[s] ? `conditions v${u.conditions[s].version} ✓` : 'conditions non acceptées'}`;
+                  }).join('')}
+                  {u.accordPhotosMarketing ? ' · 📷 accord photos' : ''}
+                </span>
+              )}
+              {u.role !== 'ADMIN' && u.espaces.map((s) => {
+                const e = espaces.find((x) => x.slug === s);
+                return <span key={s} className="badge-espace" style={{ ['--c' as string]: e?.couleur }}>{e?.nom ?? s}</span>;
+              })}
+              {u.role !== 'ADMIN' && !u.espaces.length && <span className="badge-masquee">Aucun accès</span>}
+              {u.role !== 'ADMIN' && lazzeko(u.modules) && <span className={'badge-client' + (u.clientLazzeko ? '' : ' autre')}>{u.clientLazzeko ? 'Client Lazzeko' : 'Autre marque'}</span>}
               {u.numeroOdoo && <span className="badge-odoo">Odoo {u.numeroOdoo}</span>}
             </button>
             <button type="button" className="btn petit" onClick={() => basculerActif(u)}>{u.actif ? 'Désactiver' : 'Réactiver'}</button>
@@ -130,11 +159,25 @@ export default function Admin() {
               <div className="sous-bloc">
                 <NumeroOdoo u={u} onMaj={charger} />
                 {u.role !== 'ADMIN' && (
+                  <>
+                    <b className="petit">Accès</b>
+                    <CasesModules
+                      valeur={u.modules}
+                      onChange={async (modules) => {
+                        setUsers((l) => l.map((x) => (x.id === u.id ? { ...x, modules } : x))); // affichage immédiat
+                        await api(`/users/${u.id}`, { method: 'PATCH', json: { modules } }).catch(setErr);
+                        charger();
+                      }}
+                    />
+                  </>
+                )}
+                {u.role !== 'ADMIN' && lazzeko(u.modules) && (
                   <label className="interrupteur petit">
                     <input type="checkbox" checked={u.clientLazzeko} onChange={async (e) => { await api(`/users/${u.id}`, { method: 'PATCH', json: { clientLazzeko: e.target.checked } }); charger(); }} />
                     Client Lazzeko
                   </label>
                 )}
+                {lazzeko(u.modules) && <>
                 <Link to={`/admin/fiches?userId=${u.id}`} className="lien">Voir ses fiches ({u._count?.fiches ?? 0}) ›</Link>
                 <br />
                 <b>Machines</b>
@@ -145,6 +188,7 @@ export default function Admin() {
                     <option key={v.id} value={v.id}>{`${fa.nom} ${mo.nom} ${v.nom}`}</option>
                   ))))}
                 </select>
+                </>}
               </div>
             )}
           </div>
@@ -238,17 +282,26 @@ function AideSupport() {
 
 /** Texte des conditions d'utilisation : publier une nouvelle version oblige chacun à les accepter de nouveau. */
 function ConditionsAdmin() {
+  const { espace: ouvert0, espaces } = useEspace();
+  const [esp, setEsp] = useState(ouvert0.slug);
   const [c, setC] = useState<{ version: number; texte: string }>();
   const [texte, setTexte] = useState('');
   const [ouvert, setOuvert] = useState(false);
   const [ok, setOk] = useState('');
   useEffect(() => {
-    api<{ version: number; texte: string }>('/conditions').then((x) => { setC(x); setTexte(x.texte); });
-  }, []);
+    setOuvert(false);
+    setOk('');
+    api<{ version: number; texte: string }>(`/conditions?espace=${esp}`).then((x) => { setC(x); setTexte(x.texte); });
+  }, [esp]);
   if (!c) return null;
   return (
     <>
       <h2>Conditions d'utilisation</h2>
+      <div className="seg" style={{ marginBottom: 8 }}>
+        {espaces.map((e) => (
+          <button key={e.slug} type="button" className={e.slug === esp ? 'on' : ''} onClick={() => setEsp(e.slug)}>{e.nom}</button>
+        ))}
+      </div>
       <div className="carte">
         <p className="petit" style={{ marginTop: 0 }}>Version en vigueur : <b>{c.version}</b>. Texte de départ à faire relire par un juriste.</p>
         {!ouvert ? (
@@ -263,8 +316,8 @@ function ConditionsAdmin() {
                 className="btn prim"
                 disabled={texte.trim().length < 20 || texte === c.texte}
                 onClick={async () => {
-                  if (!confirm('Publier une nouvelle version ? Chaque utilisateur devra l\'accepter à sa prochaine utilisation.')) return;
-                  const n = await api<{ version: number; texte: string }>('/admin/conditions', { method: 'POST', json: { texte } });
+                  if (!confirm(`Publier une nouvelle version pour ${espaces.find((e) => e.slug === esp)?.nom} ? Chaque utilisateur de cet espace devra l'accepter à sa prochaine utilisation.`)) return;
+                  const n = await api<{ version: number; texte: string }>('/admin/conditions', { method: 'POST', json: { espace: esp, texte } });
                   setC(n); setOuvert(false); setOk(`Version ${n.version} publiée.`);
                 }}
               >
@@ -294,6 +347,27 @@ function NumeroOdoo({ u, onMaj }: { u: { id: string; numeroOdoo: string | null }
       >
         {ok ? '✓' : 'Enregistrer'}
       </button>
+    </div>
+  );
+}
+
+/** Cases à cocher des modules, groupées par espace (Lazzeko, Kiavik). */
+function CasesModules({ valeur, onChange }: { valeur: string[]; onChange: (modules: string[]) => void }) {
+  const { espaces } = useEspace();
+  const basculer = (m: string, oui: boolean) => onChange(oui ? [...valeur, m] : valeur.filter((x) => x !== m));
+  return (
+    <div className="cases-modules">
+      {espaces.map((e) => (
+        <fieldset key={e.slug}>
+          <legend style={{ color: e.couleur }}>{e.nom}</legend>
+          {e.modules.map((m) => (
+            <label key={m.slug}>
+              <input type="checkbox" checked={valeur.includes(m.slug)} onChange={(x) => basculer(m.slug, x.target.checked)} />
+              {m.nom}
+            </label>
+          ))}
+        </fieldset>
+      ))}
     </div>
   );
 }

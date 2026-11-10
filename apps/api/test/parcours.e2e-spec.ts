@@ -268,7 +268,8 @@ describe('Parcours complet', () => {
     expect((await http.post('/api/moi/conditions').set(auth(alice)).send({ version: avant.version })).status).toBe(409);
     await accepter(alice, false);
     const m = (await http.get('/api/moi').set(auth(alice))).body;
-    expect(m).toMatchObject({ conditionsAJour: true, conditionsVersion: pub.version, accordPhotosMarketing: false });
+    expect(m).toMatchObject({ conditionsAJour: true, accordPhotosMarketing: false, modules: ['reglages-decapage'], espaces: [{ slug: 'lazzeko', conditionsAJour: true }] });
+    expect(m.conditions.lazzeko.version).toBe(pub.version);
     // l'admin n'est jamais bloqué
     expect((await http.get('/api/catalogue').set(auth(admin))).status).toBe(200);
   });
@@ -374,5 +375,65 @@ describe('Parcours complet', () => {
     await http.patch(`/api/users/${aliceId}`).set(auth(admin)).send({ numeroOdoo: null }).expect(200);
     expect(await voit(alice)).toBe(false);
     await http.delete(`/api/admin/annonces/${a.id}`).set(auth(admin)).expect(200);
+  });
+
+  it('espaces : Lazzeko / Kiavik, accès par module, conditions et messages par espace', async () => {
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'espaces' })).body.cle;
+    // configuration publique et manifeste selon l'adresse
+    const espaces = (await http.get('/api/espaces')).body;
+    expect(espaces.map((e: any) => e.slug)).toEqual(['lazzeko', 'kiavik']);
+    expect((await http.get('/api/espace').set('Host', 'app.kiavikcopilot.ovh')).body.slug).toBe('kiavik');
+    expect((await http.get('/api/espace').set('Host', 'app.lazzeko.com')).body.slug).toBe('lazzeko');
+    expect((await http.get('/api/manifest.webmanifest').set('Host', 'app.kiavikcopilot.ovh')).body.name).toBe('Kiavik Copilot');
+
+    // emma : Kiavik seulement (guide Flexiprint)
+    const emma = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `emma-${id}`, motDePasse: 'motdepasse1', modules: ['guide-flexiprint'] })).body;
+    expect(emma.modules).toEqual(['guide-flexiprint']);
+    expect(emma.espaces).toEqual(['kiavik']);
+    expect((await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `zz-${id}`, motDePasse: 'motdepasse1', modules: ['inconnu'] })).status).toBe(400);
+    const te = (await http.post('/api/auth/connexion').send({ identifiant: `emma-${id}`, motDePasse: 'motdepasse1' })).body.jeton;
+    const K = { ...auth(te), 'X-Espace': 'kiavik' };
+    // pas d'accès aux réglages Lazzeko
+    const refus = await http.get('/api/fiches').set(K);
+    expect(refus.status).toBe(403);
+    expect(refus.body.code).toBe('MODULE_NON_AUTORISE');
+    // conditions Kiavik (texte propre, sans communauté), à accepter
+    const moi0 = (await http.get('/api/moi').set(K)).body;
+    expect(moi0.espaces).toEqual([{ slug: 'kiavik', conditionsAJour: false }]);
+    expect(moi0.conditionsAJour).toBe(false);
+    expect((await http.get('/api/annonces').set(K)).body.code).toBe('CONDITIONS_A_ACCEPTER');
+    const ck = (await http.get('/api/conditions?espace=kiavik').set(K)).body;
+    expect(ck.texte).toContain('Kiavik');
+    await http.post('/api/moi/conditions').set(K).send({ version: ck.version, accordPhotosMarketing: true }).expect(201);
+    const moi1 = (await http.get('/api/moi').set(K)).body;
+    expect(moi1.conditionsAJour).toBe(true);
+    expect(moi1.accordPhotosMarketing).toBe(false); // l'accord photos ne concerne que Lazzeko
+    // les conditions Lazzeko d'alice ne sont pas touchées par une nouvelle version Kiavik
+    await http.post('/api/admin/conditions').set(auth(admin)).send({ espace: 'kiavik', texte: ck.texte }).expect(201);
+    expect((await http.get('/api/moi').set(auth(alice))).body.conditionsAJour).toBe(true);
+    expect((await http.get('/api/moi').set(K)).body.conditionsAJour).toBe(false);
+    await http.post('/api/moi/conditions').set(K).send({ espace: 'kiavik', version: ck.version + 1 }).expect(201);
+
+    // messages par espace : Kiavik → emma seulement ; « tous » → chacun dans son espace
+    const mk = (await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: `Kiavik ${id}`, texte: 'Nouveau guide', espaces: ['kiavik'], lienUrl: '/guides', debut: new Date(Date.now() - 60000) })).body;
+    const ml = (await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: `Lazzeko ${id}`, texte: 'Nouveau réglage', espaces: ['lazzeko'], debut: new Date(Date.now() - 60000) })).body;
+    const voit = async (h: Record<string, string>, a: any) => (await http.get('/api/annonces').set(h)).body.some((x: any) => x.id === a.id);
+    expect(await voit(K, mk)).toBe(true);
+    expect(await voit(K, ml)).toBe(false);
+    expect(await voit(auth(alice), mk)).toBe(false);
+    expect(await voit(auth(alice), ml)).toBe(true);
+    // emma n'a pas accès à Lazzeko : rien même si elle ouvre l'espace Lazzeko
+    expect(await voit({ ...auth(te), 'X-Espace': 'lazzeko' }, ml)).toBe(false);
+    const nk = (await http.post('/api/admin/annonces/cible').set(auth(admin)).send({ espaces: ['kiavik'] })).body.utilisateurs;
+    expect(nk).toBeGreaterThan(0);
+
+    // un compte dans les deux espaces : l'admin ajoute le module Lazzeko à emma
+    const e2 = (await http.patch(`/api/users/${emma.id}`).set(auth(admin)).send({ modules: ['guide-flexiprint', 'reglages-decapage'] })).body;
+    expect(e2.espaces).toEqual(['lazzeko', 'kiavik']);
+    expect((await http.get('/api/fiches').set({ ...auth(te), 'X-Espace': 'lazzeko' })).body.code).toBe('CONDITIONS_A_ACCEPTER');
+    expect((await http.get(`/api/users?espace=kiavik`).set(auth(admin))).body.some((u: any) => u.id === emma.id)).toBe(true);
+    // retrait de Kiavik
+    expect((await http.patch(`/api/users/${emma.id}`).set(auth(admin)).send({ modules: ['reglages-decapage'] })).body.espaces).toEqual(['lazzeko']);
+    for (const a of [mk, ml]) await http.delete(`/api/admin/annonces/${a.id}`).set(auth(admin)).expect(200);
   });
 });

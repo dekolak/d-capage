@@ -1,7 +1,7 @@
 import { Body, Controller, Get, NotFoundException, Param, Patch, Post } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { Moi, Principal, Roles } from '../auth/decorators';
+import { ModuleRequis, Moi, Principal, Roles } from '../auth/decorators';
 import { PrismaService } from '../prisma/prisma.service';
 
 class ProposerTagDto {
@@ -17,6 +17,8 @@ class ModifierTagDto {
 export const slugifier = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
+/** Module « Réglages décapage » (espace Lazzeko). */
+@ModuleRequis('reglages-decapage')
 @Controller('tags')
 export class TagsController {
   constructor(private prisma: PrismaService) {}

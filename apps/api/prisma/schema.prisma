@@ -48,9 +48,6 @@ model User {
   clientLazzeko           Boolean       @default(true)
   /// N° de client dans Odoo (plusieurs comptes peuvent partager le même n°, ex. une entreprise).
   numeroOdoo              String?
-  /// Conditions d'utilisation acceptées (version) : partage communautaire obligatoire.
-  conditionsVersion       Int?
-  conditionsAccepteesLe   DateTime?
   /// Accord facultatif pour que Lazzeko réutilise les photos (site, réseaux, documentation).
   accordPhotosMarketing   Boolean       @default(false)
   accordPhotosMarketingLe DateTime?
@@ -67,8 +64,34 @@ model User {
   lecturesAnnonces AnnonceLecture[]
   reponsesAnnonces AnnonceReponse[]
   demandesAide     DemandeAide[]
+  /// Modules accessibles (et donc espaces : Lazzeko, Kiavik…) — voir src/espaces/espaces.ts.
+  modules          UserModule[]
+  /// Conditions d'utilisation acceptées, par espace.
+  acceptations     AcceptationConditions[]
 
   @@index([numeroOdoo])
+}
+
+/// Accès d'un compte à un module (slug défini dans src/espaces/espaces.ts, ex. reglages-decapage).
+model UserModule {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module    String
+  createdAt DateTime @default(now())
+
+  @@id([userId, module])
+  @@index([module])
+}
+
+/// Version des conditions d'utilisation acceptée par un compte, pour un espace.
+model AcceptationConditions {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  espace     String
+  version    Int
+  accepteeLe DateTime @default(now())
+
+  @@id([userId, espace])
 }
 
 /// Clé API pour créer des comptes depuis un autre système (site, CRM…).
@@ -334,6 +357,8 @@ model DemandeAide {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   message   String
+  /// Espace d'où vient la demande (lazzeko, kiavik…).
+  espace    String   @default("lazzeko")
   traitee   Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -384,6 +409,8 @@ model Annonce {
   /// Message périodique : réapparaît tous les `intervalle` jours / semaines / mois après « J'ai compris ».
   recurrence         Recurrence       @default(AUCUNE)
   intervalle         Int              @default(1)
+  /// Espaces visés (vide = tous) : le message s'affiche dans ces espaces, aux comptes qui y ont accès.
+  espaces            String[]
   /// Ciblage (listes vides = toutes les machines).
   cibleClient        CibleClient      @default(TOUS)
   fabricantIds       String[]

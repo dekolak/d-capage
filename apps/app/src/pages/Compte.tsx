@@ -3,9 +3,13 @@ import { Link } from 'react-router-dom';
 import { Erreur } from '../components/Composants';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import { useEspace } from '../lib/espace';
 
 export default function Compte() {
   const { moi, deconnexion, rafraichir } = useAuth();
+  const { espace, espaces, choisir } = useEspace();
+  const mesEspaces = espaces.filter((e) => moi?.espaces.some((x) => x.slug === e.slug));
+  const reglages = espace.modules.some((m) => m.slug === 'reglages-decapage');
   const [accord, setAccord] = useState(!!moi?.accordPhotosMarketing);
   const [ancien, setAncien] = useState('');
   const [nouveau, setNouveau] = useState('');
@@ -33,10 +37,31 @@ export default function Compte() {
         <b>{moi?.nom || moi?.identifiant}</b> <span className="muted">({moi?.identifiant})</span>
       </p>
       <div className="actions">
-        <Link to="/machines" className="btn">Mes machines</Link>
+        {reglages && <Link to="/machines" className="btn">Mes machines</Link>}
         {moi?.role === 'ADMIN' && <Link to="/admin" className="btn">Administration</Link>}
       </div>
 
+      {mesEspaces.length > 1 && (
+        <>
+          <h2>Mes espaces</h2>
+          <div className="espaces-choix">
+            {mesEspaces.map((e) => (
+              <button
+                key={e.slug}
+                type="button"
+                className={'espace-choix' + (e.slug === espace.slug ? ' actif' : '')}
+                style={{ ['--c' as string]: e.couleur }}
+                onClick={() => choisir(e.slug)}
+              >
+                <img src={`${e.icones}icone.svg`} alt="" width={36} height={36} />
+                <span><b>{e.nomApp}</b><small>{e.slug === espace.slug ? 'Ouvert' : 'Ouvrir'}</small></span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {espace.communaute && <>
       <h2>Mes photos</h2>
       <div className="carte">
         <label className="interrupteur choix-accord" style={{ boxShadow: 'none', padding: 0 }}>
@@ -55,12 +80,14 @@ export default function Compte() {
             }}
           />
           <span>
-            J'accepte que Lazzeko réutilise mes photos (site, réseaux sociaux, documentation).
+            J'accepte que {espace.nom} réutilise mes photos (site, réseaux sociaux, documentation).
             <small className="muted"> Facultatif. Vos photos restent partagées avec la communauté dans tous les cas.</small>
           </span>
         </label>
         <Link to="/conditions" className="lien petit">Lire les conditions d'utilisation ›</Link>
       </div>
+      </>}
+      {!espace.communaute && <p><Link to="/conditions" className="lien petit">Lire les conditions d'utilisation ›</Link></p>}
 
       <h2>Changer de mot de passe</h2>
       <form className="form" onSubmit={changer}>
