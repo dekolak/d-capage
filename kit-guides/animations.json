@@ -809,6 +809,224 @@
      "cap": "Couleur d'accompagnement : permet d'avoir du blanc uniquement là où on le décide. Le blanc vient d'un calque préparé dans Photoshop : c'est le niveau expert."
     }
    ]
+  },
+  {
+   "id": "offre-composition",
+   "guide": "dxonjet",
+   "titre": "Régler l'Offre (alignement des encres)",
+   "resume": "Quand les couleurs sont mal superposées : imprimer la mire, lire la valeur, corriger l'Offre en D4, recommencer jusqu'au zéro.",
+   "image": "images/dx/offre_mire_decalee.jpg",
+   "type": "ecrans",
+   "liens": [
+    [
+     "d4a",
+     "a.6"
+    ]
+   ],
+   "source": "Vidéo de Teddy (D4 · a.6), novembre 2026 : photos tirées de la vidéo.",
+   "photos": {
+    "avant": {
+     "image": "images/dx/offre_grilles_avant.jpg",
+     "largeur": 390,
+     "hauteur": 560
+    },
+    "decalee": {
+     "image": "images/dx/offre_mire_decalee.jpg",
+     "largeur": 300,
+     "hauteur": 510
+    },
+    "alignee": {
+     "image": "images/dx/offre_mire_alignee.jpg",
+     "largeur": 300,
+     "hauteur": 500
+    },
+    "apres": {
+     "image": "images/dx/offre_grilles_apres.jpg",
+     "largeur": 480,
+     "hauteur": 560
+    }
+   },
+   "scenes": [
+    {
+     "titre": "Le problème",
+     "ecran": "photo:avant",
+     "etat": {},
+     "etapes": [
+      {
+       "cur": [
+        240,
+        170
+       ],
+       "ring": 1,
+       "cap": "Les couleurs sont mal superposées : sur l'impression test, les lignes des grilles font des marches d'escalier. Il faut régler l'Offre.",
+       "d": 5000
+      }
+     ]
+    },
+    {
+     "titre": "Ouvrir le calibrage (D4)",
+     "ecran": "dc",
+     "etat": {},
+     "etapes": [
+      {
+       "cur": [
+        645,
+        150
+       ],
+       "ring": 1,
+       "cap": "Dans le logiciel DXonJet, ouvrez le menu D4, Calibrage.",
+       "d": 2600
+      },
+      {
+       "click": 1,
+       "go": "d4a",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Imprimer la mire",
+     "ecran": "d4a",
+     "etat": {},
+     "etapes": [
+      {
+       "cur": [
+        722,
+        702
+       ],
+       "ring": 1,
+       "cap": "En bas de l'écran, touchez Composition des encres : la machine imprime la mire de réglage sur le mur.",
+       "d": 3800
+      },
+      {
+       "click": 1,
+       "go": "photo:decalee",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "Lire la mire",
+     "ecran": "photo:decalee",
+     "etat": {},
+     "etapes": [
+      {
+       "cur": [
+        62,
+        330
+       ],
+       "ring": 1,
+       "cap": "Sur la mire, chaque ligne a une valeur : positive au-dessus du zéro, négative en dessous.",
+       "d": 3800
+      },
+      {
+       "cur": [
+        205,
+        220
+       ],
+       "ring": 1,
+       "cap": "Ici, les deux moitiés des lignes sont décalées. Cherchez la ligne où elles sont le mieux alignées, et notez sa valeur.",
+       "d": 5000
+      }
+     ]
+    },
+    {
+     "titre": "Corriger l'Offre",
+     "ecran": "d4a",
+     "etat": {},
+     "etapes": [
+      {
+       "cur": [
+        652,
+        702
+       ],
+       "ring": 1,
+       "cap": "Dans la case Offre : si la valeur lue est positive, ajoutez-la ; si elle est négative, retirez-la.",
+       "d": 4500
+      },
+      {
+       "click": 1,
+       "d": 600
+      },
+      {
+       "eff": "texte",
+       "zone": [
+        633,
+        693,
+        38,
+        19
+       ],
+       "val": "90",
+       "cap": "Exemple : Offre à 94 et lignes alignées sur moins 4 : on tape 90. Puis on touche Appliquer.",
+       "d": 5000
+      }
+     ]
+    },
+    {
+     "titre": "Recommencer",
+     "ecran": "d4a",
+     "etat": {
+      "textes": [
+       {
+        "zone": [
+         633,
+         693,
+         38,
+         19
+        ],
+        "val": "90"
+       }
+      ]
+     },
+     "etapes": [
+      {
+       "cur": [
+        722,
+        702
+       ],
+       "ring": 1,
+       "cap": "Réimprimez la mire avec Composition des encres. Recommencez jusqu'à ce que les deux moitiés soient alignées sur le zéro.",
+       "d": 5000
+      },
+      {
+       "click": 1,
+       "go": "photo:alignee",
+       "d": 900
+      }
+     ]
+    },
+    {
+     "titre": "C'est réglé",
+     "ecran": "photo:alignee",
+     "etat": {},
+     "etapes": [
+      {
+       "cur": [
+        200,
+        470
+       ],
+       "ring": 1,
+       "cap": "Les lignes sont droites jusqu'au zéro : l'Offre est bon.",
+       "d": 3800
+      }
+     ]
+    },
+    {
+     "titre": "Le résultat",
+     "ecran": "photo:apres",
+     "etat": {},
+     "etapes": [
+      {
+       "cur": [
+        240,
+        280
+       ],
+       "cap": "Les grilles sont nettes : les couleurs sont bien superposées.",
+       "d": 4200
+      }
+     ]
+    }
+   ]
   }
  ],
  "fenetre_blanc": {

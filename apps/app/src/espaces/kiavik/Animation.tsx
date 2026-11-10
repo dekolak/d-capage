@@ -2,7 +2,7 @@ import { CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } 
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { Fenetre } from './Fenetres';
-import { Animation as Anim, EtapeAnim, EtatAnim, Guide, ModeBlanc, SceneBlanc, SceneEcrans, useGuide } from './guides';
+import { Animation as Anim, EtapeAnim, EtatAnim, TexteAnim, Guide, ModeBlanc, SceneBlanc, SceneEcrans, useGuide } from './guides';
 import { useVoix } from './voix';
 import './animations.css';
 import './guides.css';
@@ -153,7 +153,7 @@ function Lecteur({ guide, a }: { guide: Guide; a: Anim }) {
 }
 
 // ---------- animations sur les écrans du guide ----------
-interface Etat { f: string | null; j: number; a: number; wm: string; t9: number; o: number; hl: number; pop: string | null; ecran: string }
+interface Etat { f: string | null; j: number; a: number; wm: string; t9: number; o: number; hl: number; pop: string | null; ecran: string; textes: TexteAnim[] }
 
 function appliquer(st: Etat, e: EtapeAnim) {
   switch (e.eff) {
@@ -165,6 +165,7 @@ function appliquer(st: Etat, e: EtapeAnim) {
     case 't9w': st.t9 = 2; break;
     case 'pop': st.pop = e.val ?? null; break;
     case 'popclose': st.pop = null; break;
+    case 'texte': if (e.zone) st.textes = [...st.textes.filter((x) => x.zone.join() !== e.zone!.join()), { zone: e.zone, val: e.val ?? '' }]; break;
   }
   if (e.go) st.ecran = e.go;
 }
@@ -180,7 +181,7 @@ function VueEcrans({ guide, a, t: tp, clicFait, vitesse }: { guide: Guide; a: An
 
   const etat = useMemo(() => {
     const e0: EtatAnim = scene.etat;
-    const st: Etat = { f: e0.f ?? null, j: e0.j ?? 0, a: e0.a ?? 0, wm: e0.wm ?? 'Aucun', t9: e0.t9 ?? 0, o: 0, hl: 0, pop: null, ecran: scene.ecran };
+    const st: Etat = { f: e0.f ?? null, j: e0.j ?? 0, a: e0.a ?? 0, wm: e0.wm ?? 'Aucun', t9: e0.t9 ?? 0, o: 0, hl: 0, pop: null, ecran: scene.ecran, textes: e0.textes ?? [] };
     scene.etapes.forEach((e, k) => {
       if (k < tp.etape || (k === tp.etape && (!e.click || clicFait))) appliquer(st, e);
     });
@@ -188,8 +189,10 @@ function VueEcrans({ guide, a, t: tp, clicFait, vitesse }: { guide: Guide; a: An
   }, [scene, tp.etape, clicFait]);
 
   const ecran = guide.ecrans.find((x) => x.id === etat.ecran);
-  const W = ecran?.largeur ?? 1210;
-  const H = ecran?.hauteur ?? 600;
+  // une scène peut se passer sur une photo (ex. la mire imprimée sur le mur) : ecran « photo:<clé> »
+  const photo = etat.ecran.startsWith('photo:') ? a.photos?.[etat.ecran.slice(6)] : undefined;
+  const W = photo?.largeur ?? ecran?.largeur ?? 1210;
+  const H = photo?.hauteur ?? ecran?.hauteur ?? 600;
   const pc = (x: number, y: number, w?: number, h?: number): CSSProperties => ({
     left: `${(x / W) * 100}%`, top: `${(y / H) * 100}%`, ...(w !== undefined ? { width: `${(w / W) * 100}%` } : {}), ...(h !== undefined ? { height: `${(h / H) * 100}%` } : {}),
   });
@@ -224,6 +227,8 @@ function VueEcrans({ guide, a, t: tp, clicFait, vitesse }: { guide: Guide; a: An
           <div><b>{t('kiavik.anim.fin.logiciel')}</b><span>{t('kiavik.anim.fin.ouvre')}</span></div><i>→</i>
           <div><b>{t('kiavik.anim.fin.mur')}</b><span>{t('kiavik.anim.fin.impression')}</span></div>
         </div>
+      ) : photo ? (
+        <img src={photo.image} alt="" draggable={false} />
       ) : ecran?.type === 'capture' && ecran.image ? (
         <img src={ecran.image} alt="" draggable={false} />
       ) : ecran ? (
@@ -253,6 +258,9 @@ function VueEcrans({ guide, a, t: tp, clicFait, vitesse }: { guide: Guide; a: An
           <div className="aaucun an-coche" style={pc(106, 298, 12, 12)}>✓</div>
         </>
       )}
+      {etat.textes.map((x) => (
+        <div key={x.zone.join()} className="aaucun" style={pc(x.zone[0], x.zone[1], x.zone[2], x.zone[3])}>{x.val}</div>
+      ))}
       {etat.pop && <FenetreBlanc guide={guide} onglet={etat.pop} mode={mode(etat.pop)} />}
 
       {etape?.ring && curseur && (

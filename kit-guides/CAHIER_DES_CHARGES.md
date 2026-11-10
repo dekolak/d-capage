@@ -108,7 +108,7 @@ Voix off selon les règles de Teddy : `speechSynthesis` fr-FR ; voix « Google f
 
 ## 8. Points ouverts (à confirmer avec Teddy)
 - Domaine exact Kiavik (app.kiavikprint.com ?), logo et couleurs Kiavik.
-- DXonJet `D4-a` / `a.6` (Offre / Composition des encres) : rôle exact à compléter.
+- ~~DXonJet `D4-a` / `a.6` (Offre / Composition des encres)~~ : complété (novembre 2026) + animation « Régler l'Offre ».
 - DXonJet `D2` / `2.2` (onglets Activité / Histoire) : garder ou griser.
 - Les pastilles `a_completer` restantes.
 

@@ -577,10 +577,18 @@
           "x": 640,
           "y": 702,
           "titre": "Aligner la composition (Offre)",
-          "texte": "Seul réglage de cet écran qu'on utilise : la valeur Offre (ex. 94) et le bouton Composition des encres.",
-          "conseil": "Rôle exact à compléter par Teddy.",
+          "texte": "Aligne les encres : corrige le décalage quand les couleurs sont mal superposées (lignes des grilles en marches d'escalier). Seul réglage de cet écran qu'on utilise : la case Offre et le bouton Composition des encres.",
+          "conseil": "Touchez Composition des encres pour imprimer la mire. Lisez la valeur où les deux moitiés des lignes sont alignées (positive au-dessus du zéro, négative en dessous), ajoutez-la à l'Offre ou retirez-la, Appliquer, puis recommencez jusqu'à l'alignement sur le 0.",
           "etat": "actif",
-          "niveau": "a_completer"
+          "niveau": "astuce",
+          "mots_cles": [
+            "alignement",
+            "superposition",
+            "décalage",
+            "mire",
+            "offset",
+            "flou"
+          ]
         }
       ]
     },
