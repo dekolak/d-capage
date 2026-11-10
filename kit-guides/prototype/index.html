@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulateur FlexiPRINT DXonJet — V1 de travail</title>
+<style>
+:root{--bg:#f3f2ee;--ink:#1e2228;--mut:#6b7078;--line:#d9d6cf;--acc:#e8541e;--acc2:#1f6feb;--ok:#1a8f4c;--side:#1c2027}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+aside{background:var(--side);color:#e8e8e8;padding:16px 10px;position:sticky;top:0;height:100vh;overflow:auto}
+aside h1{font-size:15px;margin:0 6px 4px;letter-spacing:.3px}
+aside .sub{font-size:11px;color:#9aa0a8;margin:0 6px 14px}
+.navbtn{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;color:#d6d8dc;padding:7px 8px;border-radius:6px;font-size:13px;cursor:pointer}
+.navbtn:hover{background:#2a3039}
+.navbtn.on{background:var(--acc);color:#fff}
+.navbtn .code{font-weight:700;font-size:11px;min-width:30px;padding:2px 5px;border-radius:4px;background:#ffffff1a;text-align:center}
+.grp{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#7d848e;margin:14px 8px 4px}
+main{padding:22px 26px 60px;max-width:1350px}
+.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:6px}
+.head h2{margin:0;font-size:22px}
+.badge{background:var(--ink);color:#fff;font-weight:700;padding:3px 9px;border-radius:5px;font-size:13px}
+.intro{color:var(--mut);margin:4px 0 14px;max-width:820px;line-height:1.45}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
+.shot{position:relative;border-radius:8px;overflow:hidden;box-shadow:0 6px 24px #0002;background:#fff;user-select:none}
+.shot img{display:block;width:100%;height:auto}
+.wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font-weight:900;font-size:clamp(70px,16vw,220px);color:#e8541e;opacity:.13;transform:rotate(-18deg);letter-spacing:4px}
+.wmtag{position:absolute;top:8px;right:8px;background:#e8541ee6;color:#fff;font-weight:700;font-size:12px;padding:4px 8px;border-radius:4px;pointer-events:none}
+.hs{position:absolute;transform:translate(-50%,-50%);min-width:26px;height:22px;padding:0 5px;border-radius:11px;border:2px solid #fff;background:var(--acc2);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px #0005;transition:transform .12s}
+.hs:hover,.hs.sel{transform:translate(-50%,-50%) scale(1.25);background:var(--acc);z-index:5}
+.hs.nav{background:#5b6573}
+body.exo .hs{background:#ffffff00;border-color:#1f6feb88;color:transparent;box-shadow:none}
+body.exo .hs:hover{background:#1f6feb33}
+body.exo .hs.good{background:var(--ok);color:#fff;border-color:#fff}
+body.exo .hs.bad{background:#c62828;color:#fff;border-color:#fff}
+.panel{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;position:sticky;top:14px;max-height:calc(100vh - 28px);overflow:auto}
+.panel h3{margin:0 0 6px;font-size:15px}
+.panel .ref{display:inline-block;background:var(--acc2);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;margin-bottom:6px}
+.panel p{margin:6px 0;line-height:1.45;font-size:14px}
+.tip{background:#fff5e8;border-left:3px solid var(--acc);padding:7px 9px;font-size:13px;border-radius:0 4px 4px 0;margin-top:8px}
+.todo{background:#eef3ff;border-left:3px solid var(--acc2);padding:7px 9px;font-size:12.5px;border-radius:0 4px 4px 0;margin-top:8px;color:#26407a}
+.list{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.item{background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px;cursor:pointer;line-height:1.35}
+.item:hover{border-color:var(--acc2)}
+.item b{color:var(--acc2);margin-right:5px}
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 22px}
+.step{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:150px;max-width:220px;font-size:13px;line-height:1.4}
+.step b{display:block;font-size:14px;margin-bottom:3px}
+.arrow{font-size:22px;color:var(--acc)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;cursor:pointer}
+.card:hover{border-color:var(--acc)}
+.card img{width:100%;border-radius:4px;display:block;margin-bottom:6px}
+.card span{font-size:13px}
+.btn{background:var(--acc);color:#fff;border:0;padding:9px 14px;border-radius:6px;font-weight:600;cursor:pointer;font-size:14px}
+.btn.alt{background:var(--ink)}
+.exobar{display:none;background:var(--ink);color:#fff;border-radius:8px;padding:12px 14px;margin-bottom:12px;gap:12px;align-items:center;flex-wrap:wrap}
+body.exo .exobar{display:flex}
+.exobar .q{flex:1;min-width:220px;font-size:15px}
+.exobar .q small{display:block;color:#aab;font-size:12px;margin-bottom:2px}
+.exobar .msg{font-size:13px;color:#ffd08a;width:100%}
+.prog{height:5px;background:#ffffff22;border-radius:3px;width:100%;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--acc);width:0;transition:width .3s}
+.mobnav{display:none}
+@media (max-width:900px){
+ .app{grid-template-columns:1fr}
+ aside{display:none}
+ main{padding:14px 12px 50px}
+ .stage{grid-template-columns:1fr}
+ .panel{position:static;max-height:none}
+ .hs{min-width:20px;height:18px;font-size:9px;border-width:1.5px}
+}
+.shot{container-type:inline-size}
+.hs.off{background:#8a8f96;opacity:.9}
+.zone{position:absolute;background:rgba(70,70,70,.55);border-radius:4px;pointer-events:none;display:flex;align-items:flex-end;justify-content:center}
+.zone span{background:#333;color:#fff;font-size:max(8px,.75cqw);padding:1px 4px;border-radius:3px;margin-bottom:2px;white-space:nowrap}
+.job{position:absolute;left:5.3%;right:5.3%;top:33.8%;height:2.6%;overflow:hidden;background:#cfe6ff;border:1px solid #7fb2ec;display:flex;align-items:center;font-size:.92cqw;color:#111;cursor:pointer}
+.job:hover{background:#b9dbff}
+.job>*{position:absolute;white-space:nowrap}
+.job img{height:90%;width:auto;top:5%}
+.warn{background:#fdecea;border-left:3px solid #c62828;padding:7px 9px;font-size:13px;border-radius:0 4px 4px 0;margin-top:8px;color:#8a1c1c}
+.ok{background:#e8f6ee;border-left:3px solid var(--ok);padding:7px 9px;font-size:13px;border-radius:0 4px 4px 0;margin-top:8px}
+/* Fenêtre Windows recréée */
+.dlgwrap{position:relative;width:100%;aspect-ratio:900/600;overflow:hidden;background:#3a6ea5;border-radius:8px;box-shadow:0 6px 24px #0002}
+.dlg{position:absolute;left:0;top:0;width:900px;height:600px;transform-origin:0 0;background:#f0f0f0;font:12px "Segoe UI",Tahoma,sans-serif;color:#000;border:1px solid #888}
+.dlg .tb{height:30px;background:#fff;display:flex;align-items:center;padding:0 8px;gap:8px;border-bottom:1px solid #ddd}
+.dlg .tb .ic{width:18px;height:18px;background:#8a6bb8;color:#fff;font-weight:700;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px}
+.dlg .tb .x{margin-left:auto;font-size:16px;padding:0 10px;cursor:pointer}
+.dlg .lk{position:absolute;left:20px;top:46px;display:flex;gap:8px;align-items:center}
+.dlg .sel{border:1px solid #aaa;background:#fff;height:22px;display:flex;align-items:center;padding:0 6px;justify-content:space-between}
+.dlg .side{position:absolute;left:14px;top:84px;width:100px;height:350px;background:#fff;border:1px solid #ccc;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:10px}
+.dlg .side div{text-align:center;font-size:11px}
+.dlg .side i{display:block;font-style:normal;font-size:24px}
+.dlg .files{position:absolute;left:122px;top:84px;width:520px;height:350px;background:#fff;border:1px solid #ccc;overflow:hidden}
+.dlg .fh,.dlg .fr{display:grid;grid-template-columns:1fr 70px 130px;padding:3px 8px;align-items:center}
+.dlg .fh{color:#4c607a;border-bottom:1px solid #e5e5e5}
+.dlg .fr{cursor:default}
+.dlg .fr:hover{background:#e5f3ff}
+.dlg .fr.s{background:#cce8ff}
+.dlg .fr span:first-child{display:flex;align-items:center;gap:6px}
+.dlg .btn9{position:absolute;left:660px;width:200px;height:26px;border:1px solid #adadad;background:#e1e1e1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.dlg .btn9:hover{background:#e5f1fb;border-color:#0078d7}
+.dlg .pv{position:absolute;left:660px;top:156px;width:200px;height:170px;border:1px solid #ccc;background:#fafafa}
+.dlg .cks{position:absolute;left:660px;top:340px;display:flex;flex-direction:column;gap:7px}
+.dlg .cks label{display:flex;gap:6px;align-items:center}
+.dlg .row{position:absolute;left:122px;display:flex;align-items:center;gap:10px}
+.dlg .row b{font-weight:400;width:110px}
+.dlg .toast{position:absolute;left:122px;top:440px;color:#c62828;font-size:12px}
+body.exo .dlg .hs{display:none}
+.wlist{border:1px solid #7a9cc6;margin:10px 0;font:13px "Segoe UI",sans-serif;background:#fff}
+.wo{padding:3px 8px;cursor:pointer}
+.wo:hover{background:#e5f1fb}
+.wo.on{background:#0078d7;color:#fff}
+.wo.dis{color:#aaa;cursor:default}
+.wo i{font-size:11px}
+.wdemo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wdemo div{border:2px solid var(--line);border-radius:6px;padding:5px;font-size:12px;line-height:1.3}
+.wdemo div.on{border-color:var(--acc)}
+.wdemo svg{width:100%;display:block;border-radius:3px;margin-bottom:4px}
+.wdemo b{display:block}
+.wdemo span{color:var(--mut)}
+.hs{z-index:3}
+.t5area{position:absolute;overflow:hidden;z-index:2}
+.t5sel{position:absolute;border:2px dashed #e8541e;box-shadow:0 0 0 2000px rgba(20,20,30,.55);box-sizing:border-box}
+.t5lab{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#000a;color:#fff;font-size:max(9px,1cqw);padding:4px 7px;border-radius:4px;text-align:center;white-space:nowrap;pointer-events:none}
+.t5lab.bad{background:#c62828}
+.t5h{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;background:#e8541e;border:2px solid #fff;border-radius:3px;cursor:nwse-resize;touch-action:none;box-shadow:0 1px 4px #0006}
+.t5h[data-k=ne],.t5h[data-k=sw]{cursor:nesw-resize}
+.t5m{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;background:#999;border:1px solid #fff;cursor:not-allowed}
+.t9ck,.t9row{position:absolute;z-index:2;cursor:pointer}
+.t9ck i,.t9row i{position:absolute;left:0;top:50%;transform:translateY(-50%);width:max(9px,1cqw);height:max(9px,1cqw);background:#fff;border:1px solid #333;font-style:normal;font-size:max(8px,.9cqw);line-height:1;display:flex;align-items:center;justify-content:center;color:#0a0}
+.t9ck:hover,.t9row:hover{background:#1f6feb22}
+.t9row.on{background:#1f6feb33}
+.t9row.dis{cursor:default;background:#ffffff99}
+.t9row.dis:hover{background:#ffffff99}
+.t9pv{position:absolute;z-index:2;background:#fff}
+.t9pv img{width:100%;height:100%;display:block}
+.t9pv span{position:absolute;left:4px;right:4px;bottom:4px;background:#000b;color:#fff;font-size:max(9px,1cqw);padding:3px 6px;border-radius:3px}
+.t9hint{position:absolute;z-index:2;color:#e8541e;font-weight:700;font-size:max(9px,1.1cqw);display:flex;align-items:center}
+.toptabs{display:flex;gap:6px;margin:-6px 0 16px;border-bottom:2px solid var(--line)}
+.tt{background:none;border:0;padding:9px 16px;font-size:15px;font-weight:600;color:var(--mut);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tt.on{color:var(--ink);border-bottom-color:var(--acc)}
+.acards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:8px}
+.acard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}
+.acard:hover{border-color:var(--acc)}
+.acard.dis{opacity:.5;cursor:default}
+.acard b{display:block;margin-top:6px}
+.acard span{font-size:13px;color:var(--mut)}
+.aimg{position:relative}
+.aimg img{width:100%;display:block;border-radius:6px}
+.play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:#e8541ee6;color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px #0005}
+.ap{position:relative;width:100%;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 6px 24px #0002;container-type:inline-size}
+.ap>img{width:100%;height:100%;display:block;object-fit:fill}
+.ap .dlgwrap{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto}
+.acur{position:absolute;width:max(16px,2.2cqw);height:max(16px,2.2cqw);margin:-2px 0 0 -3px;z-index:6;pointer-events:none;display:none;filter:drop-shadow(0 2px 2px #0006)}
+.acur.clk::after{content:"";position:absolute;left:-60%;top:-60%;width:120%;height:120%;border-radius:50%;border:3px solid #e8541e;animation:rip .5s ease-out forwards}
+@keyframes rip{from{transform:scale(.3);opacity:1}to{transform:scale(1.6);opacity:0}}
+.aring{position:absolute;width:max(30px,4.5cqw);height:max(30px,4.5cqw);margin-left:calc(max(30px,4.5cqw)/-2);margin-top:calc(max(30px,4.5cqw)/-2);border:3px solid #e8541e;border-radius:50%;z-index:5;pointer-events:none;display:none;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.55}}
+.aaucun{position:absolute;background:#fff;border:1px solid #0078d7;font:max(8px,1cqw) "Segoe UI",sans-serif;display:flex;align-items:center;padding-left:4px;z-index:4;box-shadow:0 0 0 3px #e8541e88}
+.acap{background:var(--ink);color:#fff;border-radius:8px;padding:12px 14px;margin-top:10px;font-size:16px;line-height:1.4;min-height:48px}
+.actl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.actl label{font-size:13px;display:flex;align-items:center;gap:6px;margin-left:auto}
+.alist{margin:6px 0 0;padding-left:22px}
+.alist li{padding:6px 4px;cursor:pointer;border-radius:4px;font-size:14px}
+.alist li:hover{background:#f0eee8}
+.alist li.on{background:#fff0e8;color:var(--acc);font-weight:700}
+.aend{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:2cqw;background:linear-gradient(135deg,#fff7f0,#eef4ff)}
+.aend div{background:#fff;border:2px solid var(--line);border-radius:10px;padding:2cqw;text-align:center;font-size:max(11px,1.6cqw)}
+.aend b{display:block;font-size:max(12px,1.9cqw)}
+.aend i{font-style:normal;font-size:4cqw;color:var(--acc)}
+@media (max-width:900px){.toptabs{margin-top:0}.acap{font-size:14px}}
+.alst{position:absolute;z-index:4;background:#fff;border:1px solid #0078d7;font:max(8px,1cqw) "Segoe UI",sans-serif;box-shadow:0 3px 8px #0004}
+.alst div{padding:0 4px;line-height:1.55;white-space:nowrap}
+.aaucun{white-space:nowrap;overflow:hidden}
+.alst div.h{background:#0078d7;color:#fff}
+.wt{font-style:normal;font-size:10px;background:#e8541e;color:#fff;padding:0 5px;border-radius:8px;margin-left:4px}
+.wo.on .wt{background:#fff;color:#0078d7}
+.wprev{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;margin-top:6px}
+.wprev img{width:100%;border:1px solid var(--line);border-radius:4px;display:block}
+.wprev b{display:block;font-size:14px}
+.wprev span{font-size:13px;color:var(--mut)}
+.wpop{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:74cqw;background:#fff;border-radius:10px;box-shadow:0 10px 40px #0007;z-index:7;font-family:system-ui,sans-serif;overflow:hidden;border:1px solid #ccc}
+.wph{display:flex;align-items:center;justify-content:space-between;background:var(--ink);color:#fff;padding:1cqw 1.6cqw;font-size:max(12px,1.7cqw)}
+.wclose{cursor:pointer;padding:0 .6cqw}
+.wtabs{display:flex;gap:.6cqw;padding:1cqw 1.6cqw 0;border-bottom:2px solid var(--line)}
+.wtabs button{border:0;background:#eee;padding:.8cqw 2cqw;font-size:max(11px,1.5cqw);font-weight:700;border-radius:6px 6px 0 0;cursor:pointer;color:#555}
+.wtabs button.on{background:var(--acc);color:#fff}
+.wbody{display:grid;grid-template-columns:15cqw 19cqw 1fr;gap:1.6cqw;padding:1.6cqw;align-items:center}
+.wcol img{width:100%;display:block;border:1px solid #ddd;border-radius:4px}
+.wcol small{display:block;text-align:center;font-size:max(9px,1.05cqw);color:var(--mut);margin-top:.4cqw;line-height:1.25}
+.wtxt b{font-size:max(13px,2cqw);color:var(--acc)}
+.wtxt p{margin:.6cqw 0;font-size:max(11px,1.45cqw);line-height:1.35}
+.wtxt .wr{color:var(--mut)}
+.wtxt .wu{font-weight:700}
+.shot .wpop{width:78%}
+.wa{position:relative;display:flex;align-items:center;justify-content:center;gap:2%;background:#fff;border-radius:10px;box-shadow:0 6px 24px #0002;padding:24px 16px 46px;min-height:360px;container-type:inline-size}
+.wa figure{margin:0;text-align:center;width:24%}
+.wa figure img{width:100%;display:block;border-radius:6px}
+.wo1{border:1px solid var(--line);aspect-ratio:3/4;object-fit:contain;background:#fff}
+.wa figcaption{font-size:max(11px,1.3cqw);margin-top:6px;color:var(--ink);line-height:1.3}
+.wa figcaption small{color:var(--mut)}
+.warr{font-size:max(20px,3cqw);color:var(--acc)}
+.wwipe{position:relative;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.wwipe img{animation:wwipe 2.6s ease-out both}
+.wres img:first-child{animation:none}
+.wres img.top{position:absolute;inset:0;height:100%}
+@keyframes wwipe{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.wres{aspect-ratio:380/480}
+.wres img{height:100%;object-fit:cover}
+.wname{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-weight:800;font-size:max(15px,2.2cqw);color:var(--acc);white-space:nowrap}
+.wintro{display:flex;align-items:center;gap:4%;width:100%;justify-content:center}
+.wl{display:flex;flex-direction:column;gap:6px;width:30%}
+.wl span{padding:12px;border-radius:6px;font-weight:700;text-align:center;font-size:max(12px,1.5cqw)}
+.wl .l1{background:linear-gradient(90deg,#00aeef,#ec008c,#ffec00);color:#fff;text-shadow:0 1px 2px #0008}
+.wl .l2{background:#fff;border:2px solid #ccc}
+.wl .l3{background:#4e4038;color:#fff}
+.wcmp{display:flex;gap:4%;width:46%}
+.wcmp figure{width:48%}
+.wchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.wchips button{border:1px solid var(--line);background:#fff;border-radius:16px;padding:5px 11px;font-size:13px;cursor:pointer}
+.wchips button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+@media (max-width:700px){.wa{flex-wrap:wrap;padding-bottom:50px}.wa figure{width:30%}.warr{display:none}}
+.mhead,.drawer,.dmask{display:none}
+details.ng{margin:2px 0}
+details.ng summary{list-style:none;cursor:pointer;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#9aa0a8;padding:8px 8px 5px;display:flex;align-items:center;gap:6px}
+details.ng summary::-webkit-details-marker{display:none}
+details.ng summary::before{content:"▸";transition:transform .15s;font-size:10px}
+details.ng[open] summary::before{transform:rotate(90deg)}
+.nc{margin-left:auto;background:#ffffff14;border-radius:8px;padding:0 6px;font-size:10px}
+.hs::before{content:"";position:absolute;inset:-7px}
+.sclose{display:none}
+.sw{min-width:0}
+@media (max-width:900px){
+ .mhead{display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:25;background:var(--side);color:#fff;padding:8px 10px}
+ .mhead button{background:#ffffff1a;border:0;color:#fff;font-size:20px;width:40px;height:40px;border-radius:8px;cursor:pointer}
+ #mtitle{flex:1;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .drawer{display:block;position:fixed;top:0;left:0;bottom:0;width:84%;max-width:330px;background:var(--side);color:#e8e8e8;z-index:40;transform:translateX(-105%);transition:transform .22s;overflow:auto;padding:10px}
+ body.dopen .drawer{transform:none}
+ .dmask{display:block;position:fixed;inset:0;background:#0007;z-index:35;opacity:0;pointer-events:none;transition:opacity .2s}
+ body.dopen .dmask{opacity:1;pointer-events:auto}
+ .dhead{display:flex;justify-content:space-between;align-items:center;padding:4px 4px 10px}
+ .dhead button{background:#ffffff1a;border:0;color:#fff;width:36px;height:36px;border-radius:8px;font-size:16px}
+ .dtabs{display:flex;gap:4px;margin-bottom:8px}
+ .dtabs .tt{flex:1;color:#cfd3d8;border:0;background:#ffffff12;border-radius:8px;margin:0;padding:9px 4px;font-size:13px}
+ .dtabs .tt.on{background:var(--acc);color:#fff}
+ .drawer .navbtn{padding:10px 8px;font-size:14px}
+ .toptabs{display:none}
+ .sw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+ body.zoom .sw .shot,body.zoom .sw .dlgwrap{width:240%}
+ .stage.scr .panel{position:fixed;left:0;right:0;bottom:0;top:auto;max-height:46vh;border-radius:14px 14px 0 0;z-index:30;transform:translateY(110%);transition:transform .2s;box-shadow:0 -6px 24px #0003;padding-top:16px}
+ body.sheet .stage.scr .panel{transform:none}
+ .sclose{display:block;position:absolute;right:10px;top:8px;border:0;background:#eee;border-radius:50%;width:30px;height:30px;font-size:14px}
+ .stage.scr{margin-bottom:8px}
+ .hs{min-width:18px;height:16px;font-size:8px}
+ .head h2{font-size:18px}
+ .intro{font-size:14px}
+ .list{grid-template-columns:1fr 1fr;gap:6px}
+ .item{font-size:12px;padding:7px 8px}
+ .actl label{margin-left:0;width:100%}
+ .wa{min-height:0;padding:14px 8px 44px}
+ .flow{flex-direction:column;align-items:stretch;gap:4px}
+ .flow .step{max-width:none}
+ .flow .arrow{transform:rotate(90deg);align-self:center;line-height:1}
+ .acards,.cards{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="mhead"><button id="burger" aria-label="Menu">☰</button><span id="mtitle">Simulateur</span><button id="mzoom" aria-label="Zoom">🔍</button></div>
+<div class="dmask" id="dmask"></div>
+<nav class="drawer" id="drawer"><div class="dhead"><b>Menu</b><button id="dclose" aria-label="Fermer">✕</button></div><div class="dtabs" id="dtabs"></div><div id="dnav"></div></nav>
+<div class="app">
+<aside>
+ <h1>FlexiPRINT UV · DXonJet</h1>
+ <div class="sub">Simulateur — V1 de travail<br>Repères (M0, T1… et 3.2…) pour les corrections</div>
+ <div id="nav"></div>
+</aside>
+<main>
+ <div class="exobar" id="exobar">
+  <div class="q" id="exoq"></div>
+  <button class="btn alt" id="exohint">Indice</button>
+  <button class="btn alt" id="exoquit">Quitter</button>
+  <div class="prog"><i id="exoprog"></i></div>
+  <div class="msg" id="exomsg"></div>
+ </div>
+ <div class="toptabs" id="toptabs"></div>
+ <div id="view"></div>
+</main>
+</div>
+<script>
+const S = {
+ m0:{code:"M0",title:"Fenêtre principale (Production Manager)",img:"img/m0.jpg",w:1210,h:827,
+  intro:"C'est l'écran d'accueil : la file d'attente des travaux. On ajoute un fichier, on règle ses propriétés, puis le RIP crée le fichier pour le logiciel DXonJet.",
+  hs:[
+   ["0.1",103,150,"Assistant","Non utilisé.",null,1,[65,118,78,72]],
+   ["0.2",198,150,"Travail","Ouvre la fenêtre « Ajouter un travail » pour choisir le fichier à imprimer (écran M0-a).","Première action de chaque impression."],
+   ["0.3",285,150,"RIP","Non utilisé.",null,1,[250,118,72,72]],
+   ["0.4",355,150,"Envoyer","Non utilisé.",null,1,[324,118,64,72]],
+   ["0.5",435,150,"Estimation","Non utilisé.",null,1,[398,118,76,72]],
+   ["0.6",568,150,"Positionnement des formes","Non utilisé.",null,1,[488,118,162,72]],
+   ["0.7",733,150,"Travaux non imbriqués","Non utilisé.",null,1,[664,118,140,72]],
+   ["0.8",846,150,"Annuler","Annule le RIP en cours."],
+   ["0.9",925,150,"Supprimer","Supprime le fichier en attente sélectionné dans la liste."],
+   ["0.10",300,206,"Configuration de l'imprimante","Sert uniquement à régler une nouvelle imprimante. On ne l'utilise pas.","Ne pas modifier : la DXonJet est déjà configurée.",1,[170,193,262,25]],
+   ["0.11",600,420,"Liste des travaux","Historique des fichiers et travaux en cours : aperçu, nom, état, dimensions, copies, profil ICC. Un double-clic sur un travail ouvre ses propriétés (écrans T1 à T11)."],
+   ["0.12",140,752,"Bandeau d'état","Montre l'utilisation de l'ordinateur (mémoire) et l'espace libre sur les disques.","Garder de la place sur le disque C : les murs produisent de gros fichiers."]
+  ]},
+ m0a:{code:"M0-a",title:"Ajouter un travail (choix du fichier)",html:true,
+  intro:"S'ouvre avec le bouton Travail (0.2). On choisit le fichier puis on clique sur Ajout. Essaie : sélectionne « smiley.jpg ».",
+  hs:[
+   ["a.1",470,57,"Regarder dans","Dossier affiché. Les flèches à droite servent à remonter ou changer de dossier."],
+   ["a.2",64,96,"Raccourcis","Accès rapide aux emplacements de l'ordinateur (Bureau, Ce PC…)."],
+   ["a.3",380,96,"Liste des fichiers","Clique sur le fichier à imprimer pour le sélectionner."],
+   ["a.4",560,462,"Nom du fichier","Se remplit tout seul quand on clique sur un fichier."],
+   ["a.5",560,500,"Types de fichiers","Laisser « Tout ce qui est lisible »."],
+   ["a.6",560,548,"Préréglage","Non utilisé : rester sur « Utiliser les propriétés du travail par défaut ».",null,1],
+   ["a.7",870,345,"Cases à cocher","Aperçu, Copier dans le répertoire Job, Ouvrir les propriétés, Imbriquer : toutes décochées.","Ne rien cocher."],
+   ["a.8",870,92,"Ajout","Ajoute le fichier sélectionné dans la file d'attente (liste M0)."],
+   ["a.9",870,128,"Annuler","Ferme la fenêtre sans rien ajouter."]
+  ]},
+ t1:{code:"T1",title:"Mise en page (taille, position, copies)",img:"img/t1.jpg",w:1272,h:890,
+  intro:"Onglet le plus utilisé : on vérifie la taille de l'image. Les zones grisées ne sont pas utilisées.",
+  hs:[
+   ["1.1",290,118,"Préréglage","Permet de charger un préréglage, seulement si on en a enregistré un. Sinon rester sur « Utiliser les propriétés du travail par défaut »."],
+   ["1.2",240,203,"Taille du support","Taille maximum d'impression, théorique. On peut l'agrandir si on a besoin de plus grand.","Ne pas modifier dans la plupart des situations."],
+   ["1.3",240,275,"Marges","Non utilisé.",null,1,[95,245,255,60]],
+   ["1.4",230,405,"Taille du travail","Permet de réajuster la dimension du fichier (en cm ou en %).","Attention : le logiciel n'ajoute pas de pixels. Agrandir un fichier x 4, c'est risquer une image pixelisée."],
+   ["1.5",180,445,"Proportionnel / Adapter au support","« Proportionnel » garde le rapport largeur / hauteur : à laisser coché. « Adapter au support » étire l'image à la taille du support (1.2).","Ne pas cocher « Adapter au support » : l'image serait déformée."],
+   ["1.6",240,520,"Position","Non utilisé : avec notre méthode, on ne décale pas l'impression par rapport au support.",null,1,[95,505,315,32]],
+   ["1.7",240,600,"Copies","Non utilisé : imprimer plusieurs fois l'image n'est pas adapté à notre technologie.",null,1,[95,575,255,60]],
+   ["1.8",355,686,"Miroir (F)","Retourne l'image. Pour un miroir total : utiliser F ET retourner l'icône bonhomme (1.8b).","Il est préférable de faire le miroir en amont, dans un logiciel de traitement d'image."],
+   ["1.8b",448,686,"Icône bonhomme","À retourner en plus de F pour obtenir un miroir total."],
+   ["1.13",375,652,"Imbrication de pages","Laisser cochée.","Ne pas toucher."],
+   ["1.9",200,720,"Montage","Jamais utilisé.",null,1,[88,695,350,48]],
+   ["1.10",930,450,"Aperçu","Vue du fichier sur le support."],
+   ["1.11",617,455,"Propriétés de travail de base","Passe en mode réglage basique. Non utilisé : pas assez de réglages.",null,1,[602,330,32,252]],
+  ]},
+ t2:{code:"T2",title:"Général (après sortie, priorité, notes)",img:"img/t2.jpg",w:1275,h:891,
+  intro:"Non utilisé : ce menu sert pour un parc de plusieurs machines. Rien à toucher.",
+  hs:[
+   ["2.1",330,186,"Nom et dossier","Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",null,1,[82,150,500,640,"non utilisé · rien à toucher"]],
+   ["2.2",190,250,"Configuration","Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",null,1],
+   ["2.3",280,312,"Après sortie","Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",null,1],
+   ["2.4",280,334,"Priorité","Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",null,1],
+   ["2.5",160,389,"Répéter le travail","Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",null,1],
+   ["2.6",180,652,"Envoyer après","Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",null,1],
+   ["2.7",250,730,"Notes","Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",null,1]
+  ]},
+ t3:{code:"T3",title:"Couleur (profil, résolution, tramage)",img:"img/t3.jpg",w:1277,h:892,
+  intro:"On choisit seulement le profil (nombre de passes) en 3.2. Tout le reste se règle automatiquement.",
+  hs:[
+   ["3.1",195,213,"Correction des couleurs","Non utilisé.",null,1,[82,182,436,48]],
+   ["3.2",300,243,"Profil de sortie","Permet de choisir le nombre de passes de couleur (ex. F1 12PASS).","C'est le seul réglage de cet onglet à utiliser."],
+   ["3.3",300,270,"Support","Se règle automatiquement selon le profil choisi en 3.2.","Ne pas toucher.",2,[82,258,436,314,"automatique · ne pas toucher",.18]],
+   ["3.4",285,297,"Résolution","Se règle automatiquement selon le profil choisi en 3.2.","Ne pas toucher.",2],
+   ["3.5",265,325,"Mode couleur","Se règle automatiquement selon le profil choisi en 3.2.","Ne pas toucher.",2],
+   ["3.6",380,325,"Marge…","Se règle automatiquement selon le profil choisi en 3.2.","Ne pas toucher.",2],
+   ["3.7",265,352,"Diffusion","Se règle automatiquement selon le profil choisi en 3.2.","Ne pas toucher.",2],
+   ["3.8",140,384,"Dégradés lisses","Se règle automatiquement selon le profil choisi en 3.2.","Ne pas toucher.",2],
+   ["3.9",365,413,"Avancé…","Se règle automatiquement selon le profil choisi en 3.2.","Ne pas toucher.",2],
+   ["3.10",160,463,"Mappage de couleurs","Se règle automatiquement selon le profil choisi en 3.2.","Ne pas toucher.",2],
+   ["3.11",160,497,"Surimpression","Se règle automatiquement selon le profil choisi en 3.2.","Ne pas toucher.",2]
+  ]},
+ t4:{code:"T4",title:"Couleurs d'accompagnement (Spot)",img:"img/t4.jpg",w:1275,h:887,
+  intro:"Réglage du blanc. Sur la tête, les canaux sont Y Y / K C / M C / W W : le blanc passe par Spot_1. Clique sur 4.1 pour voir les choix.",
+  hs:[
+   ["4.1",362,367,"Spot_1 : réglage du blanc","Choisit comment la machine interprète la couleur blanche. Clique sur chaque choix pour voir où le blanc sera imprimé. Les plus utilisés : Support et Sous-uni.",null,0,null,"white"],
+   ["4.4",180,420,"Spot_2 à Spot_4","Non utilisé.",null,1,[80,382,275,75]],
+   ["4.2",420,683,"Couleur d'accompagnement & jeu d'encre","Non utilisé.",null,1,[308,670,224,28]],
+   ["4.3",460,720,"Défaut","Non utilisé.",null,1,[385,708,155,24]]
+  ]},
+ t5:{code:"T5",title:"Recouvrement (découpe en panneaux)",img:"img/t5.jpg",w:1273,h:889,
+  intro:"Sert à faire un échantillon à taille réelle : on tire les poignées d'angle de l'aperçu. Essaie !",
+  hs:[
+   ["5.1",230,213,"Taille du panneau","Non utilisé : on ne règle pas les champs.",null,1,[82,180,372,312]],
+   ["5.2",230,310,"Recouvrement sélectionné","Non utilisé.",null,1],
+   ["5.3",250,410,"Tous les recouvrements","Non utilisé.",null,1],
+   ["5.4",185,467,"Chevauchement","Non utilisé.",null,1],
+   ["5.5",310,467,"Inversion automatique du panneau","Non utilisé.",null,1],
+   ["5.6",1170,300,"Poignées d'angle","Attrape une poignée DANS UN ANGLE et tire-la pour délimiter une zone de l'image. Cette zone sera imprimée à taille réelle : c'est un échantillon de test. Ensuite, clique directement sur Envoyer (E).","Uniquement les poignées des angles, pas celles du milieu des côtés."],
+   ["5.7",387,657,"Remise","Remet l'image à sa taille d'origine (annule l'échantillon)."]
+  ]},
+ t6:{code:"T6",title:"Repères et étiquettes",img:"img/t6.jpg",w:1273,h:889,
+  intro:"Non utilisé en impression murale.",
+  hs:[
+   ["6.1",200,190,"Couleur et largeur","Non utilisé en impression murale.",null,1,[76,170,500,640,"non utilisé en impression murale"]],
+   ["6.2",165,245,"Imprimer les étiquettes","Non utilisé en impression murale.",null,1],
+   ["6.3",270,430,"Infos de l'étiquette","Non utilisé en impression murale.",null,1],
+   ["6.4",210,653,"Impression des repères","Non utilisé en impression murale.",null,1],
+   ["6.5",165,722,"Lignes de chevauchement","Non utilisé en impression murale.",null,1],
+   ["6.6",330,722,"Bandes couleur","Non utilisé en impression murale.",null,1],
+   ["6.7",150,775,"Ajouter un logo","Non utilisé en impression murale.",null,1]
+  ]},
+ t7:{code:"T7",title:"Courbes, contraste, netteté",img:"img/t7.jpg",w:1274,h:888,
+  intro:"Non utilisé : pour la colorimétrie, il vaut mieux utiliser un logiciel de traitement d'image en amont.",
+  hs:[
+   ["7.1",210,213,"Canal","Permet de modifier la colorimétrie, mais c'est compliqué ici.","Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",1,[76,170,500,500,"non utilisé · retouche en amont"]],
+   ["7.2",190,350,"Courbe","Permet de modifier la colorimétrie, mais c'est compliqué ici.","Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",1],
+   ["7.3",410,280,"Entrée / Sortie","Permet de modifier la colorimétrie, mais c'est compliqué ici.","Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",1],
+   ["7.4",320,183,"Imprimer un négatif","Permet de modifier la colorimétrie, mais c'est compliqué ici.","Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",1],
+   ["7.5",290,582,"Contraste","Permet de modifier la colorimétrie, mais c'est compliqué ici.","Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",1],
+   ["7.6",290,622,"Renforcement","Permet de modifier la colorimétrie, mais c'est compliqué ici.","Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",1],
+   ["7.7",395,656,"Tout réinitialiser","Permet de modifier la colorimétrie, mais c'est compliqué ici.","Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",1]
+  ]},
+ t8:{code:"T8",title:"Séparations",img:"img/t8.jpg",w:1279,h:888,
+  intro:"Non utilisé.",
+  hs:[
+   ["8.1",155,181,"Imprimer en séparations","Non utilisé.",null,1,[76,170,500,640,"non utilisé"]],
+   ["8.2",260,300,"Canal / Imprimer en","Non utilisé.",null,1]
+  ]},
+ t9:{code:"T9",title:"Aperçu des canaux de sortie",img:"img/t9.jpg",w:1274,h:889,
+  intro:"Voir ce que chaque encre va déposer. Coche 9.1 puis clique sur un canal.",
+  hs:[
+   ["9.1",300,187,"Aperçu canaux de sortie","Coche cette case pour voir chaque canal de couleur séparément. Clique ensuite sur un canal dans la liste (9.2).","Très intéressant pour voir où se trouvera le blanc."],
+   ["9.2",330,300,"Liste des canaux","Cyan, Magenta, Jaune, Noir et Spot_1 (le blanc). Spot_2 à Spot_4 ne sont pas utilisés."],
+   ["9.3",930,520,"Aperçu","Affiche le canal sélectionné."]
+  ]},
+ t10:{code:"T10",title:"Mappage des couleurs",img:"img/t10.jpg",w:1275,h:889,
+  intro:"Non utilisé.",
+  hs:[
+   ["10.1",150,205,"Infos objet","Non utilisé.",null,1,[76,170,500,640,"non utilisé"]],
+   ["10.2",260,250,"Table de mappage","Non utilisé.",null,1],
+   ["10.3",290,655,"Couleurs similaires / Plage","Non utilisé.",null,1],
+   ["10.4",180,707,"Nouveau / Edition / Supprimer","Non utilisé.",null,1]
+  ]},
+ t11:{code:"T11",title:"Blanc et transparence",img:"img/t11.jpg",w:1277,h:890,
+  intro:"Pas fiable : pas utilisé pour l'instant. On y reviendra plus tard.",
+  hs:[
+   ["11.1",160,180,"Création d'un fond transparent","Pas fiable : pas utilisé pour l'instant.",null,1,[76,170,500,640,"pas utilisé pour l'instant"]],
+   ["11.2",290,207,"Par couleur / limites / éliminer","Pas fiable : pas utilisé pour l'instant.",null,1],
+   ["11.3",260,302,"Tolérance","Pas fiable : pas utilisé pour l'instant.",null,1],
+   ["11.4",200,372,"Chemins de coupe","Pas fiable : pas utilisé pour l'instant.",null,1],
+   ["11.5",260,629,"Canal","Pas fiable : pas utilisé pour l'instant.",null,1],
+   ["11.6",255,656,"Choix blanc","Pas fiable : pas utilisé pour l'instant.",null,1],
+   ["11.7",330,683,"Densité du blanc","Pas fiable : pas utilisé pour l'instant.",null,1],
+   ["11.8",330,712,"Blanc sous le noir","Pas fiable : pas utilisé pour l'instant.",null,1],
+   ["11.9",455,736,"Marge","Pas fiable : pas utilisé pour l'instant.",null,1],
+   ["11.10",130,770,"Aperçu Transparent / Blanc","Pas fiable : pas utilisé pour l'instant.",null,1]
+  ]}
+ ,dc:{code:"DC",title:"Commandes toujours visibles",img:"img/dx/d1.jpg",w:1462,h:882,dx:1,menu:0,sub:null,
+  intro:"Visibles sur tous les menus : la barre de réglages rapides (B), le panneau de commande à droite (P) et le bandeau d'état (S).",
+  hs:[
+   ["B.1",125,214,"Paramètre bidirectionnel","On n'y touche pas.",null,1],
+   ["B.2",252,214,"Aller-retour","Choisit si on imprime en montée uniquement, ou en montée et en descente.",null],
+   ["B.3",370,193,"Sauter le blanc","Saute les zones où il n'y a rien à imprimer.",null],
+   ["B.4",505,193,"Début avec le laser","L'impression démarre au niveau du laser rouge.",null],
+   ["B.5",628,193,"Reprendre l'impression","Redémarre une impression stoppée.","Attention : une procédure est à respecter (détaillée plus tard)."],
+   ["B.6",752,214,"Mode d'impression","Choix du mode de couleur. KCMY : uniquement la couleur. WKCMY : d'abord le blanc, ensuite les couleurs. KCMYW : l'inverse, d'abord les couleurs, ensuite le blanc.",null],
+   ["B.7",877,214,"Configuration pas à pas","Choisit si la machine est en mode roue ou en mode rail (Track).",null],
+   ["B.8",1228,211,"Vitesse","Vitesse de montée et de descente de la machine (ici 30 cm/s).",null],
+   ["P.1",983,253,"Ouvrir / fermer le panneau","Ouvre ou ferme le panneau de commande.",null],
+   ["P.2",1035,261,"Imprimer","Lance l'impression.",null],
+   ["P.3",1160,261,"Pause","Met l'impression en pause.",null],
+   ["P.4",1286,261,"Arrêter","Arrête l'impression.",null],
+   ["P.5",1035,313,"Test des buses","Imprime un test des buses d'impression.",null],
+   ["P.6",1160,313,"Mode voyage","Fait un nettoyage partiellement automatique, puis un nettoyage toutes les 72 h.","Attention : vérifier que la bouteille n'est pas trop pleine."],
+   ["P.7",1286,313,"UV manuel","Fait une montée et une descente avec les lampes UV.",null],
+   ["P.8",1035,365,"Vaporisée","Vaporise l'encre.",null],
+   ["P.9",1160,365,"Pompe à encre","Active la pompe à encre.","Attention : la pompe reste active. Il faut ré-appuyer pour la désactiver."],
+   ["P.10",1286,365,"Nettoyer","Vide l'encre devant la tête, pour éviter qu'elle coule partout.",null],
+   ["P.11",1030,421,"Tête en avant","Rapproche la tête d'impression.",null],
+   ["P.12",1030,468,"Tête en arrière","Éloigne la tête d'impression.",null],
+   ["P.13",1030,515,"Tête automatique","Gère automatiquement le rapprochement de la tête d'impression.",null],
+   ["P.14",1030,563,"Rapide / normal / lent","Règle la vitesse de déplacement manuel de la machine : normale ou lente.",null],
+   ["P.15",1260,490,"Flèches et maison","Font bouger la machine.",null],
+   ["P.16",1035,610,"步进参数 (paramètre de pas)","Inutile.",null,1],
+   ["P.17",1100,667,"Point bas de l'impression","Règle le point bas de démarrage de l'impression.",null],
+   ["P.18",1293,667,"Point le plus haut","Met une sécurité : hauteur maximale que la machine peut parcourir.",null],
+   ["S.1",110,780,"Hors ligne / connecté","Indique si la machine est connectée ou non.",null],
+   ["S.2",640,762,"Format d'impression","Indique la taille maximale que la machine peut imprimer.",null]
+  ]}
+ ,d1:{code:"D1",title:"Sélection de fichier",img:"img/dx/d1.jpg",w:1462,h:882,dx:1,menu:1,sub:null,
+  intro:"On choisit le fichier RIPé à imprimer : dossier, puis fichier.",
+  hs:[
+   ["1.1",215,350,"Arborescence","Sélection du dossier où se trouve le fichier à imprimer.","Attention : si le fichier RIPé n'apparaît pas alors qu'il a bien été RIPé, il faut changer de dossier puis revenir dessus pour rafraîchir la liste."],
+   ["1.2",215,620,"Contenu du dossier","Les fichiers du dossier sélectionné : on clique sur celui à imprimer.",null],
+   ["1.3",667,460,"Aperçu","Une vue du fichier sélectionné.",null],
+   ["1.4",435,705,"创建RIP任务 (créer une tâche RIP)","On n'y touche pas.",null,1],
+   ["1.5",898,702,"Double jet latéral","On n'y touche pas.",null,1]
+  ]}
+ ,d2:{code:"D2",title:"Contrôle de l'impression",img:"img/dx/d2.jpg",w:1459,h:880,dx:1,menu:2,sub:null,
+  intro:"Suivi de l'impression : en cours, historique et consommation d'encre.",
+  hs:[
+   ["2.1",215,480,"Historique","L'historique des impressions.",null],
+   ["2.2",290,734,"Activité / Histoire","Onglets pour passer de l'activité à l'historique.",null],
+   ["2.3",665,380,"Impression en cours","Vue de l'impression en cours.",null],
+   ["2.4",655,640,"Infos du fichier","Informations du fichier et quantité d'encre utilisée pour l'impression.",null]
+  ]}
+ ,d3a:{code:"D3-a",title:"Réglage des paramètres · Paramètres d'impression",img:"img/dx/d3a.jpg",w:1458,h:879,dx:1,menu:3,sub:'d3',
+  intro:"Réglages d'impression : plage, distance du mur, vitesse de la tête et retard de mouvement.",
+  hs:[
+   ["a.1",310,285,"Mode de protection d'encre (plage)","La plage élargit le dégradé de superposition des passes. Plus le dégradé est grand, plus l'impression est régulière, surtout sur les aplats.","Attention : plus la plage est grande, plus le temps d'impression s'allonge."],
+   ["a.2",310,455,"Mode de couleur","Mêmes réglages que le mode d'impression de la barre B (B.6) : KCMY, WKCMY…",null],
+   ["a.3",555,320,"Ensemble de têtes","On n'y touche pas.",null,1],
+   ["a.4",520,441,"Distance du mur","Distance de la tête par rapport au mur.","Attention : seul le retard de mouvement (a.6) peut être modifié pendant l'impression. Les réglages a.4 et a.5 se font à l'arrêt : l'idéal est de faire Pause, reculer la tête, modifier le réglage, remettre la tête en automatique, puis relancer l'impression."],
+   ["a.5",690,471,"Vitesse de l'axe Z","Vitesse à laquelle la tête bouge d'avant en arrière.","Attention : seul le retard de mouvement (a.6) peut être modifié pendant l'impression. Les réglages a.4 et a.5 se font à l'arrêt : l'idéal est de faire Pause, reculer la tête, modifier le réglage, remettre la tête en automatique, puis relancer l'impression."],
+   ["a.6",520,501,"Retard de mouvement","Pause en haut et pause en bas, quand la machine se déplace de gauche à droite.","C'est le seul réglage de cet écran qui peut être modifié pendant l'impression."],
+   ["a.7",520,593,"Lire les paramètres","Permet de vérifier les réglages enregistrés.",null],
+   ["a.8",633,593,"Appliquer","Valide les réglages.","Attention : seul le retard de mouvement (a.6) peut être modifié pendant l'impression. Les réglages a.4 et a.5 se font à l'arrêt : l'idéal est de faire Pause, reculer la tête, modifier le réglage, remettre la tête en automatique, puis relancer l'impression."]
+  ]}
+ ,d3b:{code:"D3-b",title:"Réglage des paramètres · Limite d'encre",img:"img/dx/d3b.jpg",w:1460,h:882,dx:1,menu:3,sub:'d3',
+  intro:"On n'y touche pas.",
+  hs:[
+   ["b.1",282,261,"Réduire la valeur du gris","On n'y touche pas.",null,1,[190,236,770,505,"on n'y touche pas"]],
+   ["b.2",400,340,"Color_CH1 à CH8 (%)","On n'y touche pas.",null,1],
+   ["b.3",590,446,"应用 (Appliquer)","On n'y touche pas.",null,1]
+  ]}
+ ,d3c:{code:"D3-c",title:"Réglage des paramètres · Importer / Exporter",img:"img/dx/d3c.jpg",w:1458,h:880,dx:1,menu:3,sub:'d3',
+  intro:"On n'y touche pas.",
+  hs:[
+   ["c.1",235,275,"Exporter","On n'y touche pas.",null,1,[190,236,770,505,"on n'y touche pas"]],
+   ["c.2",359,275,"Importer","On n'y touche pas.",null,1]
+  ]}
+ ,d4a:{code:"D4-a",title:"Calibrage · Calibrage des buses",img:"img/dx/d4a.jpg",w:1462,h:880,dx:1,menu:4,sub:'d4',
+  intro:"Calibrage des buses : seul le réglage du bas (Offre / Composition) est utilisé.",
+  hs:[
+   ["a.1",490,265,"Sélectionner le média","On n'y touche pas.",null,1,[190,236,775,428,"on n'y touche pas"]],
+   ["a.2",495,318,"Réglage de la tête","On n'y touche pas.",null,1],
+   ["a.3",280,440,"Alimentation COMP","On n'y touche pas.",null,1],
+   ["a.4",500,404,"Aligner plusieurs têtes","On n'y touche pas.",null,1],
+   ["a.5",380,645,"Impulsion d'alimentation","On n'y touche pas.",null,1],
+   ["a.6",640,702,"Aligner la composition (Offre)","Seul réglage de cet écran qu'on utilise : la valeur Offre (ex. 94) et le bouton Composition des encres.","Rôle exact à compléter par Teddy."]
+  ]}
+ ,d4b:{code:"D4-b",title:"Calibrage · Position de la buse",img:"img/dx/d4b.jpg",w:1462,h:882,dx:1,menu:4,sub:'d4',
+  intro:"Position de la buse : seul le décalage du laser rouge (b.1) est utilisé.",
+  hs:[
+   ["b.1",420,252,"Décalage papier (laser rouge)","Règle le décalage du laser rouge. On pointe le laser là où on veut commencer l'impression : si l'impression démarre décalée, c'est ici qu'on corrige.",null],
+   ["b.2",435,390,"Canaux 1G","On n'y touche pas.",null,1,[190,296,1012,440,"on n'y touche pas"]],
+   ["b.3",435,470,"Canaux 2G","On n'y touche pas.",null,1],
+   ["b.4",900,265,"Forme d'onde / vitesse","On n'y touche pas.",null,1],
+   ["b.5",1010,520,"Couleur du canal","On n'y touche pas.",null,1],
+   ["b.6",1023,712,"Appliquer","On n'y touche pas.",null,1]
+  ]}
+ ,d5a:{code:"D5-a",title:"Maintenance · Fonction auxiliaire",img:"img/dx/d5a.jpg",w:1458,h:879,dx:1,menu:5,sub:'d5',
+  intro:"Menu technique : non utilisé.",
+  hs:[
+   ["a.1",265,296,"Activer le chauffage","Menu technique : non utilisé.",null,1,[190,236,1012,507,"menu technique · non utilisé"]],
+   ["a.2",370,330,"Températures","Menu technique : non utilisé.",null,1],
+   ["a.3",258,387,"Appliquer","Menu technique : non utilisé.",null,1]
+  ]}
+ ,d5b:{code:"D5-b",title:"Maintenance · Contrôle de la plateforme",img:"img/dx/d5b.jpg",w:1460,h:878,dx:1,menu:5,sub:'d5',
+  intro:"Menu technique : non utilisé.",
+  hs:[
+   ["b.1",400,290,"Contrôle de lampe","Menu technique : non utilisé.",null,1,[190,236,1012,507,"menu technique · non utilisé"]],
+   ["b.2",530,290,"Tester","Menu technique : non utilisé.",null,1],
+   ["b.3",275,368,"Correspondance / retard / distance","Menu technique : non utilisé.",null,1],
+   ["b.4",471,714,"Appliquer","Menu technique : non utilisé.",null,1]
+  ]}
+ ,d6a:{code:"D6-a",title:"Paramètres avancés · Paramètres du logiciel",img:"img/dx/d6a.jpg",w:1461,h:879,dx:1,menu:6,sub:'d6',
+  intro:"Menu technique : non utilisé.",
+  hs:[
+   ["a.1",400,278,"Langue d'affichage","Menu technique : non utilisé.",null,1,[190,236,1012,507,"menu technique · non utilisé"]],
+   ["a.2",400,307,"Unité","Menu technique : non utilisé.",null,1],
+   ["a.3",400,336,"Sélectionner","Menu technique : non utilisé.",null,1],
+   ["a.4",511,417,"Appliquer","Menu technique : non utilisé.",null,1]
+  ]}
+ ,d6b:{code:"D6-b",title:"Paramètres avancés · Interface de communication",img:"img/dx/d6b.jpg",w:1459,h:879,dx:1,menu:6,sub:'d6',
+  intro:"Menu technique : non utilisé.",
+  hs:[
+   ["b.1",505,300,"Canaux / IP","Menu technique : non utilisé.",null,1,[190,236,1012,507,"menu technique · non utilisé"]],
+   ["b.2",335,555,"Ajouter / Supprimer / Actualiser","Menu technique : non utilisé.",null,1],
+   ["b.3",531,555,"Définir la fin d'impression","Menu technique : non utilisé.",null,1],
+   ["b.4",757,590,"Appliquer","Menu technique : non utilisé.",null,1]
+  ]}
+ ,d7a:{code:"D7-a",title:"Informations · Version",img:"img/dx/d7a.jpg",w:1456,h:879,dx:1,menu:7,sub:'d7',
+  intro:"Menu technique : non utilisé.",
+  hs:[
+   ["a.1",262,259,"Version du firmware","Menu technique : non utilisé.",null,1,[190,236,1012,507,"menu technique · non utilisé"]],
+   ["a.2",390,259,"Mise à jour du firmware","Menu technique : non utilisé.",null,1],
+   ["a.3",395,298,"Version PrintX","Menu technique : non utilisé.",null,1],
+   ["a.4",520,470,"Informations détaillées","Menu technique : non utilisé.",null,1]
+  ]}
+ ,d7b:{code:"D7-b",title:"Informations · Impression",img:"img/dx/d7b.jpg",w:1461,h:882,dx:1,menu:7,sub:'d7',
+  intro:"Menu technique : non utilisé.",
+  hs:[
+   ["b.1",362,345,"Informations sur l'impression","Menu technique : non utilisé.",null,1,[190,236,1012,507,"menu technique · non utilisé"]],
+   ["b.2",686,345,"Informations sur l'encre","Menu technique : non utilisé.",null,1],
+   ["b.3",985,290,"Mot de passe de la scène","Menu technique : non utilisé.",null,1],
+   ["b.4",525,620,"Historique des impressions","Menu technique : non utilisé.",null,1]
+  ]}
+ ,tenv:{code:"T-env",title:"Envoyer : enregistrer le fichier RIPé",html:"env",
+  intro:"S'ouvre avec le bouton « Envoyer » en bas de chaque onglet (T1 à T11). On choisit où enregistrer le fichier RIPé, puis on l'ouvre dans le logiciel DXonJet.",
+  hs:[
+   ["e.1",470,57,"Dossier d'enregistrement","Dossier où sera enregistré le fichier RIPé."],
+   ["e.2",380,96,"Fichiers déjà RIPés","Les fichiers déjà présents dans le dossier."],
+   ["e.3",560,462,"Nom du fichier","Permet de renommer le fichier RIPé."],
+   ["e.4",560,500,"Type","On n'y touche pas.",null,1],
+   ["e.5",870,92,"Enregistrer","Lance le RIP et enregistre le fichier. Il sera ensuite ouvert dans le logiciel DXonJet pour imprimer."],
+   ["e.6",870,128,"Annuler","Ferme la fenêtre sans enregistrer."]
+  ]}
+};
+const ORDER=["m0","m0a","t1","t2","t3","t4","t5","t6","t7","t8","t9","t10","t11","tenv"];
+const DXO=["dc","d1","d2","d3a","d3b","d3c","d4a","d4b","d5a","d5b","d6a","d6b","d7a","d7b"];
+const DXMENU=[[243,"d1","D1"],[377,"d2","D2"],[511,"d3a","D3"],[645,"d4a","D4"],[787,"d5a","D5"],[926,"d6a","D6"],[1060,"d7a","D7"],[1195,null,"D8"]];
+const TABS=["t1","t2","t3","t4","t5","t6","t7","t8","t9","t10","t11"];
+const TABX=[88,126,165,203,241,280,318,357,396,434,470], TABY=155;
+
+const EXO=[
+ {s:"m0",id:"0.2",q:"Ton client t'envoie une photo. Ouvre la fenêtre pour ajouter un travail.",hint:"Barre d'outils de la fenêtre principale (M0).",then:"m0a"},
+ {s:"m0a",id:"a.8",q:"Sélectionne le fichier « smiley.jpg » puis clique sur Ajout.",hint:"Clique d'abord sur smiley.jpg dans la liste, puis sur le bouton Ajout à droite.",then:"m0"},
+ {s:"m0",id:"job",q:"Le travail est dans la file. Ouvre ses propriétés.",hint:"Double-clic (ou clic) sur la ligne bleue du travail.",then:"t1"},
+ {s:"t1",id:"1.4",q:"Le visuel doit faire 200 cm de haut. Où règles-tu la taille ?",hint:"Onglet Mise en page (T1), cadre « Taille du travail »."},
+ {s:"t3",id:"3.4",q:"Le client veut plus de qualité. Où changes-tu le nombre de passes ?",hint:"Onglet Couleur (T3)."},
+ {s:"t3",id:"3.2",q:"Tu as changé de résolution. Quel réglage dois-tu vérifier juste après ?",hint:"Il doit toujours correspondre à la résolution. Onglet T3."},
+ {s:"t11",id:"11.7",q:"Le mur est foncé : le blanc doit bien couvrir. Où règles-tu la quantité de blanc ?",hint:"Dernier onglet (T11)."},
+ {s:"t9",id:"9.2",q:"Avant de lancer, vérifie où le blanc va être déposé.",hint:"Onglet d'aperçu des canaux (T9)."},
+ {s:"T*",id:"E",q:"Tout est prêt : lance le travail.",hint:"Bouton « Envoyer » en bas de la fenêtre des propriétés."}
+];
+
+let cur="home", selId=null, exo=null, jobAdded=false, jobDone=false, fileSel=null, flash="";
+const $=s=>document.querySelector(s);
+
+const tabOf=k=>k=="home"||k=="anim1"||k=="anim2"||k=="anim3"?"acc":(k=="dx"||(S[k]&&S[k].dx))?"dx":"fp";
+function navGroups(T){
+ if(T=="acc") return [["Accueil",["home"]],["Animations",["anim1","anim2","anim3"]]];
+ if(T=="fp") return [["Fenêtre principale",["m0","m0a"]],["Propriétés du travail",TABS],["Envoyer",["tenv"]]];
+ return [["Commandes",["dc"]],["D1 · Sélection de fichier",["d1"]],["D2 · Contrôle de l'impression",["d2"]],["D3 · Réglage des paramètres",["d3a","d3b","d3c"]],["D4 · Calibrage",["d4a","d4b"]],["D5 · Maintenance",["d5a","d5b"]],["D6 · Paramètres avancés",["d6a","d6b"]],["D7 · Informations",["d7a","d7b"]]];
+}
+function navLabel(k){
+ if(k=="home") return ["★","Vue d'ensemble"];
+ if(k=="anim1") return ["▶","Couleur simple"]; if(k=="anim2") return ["▶","Couleur + blanc"]; if(k=="anim3") return ["▶","Les réglages du blanc"];
+ return [S[k].code, S[k].title.replace(/^.* · /,"").split(" (")[0]];
+}
+let navOpen={};
+function navHTML(){
+ const T=tabOf(cur);
+ return navGroups(T).map((g,gi)=>{
+  const key=T+gi, has=g[1].includes(cur), open=navOpen[key]!==undefined?navOpen[key]:(has||g[1].length==1||T=="acc");
+  return `<details class="ng" data-k="${key}" ${open?'open':''}><summary>${g[0]}<span class="nc">${g[1].length}</span></summary>${g[1].map(k=>{const l=navLabel(k);return `<button class="navbtn ${cur==k?'on':''}" data-go="${k}"><span class="code">${l[0]}</span>${l[1]}</button>`}).join("")}</details>`;
+ }).join("");
+}
+function topTabs(){
+ const T=tabOf(cur);
+ $("#toptabs").innerHTML=[["acc","home","Accueil"],["fp","m0","FlexiPRINT"],["dx","dc","DXonJet"]].map(x=>`<button class="tt ${T==x[0]?'on':''}" data-go="${x[1]}">${x[2]}</button>`).join("");
+}
+function renderNav(){
+ topTabs();
+ $("#nav").innerHTML=navHTML(); $("#dnav").innerHTML=navHTML(); $("#dtabs").innerHTML=$("#toptabs").innerHTML;
+ document.querySelectorAll("details.ng").forEach(d=>d.ontoggle=()=>{navOpen[d.dataset.k]=d.open;});
+ const l=cur=="home"?["","Simulateur FlexiPRINT · DXonJet"]:navLabel(cur); $("#mtitle").textContent=(l[0]&&l[0]!="★"&&l[0]!="▶"?l[0]+" · ":"")+l[1];
+ document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{closeDrawer(); b.dataset.go=="exo"?startExo():go(b.dataset.go)});
+}
+function closeDrawer(){document.body.classList.remove("dopen");}
+$("#burger").onclick=()=>document.body.classList.add("dopen");
+$("#dclose").onclick=closeDrawer; $("#dmask").onclick=closeDrawer;
+$("#mzoom").onclick=()=>{document.body.classList.toggle("zoom"); window.dispatchEvent(new Event("resize"));};
+function go(k,keepSel){
+ animStop(); document.body.classList.remove("sheet");
+ cur=k; if(!keepSel) selId=null; renderNav(); render(); window.scrollTo(0,0);
+}
+const hsHTML=(h,pos)=>`<div class="hs ${h[6]?'off':''} ${selId==h[0]?'sel':''}" data-id="${h[0]}" style="${pos}">${h[0]}</div>`;
+
+function render(){
+ if(cur=="home"){renderHome();return;}
+ if(cur=="anim3"){renderW();return;}
+ if(cur=="anim1"||cur=="anim2"){ if(A.key!=cur){A.key=cur;A.sc=0;} renderAnim();return;}
+ if(false){$("#view").innerHTML=`<div class="head"><span class="badge">D0</span><h2>Logiciel DXonJet</h2></div><p class="intro">À venir : envoie les captures du logiciel DXonJet et tes explications, menu par menu (repères D0, D1…).</p>`;return;}
+ const s=S[cur];
+ let stage;
+ if(s.html){ stage=`<div class="dlgwrap" id="dw"><div class="dlg" id="dlg">${s.html=="env"?envHTML():dlgHTML()}${s.hs.map(h=>hsHTML(h,`left:${h[1]}px;top:${h[2]}px`)).join("")}<div class="wm" style="font-size:150px">${s.code}</div></div><div class="wmtag">Écran ${s.code}</div></div>`; }
+ else {
+  const pct=(x,y)=>`left:${x/s.w*100}%;top:${y/s.h*100}%`;
+  let hs="";
+  s.hs.forEach(h=>{ if(h[7]){const z=h[7];hs+=`<div class="zone" style="left:${z[0]/s.w*100}%;top:${z[1]/s.h*100}%;width:${z[2]/s.w*100}%;height:${z[3]/s.h*100}%${z[5]?`;background:rgba(232,84,30,${z[5]})`:''}"><span>${z[4]||'non utilisé'}</span></div>`;} });
+  hs+=s.hs.map(h=>hsHTML(h,pct(h[1],h[2]))).join("");
+  if(cur=="m0" && jobAdded) hs+=jobHTML();
+  if(cur[0]=="t"){
+   TABX.forEach((x,i)=>{const k=TABS[i]; if(k!=cur||exo) hs+=`<div class="hs nav" title="Aller à ${S[k].code}" data-tab="${k}" style="${pct(x*s.w/1275,TABY*s.h/889)}${exo?';opacity:0':''}">${S[k].code}</div>`});
+   hs+=`<div class="hs ${selId=='E'?'sel':''}" data-id="E" style="${pct(997*s.w/1275,826*s.h/889)}">E</div><div class="hs ${selId=='A'?'sel':''}" data-id="A" style="${pct(1078*s.w/1275,826*s.h/889)}">A</div>`;
+  }
+  if(s.dx){
+   DXMENU.forEach(m=>{ const on=(m[1]&&S[m[1]].menu==s.menu); hs+=`<div class="hs nav ${on?'sel':''}" ${m[1]?`data-tab="${m[1]}"`:`data-id="D8"`} title="${m[2]}" style="${pct(m[0],150)}">${m[2]}</div>`; });
+   if(s.sub){ DXO.filter(k=>S[k].sub==s.sub).forEach((k,i)=>{ if(k!=cur) hs+=`<div class="hs nav" data-tab="${k}" style="${pct(123,248+i*33)}">${S[k].code}</div>`; }); }
+  }
+  stage=`<div class="shot" id="shot"><img src="${s.img}" alt="${s.title}"><div class="wm">${s.code}</div><div class="wmtag">Écran ${s.code}</div>${hs}</div>`;
+ }
+ const list=s.hs.map(h=>`<div class="item" data-id="${h[0]}" ${h[6]?'style="opacity:.55"':''}><b>${h[0]}</b>${h[3]}${h[6]==1?' <i>(non utilisé)</i>':h[6]==2?' <i>(préréglé)</i>':''}</div>`).join("");
+ $("#view").innerHTML=`
+ <div class="head"><span class="badge">${s.code}</span><h2>${s.title}</h2></div>
+ <p class="intro">${s.intro}</p>
+ <div class="stage scr"><div class="sw">${stage}</div><div class="panel" id="panel">${panelHTML()}</div></div>
+ ${exo?"":`<div class="list">${list}</div>`}`;
+ document.querySelectorAll(".hs[data-id],.item[data-id]").forEach(e=>e.onclick=ev=>{ev.stopPropagation();pick(e.dataset.id)});
+ document.querySelectorAll("[data-tab]").forEach(e=>e.onclick=ev=>{ev.preventDefault();go(e.dataset.tab)});
+ const j=$("#job"); if(j){j.onclick=()=>exo?checkExo("job"):go("t1");}
+ if(s.html) s.html=='env'?bindEnv():bindDlg();
+ if(cur=='t5') setupT5();
+ if(cur=='t9') setupT9();
+ if(cur=='t4'){const s=S.t4;const d=document.createElement('div');d.className='aaucun';d.style.cssText=pctBox(s,188,357,348,377)+';box-shadow:none;cursor:pointer';d.textContent=wSel;d.onclick=()=>pick('4.1');$('#shot').appendChild(d);}
+ flash="";
+}
+function jobHTML(){
+ const c=(x,t)=>`<span style="left:${(x-64)/1082*100}%">${t}</span>`;
+ return `<div class="job" id="job" title="Double-clic : propriétés du travail"><img src="img/smiley.png" style="left:3%" alt="">${c(210,"DXonJet-XHS-VP4")}${c(320,"smiley.jpg")}${c(430,jobDone?"Terminé":"En attente")}${c(540,"PC-atelier")}${c(650,"90,3 × 67,7 cm")}${c(760,"1")}${c(870,"JPEG")}${c(980,"415,7K")}${c(1090,"F1 12PASS")}</div>`;
+}
+const FILES=[["d","Visuels clients","12/10/2026 09:14"],["d","Murs 2026","03/11/2026 16:40"],["d","Logos","21/09/2026 11:02"],["d","Photos chantier","28/10/2026 08:55"],["d","Maquettes","15/08/2026 17:21"],["f","fresque-ecole.pdf","02/11/2026 10:30"],["f","logo-boulangerie.png","30/10/2026 14:12"],["f","smiley.jpg","07/11/2026 07:45"]];
+function dlgHTML(){
+ const ico=t=>t=="d"?`<svg width="16" height="13" viewBox="0 0 16 13"><path d="M0 2h6l1.5 1.5H16V13H0z" fill="#f2c94c" stroke="#d4a72c"/></svg>`:`<svg width="14" height="16" viewBox="0 0 14 16"><path d="M0 0h9l5 5v11H0z" fill="#fff" stroke="#7a8"/><rect x="2" y="7" width="10" height="6" fill="#6fb3e8"/></svg>`;
+ return `<div class="tb"><span class="ic">P</span>Ajouter un travail: DXonJet-XHS-VP4<span class="x" data-dlg="cancel">✕</span></div>
+ <div class="lk">Regarder dans : <div class="sel" style="width:400px">🖥️ Bureau <span>⌄</span></div> <span style="font-size:15px">⬅️ ⤴️ 📁 ▦</span></div>
+ <div class="side"><div><i>⭐</i>Accès rapide</div><div><i>🖥️</i>Bureau</div><div><i>📚</i>Bibliothèques</div><div><i>💻</i>Ce PC</div><div><i>🌐</i>Réseau</div></div>
+ <div class="files"><div class="fh"><span>Nom</span><span>Statut</span><span>Modifié le</span></div>
+ ${FILES.map((f,i)=>`<div class="fr ${fileSel==f[1]?'s':''}" data-f="${i}"><span>${ico(f[0])}${f[1]}</span><span></span><span>${f[2]}</span></div>`).join("")}</div>
+ <div class="btn9" style="top:80px" data-dlg="add">Ajout</div>
+ <div class="btn9" style="top:116px" data-dlg="cancel">Annuler</div>
+ <div class="pv"></div>
+ <div class="cks"><label><input type="checkbox"> Aperçu</label><label><input type="checkbox"> Copier dans le répertoire "Job"</label><label><input type="checkbox"> Ouvrir les propriétés du travail</label><label><input type="checkbox"> Imbriquer Travaux</label></div>
+ <div class="toast" id="toast"></div>
+ <div class="row" style="top:450px"><b>Nom du fichier :</b><div class="sel" style="width:400px;border-color:#0078d7">${fileSel||""}<span>⌄</span></div></div>
+ <div class="row" style="top:488px"><b>Types de fichiers :</b><div class="sel" style="width:400px">Tout ce qui est lisible <span>⌄</span></div></div>
+ <div class="row" style="top:536px"><b>Préréglage :</b><div class="sel" style="width:400px;color:#888">Utiliser les propriétés du travail par défaut <span>⌄</span></div></div>`;
+}
+function envHTML(){
+ const ico=`<svg width="14" height="16" viewBox="0 0 14 16"><path d="M0 0h9l5 5v11H0z" fill="#fff" stroke="#7a8"/><rect x="2" y="7" width="10" height="6" fill="#e8541e"/></svg>`;
+ const name=(fileSel||"smiley.jpg").replace(/\.[a-z]+$/i,"");
+ return `<div class="tb"><span class="ic">P</span>Enregistrer sous<span class="x" data-env="cancel">✕</span></div>
+ <div class="lk">Enregistrer dans : <div class="sel" style="width:400px">📁 Fichiers RIP DXonJet <span>⌄</span></div> <span style="font-size:15px">⬅️ ⤴️ 📁 ▦</span></div>
+ <div class="side"><div><i>⭐</i>Accès rapide</div><div><i>🖥️</i>Bureau</div><div><i>📚</i>Bibliothèques</div><div><i>💻</i>Ce PC</div><div><i>🌐</i>Réseau</div></div>
+ <div class="files"><div class="fh"><span>Nom</span><span>Statut</span><span>Modifié le</span></div>
+ ${[["fresque-ecole","02/11/2026 11:05"],["logo-boulangerie","30/10/2026 15:40"],["mur-salle-sport","24/10/2026 09:12"]].map(f=>`<div class="fr"><span>${ico}${f[0]}</span><span></span><span>${f[1]}</span></div>`).join("")}</div>
+ <div class="btn9" style="top:80px" data-env="save">Enregistrer</div>
+ <div class="btn9" style="top:116px" data-env="cancel">Annuler</div>
+ <div class="toast" id="toast"></div>
+ <div class="row" style="top:450px"><b>Nom du fichier :</b><div class="sel" style="width:400px;border-color:#0078d7">${name}<span>⌄</span></div></div>
+ <div class="row" style="top:488px"><b>Type :</b><div class="sel" style="width:400px">Fichier d'impression DXonJet <span>⌄</span></div></div>`;
+}
+function bindEnv(){
+ const fit=()=>{const w=$("#dw");if(w)$("#dlg").style.transform=`scale(${w.clientWidth/900})`};
+ fit(); window.onresize=fit;
+ document.querySelectorAll("[data-env]").forEach(b=>b.onclick=()=>{
+  if(b.dataset.env=="cancel"){go("t1");return;}
+  if(jobAdded) jobDone=true; flash="saved"; go("m0");
+ });
+}
+function bindDlg(){
+ const fit=()=>{const w=$("#dw");if(w)$("#dlg").style.transform=`scale(${w.clientWidth/900})`};
+ fit(); window.onresize=fit;
+ document.querySelectorAll(".fr").forEach(r=>{
+  r.onclick=()=>{const f=FILES[r.dataset.f]; if(f[0]=="d"){$("#toast").textContent="Dossier d'exemple : choisis plutôt le fichier smiley.jpg.";return;} fileSel=f[1]; render();};
+ });
+ document.querySelectorAll("[data-dlg]").forEach(b=>b.onclick=()=>{
+  if(b.dataset.dlg=="cancel"){ if(exo){$("#exomsg").textContent="❌ Il faut ajouter le fichier, pas annuler.";exo.err++;return;} go("m0"); return; }
+  if(!fileSel){$("#toast").textContent="Sélectionne d'abord un fichier dans la liste."; if(exo) exo.err+=.5; return;}
+  if(fileSel!="smiley.jpg" && exo){$("#toast").textContent="Pour l'exercice, choisis smiley.jpg.";return;}
+  if(exo){checkExo("a.8");return;}
+  jobAdded=true; jobDone=false; flash="ok"; go("m0");
+ });
+}
+const WM={"Aucun":["aucun","Pas de blanc : impression couleur simple."],
+ "Couleur d'accompagnement":["accomp","Permet d'avoir du blanc uniquement là où on le décide. Le blanc vient d'un calque préparé dans Photoshop. Niveau expert."],
+ "Sous-couleur":["souscouleur","Plus la couleur est foncée, plus il y a de blanc."],
+ "Couleur de remplissage":["remplissage","Plus la couleur est claire, plus il y a de blanc, y compris dans le fond."],
+ "Support":["support","Du blanc sur toute l'image."],
+ "Sous-uni":["sousuni","Du blanc uniforme sous tous les pixels de couleur."],
+ "Remplir le substrat":["substrat","Plus la couleur est claire, plus il y a de blanc, mais pas là où il y a du vide."]};
+const WTAG={"Support":"le plus utilisé","Sous-uni":"le plus utilisé","Couleur d'accompagnement":"expert","Aucun":"sans blanc"};
+let wSel="Couleur d'accompagnement", wPop=null;
+const WP={"Sous-uni":{t:"Blanc sous la couleur uniquement",u:"Pour un logo ou un dessin détouré",r:"Le smiley ressort, le mur reste visible autour."},
+ "Support":{t:"Blanc sous la totalité de l'image",u:"Pour une photo ou un visuel rectangulaire",r:"Un rectangle blanc, avec le smiley dedans."}};
+function wpopHTML(tab,anim){
+ const w=WP[tab], k=tab=="Support"?"support":"sousuni";
+ return `<div class="wpop ${anim?'inanim':''}"><div class="wph"><b>Quel blanc choisir ?</b><span class="wclose">✕</span></div>
+ <div class="wtabs">${["Sous-uni","Support"].map(x=>`<button data-tab="${x}" class="${x==tab?'on':''}">${x}</button>`).join("")}</div>
+ <div class="wbody"><div class="wcol"><img src="img/pw_${k}.png" alt=""><small>Aperçu dans le logiciel<br>(noir = blanc)</small></div>
+ <div class="wcol"><img src="img/r_${k}.png" alt=""><small>Résultat sur un mur foncé</small></div>
+ <div class="wtxt"><b>${tab}</b><p>${w.t}</p><p class="wr">${w.r}</p><p class="wu">👉 ${w.u}</p></div></div></div>`;
+}
+function showT4Pop(){
+ document.querySelectorAll("#shot .wpop").forEach(e=>e.remove());
+ if(!wPop) return;
+ const d=document.createElement("div"); d.innerHTML=wpopHTML(wPop); const p=d.firstElementChild; $("#shot").appendChild(p);
+ p.querySelector(".wclose").onclick=()=>{wPop=null;showT4Pop();};
+ p.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{wPop=b.dataset.tab; wSel=wPop; pick("4.1");});
+}
+function whiteHTML(){
+ const m=WM[wSel];
+ return `<div class="wlist">${Object.keys(WM).map(o=>`<div class="wo ${wSel==o?'on':''}" data-w="${o}">${o}${WTAG[o]?` <i class="wt">${WTAG[o]}</i>`:''}</div>`).join("")}</div>
+ <div class="wprev"><img src="img/w_${m[0]}.png" alt=""><div><b>${wSel}</b><span>${m[1]}</span></div></div>
+ <p style="font-size:12px;color:var(--mut)">Aperçu du canal blanc : <b>le noir représente le blanc imprimé</b>. Les zones blanches de l'image = du vide.</p>`;
+}
+let T5S={x0:0,y0:0,x1:1,y1:1}, t9on=false, t9ch=null;
+const pctBox=(s,x0,y0,x1,y1)=>`left:${x0/s.w*100}%;top:${y0/s.h*100}%;width:${(x1-x0)/s.w*100}%;height:${(y1-y0)/s.h*100}%`;
+function setupT5(){
+ const s=S.t5, shot=$("#shot");
+ const area=document.createElement("div"); area.className="t5area"; area.style.cssText=pctBox(s,689,289,1153,637);
+ const hl=document.createElement("div"); hl.className="t5area"; hl.style.cssText=pctBox(s,689,289,1153,637)+";overflow:visible";
+ shot.appendChild(area); shot.appendChild(hl);
+ const sel=document.createElement("div"); sel.className="t5sel"; area.appendChild(sel);
+ const lab=document.createElement("div"); lab.className="t5lab"; sel.appendChild(lab);
+ const H={}; ["nw","ne","sw","se"].forEach(k=>{const h=document.createElement("div");h.className="t5h";h.dataset.k=k;hl.appendChild(h);H[k]=h;});
+ const M={}; ["n","s","e","w"].forEach(k=>{const h=document.createElement("div");h.className="t5m";h.title="Angles uniquement";hl.appendChild(h);M[k]=h;
+   h.onpointerdown=ev=>{ev.preventDefault();lab.innerHTML="⚠️ Angles uniquement !";lab.classList.add("bad");setTimeout(()=>{lab.classList.remove("bad");draw()},1200)};});
+ function draw(){
+  const {x0,y0,x1,y1}=T5S; const P=v=>v*100+"%";
+  Object.assign(sel.style,{left:P(x0),top:P(y0),width:P(x1-x0),height:P(y1-y0)});
+  const pos={nw:[x0,y0],ne:[x1,y0],sw:[x0,y1],se:[x1,y1]};
+  for(const k in H){H[k].style.left=P(pos[k][0]);H[k].style.top=P(pos[k][1]);}
+  const mid={n:[(x0+x1)/2,y0],s:[(x0+x1)/2,y1],e:[x1,(y0+y1)/2],w:[x0,(y0+y1)/2]};
+  for(const k in M){M[k].style.left=P(mid[k][0]);M[k].style.top=P(mid[k][1]);}
+  const full=(x1-x0>.999&&y1-y0>.999);
+  lab.innerHTML= full?"Image entière : 90,3 × 67,7 cm<br><small>tire un angle pour faire un échantillon</small>":`Échantillon taille réelle :<br><b>${((x1-x0)*90.311).toFixed(1).replace(".",",")} × ${((y1-y0)*67.733).toFixed(1).replace(".",",")} cm</b>`;
+ }
+ for(const k in H){
+  H[k].onpointerdown=ev=>{
+   ev.preventDefault(); H[k].setPointerCapture(ev.pointerId);
+   const r=area.getBoundingClientRect();
+   H[k].onpointermove=e=>{
+    let fx=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)), fy=Math.min(1,Math.max(0,(e.clientY-r.top)/r.height)), m=.08;
+    if(k[1]=="w") T5S.x0=Math.min(fx,T5S.x1-m); else T5S.x1=Math.max(fx,T5S.x0+m);
+    if(k[0]=="n") T5S.y0=Math.min(fy,T5S.y1-m); else T5S.y1=Math.max(fy,T5S.y0+m);
+    draw();
+   };
+   H[k].onpointerup=()=>{H[k].onpointermove=null;};
+  };
+ }
+ draw();
+}
+function setupT9(){
+ const s=S.t9, shot=$("#shot");
+ const ROWS=[["Cyan","c",236],["Magenta","m",253],["Jaune","y",270],["Noir","k",287],["Spot_1 (blanc)","w",304],["Spot_2",null,321],["Spot_3",null,338],["Spot_4",null,355]];
+ let h=`<div class="t9ck ${t9on?'on':''}" id="t9ck" style="${pctBox(s,100,179,290,196)}"><i>${t9on?'✓':''}</i></div>`;
+ ROWS.forEach(r=>{h+=`<div class="t9row ${r[1]?'':'dis'} ${t9ch==r[1]&&r[1]?'on':''}" ${r[1]?`data-ch="${r[1]}"`:''} style="${pctBox(s,104,r[2]-8,418,r[2]+9)}"><i>${t9ch==r[1]&&r[1]?'✓':''}</i></div>`});
+ if(t9on && t9ch){
+  const cap=t9ch=="w"?`Spot_1 = blanc · mode « ${wSel} » (réglé en T4) · le noir = le blanc imprimé`:({c:"Canal Cyan",m:"Canal Magenta",y:"Canal Jaune",k:"Canal Noir"})[t9ch];
+  h+=`<div class="t9pv" style="${pctBox(s,666,332,1183,721)}"><img src="img/${t9ch=='w'?'w_'+WM[wSel][0]:'ch_'+t9ch}.png" alt=""><span>${cap}</span></div>`;
+ }
+ if(!t9on) h+=`<div class="t9hint" style="${pctBox(s,104,370,418,400)}">← coche d'abord la case</div>`;
+ const wrap=document.createElement("div"); wrap.innerHTML=h; [...wrap.children].forEach(c=>shot.appendChild(c));
+ $("#t9ck").onclick=()=>{t9on=!t9on; if(t9on&&!t9ch) t9ch="w"; render();};
+ document.querySelectorAll("[data-ch]").forEach(e=>e.onclick=()=>{ if(!t9on){t9on=true;} t9ch=e.dataset.ch; render();});
+}
+function panelHTML(){
+ const s=S[cur];
+ document.body.classList.toggle('sheet',!!selId);
+ if(exo) return `<h3>Exercice en cours</h3><p>Clique sur la bonne zone de l'écran. Les onglets en haut de la fenêtre des propriétés sont cliquables pour changer d'écran.</p><p>Écrans : ${ORDER.map(k=>`<a href="#" data-tab="${k}">${S[k].code}</a>`).join(" · ")}</p>`;
+ let pre="";
+ if(flash=="ok") pre=`<div class="ok">✅ Travail ajouté dans la file. Clique sur la ligne bleue pour ouvrir ses propriétés.</div>`;
+ if(flash=="del") pre=`<div class="ok">🗑️ Travail supprimé de la file.</div>`;
+ const GEN={D8:["D8",0,0,"Quitter","Ferme le logiciel DXonJet.","À compléter par Teddy."],E:["E",0,0,"Envoyer","Ouvre une fenêtre Windows pour enregistrer le fichier RIPé (écran T-env). Valable sur tous les onglets T1 à T11."],A:["A",0,0,"Accepter","Garde les réglages et met le travail en attente pour plus tard. Valable sur tous les onglets T1 à T11."]};
+ let h=s.hs.find(x=>x[0]==selId)||GEN[selId];
+ if(flash=="saved") pre=`<div class="ok">✅ Fichier RIPé enregistré. Il reste à l'ouvrir dans le logiciel DXonJet pour imprimer.</div>`;
+ if(!h) return pre+`<h3>Clique sur un repère</h3><p>Chaque pastille bleue numérotée explique un réglage. Les pastilles grises en haut servent à changer d'onglet. Les zones grisées ne sont pas utilisées.</p><div class="todo">Pour une correction, cite le repère : « ${s.code} / ${s.hs[0][0]} : … »</div>`;
+ let extra="";
+ if(h[0]=="0.2") extra=`<p><button class="btn" id="open0a">Ouvrir la fenêtre (M0-a)</button></p>`;
+ if(h[8]=="white") extra=whiteHTML();
+ if(h[0]=="E") extra=`<p><button class="btn" id="openenv">Ouvrir la fenêtre (T-env)</button></p>`;
+ if(h[6]==2 && !h[5]) h=[...h.slice(0,5),"Préréglé : ne pas toucher.",2];
+ const tip=h[5]?(/confirmer|compléter/.test(h[5])?`<div class="todo">${h[5]}</div>`:(/Ne pas|Ne rien|ne pas|Attention/.test(h[5])?`<div class="warn">⚠️ ${h[5]}</div>`:`<div class="tip">💡 ${h[5]}</div>`)):"";
+ return pre+`<button class="sclose" onclick="selId=null;render()">✕</button><span class="ref" ${h[6]?'style="background:#8a8f96"':''}>${s.code} · ${h[0]}${h[6]==1?' · non utilisé':h[6]==2?' · préréglé':''}</span><h3>${h[3]}</h3><p>${h[4]}</p>${tip}${extra}`;
+}
+function pick(id){
+ if(exo){checkExo(id);return;}
+ if(id=="0.2" && cur=="m0"){fileSel=null; go("m0a"); return;}
+ if(id=="5.7" && cur=="t5"){T5S={x0:0,y0:0,x1:1,y1:1};}
+ if(id=="0.9" && cur=="m0" && jobAdded){jobAdded=false; flash="del"; selId=id; render(); return;}
+ selId=id; render();
+ const b=$("#open0a"); if(b) b.onclick=()=>{fileSel=null;go("m0a")};
+ const b2=$("#openenv"); if(b2) b2.onclick=()=>go("tenv");
+ document.querySelectorAll("[data-w]").forEach(e=>e.onclick=()=>{wSel=e.dataset.w; wPop=(wSel=="Support"||wSel=="Sous-uni")?wSel:null; pick(selId)});
+ if(cur=="t4") showT4Pop();
+}
+function renderHome(){
+ $("#view").innerHTML=`
+ <div class="head"><span class="badge">★</span><h2>Simulateur FlexiPRINT UV — DXonJet</h2></div>
+ <p class="intro">Découvre le logiciel RIP de ta machine sans risque : regarde les animations, puis explore chaque écran.</p>
+ <h3>Le chemin d'une impression</h3>
+ <div class="flow">
+  <div class="step"><b>1. Ton image</b>Photo, PDF, visuel du client</div><span class="arrow">→</span>
+  <div class="step"><b>2. FlexiPRINT (RIP)</b>On ajoute le fichier et on vérifie taille, profil et blanc</div><span class="arrow">→</span>
+  <div class="step"><b>3. Fichier RIPé</b>Enregistré avec le bouton Envoyer</div><span class="arrow">→</span>
+  <div class="step"><b>4. Logiciel DXonJet</b>Ouvre le fichier et imprime sur le mur</div>
+ </div>
+ <h3>Les animations</h3>
+ <div class="acards">
+  <div class="acard" data-go="anim1"><div class="aimg"><img src="img/m0.jpg" alt=""><span class="play">▶</span></div><b>Impression couleur simple</b><span>Du fichier au fichier RIPé, sans blanc · 10 étapes</span></div>
+  <div class="acard" data-go="anim2"><div class="aimg"><img src="img/t4.jpg" alt=""><span class="play">▶</span></div><b>Impression couleur + blanc</b><span>Avec une couche de blanc · comparaison Support / Sous-uni · 11 étapes</span></div>
+  <div class="acard" data-go="anim3"><div class="aimg"><img src="img/r_sousuni.png" alt="" style="aspect-ratio:1210/827;object-fit:cover"><span class="play">▶</span></div><b>Les réglages du blanc</b><span>Les 7 modes expliqués simplement · 8 scènes</span></div>
+ </div>
+ <h3 style="margin-top:26px">L'interface</h3>
+ <div class="cards">
+  <div class="card" data-go="m0"><img src="img/m0.jpg" alt=""><span><b>M0</b> — Fenêtre principale : la file d'attente des travaux</span></div>
+  <div class="card" data-go="m0a"><img src="img/m0.jpg" alt=""><span><b>M0-a</b> — Ajouter un travail (choix du fichier)</span></div>
+  <div class="card" data-go="t1"><img src="img/t1.jpg" alt=""><span><b>T1 à T11</b> — Propriétés du travail (les réglages)</span></div>
+  <div class="card" data-go="tenv"><img src="img/t3.jpg" alt=""><span><b>T-env</b> — Envoyer : enregistrer le fichier RIPé</span></div>
+ </div>`;
+ document.querySelectorAll("#view [data-go]").forEach(c=>c.onclick=()=>go(c.dataset.go));
+}
+// ===== Animation couleur simple =====
+const ANIMS={};
+const ANIM1=[
+ {t:"La fenêtre principale",scr:"m0",st:{f:null,j:0,a:0},steps:[{cur:[600,430],cap:"Voici la fenêtre principale de FlexiPRINT : c'est la file d'attente des travaux.",d:2600}]},
+ {t:"Ajouter un travail",scr:"m0",st:{f:null,j:0,a:0},steps:[{cur:[198,150],ring:1,cap:"Pour ajouter une image, on clique sur le bouton Travail.",d:1800},{click:1,go:"m0a",d:900}]},
+ {t:"Choisir le fichier",scr:"m0a",st:{f:null,j:0,a:0},steps:[{cur:[200,236],cap:"On choisit le fichier à imprimer dans la liste…",d:1500},{click:1,eff:"f",d:900},{cur:[760,93],ring:1,cap:"… puis on clique sur Ajout. Les cases à droite restent décochées.",d:1800},{click:1,go:"m0",eff:"j",d:900}]},
+ {t:"Ouvrir les propriétés",scr:"m0",st:{f:"smiley.jpg",j:1,a:0},steps:[{cur:[420,292],ring:1,cap:"Le travail est dans la file. On double-clique dessus pour ouvrir ses propriétés.",d:2200},{click:1,go:"t1",d:900}]},
+ {t:"Vérifier la taille (T1)",scr:"t1",st:{f:"smiley.jpg",j:1,a:0},steps:[{cur:[165,405],ring:1,cap:"Onglet T1 : on vérifie la taille de l'image. Attention, agrandir beaucoup peut pixeliser l'image.",d:3000},{cur:[290,445],ring:1,cap:"La case Proportionnel reste cochée, et on ne coche pas Adapter au support.",d:2600}]},
+ {t:"Choisir le profil (T3)",scr:"t1",st:{f:"smiley.jpg",j:1,a:0},steps:[{cur:[165,155],cap:"On passe à l'onglet Couleur, T3.",d:1500},{click:1,go:"t3",d:800},{cur:[300,243],ring:1,cap:"On choisit le profil, c'est-à-dire le nombre de passes. Tout le reste se règle automatiquement.",d:3000}]},
+ {t:"Désactiver le blanc (T4)",scr:"t3",st:{f:"smiley.jpg",j:1,a:0},steps:[{cur:[203,155],cap:"On passe à l'onglet T4, le réglage du blanc.",d:1500},{click:1,go:"t4",d:800},{cur:[268,367],ring:1,cap:"On ouvre le menu du blanc, sur la ligne Spot_1.",d:1800},{click:1,eff:"o",d:1500},{cur:[222,385],cap:"Pour une impression couleur simple, sans blanc, on choisit Aucun.",d:2000},{click:1,eff:"a",val:"Aucun",d:2200}]},
+ {t:"Envoyer",scr:"t4",st:{f:"smiley.jpg",j:1,a:1},steps:[{cur:[997,812],ring:1,cap:"Tout est prêt : on clique sur Envoyer, en bas de la fenêtre.",d:2000},{click:1,go:"tenv",d:900}]},
+ {t:"Enregistrer le fichier RIPé",scr:"tenv",st:{f:"smiley.jpg",j:1,a:1},steps:[{cur:[560,462],ring:1,cap:"On peut renommer le fichier RIPé ici.",d:2000},{cur:[760,93],ring:1,cap:"Puis on clique sur Enregistrer : le RIP se lance et crée le fichier.",d:2000},{click:1,d:900}]},
+ {t:"Et ensuite ?",scr:"end",st:{f:"smiley.jpg",j:1,a:1},steps:[{cap:"Il ne reste plus qu'à ouvrir le fichier RIPé dans le logiciel DXonJet pour imprimer sur le mur.",d:3500}]}
+];
+const ANIM2=[
+ {t:"La fenêtre principale",scr:"m0",st:{f:null,j:0,a:0},steps:[{cur:[600,430],cap:"Cette fois, on imprime avec une couche de blanc, par exemple sur un mur foncé.",d:2800}]},
+ {t:"Ajouter un travail",scr:"m0",st:{f:null,j:0,a:0},steps:[{cur:[198,150],ring:1,cap:"On commence comme d'habitude : bouton Travail.",d:1800},{click:1,go:"m0a",d:900}]},
+ {t:"Choisir le fichier",scr:"m0a",st:{f:null,j:0,a:0},steps:[{cur:[200,236],cap:"On choisit le fichier…",d:1400},{click:1,eff:"f",d:800},{cur:[760,93],ring:1,cap:"… puis Ajout.",d:1500},{click:1,go:"m0",eff:"j",d:900}]},
+ {t:"Ouvrir les propriétés",scr:"m0",st:{f:"smiley.jpg",j:1,a:0},steps:[{cur:[420,292],ring:1,cap:"On ouvre les propriétés du travail.",d:1800},{click:1,go:"t1",d:900}]},
+ {t:"Vérifier la taille (T1)",scr:"t1",st:{f:"smiley.jpg",j:1,a:0},steps:[{cur:[165,405],ring:1,cap:"On vérifie la taille, en gardant Proportionnel coché.",d:2400}]},
+ {t:"Choisir le profil (T3)",scr:"t1",st:{f:"smiley.jpg",j:1,a:0},steps:[{cur:[165,155],cap:"Onglet T3…",d:1200},{click:1,go:"t3",d:800},{cur:[300,243],ring:1,cap:"… on choisit le profil, donc le nombre de passes.",d:2400}]},
+ {t:"Choisir le blanc (T4)",scr:"t3",st:{f:"smiley.jpg",j:1,a:0},steps:[{cur:[203,155],cap:"Onglet T4 : le réglage du blanc.",d:1400},{click:1,go:"t4",d:800},{cur:[268,367],ring:1,cap:"On ouvre le menu du blanc sur la ligne Spot_1.",d:1800},{click:1,eff:"o",hl:5,d:1300},
+  {cap:"Avant de choisir, comparons les deux blancs les plus utilisés.",eff:"pop",val:"Support",d:2200},
+  {sel:'.wpop [data-tab="Support"]',ring:1,cap:"Support : du blanc sous la totalité de l'image. Sur un mur foncé, on voit un rectangle blanc. Idéal pour une photo ou un visuel rectangulaire.",d:5000},
+  {sel:'.wpop [data-tab="Sous-uni"]',cap:"Et maintenant Sous-uni…",d:1300},{click:1,eff:"pop",val:"Sous-uni",d:300},
+  {sel:'.wpop [data-tab="Sous-uni"]',ring:1,cap:"Sous-uni : du blanc seulement sous la couleur. Le mur reste visible autour. Idéal pour un logo ou un dessin détouré.",d:5000},
+  {sel:'.wpop .wclose',cap:"Ici, notre smiley est détouré : on choisit Sous-uni.",d:1600},{click:1,eff:"popclose",d:700},
+  {sel:'.alst div:nth-child(6)',fx:.3,fy:.8,ring:1,d:1500},{click:1,eff:"a",val:"Sous-uni",d:2000}]},
+ {t:"Vérifier le blanc (T9)",scr:"t4",st:{f:"smiley.jpg",j:1,a:1,wm:"Sous-uni"},steps:[{cur:[396,155],cap:"On vérifie où ira le blanc : onglet T9.",d:1500},{click:1,go:"t9",d:800},{cur:[110,187],ring:1,cap:"On coche Aperçu canaux de sortie…",d:1600},{click:1,eff:"t9",d:900},{cur:[150,304],ring:1,cap:"… puis on clique sur Spot_1, le canal du blanc.",d:1600},{click:1,eff:"t9w",d:900},{cur:[900,520],cap:"Le noir montre où le blanc sera imprimé : sous le smiley, le texte et les bandes, mais pas dans le vide autour.",d:4200}]},
+ {t:"Envoyer",scr:"t9",st:{f:"smiley.jpg",j:1,a:1,wm:"Sous-uni",t9:2},steps:[{cur:[997,812],ring:1,cap:"Tout est prêt : on clique sur Envoyer.",d:1800},{click:1,go:"tenv",d:900}]},
+ {t:"Enregistrer le fichier RIPé",scr:"tenv",st:{f:"smiley.jpg",j:1,a:1,wm:"Sous-uni"},steps:[{cur:[560,462],ring:1,cap:"On renomme le fichier si besoin…",d:1700},{cur:[760,93],ring:1,cap:"… et on clique sur Enregistrer.",d:1700},{click:1,d:900}]},
+ {t:"Et ensuite ?",scr:"end",st:{f:"smiley.jpg",j:1,a:1,wm:"Sous-uni"},steps:[{cap:"On ouvre le fichier RIPé dans le logiciel DXonJet : la machine imprimera le blanc puis la couleur.",d:3600}]}
+];
+ANIMS.anim2={title:"Impression couleur + blanc",intro:"Avec une couche de blanc en mode Sous-uni.",sc:ANIM2};
+ANIMS.anim1={title:"Impression couleur simple",intro:"De l'image au fichier RIPé, sans blanc.",sc:ANIM1};
+let A={key:"anim1",sc:0,st:0,timer:null,playing:false,speed:1,f:null,j:0,a:0};
+const AN=()=>ANIMS[A.key].sc;
+function animStop(){clearTimeout(A.timer);A.playing=false;clearTimeout(WA.timer);WA.playing=false;}
+function renderAnim(){
+ $("#view").innerHTML=`
+ <div class="head"><span class="badge">▶</span><h2>Animation : ${ANIMS[A.key].title.toLowerCase()}</h2></div>
+ <p class="intro">${ANIMS[A.key].intro} Clique sur Lecture, ou sur une étape pour y aller directement.</p>
+ <div class="stage"><div>
+  <div class="ap" id="ap"></div>
+  <div class="acap" id="acap"></div>
+  <div class="actl"><button class="btn" id="aplay">▶ Lecture</button><button class="btn alt" id="aprev">⏮</button><button class="btn alt" id="anext">⏭</button><button class="btn alt" id="arestart">↺ Recommencer</button>
+  <label>Vitesse <input type="range" id="aspeed" min="0.25" max="2" step="0.25" value="${A.speed}"> <span id="aspv">×${A.speed}</span></label></div>
+ </div><div class="panel"><h3>Étapes</h3><ol class="alist" id="alist">${AN().map((s,i)=>`<li data-sc="${i}">${s.t}</li>`).join("")}</ol></div></div>`;
+ $("#aplay").onclick=()=>A.playing?animPause():animPlay();
+ $("#aprev").onclick=()=>animGoto(Math.max(0,A.sc-1));
+ $("#anext").onclick=()=>animGoto(Math.min(AN().length-1,A.sc+1));
+ $("#arestart").onclick=()=>{animGoto(0);animPlay();};
+ $("#aspeed").oninput=e=>{A.speed=+e.target.value;$("#aspv").textContent="×"+A.speed;};
+ document.querySelectorAll("#alist li").forEach(li=>li.onclick=()=>{animGoto(+li.dataset.sc);animPlay();});
+ animGoto(A.sc,true);
+}
+function animScreen(k){
+ const ap=$("#ap"); if(!ap) return; ap.dataset.scr=k;
+ let inner;
+ if(k=="end") inner=`<div class="aend"><div><b>📄 Fichier RIPé</b><span>smiley</span></div><i>→</i><div><b>💻 Logiciel DXonJet</b><span>ouvre le fichier</span></div><i>→</i><div><b>🧱 Le mur</b><span>impression</span></div></div>`;
+ else if(k=="m0a"||k=="tenv"){ fileSel=A.f; inner=`<div class="dlgwrap" style="border-radius:0;box-shadow:none"><div class="dlg" id="adlg">${k=="tenv"?envHTML():dlgHTML()}</div></div>`; }
+ else { const s=S[k]; inner=`<img src="${s.img}" alt="">`; if(k=="m0"&&A.j){jobDone=false;inner+=jobHTML();} if(k=="t4"&&A.o){ const o=["Aucun","Couleur d'accompagnement","Sous-couleur","Couleur de remplissage","Support","Sous-uni","Remplir le substrat"]; inner+=`<div class="aaucun" style="left:${188/s.w*100}%;top:${357/s.h*100}%;width:${160/s.w*100}%;height:${20/s.h*100}%;box-shadow:none">Couleur d'accompagnement</div><div class="alst" style="left:${188/s.w*100}%;top:${377/s.h*100}%;min-width:${160/s.w*100}%">${o.map((x,i)=>`<div class="${i==A.hl?'h':''}">${x}</div>`).join("")}</div>`; }
+ if(k=="t4"&&A.a) inner+=`<div class="aaucun" style="left:${188/s.w*100}%;top:${357/s.h*100}%;width:${160/s.w*100}%;height:${20/s.h*100}%">${A.wm}</div>`;
+ if(k=="t9"&&A.t9){ inner+=`<div class="aaucun" style="left:${104/s.w*100}%;top:${180/s.h*100}%;width:${14/s.w*100}%;height:${14/s.h*100}%;padding:0;justify-content:center;box-shadow:none;color:#0a0">✓</div>`;
+   if(A.t9==2) inner+=`<div class="t9pv" style="left:${666/s.w*100}%;top:${332/s.h*100}%;width:${517/s.w*100}%;height:${389/s.h*100}%"><img src="img/w_${WM[A.wm][0]}.png" alt=""><span>Spot_1 = blanc · le noir montre où le blanc sera imprimé</span></div><div class="aaucun" style="left:${104/s.w*100}%;top:${296/s.h*100}%;width:${314/s.w*100}%;height:${17/s.h*100}%;background:#1f6feb33;border:0;box-shadow:none"></div><div class="aaucun" style="left:${106/s.w*100}%;top:${230/s.h*100}%;width:${12/s.w*100}%;height:${12/s.h*100}%;padding:0;border:1px solid #555;box-shadow:none"></div><div class="aaucun" style="left:${106/s.w*100}%;top:${298/s.h*100}%;width:${12/s.w*100}%;height:${12/s.h*100}%;padding:0;border:1px solid #555;box-shadow:none;justify-content:center;color:#0a0">✓</div>`; } }
+ if(A.pop) inner+=wpopHTML(A.pop,true);
+ ap.innerHTML=inner+`<div class="aring" id="aring"></div><div class="acur" id="acur"><svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M3 2l7 19 2.6-7.4L20 11z" fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></svg></div>`;
+ const ar=k=="end"?1210/600:(k=="m0a"||k=="tenv")?900/600:S[k].w/S[k].h; ap.style.aspectRatio=ar;
+ const d=$("#adlg"); if(d){const fit=()=>{d.style.transform=`scale(${ap.clientWidth/900})`};fit();}
+ ap.querySelectorAll("img").forEach(im=>im.style.pointerEvents="none");
+}
+function animPt(x,y){const k=$("#ap").dataset.scr; const W=(k=="m0a"||k=="tenv")?900:S[k]?.w||1210, H=(k=="m0a"||k=="tenv")?600:S[k]?.h||600; return [x/W*100,y/H*100];}
+function animEff(step){
+ const e=step.eff; if(!e) return;
+ if(e=="f"){A.f="smiley.jpg";} if(e=="j"){A.j=1;} if(e=="a"){A.a=1;A.o=0;A.wm=step.val||"Aucun";} if(e=="o"){A.o=1;A.hl=step.hl||0;}
+ if(e=="t9"){A.t9=1;} if(e=="t9w"){A.t9=2;} if(e=="pop"){A.pop=step.val;} if(e=="popclose"){A.pop=null;}
+}
+function animRedraw(scr){ const c=$("#acur"); const p=[c.style.left,c.style.top]; animScreen(scr); const c2=$("#acur"); c2.style.transition="none"; c2.style.left=p[0]; c2.style.top=p[1]; c2.style.display="block"; }
+function animApply(step,instant){
+ const c=$("#acur"), r=$("#aring"), dur=instant?0:Math.round(700/A.speed);
+ if(step.cap!==undefined) $("#acap").textContent=step.cap;
+ let pos=null;
+ if(step.cur) pos=animPt(...step.cur);
+ if(step.sel){ const ap=$("#ap"), el=ap.querySelector(step.sel); if(el){ const R1=ap.getBoundingClientRect(), R2=el.getBoundingClientRect(); pos=[(R2.left+R2.width*(step.fx||.5)-R1.left)/R1.width*100,(R2.top+R2.height*(step.fy||.5)-R1.top)/R1.height*100]; } }
+ if(pos){ const [x,y]=pos; c.style.transition=`left ${dur}ms ease, top ${dur}ms ease`; c.style.left=x+"%"; c.style.top=y+"%"; c.style.display="block";
+   r.style.display="none"; if(step.ring){ setTimeout(()=>{r.style.left=x+"%";r.style.top=y+"%";r.style.display="block";},dur); } }
+ if(!step.click && step.eff){ animEff(step); animRedraw($("#ap").dataset.scr); }
+ if(step.click){ c.classList.remove("clk"); void c.offsetWidth; c.classList.add("clk");
+   setTimeout(()=>{ animEff(step);
+     if(step.go) animRedraw(step.go); else if(step.eff) animRedraw($("#ap").dataset.scr);
+   }, instant?0:Math.round(250/A.speed)); }
+}
+function animGoto(i,noPlay){
+ clearTimeout(A.timer); A.sc=i; A.st=0; const sc=AN()[i]; A.f=sc.st.f; A.j=sc.st.j; A.a=sc.st.a; A.o=0; A.wm=sc.st.wm||"Aucun"; A.hl=0; A.t9=sc.st.t9||0; A.pop=null;
+ animScreen(sc.scr); const c=$("#acur"); if(c){c.style.left="50%";c.style.top="55%";c.style.display=sc.scr=="end"?"none":"block";}
+ $("#acap").textContent=sc.steps[0].cap||"";
+ document.querySelectorAll("#alist li").forEach((li,k)=>li.classList.toggle("on",k==i));
+ if(A.playing && !noPlay) animTick();
+}
+function animTick(){
+ const sc=AN()[A.sc]; if(!sc) return;
+ if(A.st>=sc.steps.length){ if(A.sc<AN().length-1){ animGoto(A.sc+1,true); A.timer=setTimeout(animTick,Math.round(500/A.speed)); } else { animPause(); $("#aplay").textContent="↺ Revoir"; } return; }
+ const step=sc.steps[A.st++]; animApply(step);
+ A.timer=setTimeout(animTick,Math.round((step.d||1500)/A.speed));
+}
+function animPlay(){ if(A.sc==AN().length-1 && A.st>=AN()[A.sc].steps.length) animGoto(0,true); A.playing=true; $("#aplay").textContent="⏸ Pause"; animTick(); }
+function animPause(){ clearTimeout(A.timer); A.playing=false; const b=$("#aplay"); if(b) b.textContent="▶ Lecture"; }
+// ===== Animation : les réglages du blanc =====
+const WSC=[
+ {k:null,t:"Introduction",cap:"Le blanc sert de sous-couche : il permet aux couleurs de bien ressortir sur un mur foncé. Voyons les 7 réglages possibles, choisis en T4."},
+ {k:"aucun",t:"Aucun",cap:"Aucun : pas de blanc. Les couleurs se mélangent avec le mur et paraissent sombres."},
+ {k:"support",t:"Support",cap:"Support : du blanc sur toute l'image. On voit un rectangle blanc sur le mur, avec l'image dedans."},
+ {k:"sousuni",t:"Sous-uni",cap:"Sous-uni : du blanc uniforme sous tous les pixels de couleur. Le mur reste visible autour du dessin."},
+ {k:"souscouleur",t:"Sous-couleur",cap:"Sous-couleur : plus la couleur est foncée, plus il y a de blanc dessous."},
+ {k:"remplissage",t:"Couleur de remplissage",cap:"Couleur de remplissage : plus la couleur est claire, plus il y a de blanc, y compris dans le fond."},
+ {k:"substrat",t:"Remplir le substrat",cap:"Remplir le substrat : plus la couleur est claire, plus il y a de blanc, mais pas là où il y a du vide."},
+ {k:"accomp",t:"Couleur d'accompagnement",cap:"Couleur d'accompagnement : permet d'avoir du blanc uniquement là où on le décide. Le blanc vient d'un calque préparé dans Photoshop : c'est le niveau expert."}
+];
+let WA={i:0,playing:false,timer:null,speed:1};
+function renderW(){
+ $("#view").innerHTML=`
+ <div class="head"><span class="badge">▶</span><h2>Animation : les réglages du blanc</h2></div>
+ <p class="intro">Les 7 façons d'imprimer le blanc, choisies en T4 sur la ligne Spot_1. Résultats simulés sur un mur foncé.</p>
+ <div class="wa" id="wa"></div>
+ <div class="acap" id="wcap"></div>
+ <div class="wchips" id="wchips">${WSC.map((s,i)=>`<button data-i="${i}">${i?i+". ":""}${s.t}</button>`).join("")}</div>
+ <div class="actl"><button class="btn" id="wplay">▶ Lecture</button><button class="btn alt" id="wprev">⏮</button><button class="btn alt" id="wnext">⏭</button><button class="btn alt" id="wre">↺ Recommencer</button>
+ <label>Vitesse <input type="range" id="wspeed" min="0.25" max="2" step="0.25" value="${WA.speed}"> <span id="wspv">×${WA.speed}</span></label></div>`;
+ $("#wplay").onclick=()=>WA.playing?wPause():wPlay();
+ $("#wprev").onclick=()=>wShow(Math.max(0,WA.i-1));
+ $("#wnext").onclick=()=>wShow(Math.min(WSC.length-1,WA.i+1));
+ $("#wre").onclick=()=>{wShow(0);wPlay();};
+ $("#wspeed").oninput=e=>{WA.speed=+e.target.value;$("#wspv").textContent="×"+WA.speed;};
+ document.querySelectorAll("#wchips button").forEach(b=>b.onclick=()=>{wShow(+b.dataset.i);});
+ wShow(WA.i);
+}
+function wShow(i){
+ clearTimeout(WA.timer); WA.i=i; const s=WSC[i], wa=$("#wa"); if(!wa) return;
+ const wipe=Math.round(2600/WA.speed);
+ if(!s.k){
+  wa.innerHTML=`<div class="wintro"><div class="wl"><span class="l1">🎨 Couleur</span><span class="l2">⬜ Blanc (sous-couche)</span><span class="l3">🧱 Mur foncé</span></div>
+   <div class="wcmp"><figure><img src="img/r_aucun.png" alt=""><figcaption>Sans blanc</figcaption></figure><figure><img src="img/r_sousuni.png" alt=""><figcaption>Avec blanc</figcaption></figure></div></div>`;
+ } else {
+  wa.innerHTML=`<figure><img src="img/o_smiley.png" alt="" class="wo1"><figcaption>1. Image d'origine</figcaption></figure>
+   <span class="warr">→</span>
+   <figure><div class="wwipe"><img src="img/pw_${s.k}.png" alt="" style="animation-duration:${wipe}ms"></div><figcaption>2. Aperçu dans le logiciel<br><small>noir = blanc imprimé</small></figcaption></figure>
+   <span class="warr">→</span>
+   <figure><div class="wwipe wres"><img src="img/r_aucun.png" alt=""><img src="img/r_${s.k}.png" alt="" class="top" style="animation-duration:${wipe}ms"></div><figcaption>3. Résultat sur un mur foncé</figcaption></figure>
+   <div class="wname">${s.t}${WTAG[s.t]?` <i class="wt">${WTAG[s.t]}</i>`:''}</div>`;
+ }
+ $("#wcap").textContent=s.cap;
+ document.querySelectorAll("#wchips button").forEach((b,k)=>b.classList.toggle("on",k==i));
+ if(WA.playing) WA.timer=setTimeout(()=>{ if(WA.i<WSC.length-1) wShow(WA.i+1); else {wPause();$("#wplay").textContent="↺ Revoir";} }, Math.round(8000/WA.speed));
+}
+function wPlay(){ if(WA.i==WSC.length-1) WA.i=0; WA.playing=true; $("#wplay").textContent="⏸ Pause"; wShow(WA.i); }
+function wPause(){ clearTimeout(WA.timer); WA.playing=false; const b=$("#wplay"); if(b) b.textContent="▶ Lecture"; }
+// Exercice
+function startExo(){exo={i:0,err:0};jobAdded=false;fileSel=null;document.body.classList.add("exo");showExo();go("m0");}
+function showExo(msg){
+ const e=EXO[exo.i];
+ $("#exoq").innerHTML=`<small>Étape ${exo.i+1} / ${EXO.length}</small>${e.q}`;
+ $("#exoprog").style.width=(exo.i/EXO.length*100)+"%";
+ $("#exomsg").textContent=msg||"";
+}
+function checkExo(id){
+ const e=EXO[exo.i], el=document.querySelector(`.hs[data-id="${id}"]`);
+ const onScreen = e.s=="T*" ? cur[0]=="t" : cur==e.s;
+ if(onScreen && id==e.id){
+  el&&el.classList.add("good"); exo.i++;
+  if(e.id=="a.8") jobAdded=true;
+  if(exo.i>=EXO.length){setTimeout(endExo,500);return;}
+  setTimeout(()=>{showExo("✅ Bravo !"); e.then?go(e.then):render();},500);
+ } else {
+  exo.err++; el&&el.classList.add("bad"); setTimeout(()=>el&&el.classList.remove("bad"),700);
+  $("#exomsg").textContent= !onScreen ? "❌ Pas sur cet écran. Change d'onglet ou d'écran." : "❌ Pas cette zone, essaie encore.";
+ }
+}
+function endExo(){
+ const n=EXO.length, sc=Math.max(0,Math.round(100-exo.err*100/(n*2)));
+ document.body.classList.remove("exo"); exo=null; cur="home"; renderNav();
+ $("#view").innerHTML=`<div class="head"><span class="badge">E1</span><h2>Exercice terminé 🎉</h2></div>
+ <p class="intro">Score : <b>${sc} %</b> (${n} étapes). Tu connais le chemin complet : ajouter le fichier → ouvrir ses propriétés → taille → passes → profil → blanc → vérifier → envoyer.</p>
+ <p><button class="btn" id="re">Recommencer</button> <button class="btn alt" id="ho">Accueil</button></p>`;
+ $("#re").onclick=startExo; $("#ho").onclick=()=>go("home");
+}
+$("#exohint").onclick=()=>{$("#exomsg").textContent="💡 "+EXO[exo.i].hint;exo.err+=0.5};
+$("#exoquit").onclick=()=>{exo=null;document.body.classList.remove("exo");go("home")};
+renderNav(); render();
+</script>
+</body>
+</html>

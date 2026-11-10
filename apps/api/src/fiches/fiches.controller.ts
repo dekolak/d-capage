@@ -2,7 +2,7 @@ import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, 
 import { IsBoolean } from 'class-validator';
 import { ParametresService } from '../parametres/parametres.service';
 import { Role } from '@prisma/client';
-import { AutoriseCleApi, Moi, Principal, Roles } from '../auth/decorators';
+import { AutoriseCleApi, ModuleRequis, Moi, Principal, Roles } from '../auth/decorators';
 import { CreerFicheDto, DemandeAideDto, EvaluerDto, FiltresAdminDto, FiltresAvisDto, FiltresDto, MasquerDto, ModererAvisDto, ModifierFicheDto } from './fiches.dto';
 import { FichesService } from './fiches.service';
 
@@ -10,6 +10,8 @@ class TraiterAideDto {
   @IsBoolean() traitee!: boolean;
 }
 
+/** Module « Réglages décapage » (espace Lazzeko). */
+@ModuleRequis('reglages-decapage')
 @Controller()
 export class FichesController {
   constructor(private fiches: FichesService, private parametres: ParametresService) {}

@@ -6,6 +6,14 @@ Les fiches partagées alimentent une **section communautaire** : mêmes machines
 
 Le simulateur du site (bloc HTML Odoo) reste à part : il sert à expliquer la machine aux prospects. Il pourra plus tard lire la même config JSON.
 
+## Deux espaces dans une seule app
+- **Lazzeko** (`app.lazzeko.com`) : réglages décapage + communauté. **Kiavik** (`app.kiavikcopilot.ovh`) : guides et procédures, sans communauté.
+- Une base, un admin, une gestion des comptes et des messages. L'adresse choisit la marque (couleur, nom, icône, manifeste PWA).
+- `apps/api/src/espaces/espaces.ts` : espaces et **modules** (fonctions). `UserModule` = accès d'un compte à un module ; l'accès à un espace découle de ses modules.
+- Garde : `@ModuleRequis('reglages-decapage')` sur les contrôleurs d'un module (403 `MODULE_NON_AUTORISE`), puis conditions de l'espace du module (403 `CONDITIONS_A_ACCEPTER`). Routes communes : espace de l'en-tête `X-Espace` (sinon l'adresse).
+- Conditions par espace : `Parametre` `conditions:<espace>` = `{version, texte}`, acceptations dans `AcceptationConditions`.
+- App : `src/lib/espace.tsx` (espace ouvert, thème), `src/espaces/<espace>/` (écrans et barre du bas propres), `src/App.tsx` (commun : compte, conditions, messages, admin).
+
 ## Principe clé : une machine = un fichier JSON
 ```
 machines/<fabricant>/<variante>/v<N>.json
@@ -56,6 +64,7 @@ machines/              configs JSON des machines
 | Table | Rôle |
 |---|---|
 | `User` | identifiant + mot de passe (bcrypt), rôle `ADMIN`/`USER`, `organisationId` facultatif (entreprises : plus tard) |
+| `UserModule`, `AcceptationConditions` | modules accessibles (→ espaces) ; conditions acceptées par espace |
 | `ApiKey` | création de comptes depuis un autre système ; seul le hash est stocké |
 | `Technologie`, `Fabricant`, `Modele`, `Variante`, `VersionInterface` | catalogue ; la version contient le JSON |
 | `UserMachine` | machines d'un utilisateur (variante + surnom facultatif, pas de n° de série) |
@@ -96,4 +105,6 @@ machines/              configs JSON des machines
 3. ✅ Fiches : miroir, tags (proposition par les utilisateurs), note — API + app mobile.
 4. ✅ Photos : compression côté téléphone, stockage local derrière une interface.
 5. ✅ Communauté : partage, notes des autres, duplication, tri par note (moyenne dénormalisée).
-6. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran, mode hors ligne complet (file d'envoi).
+6. ✅ Espaces Lazzeko / Kiavik (modules, conditions, marque par adresse).
+7. Kiavik : guides (kit-guides/), procédures, animations.
+8. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran, mode hors ligne complet (file d'envoi).

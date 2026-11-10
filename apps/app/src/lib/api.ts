@@ -14,6 +14,10 @@ export class ErreurApi extends Error {
   }
 }
 
+/** Espace ouvert (lazzeko, kiavik…) : envoyé à chaque requête, l'API s'en sert pour les conditions et les messages. */
+let espaceCourant = '';
+export const definirEspace = (slug: string) => (espaceCourant = slug);
+
 let surDeconnexion: () => void = () => {};
 export const onDeconnexion = (f: () => void) => (surDeconnexion = f);
 let surConditions: () => void = () => {};
@@ -24,6 +28,7 @@ export async function api<T = unknown>(chemin: string, opts: RequestInit & { jso
   const headers = new Headers(opts.headers);
   const t = jeton.get();
   if (t) headers.set('Authorization', `Bearer ${t}`);
+  if (espaceCourant) headers.set('X-Espace', espaceCourant);
   let body = opts.body;
   if (opts.json !== undefined) {
     headers.set('Content-Type', 'application/json');
@@ -47,7 +52,22 @@ export async function api<T = unknown>(chemin: string, opts: RequestInit & { jso
 // ---------- types renvoyés par l'API ----------
 export interface Moi {
   id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER';
-  conditionsAJour: boolean; conditionsVersion: number | null; accordPhotosMarketing: boolean;
+  /** Conditions de l'espace ouvert acceptées (version en vigueur). */
+  conditionsAJour: boolean;
+  /** Conditions acceptées, par espace. */
+  conditions: Record<string, { version: number; accepteeLe: string }>;
+  accordPhotosMarketing: boolean;
+  modules: string[];
+  /** Espaces accessibles (tous pour l'admin). */
+  espaces: { slug: string; conditionsAJour: boolean }[];
+}
+export interface ModuleDef { slug: string; nom: string }
+export interface Espace {
+  slug: string; nom: string; nomApp: string; nomCourt: string; domaines: string[];
+  couleur: string; couleurFoncee: string; couleurDouce: string; icones: string;
+  /** Partage communautaire (Lazzeko) ou non (Kiavik). */
+  communaute: boolean;
+  modules: ModuleDef[];
 }
 export interface Variante { id: string; slug: string; nom: string; version: { id: string; numero: number }; imageUrl: string | null; imagePropre: boolean }
 export interface Fabricant { id: string; nom: string; modeles: { id: string; nom: string; technologie: string; imageUrl: string | null; variantes: Variante[] }[] }

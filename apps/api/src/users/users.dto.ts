@@ -1,5 +1,6 @@
 import { Role } from '@prisma/client';
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Matches, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
+import { ESPACES, TOUS_MODULES } from '../espaces/espaces';
+import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsEnum, IsInt, IsOptional, IsString, Matches, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
 
 export class CreerUserDto {
   @IsString()
@@ -17,6 +18,9 @@ export class CreerUserDto {
 
   /** N° de client dans Odoo (facultatif). */
   @IsOptional() @IsString() @MaxLength(40) numeroOdoo?: string;
+
+  /** Modules accessibles (donnent l'accès aux espaces). Absent : ["reglages-decapage"]. */
+  @IsOptional() @IsArray() @ArrayMaxSize(20) @IsIn(TOUS_MODULES, { each: true }) modules?: string[];
 }
 
 export class ModifierUserDto {
@@ -26,9 +30,13 @@ export class ModifierUserDto {
   @IsOptional() @IsBoolean() clientLazzeko?: boolean;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) numeroOdoo?: string | null;
   @IsOptional() @IsString() @MinLength(8) @MaxLength(128) motDePasse?: string;
+  /** Remplace la liste des modules. */
+  @IsOptional() @IsArray() @ArrayMaxSize(20) @IsIn(TOUS_MODULES, { each: true }) modules?: string[];
 }
 
 export class AccepterConditionsDto {
+  /** Espace dont on accepte les conditions (par défaut : l'espace courant). */
+  @IsOptional() @IsIn(ESPACES.map((e) => e.slug)) espace?: string;
   @IsInt() @Min(1) version!: number;
   @IsOptional() @IsBoolean() accordPhotosMarketing?: boolean;
 }

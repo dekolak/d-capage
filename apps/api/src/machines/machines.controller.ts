@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
-import { AutoriseCleApi, Moi, Principal, Roles } from '../auth/decorators';
+import { AutoriseCleApi, ModuleRequis, Moi, Principal, Roles } from '../auth/decorators';
 import { PrismaService } from '../prisma/prisma.service';
 import { MachinesService } from './machines.service';
 
@@ -14,6 +14,8 @@ class ModifierMachineDto {
   @IsOptional() @IsString() @MaxLength(60) surnom?: string;
 }
 
+/** Module « Réglages décapage » (espace Lazzeko). */
+@ModuleRequis('reglages-decapage')
 @Controller()
 export class MachinesController {
   constructor(private machines: MachinesService, private prisma: PrismaService) {}

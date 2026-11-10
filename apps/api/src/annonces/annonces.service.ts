@@ -1,11 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Annonce, CibleClient, Prisma, Recurrence, Role, TypeQuestion } from '@prisma/client';
+import { espacesDesModules, modulesDeLEspace } from '../espaces/espaces';
 import { PrismaService } from '../prisma/prisma.service';
 
 const JOUR = 86_400_000;
 const POIDS = { IMPORTANT: 0, INFO: 1, CONSEIL: 2 } as const;
 
 export interface Ciblage {
+  /** Espaces visés (vide = tous) : comptes ayant au moins un module de ces espaces. */
+  espaces?: string[];
   cibleClient?: CibleClient;
   fabricantIds?: string[];
   modeleIds?: string[];
@@ -67,9 +70,11 @@ export function utilisateursVises(c: Ciblage): Prisma.UserWhereInput {
     ...(c.modeleIds?.length ? [{ variante: { modeleId: { in: c.modeleIds } } }] : []),
     ...(c.fabricantIds?.length ? [{ variante: { modele: { fabricantId: { in: c.fabricantIds } } } }] : []),
   ];
+  const modules = (c.espaces ?? []).flatMap(modulesDeLEspace);
   return {
     role: Role.USER,
     actif: true,
+    ...(c.espaces?.length ? { modules: { some: { module: { in: modules } } } } : {}),
     ...(c.cibleClient === CibleClient.LAZZEKO ? { clientLazzeko: true } : c.cibleClient === CibleClient.AUTRES ? { clientLazzeko: false } : {}),
     ...(machines.length ? { machines: { some: { OR: machines } } } : {}),
     ...(c.numerosOdoo?.length ? { numeroOdoo: { in: c.numerosOdoo } } : {}),
@@ -81,17 +86,20 @@ export class AnnoncesService {
   constructor(private prisma: PrismaService) {}
 
   /** Messages à afficher maintenant pour cet utilisateur (et note qu'il les a vus). */
-  async pourMoi(userId: string) {
+  async pourMoi(userId: string, espace: string) {
     const now = new Date();
     const u = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true, clientLazzeko: true, numeroOdoo: true, machines: { select: { varianteId: true, variante: { select: { modeleId: true, modele: { select: { fabricantId: true } } } } } } },
+      select: { role: true, clientLazzeko: true, modules: { select: { module: true } }, numeroOdoo: true, machines: { select: { varianteId: true, variante: { select: { modeleId: true, modele: { select: { fabricantId: true } } } } } } },
     });
     if (!u || u.role !== Role.USER) return [];
+    // Les messages s'affichent dans l'espace ouvert, si le compte y a accès.
+    if (!espacesDesModules(u.modules.map((m) => m.module)).some((e) => e.slug === espace)) return [];
     const actives = await this.prisma.annonce.findMany({
       where: { actif: true, debut: { lte: now }, OR: [{ fin: null }, { fin: { gt: now } }] },
     });
     const vise = (a: Annonce) => {
+      if (a.espaces.length && !a.espaces.includes(espace)) return false;
       if (a.cibleClient === CibleClient.LAZZEKO && !u.clientLazzeko) return false;
       if (a.cibleClient === CibleClient.AUTRES && u.clientLazzeko) return false;
       if (a.numerosOdoo.length && !(u.numeroOdoo && a.numerosOdoo.includes(u.numeroOdoo))) return false;

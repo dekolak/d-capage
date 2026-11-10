@@ -9,6 +9,7 @@ import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { CatalogueModule } from './catalogue/catalogue.module';
+import { EspacesModule } from './espaces/espaces.module';
 import { FichesModule } from './fiches/fiches.module';
 import { HealthController } from './health.controller';
 import { MachinesModule } from './machines/machines.module';
@@ -30,6 +31,7 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     PrismaModule,
     StockageModule,
     ParametresModule,
+    EspacesModule,
     AuthModule,
     ApiKeysModule,
     UsersModule,

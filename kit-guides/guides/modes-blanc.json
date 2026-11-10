@@ -1,0 +1,53 @@
+{
+  "ecran": "t4",
+  "pastille": "4.1",
+  "convention": "Sur les aperçus du canal blanc, le noir représente le blanc imprimé.",
+  "plus_utilises": [
+    "Support",
+    "Sous-uni"
+  ],
+  "modes": [
+    {
+      "nom": "Aucun",
+      "image_canal": "images/pw_aucun.png",
+      "image_mur": "images/r_aucun.png",
+      "texte": "Pas de blanc : impression couleur simple."
+    },
+    {
+      "nom": "Couleur d'accompagnement",
+      "image_canal": "images/pw_accomp.png",
+      "image_mur": "images/r_accomp.png",
+      "texte": "Permet d'avoir du blanc uniquement là où on le décide. Le blanc vient d'un calque préparé dans Photoshop. Niveau expert."
+    },
+    {
+      "nom": "Sous-couleur",
+      "image_canal": "images/pw_souscouleur.png",
+      "image_mur": "images/r_souscouleur.png",
+      "texte": "Plus la couleur est foncée, plus il y a de blanc."
+    },
+    {
+      "nom": "Couleur de remplissage",
+      "image_canal": "images/pw_remplissage.png",
+      "image_mur": "images/r_remplissage.png",
+      "texte": "Plus la couleur est claire, plus il y a de blanc, y compris dans le fond."
+    },
+    {
+      "nom": "Support",
+      "image_canal": "images/pw_support.png",
+      "image_mur": "images/r_support.png",
+      "texte": "Du blanc sur toute l'image."
+    },
+    {
+      "nom": "Sous-uni",
+      "image_canal": "images/pw_sousuni.png",
+      "image_mur": "images/r_sousuni.png",
+      "texte": "Du blanc uniforme sous tous les pixels de couleur."
+    },
+    {
+      "nom": "Remplir le substrat",
+      "image_canal": "images/pw_substrat.png",
+      "image_mur": "images/r_substrat.png",
+      "texte": "Plus la couleur est claire, plus il y a de blanc, mais pas là où il y a du vide."
+    }
+  ]
+}

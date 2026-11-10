@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bulle, TypeQuestion } from '../components/Annonces';
 import { Erreur } from '../components/Composants';
+import { useEspace } from '../lib/espace';
 import { api, Fabricant } from '../lib/api';
 import { date } from '../lib/util';
 
@@ -11,13 +12,13 @@ type Cible = 'TOUS' | 'LAZZEKO' | 'AUTRES';
 interface Annonce {
   id: string; titre: string; texte: string; niveau: Niveau; lienUrl: string | null; lienTexte: string | null;
   debut: string; fin: string | null; actif: boolean; recurrence: Rec; intervalle: number; cibleClient: Cible;
-  fabricantIds: string[]; modeleIds: string[]; varianteIds: string[]; numerosOdoo: string[];
+  espaces: string[]; fabricantIds: string[]; modeleIds: string[]; varianteIds: string[]; numerosOdoo: string[];
   questionType: TypeQuestion; question: string | null; options: string[]; autreOption: boolean; reponseObligatoire: boolean;
   etat: 'EN_COURS' | 'PROGRAMME' | 'TERMINE' | 'PAUSE'; cible: number; stats: { occurrence: number; vues: number; comprises: number; reponses: number }; prochaine: string | null;
 }
 const VIDE = {
   titre: '', texte: '', niveau: 'CONSEIL' as Niveau, lienUrl: '', lienTexte: '', debut: '', fin: '',
-  recurrence: 'AUCUNE' as Rec, intervalle: 1, cibleClient: 'TOUS' as Cible, machines: [] as string[], numeros: '',
+  recurrence: 'AUCUNE' as Rec, intervalle: 1, espace: '', cibleClient: 'TOUS' as Cible, machines: [] as string[], numeros: '',
   questionType: 'AUCUNE' as TypeQuestion, question: '', options: ['', ''], autreOption: false, reponseObligatoire: false,
 };
 type Form = typeof VIDE;
@@ -29,13 +30,20 @@ const local = (d: string | null) => (d ? new Date(d).toISOString().slice(0, 16) 
 function versCiblage(f: Form) {
   const pick = (p: string) => f.machines.filter((x) => x.startsWith(p)).map((x) => x.slice(2));
   const numerosOdoo = [...new Set(f.numeros.split(/[\s,;]+/).map((x) => x.trim()).filter(Boolean))];
-  return { cibleClient: f.cibleClient, fabricantIds: pick('f:'), modeleIds: pick('m:'), varianteIds: pick('v:'), numerosOdoo };
+  // Clients Lazzeko / autres marques et machines : seulement pour l'espace Lazzeko (réglages décapage).
+  if (!avecMachines(f)) return { espaces: [f.espace], cibleClient: 'TOUS' as Cible, fabricantIds: [], modeleIds: [], varianteIds: [], numerosOdoo };
+  return { espaces: f.espace ? [f.espace] : [], cibleClient: f.cibleClient, fabricantIds: pick('f:'), modeleIds: pick('m:'), varianteIds: pick('v:'), numerosOdoo };
+}
+const avecMachines = (f: Form) => !f.espace || f.espace === 'lazzeko';
+function nomEspace(slug: string, espaces: { slug: string; nom: string }[]) {
+  return espaces.find((e) => e.slug === slug)?.nom ?? slug;
 }
 
 /** Admin : messages affichés en bulle à l'ouverture de l'app (pas de messagerie, pas de réponse). */
 export default function AdminAnnonces() {
   const [liste, setListe] = useState<Annonce[]>([]);
   const [cat, setCat] = useState<Fabricant[]>([]);
+  const { espace: espaceOuvert, espaces } = useEspace();
   const [f, setF] = useState<Form>(VIDE);
   const [edition, setEdition] = useState<string | null>(null);
   const [ouvert, setOuvert] = useState(false);
@@ -53,13 +61,13 @@ export default function AdminAnnonces() {
     if (!ouvert) return;
     const h = setTimeout(() => api<{ utilisateurs: number }>('/admin/annonces/cible', { method: 'POST', json: versCiblage(f) }).then((r) => setNb(r.utilisateurs)).catch(() => {}), 200);
     return () => clearTimeout(h);
-  }, [ouvert, f.cibleClient, f.machines.join(), f.numeros]);
+  }, [ouvert, f.espace, f.cibleClient, f.machines.join(), f.numeros]);
 
-  const nouveau = () => { setF(VIDE); setEdition(null); setOuvert(true); window.scrollTo(0, 0); };
+  const nouveau = () => { setF({ ...VIDE, espace: espaceOuvert.slug }); setEdition(null); setOuvert(true); window.scrollTo(0, 0); };
   const modifier = (a: Annonce) => {
     setF({
       titre: a.titre, texte: a.texte, niveau: a.niveau, lienUrl: a.lienUrl ?? '', lienTexte: a.lienTexte ?? '',
-      debut: local(a.debut), fin: local(a.fin), recurrence: a.recurrence, intervalle: a.intervalle, cibleClient: a.cibleClient,
+      debut: local(a.debut), fin: local(a.fin), recurrence: a.recurrence, intervalle: a.intervalle, espace: a.espaces[0] ?? '', cibleClient: a.cibleClient,
       machines: [...a.fabricantIds.map((x) => 'f:' + x), ...a.modeleIds.map((x) => 'm:' + x), ...a.varianteIds.map((x) => 'v:' + x)],
       numeros: a.numerosOdoo.join('\n'),
       questionType: a.questionType, question: a.question ?? '', options: a.options.length ? a.options : ['', ''],
@@ -110,7 +118,7 @@ export default function AdminAnnonces() {
           <label>Titre<input value={f.titre} maxLength={120} onChange={(e) => setF({ ...f, titre: e.target.value })} placeholder="ex. Pensez à nettoyer la lentille" required /></label>
           <label>Texte<textarea rows={3} maxLength={2000} value={f.texte} onChange={(e) => setF({ ...f, texte: e.target.value })} required /></label>
           <div className="deux">
-            <label>Lien (facultatif)<input value={f.lienUrl} onChange={(e) => setF({ ...f, lienUrl: e.target.value })} placeholder="https://…" /></label>
+            <label>Lien (facultatif)<input value={f.lienUrl} onChange={(e) => setF({ ...f, lienUrl: e.target.value })} placeholder="https://… ou page de l'app (ex. /procedures)" /></label>
             <label>Texte du bouton<input value={f.lienTexte} maxLength={40} onChange={(e) => setF({ ...f, lienTexte: e.target.value })} placeholder="En savoir plus" /></label>
           </div>
 
@@ -159,7 +167,15 @@ export default function AdminAnnonces() {
             </label>
           )}
 
+          <b className="petit">Dans quel espace</b>
+          <div className="seg">
+            {[{ slug: '', nom: 'Tous' }, ...espaces].map((e) => (
+              <button key={e.slug} type="button" className={f.espace === e.slug ? 'on' : ''} onClick={() => setF({ ...f, espace: e.slug })}>{e.nom}</button>
+            ))}
+          </div>
+
           <b className="petit">À qui</b>
+          {avecMachines(f) && <>
           <div className="seg">
             {(['TOUS', 'LAZZEKO', 'AUTRES'] as Cible[]).map((c) => (
               <button key={c} type="button" className={f.cibleClient === c ? 'on' : ''} onClick={() => setF({ ...f, cibleClient: c })}>
@@ -184,6 +200,7 @@ export default function AdminAnnonces() {
               )}
             </div>
           </div>
+          </>}
           <label>
             N° clients Odoo (facultatif)
             <textarea rows={2} value={f.numeros} onChange={(e) => setF({ ...f, numeros: e.target.value })} placeholder="ex. C00123, C00456 (séparés par une virgule, un espace ou un retour à la ligne)" />
@@ -212,6 +229,7 @@ export default function AdminAnnonces() {
             <div className="muted petit">
               {a.recurrence === 'AUCUNE' ? 'Une seule fois' : `Tous les ${a.intervalle > 1 ? a.intervalle + ' ' : ''}${UNITE[a.recurrence]}${a.intervalle > 1 && a.recurrence !== 'MOIS' ? 's' : ''}`}
               {' · '}dès le {date(a.debut)}{a.fin ? ` jusqu'au ${date(a.fin)}` : ''}
+              {' · '}{a.espaces.length ? a.espaces.map((s) => nomEspace(s, espaces)).join(', ') : 'tous les espaces'}
               {' · '}{a.cibleClient === 'TOUS' ? 'tous' : a.cibleClient === 'LAZZEKO' ? 'clients Lazzeko' : 'autres marques'}
               {a.modeleIds.length + a.varianteIds.length + a.fabricantIds.length ? ' · machines ciblées' : ''}
               {a.numerosOdoo.length ? ` · ${a.numerosOdoo.length} n° Odoo` : ''}

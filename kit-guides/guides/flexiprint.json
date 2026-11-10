@@ -1,0 +1,1284 @@
+{
+  "slug": "flexiprint",
+  "nom": "FlexiPRINT UV DXonJet Edition",
+  "marque": "kiavik",
+  "description": "Logiciel RIP : prépare le fichier pour la machine.",
+  "ecrans": [
+    {
+      "id": "m0",
+      "code": "M0",
+      "titre": "Fenêtre principale (Production Manager)",
+      "groupe": "Fenêtre principale",
+      "intro": "C'est l'écran d'accueil : la file d'attente des travaux. On ajoute un fichier, on règle ses propriétés, puis le RIP crée le fichier pour le logiciel DXonJet.",
+      "type": "capture",
+      "image": "images/m0.jpg",
+      "largeur": 1210,
+      "hauteur": 827,
+      "pastilles": [
+        {
+          "id": "0.1",
+          "x": 103,
+          "y": 150,
+          "titre": "Assistant",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 65,
+            "y": 118,
+            "largeur": 78,
+            "hauteur": 72,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "0.2",
+          "x": 198,
+          "y": 150,
+          "titre": "Travail",
+          "texte": "Ouvre la fenêtre « Ajouter un travail » pour choisir le fichier à imprimer (écran M0-a).",
+          "conseil": "Première action de chaque impression.",
+          "etat": "actif",
+          "niveau": "astuce"
+        },
+        {
+          "id": "0.3",
+          "x": 285,
+          "y": 150,
+          "titre": "RIP",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 250,
+            "y": 118,
+            "largeur": 72,
+            "hauteur": 72,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "0.4",
+          "x": 355,
+          "y": 150,
+          "titre": "Envoyer",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 324,
+            "y": 118,
+            "largeur": 64,
+            "hauteur": 72,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "0.5",
+          "x": 435,
+          "y": 150,
+          "titre": "Estimation",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 398,
+            "y": 118,
+            "largeur": 76,
+            "hauteur": 72,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "0.6",
+          "x": 568,
+          "y": 150,
+          "titre": "Positionnement des formes",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 488,
+            "y": 118,
+            "largeur": 162,
+            "hauteur": 72,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "0.7",
+          "x": 733,
+          "y": 150,
+          "titre": "Travaux non imbriqués",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 664,
+            "y": 118,
+            "largeur": 140,
+            "hauteur": 72,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "0.8",
+          "x": 846,
+          "y": 150,
+          "titre": "Annuler",
+          "texte": "Annule le RIP en cours.",
+          "etat": "actif"
+        },
+        {
+          "id": "0.9",
+          "x": 925,
+          "y": 150,
+          "titre": "Supprimer",
+          "texte": "Supprime le fichier en attente sélectionné dans la liste.",
+          "etat": "actif"
+        },
+        {
+          "id": "0.10",
+          "x": 300,
+          "y": 206,
+          "titre": "Configuration de l'imprimante",
+          "texte": "Sert uniquement à régler une nouvelle imprimante. On ne l'utilise pas.",
+          "conseil": "Ne pas modifier : la DXonJet est déjà configurée.",
+          "etat": "non_utilise",
+          "niveau": "avertissement",
+          "zone": {
+            "x": 170,
+            "y": 193,
+            "largeur": 262,
+            "hauteur": 25,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "0.11",
+          "x": 600,
+          "y": 420,
+          "titre": "Liste des travaux",
+          "texte": "Historique des fichiers et travaux en cours : aperçu, nom, état, dimensions, copies, profil ICC. Un double-clic sur un travail ouvre ses propriétés (écrans T1 à T11).",
+          "etat": "actif"
+        },
+        {
+          "id": "0.12",
+          "x": 140,
+          "y": 752,
+          "titre": "Bandeau d'état",
+          "texte": "Montre l'utilisation de l'ordinateur (mémoire) et l'espace libre sur les disques.",
+          "conseil": "Garder de la place sur le disque C : les murs produisent de gros fichiers.",
+          "etat": "actif",
+          "niveau": "astuce"
+        }
+      ]
+    },
+    {
+      "id": "m0a",
+      "code": "M0-a",
+      "titre": "Ajouter un travail (choix du fichier)",
+      "groupe": "Fenêtre principale",
+      "intro": "S'ouvre avec le bouton Travail (0.2). On choisit le fichier puis on clique sur Ajout. Essaie : sélectionne « smiley.jpg ».",
+      "type": "fenetre_recreee",
+      "fenetre": "ajouter_travail",
+      "largeur": 900,
+      "hauteur": 600,
+      "pastilles": [
+        {
+          "id": "a.1",
+          "x": 470,
+          "y": 57,
+          "titre": "Regarder dans",
+          "texte": "Dossier affiché. Les flèches à droite servent à remonter ou changer de dossier.",
+          "etat": "actif"
+        },
+        {
+          "id": "a.2",
+          "x": 64,
+          "y": 96,
+          "titre": "Raccourcis",
+          "texte": "Accès rapide aux emplacements de l'ordinateur (Bureau, Ce PC…).",
+          "etat": "actif"
+        },
+        {
+          "id": "a.3",
+          "x": 380,
+          "y": 96,
+          "titre": "Liste des fichiers",
+          "texte": "Clique sur le fichier à imprimer pour le sélectionner.",
+          "etat": "actif"
+        },
+        {
+          "id": "a.4",
+          "x": 560,
+          "y": 462,
+          "titre": "Nom du fichier",
+          "texte": "Se remplit tout seul quand on clique sur un fichier.",
+          "etat": "actif"
+        },
+        {
+          "id": "a.5",
+          "x": 560,
+          "y": 500,
+          "titre": "Types de fichiers",
+          "texte": "Laisser « Tout ce qui est lisible ».",
+          "etat": "actif"
+        },
+        {
+          "id": "a.6",
+          "x": 560,
+          "y": 548,
+          "titre": "Préréglage",
+          "texte": "Non utilisé : rester sur « Utiliser les propriétés du travail par défaut ».",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.7",
+          "x": 870,
+          "y": 345,
+          "titre": "Cases à cocher",
+          "texte": "Aperçu, Copier dans le répertoire Job, Ouvrir les propriétés, Imbriquer : toutes décochées.",
+          "conseil": "Ne rien cocher.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "a.8",
+          "x": 870,
+          "y": 92,
+          "titre": "Ajout",
+          "texte": "Ajoute le fichier sélectionné dans la file d'attente (liste M0).",
+          "etat": "actif"
+        },
+        {
+          "id": "a.9",
+          "x": 870,
+          "y": 128,
+          "titre": "Annuler",
+          "texte": "Ferme la fenêtre sans rien ajouter.",
+          "etat": "actif"
+        }
+      ]
+    },
+    {
+      "id": "t1",
+      "code": "T1",
+      "titre": "Mise en page (taille, position, copies)",
+      "groupe": "Propriétés du travail",
+      "intro": "Onglet le plus utilisé : on vérifie la taille de l'image. Les zones grisées ne sont pas utilisées.",
+      "type": "capture",
+      "image": "images/t1.jpg",
+      "largeur": 1272,
+      "hauteur": 890,
+      "pastilles": [
+        {
+          "id": "1.1",
+          "x": 290,
+          "y": 118,
+          "titre": "Préréglage",
+          "texte": "Permet de charger un préréglage, seulement si on en a enregistré un. Sinon rester sur « Utiliser les propriétés du travail par défaut ».",
+          "etat": "actif"
+        },
+        {
+          "id": "1.2",
+          "x": 240,
+          "y": 203,
+          "titre": "Taille du support",
+          "texte": "Taille maximum d'impression, théorique. On peut l'agrandir si on a besoin de plus grand.",
+          "conseil": "Ne pas modifier dans la plupart des situations.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "1.3",
+          "x": 240,
+          "y": 275,
+          "titre": "Marges",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 95,
+            "y": 245,
+            "largeur": 255,
+            "hauteur": 60,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "1.4",
+          "x": 230,
+          "y": 405,
+          "titre": "Taille du travail",
+          "texte": "Permet de réajuster la dimension du fichier (en cm ou en %).",
+          "conseil": "Attention : le logiciel n'ajoute pas de pixels. Agrandir un fichier x 4, c'est risquer une image pixelisée.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "1.5",
+          "x": 180,
+          "y": 445,
+          "titre": "Proportionnel / Adapter au support",
+          "texte": "« Proportionnel » garde le rapport largeur / hauteur : à laisser coché. « Adapter au support » étire l'image à la taille du support (1.2).",
+          "conseil": "Ne pas cocher « Adapter au support » : l'image serait déformée.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "1.6",
+          "x": 240,
+          "y": 520,
+          "titre": "Position",
+          "texte": "Non utilisé : avec notre méthode, on ne décale pas l'impression par rapport au support.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 95,
+            "y": 505,
+            "largeur": 315,
+            "hauteur": 32,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "1.7",
+          "x": 240,
+          "y": 600,
+          "titre": "Copies",
+          "texte": "Non utilisé : imprimer plusieurs fois l'image n'est pas adapté à notre technologie.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 95,
+            "y": 575,
+            "largeur": 255,
+            "hauteur": 60,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "1.8",
+          "x": 355,
+          "y": 686,
+          "titre": "Miroir (F)",
+          "texte": "Retourne l'image. Pour un miroir total : utiliser F ET retourner l'icône bonhomme (1.8b).",
+          "conseil": "Il est préférable de faire le miroir en amont, dans un logiciel de traitement d'image.",
+          "etat": "actif",
+          "niveau": "astuce"
+        },
+        {
+          "id": "1.8b",
+          "x": 448,
+          "y": 686,
+          "titre": "Icône bonhomme",
+          "texte": "À retourner en plus de F pour obtenir un miroir total.",
+          "etat": "actif"
+        },
+        {
+          "id": "1.13",
+          "x": 375,
+          "y": 652,
+          "titre": "Imbrication de pages",
+          "texte": "Laisser cochée.",
+          "conseil": "Ne pas toucher.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "1.9",
+          "x": 200,
+          "y": 720,
+          "titre": "Montage",
+          "texte": "Jamais utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 88,
+            "y": 695,
+            "largeur": 350,
+            "hauteur": 48,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "1.10",
+          "x": 930,
+          "y": 450,
+          "titre": "Aperçu",
+          "texte": "Vue du fichier sur le support.",
+          "etat": "actif"
+        },
+        {
+          "id": "1.11",
+          "x": 617,
+          "y": 455,
+          "titre": "Propriétés de travail de base",
+          "texte": "Passe en mode réglage basique. Non utilisé : pas assez de réglages.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 602,
+            "y": 330,
+            "largeur": 32,
+            "hauteur": 252,
+            "libelle": "non utilisé"
+          }
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "code": "T2",
+      "titre": "Général (après sortie, priorité, notes)",
+      "groupe": "Propriétés du travail",
+      "intro": "Non utilisé : ce menu sert pour un parc de plusieurs machines. Rien à toucher.",
+      "type": "capture",
+      "image": "images/t2.jpg",
+      "largeur": 1275,
+      "hauteur": 891,
+      "pastilles": [
+        {
+          "id": "2.1",
+          "x": 330,
+          "y": 186,
+          "titre": "Nom et dossier",
+          "texte": "Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 82,
+            "y": 150,
+            "largeur": 500,
+            "hauteur": 640,
+            "libelle": "non utilisé · rien à toucher"
+          }
+        },
+        {
+          "id": "2.2",
+          "x": 190,
+          "y": 250,
+          "titre": "Configuration",
+          "texte": "Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "2.3",
+          "x": 280,
+          "y": 312,
+          "titre": "Après sortie",
+          "texte": "Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "2.4",
+          "x": 280,
+          "y": 334,
+          "titre": "Priorité",
+          "texte": "Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "2.5",
+          "x": 160,
+          "y": 389,
+          "titre": "Répéter le travail",
+          "texte": "Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "2.6",
+          "x": 180,
+          "y": 652,
+          "titre": "Envoyer après",
+          "texte": "Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "2.7",
+          "x": 250,
+          "y": 730,
+          "titre": "Notes",
+          "texte": "Non utilisé : ce menu sert quand on a un parc de plusieurs machines. Rien à toucher.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "code": "T3",
+      "titre": "Couleur (profil, résolution, tramage)",
+      "groupe": "Propriétés du travail",
+      "intro": "On choisit seulement le profil (nombre de passes) en 3.2. Tout le reste se règle automatiquement.",
+      "type": "capture",
+      "image": "images/t3.jpg",
+      "largeur": 1277,
+      "hauteur": 892,
+      "pastilles": [
+        {
+          "id": "3.1",
+          "x": 195,
+          "y": 213,
+          "titre": "Correction des couleurs",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 82,
+            "y": 182,
+            "largeur": 436,
+            "hauteur": 48,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "3.2",
+          "x": 300,
+          "y": 243,
+          "titre": "Profil de sortie",
+          "texte": "Permet de choisir le nombre de passes de couleur (ex. F1 12PASS).",
+          "conseil": "C'est le seul réglage de cet onglet à utiliser.",
+          "etat": "actif",
+          "niveau": "astuce"
+        },
+        {
+          "id": "3.3",
+          "x": 300,
+          "y": 270,
+          "titre": "Support",
+          "texte": "Se règle automatiquement selon le profil choisi en 3.2.",
+          "conseil": "Ne pas toucher.",
+          "etat": "preregle",
+          "niveau": "avertissement",
+          "zone": {
+            "x": 82,
+            "y": 258,
+            "largeur": 436,
+            "hauteur": 314,
+            "libelle": "automatique · ne pas toucher"
+          }
+        },
+        {
+          "id": "3.4",
+          "x": 285,
+          "y": 297,
+          "titre": "Résolution",
+          "texte": "Se règle automatiquement selon le profil choisi en 3.2.",
+          "conseil": "Ne pas toucher.",
+          "etat": "preregle",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "3.5",
+          "x": 265,
+          "y": 325,
+          "titre": "Mode couleur",
+          "texte": "Se règle automatiquement selon le profil choisi en 3.2.",
+          "conseil": "Ne pas toucher.",
+          "etat": "preregle",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "3.6",
+          "x": 380,
+          "y": 325,
+          "titre": "Marge…",
+          "texte": "Se règle automatiquement selon le profil choisi en 3.2.",
+          "conseil": "Ne pas toucher.",
+          "etat": "preregle",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "3.7",
+          "x": 265,
+          "y": 352,
+          "titre": "Diffusion",
+          "texte": "Se règle automatiquement selon le profil choisi en 3.2.",
+          "conseil": "Ne pas toucher.",
+          "etat": "preregle",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "3.8",
+          "x": 140,
+          "y": 384,
+          "titre": "Dégradés lisses",
+          "texte": "Se règle automatiquement selon le profil choisi en 3.2.",
+          "conseil": "Ne pas toucher.",
+          "etat": "preregle",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "3.9",
+          "x": 365,
+          "y": 413,
+          "titre": "Avancé…",
+          "texte": "Se règle automatiquement selon le profil choisi en 3.2.",
+          "conseil": "Ne pas toucher.",
+          "etat": "preregle",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "3.10",
+          "x": 160,
+          "y": 463,
+          "titre": "Mappage de couleurs",
+          "texte": "Se règle automatiquement selon le profil choisi en 3.2.",
+          "conseil": "Ne pas toucher.",
+          "etat": "preregle",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "3.11",
+          "x": 160,
+          "y": 497,
+          "titre": "Surimpression",
+          "texte": "Se règle automatiquement selon le profil choisi en 3.2.",
+          "conseil": "Ne pas toucher.",
+          "etat": "preregle",
+          "niveau": "avertissement"
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "code": "T4",
+      "titre": "Couleurs d'accompagnement (Spot)",
+      "groupe": "Propriétés du travail",
+      "intro": "Réglage du blanc. Sur la tête, les canaux sont Y Y / K C / M C / W W : le blanc passe par Spot_1. Clique sur 4.1 pour voir les choix.",
+      "type": "capture",
+      "image": "images/t4.jpg",
+      "largeur": 1275,
+      "hauteur": 887,
+      "pastilles": [
+        {
+          "id": "4.1",
+          "x": 362,
+          "y": 367,
+          "titre": "Spot_1 : réglage du blanc",
+          "texte": "Choisit comment la machine interprète la couleur blanche. Clique sur chaque choix pour voir où le blanc sera imprimé. Les plus utilisés : Support et Sous-uni.",
+          "etat": "actif",
+          "special": "menu_blanc"
+        },
+        {
+          "id": "4.4",
+          "x": 180,
+          "y": 420,
+          "titre": "Spot_2 à Spot_4",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 80,
+            "y": 382,
+            "largeur": 275,
+            "hauteur": 75,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "4.2",
+          "x": 420,
+          "y": 683,
+          "titre": "Couleur d'accompagnement & jeu d'encre",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 308,
+            "y": 670,
+            "largeur": 224,
+            "hauteur": 28,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "4.3",
+          "x": 460,
+          "y": 720,
+          "titre": "Défaut",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 385,
+            "y": 708,
+            "largeur": 155,
+            "hauteur": 24,
+            "libelle": "non utilisé"
+          }
+        }
+      ]
+    },
+    {
+      "id": "t5",
+      "code": "T5",
+      "titre": "Recouvrement (découpe en panneaux)",
+      "groupe": "Propriétés du travail",
+      "intro": "Sert à faire un échantillon à taille réelle : on tire les poignées d'angle de l'aperçu. Essaie !",
+      "type": "capture",
+      "image": "images/t5.jpg",
+      "largeur": 1273,
+      "hauteur": 889,
+      "pastilles": [
+        {
+          "id": "5.1",
+          "x": 230,
+          "y": 213,
+          "titre": "Taille du panneau",
+          "texte": "Non utilisé : on ne règle pas les champs.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 82,
+            "y": 180,
+            "largeur": 372,
+            "hauteur": 312,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "5.2",
+          "x": 230,
+          "y": 310,
+          "titre": "Recouvrement sélectionné",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "5.3",
+          "x": 250,
+          "y": 410,
+          "titre": "Tous les recouvrements",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "5.4",
+          "x": 185,
+          "y": 467,
+          "titre": "Chevauchement",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "5.5",
+          "x": 310,
+          "y": 467,
+          "titre": "Inversion automatique du panneau",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "5.6",
+          "x": 1170,
+          "y": 300,
+          "titre": "Poignées d'angle",
+          "texte": "Attrape une poignée DANS UN ANGLE et tire-la pour délimiter une zone de l'image. Cette zone sera imprimée à taille réelle : c'est un échantillon de test. Ensuite, clique directement sur Envoyer (E).",
+          "conseil": "Uniquement les poignées des angles, pas celles du milieu des côtés.",
+          "etat": "actif",
+          "niveau": "astuce"
+        },
+        {
+          "id": "5.7",
+          "x": 387,
+          "y": 657,
+          "titre": "Remise",
+          "texte": "Remet l'image à sa taille d'origine (annule l'échantillon).",
+          "etat": "actif"
+        }
+      ]
+    },
+    {
+      "id": "t6",
+      "code": "T6",
+      "titre": "Repères et étiquettes",
+      "groupe": "Propriétés du travail",
+      "intro": "Non utilisé en impression murale.",
+      "type": "capture",
+      "image": "images/t6.jpg",
+      "largeur": 1273,
+      "hauteur": 889,
+      "pastilles": [
+        {
+          "id": "6.1",
+          "x": 200,
+          "y": 190,
+          "titre": "Couleur et largeur",
+          "texte": "Non utilisé en impression murale.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 76,
+            "y": 170,
+            "largeur": 500,
+            "hauteur": 640,
+            "libelle": "non utilisé en impression murale"
+          }
+        },
+        {
+          "id": "6.2",
+          "x": 165,
+          "y": 245,
+          "titre": "Imprimer les étiquettes",
+          "texte": "Non utilisé en impression murale.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "6.3",
+          "x": 270,
+          "y": 430,
+          "titre": "Infos de l'étiquette",
+          "texte": "Non utilisé en impression murale.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "6.4",
+          "x": 210,
+          "y": 653,
+          "titre": "Impression des repères",
+          "texte": "Non utilisé en impression murale.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "6.5",
+          "x": 165,
+          "y": 722,
+          "titre": "Lignes de chevauchement",
+          "texte": "Non utilisé en impression murale.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "6.6",
+          "x": 330,
+          "y": 722,
+          "titre": "Bandes couleur",
+          "texte": "Non utilisé en impression murale.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "6.7",
+          "x": 150,
+          "y": 775,
+          "titre": "Ajouter un logo",
+          "texte": "Non utilisé en impression murale.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "t7",
+      "code": "T7",
+      "titre": "Courbes, contraste, netteté",
+      "groupe": "Propriétés du travail",
+      "intro": "Non utilisé : pour la colorimétrie, il vaut mieux utiliser un logiciel de traitement d'image en amont.",
+      "type": "capture",
+      "image": "images/t7.jpg",
+      "largeur": 1274,
+      "hauteur": 888,
+      "pastilles": [
+        {
+          "id": "7.1",
+          "x": 210,
+          "y": 213,
+          "titre": "Canal",
+          "texte": "Permet de modifier la colorimétrie, mais c'est compliqué ici.",
+          "conseil": "Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",
+          "etat": "non_utilise",
+          "niveau": "astuce",
+          "zone": {
+            "x": 76,
+            "y": 170,
+            "largeur": 500,
+            "hauteur": 500,
+            "libelle": "non utilisé · retouche en amont"
+          }
+        },
+        {
+          "id": "7.2",
+          "x": 190,
+          "y": 350,
+          "titre": "Courbe",
+          "texte": "Permet de modifier la colorimétrie, mais c'est compliqué ici.",
+          "conseil": "Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",
+          "etat": "non_utilise",
+          "niveau": "astuce"
+        },
+        {
+          "id": "7.3",
+          "x": 410,
+          "y": 280,
+          "titre": "Entrée / Sortie",
+          "texte": "Permet de modifier la colorimétrie, mais c'est compliqué ici.",
+          "conseil": "Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",
+          "etat": "non_utilise",
+          "niveau": "astuce"
+        },
+        {
+          "id": "7.4",
+          "x": 320,
+          "y": 183,
+          "titre": "Imprimer un négatif",
+          "texte": "Permet de modifier la colorimétrie, mais c'est compliqué ici.",
+          "conseil": "Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",
+          "etat": "non_utilise",
+          "niveau": "astuce"
+        },
+        {
+          "id": "7.5",
+          "x": 290,
+          "y": 582,
+          "titre": "Contraste",
+          "texte": "Permet de modifier la colorimétrie, mais c'est compliqué ici.",
+          "conseil": "Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",
+          "etat": "non_utilise",
+          "niveau": "astuce"
+        },
+        {
+          "id": "7.6",
+          "x": 290,
+          "y": 622,
+          "titre": "Renforcement",
+          "texte": "Permet de modifier la colorimétrie, mais c'est compliqué ici.",
+          "conseil": "Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",
+          "etat": "non_utilise",
+          "niveau": "astuce"
+        },
+        {
+          "id": "7.7",
+          "x": 395,
+          "y": 656,
+          "titre": "Tout réinitialiser",
+          "texte": "Permet de modifier la colorimétrie, mais c'est compliqué ici.",
+          "conseil": "Il est préférable de corriger les couleurs dans un logiciel de traitement d'image, avant d'ajouter le fichier.",
+          "etat": "non_utilise",
+          "niveau": "astuce"
+        }
+      ]
+    },
+    {
+      "id": "t8",
+      "code": "T8",
+      "titre": "Séparations",
+      "groupe": "Propriétés du travail",
+      "intro": "Non utilisé.",
+      "type": "capture",
+      "image": "images/t8.jpg",
+      "largeur": 1279,
+      "hauteur": 888,
+      "pastilles": [
+        {
+          "id": "8.1",
+          "x": 155,
+          "y": 181,
+          "titre": "Imprimer en séparations",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 76,
+            "y": 170,
+            "largeur": 500,
+            "hauteur": 640,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "8.2",
+          "x": 260,
+          "y": 300,
+          "titre": "Canal / Imprimer en",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "t9",
+      "code": "T9",
+      "titre": "Aperçu des canaux de sortie",
+      "groupe": "Propriétés du travail",
+      "intro": "Voir ce que chaque encre va déposer. Coche 9.1 puis clique sur un canal.",
+      "type": "capture",
+      "image": "images/t9.jpg",
+      "largeur": 1274,
+      "hauteur": 889,
+      "pastilles": [
+        {
+          "id": "9.1",
+          "x": 300,
+          "y": 187,
+          "titre": "Aperçu canaux de sortie",
+          "texte": "Coche cette case pour voir chaque canal de couleur séparément. Clique ensuite sur un canal dans la liste (9.2).",
+          "conseil": "Très intéressant pour voir où se trouvera le blanc.",
+          "etat": "actif",
+          "niveau": "astuce"
+        },
+        {
+          "id": "9.2",
+          "x": 330,
+          "y": 300,
+          "titre": "Liste des canaux",
+          "texte": "Cyan, Magenta, Jaune, Noir et Spot_1 (le blanc). Spot_2 à Spot_4 ne sont pas utilisés.",
+          "etat": "actif"
+        },
+        {
+          "id": "9.3",
+          "x": 930,
+          "y": 520,
+          "titre": "Aperçu",
+          "texte": "Affiche le canal sélectionné.",
+          "etat": "actif"
+        }
+      ]
+    },
+    {
+      "id": "t10",
+      "code": "T10",
+      "titre": "Mappage des couleurs",
+      "groupe": "Propriétés du travail",
+      "intro": "Non utilisé.",
+      "type": "capture",
+      "image": "images/t10.jpg",
+      "largeur": 1275,
+      "hauteur": 889,
+      "pastilles": [
+        {
+          "id": "10.1",
+          "x": 150,
+          "y": 205,
+          "titre": "Infos objet",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 76,
+            "y": 170,
+            "largeur": 500,
+            "hauteur": 640,
+            "libelle": "non utilisé"
+          }
+        },
+        {
+          "id": "10.2",
+          "x": 260,
+          "y": 250,
+          "titre": "Table de mappage",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "10.3",
+          "x": 290,
+          "y": 655,
+          "titre": "Couleurs similaires / Plage",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "10.4",
+          "x": 180,
+          "y": 707,
+          "titre": "Nouveau / Edition / Supprimer",
+          "texte": "Non utilisé.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "t11",
+      "code": "T11",
+      "titre": "Blanc et transparence",
+      "groupe": "Propriétés du travail",
+      "intro": "Pas fiable : pas utilisé pour l'instant. On y reviendra plus tard.",
+      "type": "capture",
+      "image": "images/t11.jpg",
+      "largeur": 1277,
+      "hauteur": 890,
+      "pastilles": [
+        {
+          "id": "11.1",
+          "x": 160,
+          "y": 180,
+          "titre": "Création d'un fond transparent",
+          "texte": "Pas fiable : pas utilisé pour l'instant.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 76,
+            "y": 170,
+            "largeur": 500,
+            "hauteur": 640,
+            "libelle": "pas utilisé pour l'instant"
+          }
+        },
+        {
+          "id": "11.2",
+          "x": 290,
+          "y": 207,
+          "titre": "Par couleur / limites / éliminer",
+          "texte": "Pas fiable : pas utilisé pour l'instant.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "11.3",
+          "x": 260,
+          "y": 302,
+          "titre": "Tolérance",
+          "texte": "Pas fiable : pas utilisé pour l'instant.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "11.4",
+          "x": 200,
+          "y": 372,
+          "titre": "Chemins de coupe",
+          "texte": "Pas fiable : pas utilisé pour l'instant.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "11.5",
+          "x": 260,
+          "y": 629,
+          "titre": "Canal",
+          "texte": "Pas fiable : pas utilisé pour l'instant.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "11.6",
+          "x": 255,
+          "y": 656,
+          "titre": "Choix blanc",
+          "texte": "Pas fiable : pas utilisé pour l'instant.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "11.7",
+          "x": 330,
+          "y": 683,
+          "titre": "Densité du blanc",
+          "texte": "Pas fiable : pas utilisé pour l'instant.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "11.8",
+          "x": 330,
+          "y": 712,
+          "titre": "Blanc sous le noir",
+          "texte": "Pas fiable : pas utilisé pour l'instant.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "11.9",
+          "x": 455,
+          "y": 736,
+          "titre": "Marge",
+          "texte": "Pas fiable : pas utilisé pour l'instant.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "11.10",
+          "x": 130,
+          "y": 770,
+          "titre": "Aperçu Transparent / Blanc",
+          "texte": "Pas fiable : pas utilisé pour l'instant.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "tenv",
+      "code": "T-env",
+      "titre": "Envoyer : enregistrer le fichier RIPé",
+      "groupe": "Envoyer",
+      "intro": "S'ouvre avec le bouton « Envoyer » en bas de chaque onglet (T1 à T11). On choisit où enregistrer le fichier RIPé, puis on l'ouvre dans le logiciel DXonJet.",
+      "type": "fenetre_recreee",
+      "fenetre": "enregistrer_sous",
+      "largeur": 900,
+      "hauteur": 600,
+      "pastilles": [
+        {
+          "id": "e.1",
+          "x": 470,
+          "y": 57,
+          "titre": "Dossier d'enregistrement",
+          "texte": "Dossier où sera enregistré le fichier RIPé.",
+          "etat": "actif"
+        },
+        {
+          "id": "e.2",
+          "x": 380,
+          "y": 96,
+          "titre": "Fichiers déjà RIPés",
+          "texte": "Les fichiers déjà présents dans le dossier.",
+          "etat": "actif"
+        },
+        {
+          "id": "e.3",
+          "x": 560,
+          "y": 462,
+          "titre": "Nom du fichier",
+          "texte": "Permet de renommer le fichier RIPé.",
+          "etat": "actif"
+        },
+        {
+          "id": "e.4",
+          "x": 560,
+          "y": 500,
+          "titre": "Type",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "e.5",
+          "x": 870,
+          "y": 92,
+          "titre": "Enregistrer",
+          "texte": "Lance le RIP et enregistre le fichier. Il sera ensuite ouvert dans le logiciel DXonJet pour imprimer.",
+          "etat": "actif"
+        },
+        {
+          "id": "e.6",
+          "x": 870,
+          "y": 128,
+          "titre": "Annuler",
+          "texte": "Ferme la fenêtre sans enregistrer.",
+          "etat": "actif"
+        }
+      ]
+    }
+  ],
+  "navigation": {
+    "onglets_proprietes": {
+      "ecrans": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "t8",
+        "t9",
+        "t10",
+        "t11"
+      ],
+      "y": 155,
+      "x": [
+        88,
+        126,
+        165,
+        203,
+        241,
+        280,
+        318,
+        357,
+        396,
+        434,
+        470
+      ],
+      "reference": {
+        "largeur": 1275,
+        "hauteur": 889
+      }
+    },
+    "boutons_bas": {
+      "reference": {
+        "largeur": 1275,
+        "hauteur": 889
+      },
+      "E": {
+        "titre": "Envoyer",
+        "texte": "Ouvre la fenêtre Enregistrer sous (écran tenv). Valable sur T1 à T11.",
+        "x": 997,
+        "y": 826
+      },
+      "A": {
+        "titre": "Accepter",
+        "texte": "Garde les réglages et met le travail en attente pour plus tard. Valable sur T1 à T11.",
+        "x": 1078,
+        "y": 826
+      }
+    }
+  }
+}

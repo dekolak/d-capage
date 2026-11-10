@@ -1,7 +1,7 @@
 // Service worker minimal : met en cache l'app (pas l'API) pour un démarrage rapide sur chantier.
-const CACHE = 'decapage-v1';
+const CACHE = 'decapage-v2';
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/icone.svg'])));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/icone.svg', '/espaces/kiavik/icone.svg'])));
   self.skipWaiting();
 });
 self.addEventListener('activate', (e) => {

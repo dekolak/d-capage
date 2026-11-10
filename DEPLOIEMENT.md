@@ -47,3 +47,9 @@ ou sauvegarde des volumes `decapage_db` et `decapage_uploads` au niveau du VPS.
 
 ## Mises à jour
 Merge sur `main` → **Redeploy** (ou *Auto Deploy*). Ajouter une machine = un JSON dans `machines/` + redéployer.
+
+## Deuxième adresse : Kiavik (app.kiavikcopilot.ovh)
+La même app sert les deux espaces : l'adresse choisit la marque (nom, couleur, icône).
+1. OVH → zone DNS de `kiavikcopilot.ovh` → entrée **A** `app` → `51.178.183.183`.
+2. Rien à changer dans Coolify : la règle Traefik de `docker-compose.prod.yml` contient déjà les deux adresses. Faire **Redeploy**.
+3. Vérifier `https://app.kiavikcopilot.ovh/api/espace` → `"slug":"kiavik"` (le certificat est créé au premier accès, compter une minute).

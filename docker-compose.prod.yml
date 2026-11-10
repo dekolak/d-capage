@@ -43,7 +43,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=n8n-compose_default"
-      - "traefik.http.routers.decapage.rule=Host(`app.lazzeko.com`)"
+      - "traefik.http.routers.decapage.rule=Host(`app.lazzeko.com`) || Host(`app.kiavikcopilot.ovh`)"
       - "traefik.http.routers.decapage.entrypoints=websecure"
       - "traefik.http.routers.decapage.tls=true"
       - "traefik.http.routers.decapage.tls.certresolver=mytlschallenge"

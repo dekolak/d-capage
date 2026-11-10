@@ -1,7 +1,10 @@
+import { useEffect } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { Annonces } from './components/Annonces';
 import { Chargement } from './components/Composants';
+import { APPS } from './espaces';
 import { useAuth } from './lib/auth';
+import { useEspace } from './lib/espace';
 import Accueil from './pages/Accueil';
 import Admin from './pages/Admin';
 import AdminAnnonces from './pages/AdminAnnonces';
@@ -9,65 +12,70 @@ import AdminAvis from './pages/AdminAvis';
 import AdminCatalogue from './pages/AdminCatalogue';
 import AdminFiches from './pages/AdminFiches';
 import AdminWebhooks from './pages/AdminWebhooks';
-import Aide from './pages/Aide';
-import Communaute from './pages/Communaute';
 import Compte from './pages/Compte';
 import Conditions from './pages/Conditions';
 import Connexion from './pages/Connexion';
-import FicheDetail from './pages/FicheDetail';
-import FicheEditeur from './pages/FicheEditeur';
-import Fiches from './pages/Fiches';
-import Machines from './pages/Machines';
-import Top from './pages/Top';
 
+/**
+ * Une seule app, plusieurs espaces (Lazzeko, Kiavik) : chaque espace a ses écrans et sa barre du bas (src/espaces/),
+ * le compte, les conditions, les messages et l'administration sont communs.
+ */
 export default function App() {
-  const { moi, pret } = useAuth();
+  const { moi, pret, deconnexion } = useAuth();
+  const { espace, choisir } = useEspace();
+  const acces = moi?.espaces.find((e) => e.slug === espace.slug);
+  const autre = moi?.espaces[0];
+
+  // Compte sans accès à l'espace de cette adresse : on ouvre un espace auquel il a accès.
+  useEffect(() => {
+    if (moi && !acces && autre) choisir(autre.slug);
+  }, [moi, acces, autre, choisir]);
+
   if (!pret) return <Chargement />;
   if (!moi) return <Connexion />;
-  if (!moi.conditionsAJour) return <Accueil />;
+  if (!acces)
+    return autre ? <Chargement /> : (
+      <div className="accueil">
+        <h1>Aucun accès</h1>
+        <p className="muted">Votre compte n'a encore accès à aucune fonction. Contactez {espace.nom}.</p>
+        <button type="button" className="btn large" onClick={deconnexion}>Se déconnecter</button>
+      </div>
+    );
+  if (!acces.conditionsAJour) return <Accueil key={espace.slug} />;
 
+  const app = APPS[espace.slug] ?? APPS.lazzeko;
+  const admin = moi.role === 'ADMIN';
   return (
-    <>
+    <div key={espace.slug} className="app-espace">
       <main>
-        {moi.role !== 'ADMIN' && <Annonces />}
+        {!admin && <Annonces />}
         <Routes>
-          <Route path="/" element={<Fiches />} />
-          <Route path="/fiches/nouvelle" element={<FicheEditeur />} />
-          <Route path="/fiches/:id/modifier" element={<FicheEditeur />} />
-          <Route path="/fiches/:id" element={<FicheDetail />} />
-          <Route path="/communaute" element={<Communaute />} />
-          <Route path="/top" element={<Top />} />
-          <Route path="/machines" element={<Machines />} />
+          {app.routes()}
           <Route path="/compte" element={<Compte />} />
           <Route path="/conditions" element={<Conditions />} />
-          <Route path="/aide" element={<Aide />} />
-          {moi.role === 'ADMIN' && <Route path="/admin" element={<Admin />} />}
-          {moi.role === 'ADMIN' && <Route path="/admin/fiches" element={<AdminFiches />} />}
-          {moi.role === 'ADMIN' && <Route path="/admin/avis" element={<AdminAvis />} />}
-          {moi.role === 'ADMIN' && <Route path="/admin/messages" element={<AdminAnnonces />} />}
-          {moi.role === 'ADMIN' && <Route path="/admin/catalogue" element={<AdminCatalogue />} />}
-          {moi.role === 'ADMIN' && <Route path="/admin/webhooks" element={<AdminWebhooks />} />}
+          {admin && <Route path="/admin" element={<Admin />} />}
+          {admin && <Route path="/admin/fiches" element={<AdminFiches />} />}
+          {admin && <Route path="/admin/avis" element={<AdminAvis />} />}
+          {admin && <Route path="/admin/messages" element={<AdminAnnonces />} />}
+          {admin && <Route path="/admin/catalogue" element={<AdminCatalogue />} />}
+          {admin && <Route path="/admin/webhooks" element={<AdminWebhooks />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       <nav className="onglets">
-        <NavLink to="/" end>
-          <Ic d="M4 6h16M4 12h16M4 18h10" />Mes fiches
-        </NavLink>
-        <NavLink to="/fiches/nouvelle" className="plus">
-          <span>+</span>Nouvelle
-        </NavLink>
-        <NavLink to="/communaute">
-          <Ic d="M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6M22 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8" />Communauté
-        </NavLink>
-        <NavLink to="/aide">
-          <Ic d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01" />Aide
-        </NavLink>
-        <NavLink to="/compte">
-          <Ic d="M20 21v-1a5 5 0 0 0-5-5H9a5 5 0 0 0-5 5v1M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />Compte
-        </NavLink>
+        {app.onglets.map((o) =>
+          o.plus ? (
+            <NavLink key={o.to} to={o.to} className="plus">
+              <span>+</span>{o.label}
+            </NavLink>
+          ) : (
+            <NavLink key={o.to} to={o.to} end={o.end}>
+              <Ic d={o.icone!} />{o.label}
+            </NavLink>
+          ),
+        )}
       </nav>
-    </>
+    </div>
   );
 }
 

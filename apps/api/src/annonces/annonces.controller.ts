@@ -1,11 +1,14 @@
 import { Body, Controller, Delete, Get, Header, Param, Patch, Post, Query } from '@nestjs/common';
 import { CibleClient, NiveauAnnonce, Recurrence, Role, TypeQuestion } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, IsArray, IsBoolean, IsDate, IsEnum, IsInt, IsOptional, IsString, IsUrl, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
-import { AutoriseCleApi, Moi, Principal, Roles } from '../auth/decorators';
+import { ArrayMaxSize, IsArray, IsBoolean, IsDate, IsEnum, IsIn, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
+import { AutoriseCleApi, EspaceCourant, Moi, Principal, Roles } from '../auth/decorators';
+import { ESPACES } from '../espaces/espaces';
 import { AnnoncesService } from './annonces.service';
 
 class CiblageDto {
+  /** Espaces où le message s'affiche (vide = tous). */
+  @IsOptional() @IsArray() @IsIn(ESPACES.map((e) => e.slug), { each: true }) espaces?: string[];
   @IsOptional() @IsEnum(CibleClient) cibleClient?: CibleClient;
   @IsOptional() @IsArray() @IsString({ each: true }) fabricantIds?: string[];
   @IsOptional() @IsArray() @IsString({ each: true }) modeleIds?: string[];
@@ -18,7 +21,7 @@ class AnnonceDto extends CiblageDto {
   @IsString() @MinLength(2) @MaxLength(120) titre!: string;
   @IsString() @MinLength(2) @MaxLength(2000) texte!: string;
   @IsOptional() @IsEnum(NiveauAnnonce) niveau?: NiveauAnnonce;
-  @IsOptional() @ValidateIf((_, v) => v !== null && v !== '') @IsUrl({ require_protocol: true }) lienUrl?: string | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null && v !== '') @Matches(/^(https?:\/\/\S+|\/\S*)$/, { message: 'lien : adresse complète (https://…) ou page de l\'app (/…)' }) lienUrl?: string | null;
   @IsOptional() @IsString() @MaxLength(40) lienTexte?: string | null;
   @IsOptional() @Type(() => Date) @IsDate() debut?: Date;
   @IsOptional() @ValidateIf((_, v) => v !== null) @Type(() => Date) @IsDate() fin?: Date | null;
@@ -56,8 +59,8 @@ export class AnnoncesController {
 
   /** Messages à afficher à l'ouverture de l'app. */
   @Get('annonces')
-  pourMoi(@Moi() moi: Principal) {
-    return this.annonces.pourMoi(moi.id);
+  pourMoi(@Moi() moi: Principal, @EspaceCourant() espace: string) {
+    return this.annonces.pourMoi(moi.id, espace);
   }
 
   /** « J'ai compris » : masque le message (jusqu'à la prochaine période pour un message périodique). */

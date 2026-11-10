@@ -4,13 +4,15 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
-import { Public, Roles } from '../auth/decorators';
+import { ModuleRequis, Public, Roles } from '../auth/decorators';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, MIME_IMAGE, StockageService } from '../stockage/stockage.service';
 import { CatalogueService } from './catalogue.service';
 
 type Cible = 'modeles' | 'variantes';
 
+/** Module « Réglages décapage » (espace Lazzeko). */
+@ModuleRequis('reglages-decapage')
 @Controller('catalogue')
 export class CatalogueController {
   constructor(private catalogue: CatalogueService, private prisma: PrismaService, private stockage: StockageService) {}

@@ -1,0 +1,1037 @@
+{
+  "slug": "dxonjet",
+  "nom": "DXonJet (PrintX)",
+  "marque": "kiavik",
+  "description": "Logiciel de la machine : ouvre le fichier RIPé et imprime sur le mur.",
+  "ecrans": [
+    {
+      "id": "dc",
+      "code": "DC",
+      "titre": "Commandes toujours visibles",
+      "groupe": "Commandes",
+      "intro": "Visibles sur tous les menus : la barre de réglages rapides (B), le panneau de commande à droite (P) et le bandeau d'état (S).",
+      "type": "capture",
+      "image": "images/dx/d1.jpg",
+      "largeur": 1462,
+      "hauteur": 882,
+      "pastilles": [
+        {
+          "id": "B.1",
+          "x": 125,
+          "y": 214,
+          "titre": "Paramètre bidirectionnel",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "B.2",
+          "x": 252,
+          "y": 214,
+          "titre": "Aller-retour",
+          "texte": "Choisit si on imprime en montée uniquement, ou en montée et en descente.",
+          "etat": "actif"
+        },
+        {
+          "id": "B.3",
+          "x": 370,
+          "y": 193,
+          "titre": "Sauter le blanc",
+          "texte": "Saute les zones où il n'y a rien à imprimer.",
+          "etat": "actif"
+        },
+        {
+          "id": "B.4",
+          "x": 505,
+          "y": 193,
+          "titre": "Début avec le laser",
+          "texte": "L'impression démarre au niveau du laser rouge.",
+          "etat": "actif"
+        },
+        {
+          "id": "B.5",
+          "x": 628,
+          "y": 193,
+          "titre": "Reprendre l'impression",
+          "texte": "Redémarre une impression stoppée.",
+          "conseil": "Attention : une procédure est à respecter (détaillée plus tard).",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "B.6",
+          "x": 752,
+          "y": 214,
+          "titre": "Mode d'impression",
+          "texte": "Choix du mode de couleur. KCMY : uniquement la couleur. WKCMY : d'abord le blanc, ensuite les couleurs. KCMYW : l'inverse, d'abord les couleurs, ensuite le blanc.",
+          "etat": "actif"
+        },
+        {
+          "id": "B.7",
+          "x": 877,
+          "y": 214,
+          "titre": "Configuration pas à pas",
+          "texte": "Choisit si la machine est en mode roue ou en mode rail (Track).",
+          "etat": "actif"
+        },
+        {
+          "id": "B.8",
+          "x": 1228,
+          "y": 211,
+          "titre": "Vitesse",
+          "texte": "Vitesse de montée et de descente de la machine (ici 30 cm/s).",
+          "etat": "actif"
+        },
+        {
+          "id": "P.1",
+          "x": 983,
+          "y": 253,
+          "titre": "Ouvrir / fermer le panneau",
+          "texte": "Ouvre ou ferme le panneau de commande.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.2",
+          "x": 1035,
+          "y": 261,
+          "titre": "Imprimer",
+          "texte": "Lance l'impression.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.3",
+          "x": 1160,
+          "y": 261,
+          "titre": "Pause",
+          "texte": "Met l'impression en pause.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.4",
+          "x": 1286,
+          "y": 261,
+          "titre": "Arrêter",
+          "texte": "Arrête l'impression.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.5",
+          "x": 1035,
+          "y": 313,
+          "titre": "Test des buses",
+          "texte": "Imprime un test des buses d'impression.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.6",
+          "x": 1160,
+          "y": 313,
+          "titre": "Mode voyage",
+          "texte": "Fait un nettoyage partiellement automatique, puis un nettoyage toutes les 72 h.",
+          "conseil": "Attention : vérifier que la bouteille n'est pas trop pleine.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "P.7",
+          "x": 1286,
+          "y": 313,
+          "titre": "UV manuel",
+          "texte": "Fait une montée et une descente avec les lampes UV.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.8",
+          "x": 1035,
+          "y": 365,
+          "titre": "Vaporisée",
+          "texte": "Vaporise l'encre.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.9",
+          "x": 1160,
+          "y": 365,
+          "titre": "Pompe à encre",
+          "texte": "Active la pompe à encre.",
+          "conseil": "Attention : la pompe reste active. Il faut ré-appuyer pour la désactiver.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "P.10",
+          "x": 1286,
+          "y": 365,
+          "titre": "Nettoyer",
+          "texte": "Vide l'encre devant la tête, pour éviter qu'elle coule partout.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.11",
+          "x": 1030,
+          "y": 421,
+          "titre": "Tête en avant",
+          "texte": "Rapproche la tête d'impression.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.12",
+          "x": 1030,
+          "y": 468,
+          "titre": "Tête en arrière",
+          "texte": "Éloigne la tête d'impression.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.13",
+          "x": 1030,
+          "y": 515,
+          "titre": "Tête automatique",
+          "texte": "Gère automatiquement le rapprochement de la tête d'impression.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.14",
+          "x": 1030,
+          "y": 563,
+          "titre": "Rapide / normal / lent",
+          "texte": "Règle la vitesse de déplacement manuel de la machine : normale ou lente.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.15",
+          "x": 1260,
+          "y": 490,
+          "titre": "Flèches et maison",
+          "texte": "Font bouger la machine.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.16",
+          "x": 1035,
+          "y": 610,
+          "titre": "步进参数 (paramètre de pas)",
+          "texte": "Inutile.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "P.17",
+          "x": 1100,
+          "y": 667,
+          "titre": "Point bas de l'impression",
+          "texte": "Règle le point bas de démarrage de l'impression.",
+          "etat": "actif"
+        },
+        {
+          "id": "P.18",
+          "x": 1293,
+          "y": 667,
+          "titre": "Point le plus haut",
+          "texte": "Met une sécurité : hauteur maximale que la machine peut parcourir.",
+          "etat": "actif"
+        },
+        {
+          "id": "S.1",
+          "x": 110,
+          "y": 780,
+          "titre": "Hors ligne / connecté",
+          "texte": "Indique si la machine est connectée ou non.",
+          "etat": "actif"
+        },
+        {
+          "id": "S.2",
+          "x": 640,
+          "y": 762,
+          "titre": "Format d'impression",
+          "texte": "Indique la taille maximale que la machine peut imprimer.",
+          "etat": "actif"
+        }
+      ]
+    },
+    {
+      "id": "d1",
+      "code": "D1",
+      "titre": "Sélection de fichier",
+      "groupe": "D1 · Sélection de fichier",
+      "intro": "On choisit le fichier RIPé à imprimer : dossier, puis fichier.",
+      "type": "capture",
+      "image": "images/dx/d1.jpg",
+      "largeur": 1462,
+      "hauteur": 882,
+      "pastilles": [
+        {
+          "id": "1.1",
+          "x": 215,
+          "y": 350,
+          "titre": "Arborescence",
+          "texte": "Sélection du dossier où se trouve le fichier à imprimer.",
+          "conseil": "Attention : si le fichier RIPé n'apparaît pas alors qu'il a bien été RIPé, il faut changer de dossier puis revenir dessus pour rafraîchir la liste.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "1.2",
+          "x": 215,
+          "y": 620,
+          "titre": "Contenu du dossier",
+          "texte": "Les fichiers du dossier sélectionné : on clique sur celui à imprimer.",
+          "etat": "actif"
+        },
+        {
+          "id": "1.3",
+          "x": 667,
+          "y": 460,
+          "titre": "Aperçu",
+          "texte": "Une vue du fichier sélectionné.",
+          "etat": "actif"
+        },
+        {
+          "id": "1.4",
+          "x": 435,
+          "y": 705,
+          "titre": "创建RIP任务 (créer une tâche RIP)",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "1.5",
+          "x": 898,
+          "y": 702,
+          "titre": "Double jet latéral",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "d2",
+      "code": "D2",
+      "titre": "Contrôle de l'impression",
+      "groupe": "D2 · Contrôle de l'impression",
+      "intro": "Suivi de l'impression : en cours, historique et consommation d'encre.",
+      "type": "capture",
+      "image": "images/dx/d2.jpg",
+      "largeur": 1459,
+      "hauteur": 880,
+      "pastilles": [
+        {
+          "id": "2.1",
+          "x": 215,
+          "y": 480,
+          "titre": "Historique",
+          "texte": "L'historique des impressions.",
+          "etat": "actif"
+        },
+        {
+          "id": "2.2",
+          "x": 290,
+          "y": 734,
+          "titre": "Activité / Histoire",
+          "texte": "Onglets pour passer de l'activité à l'historique.",
+          "etat": "actif"
+        },
+        {
+          "id": "2.3",
+          "x": 665,
+          "y": 380,
+          "titre": "Impression en cours",
+          "texte": "Vue de l'impression en cours.",
+          "etat": "actif"
+        },
+        {
+          "id": "2.4",
+          "x": 655,
+          "y": 640,
+          "titre": "Infos du fichier",
+          "texte": "Informations du fichier et quantité d'encre utilisée pour l'impression.",
+          "etat": "actif"
+        }
+      ]
+    },
+    {
+      "id": "d3a",
+      "code": "D3-a",
+      "titre": "Réglage des paramètres · Paramètres d'impression",
+      "groupe": "D3 · Réglage des paramètres",
+      "intro": "Réglages d'impression : plage, distance du mur, vitesse de la tête et retard de mouvement.",
+      "type": "capture",
+      "image": "images/dx/d3a.jpg",
+      "largeur": 1458,
+      "hauteur": 879,
+      "pastilles": [
+        {
+          "id": "a.1",
+          "x": 310,
+          "y": 285,
+          "titre": "Mode de protection d'encre (plage)",
+          "texte": "La plage élargit le dégradé de superposition des passes. Plus le dégradé est grand, plus l'impression est régulière, surtout sur les aplats.",
+          "conseil": "Attention : plus la plage est grande, plus le temps d'impression s'allonge.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "a.2",
+          "x": 310,
+          "y": 455,
+          "titre": "Mode de couleur",
+          "texte": "Mêmes réglages que le mode d'impression de la barre B (B.6) : KCMY, WKCMY…",
+          "etat": "actif"
+        },
+        {
+          "id": "a.3",
+          "x": 555,
+          "y": 320,
+          "titre": "Ensemble de têtes",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.4",
+          "x": 520,
+          "y": 441,
+          "titre": "Distance du mur",
+          "texte": "Distance de la tête par rapport au mur.",
+          "conseil": "Attention : seul le retard de mouvement (a.6) peut être modifié pendant l'impression. Les réglages a.4 et a.5 se font à l'arrêt : l'idéal est de faire Pause, reculer la tête, modifier le réglage, remettre la tête en automatique, puis relancer l'impression.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "a.5",
+          "x": 690,
+          "y": 471,
+          "titre": "Vitesse de l'axe Z",
+          "texte": "Vitesse à laquelle la tête bouge d'avant en arrière.",
+          "conseil": "Attention : seul le retard de mouvement (a.6) peut être modifié pendant l'impression. Les réglages a.4 et a.5 se font à l'arrêt : l'idéal est de faire Pause, reculer la tête, modifier le réglage, remettre la tête en automatique, puis relancer l'impression.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        },
+        {
+          "id": "a.6",
+          "x": 520,
+          "y": 501,
+          "titre": "Retard de mouvement",
+          "texte": "Pause en haut et pause en bas, quand la machine se déplace de gauche à droite.",
+          "conseil": "C'est le seul réglage de cet écran qui peut être modifié pendant l'impression.",
+          "etat": "actif",
+          "niveau": "astuce"
+        },
+        {
+          "id": "a.7",
+          "x": 520,
+          "y": 593,
+          "titre": "Lire les paramètres",
+          "texte": "Permet de vérifier les réglages enregistrés.",
+          "etat": "actif"
+        },
+        {
+          "id": "a.8",
+          "x": 633,
+          "y": 593,
+          "titre": "Appliquer",
+          "texte": "Valide les réglages.",
+          "conseil": "Attention : seul le retard de mouvement (a.6) peut être modifié pendant l'impression. Les réglages a.4 et a.5 se font à l'arrêt : l'idéal est de faire Pause, reculer la tête, modifier le réglage, remettre la tête en automatique, puis relancer l'impression.",
+          "etat": "actif",
+          "niveau": "avertissement"
+        }
+      ]
+    },
+    {
+      "id": "d3b",
+      "code": "D3-b",
+      "titre": "Réglage des paramètres · Limite d'encre",
+      "groupe": "D3 · Réglage des paramètres",
+      "intro": "On n'y touche pas.",
+      "type": "capture",
+      "image": "images/dx/d3b.jpg",
+      "largeur": 1460,
+      "hauteur": 882,
+      "pastilles": [
+        {
+          "id": "b.1",
+          "x": 282,
+          "y": 261,
+          "titre": "Réduire la valeur du gris",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 190,
+            "y": 236,
+            "largeur": 770,
+            "hauteur": 505,
+            "libelle": "on n'y touche pas"
+          }
+        },
+        {
+          "id": "b.2",
+          "x": 400,
+          "y": 340,
+          "titre": "Color_CH1 à CH8 (%)",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "b.3",
+          "x": 590,
+          "y": 446,
+          "titre": "应用 (Appliquer)",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "d3c",
+      "code": "D3-c",
+      "titre": "Réglage des paramètres · Importer / Exporter",
+      "groupe": "D3 · Réglage des paramètres",
+      "intro": "On n'y touche pas.",
+      "type": "capture",
+      "image": "images/dx/d3c.jpg",
+      "largeur": 1458,
+      "hauteur": 880,
+      "pastilles": [
+        {
+          "id": "c.1",
+          "x": 235,
+          "y": 275,
+          "titre": "Exporter",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 190,
+            "y": 236,
+            "largeur": 770,
+            "hauteur": 505,
+            "libelle": "on n'y touche pas"
+          }
+        },
+        {
+          "id": "c.2",
+          "x": 359,
+          "y": 275,
+          "titre": "Importer",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "d4a",
+      "code": "D4-a",
+      "titre": "Calibrage · Calibrage des buses",
+      "groupe": "D4 · Calibrage",
+      "intro": "Calibrage des buses : seul le réglage du bas (Offre / Composition) est utilisé.",
+      "type": "capture",
+      "image": "images/dx/d4a.jpg",
+      "largeur": 1462,
+      "hauteur": 880,
+      "pastilles": [
+        {
+          "id": "a.1",
+          "x": 490,
+          "y": 265,
+          "titre": "Sélectionner le média",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 190,
+            "y": 236,
+            "largeur": 775,
+            "hauteur": 428,
+            "libelle": "on n'y touche pas"
+          }
+        },
+        {
+          "id": "a.2",
+          "x": 495,
+          "y": 318,
+          "titre": "Réglage de la tête",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.3",
+          "x": 280,
+          "y": 440,
+          "titre": "Alimentation COMP",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.4",
+          "x": 500,
+          "y": 404,
+          "titre": "Aligner plusieurs têtes",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.5",
+          "x": 380,
+          "y": 645,
+          "titre": "Impulsion d'alimentation",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.6",
+          "x": 640,
+          "y": 702,
+          "titre": "Aligner la composition (Offre)",
+          "texte": "Seul réglage de cet écran qu'on utilise : la valeur Offre (ex. 94) et le bouton Composition des encres.",
+          "conseil": "Rôle exact à compléter par Teddy.",
+          "etat": "actif",
+          "niveau": "a_completer"
+        }
+      ]
+    },
+    {
+      "id": "d4b",
+      "code": "D4-b",
+      "titre": "Calibrage · Position de la buse",
+      "groupe": "D4 · Calibrage",
+      "intro": "Position de la buse : seul le décalage du laser rouge (b.1) est utilisé.",
+      "type": "capture",
+      "image": "images/dx/d4b.jpg",
+      "largeur": 1462,
+      "hauteur": 882,
+      "pastilles": [
+        {
+          "id": "b.1",
+          "x": 420,
+          "y": 252,
+          "titre": "Décalage papier (laser rouge)",
+          "texte": "Règle le décalage du laser rouge. On pointe le laser là où on veut commencer l'impression : si l'impression démarre décalée, c'est ici qu'on corrige.",
+          "etat": "actif"
+        },
+        {
+          "id": "b.2",
+          "x": 435,
+          "y": 390,
+          "titre": "Canaux 1G",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 190,
+            "y": 296,
+            "largeur": 1012,
+            "hauteur": 440,
+            "libelle": "on n'y touche pas"
+          }
+        },
+        {
+          "id": "b.3",
+          "x": 435,
+          "y": 470,
+          "titre": "Canaux 2G",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "b.4",
+          "x": 900,
+          "y": 265,
+          "titre": "Forme d'onde / vitesse",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "b.5",
+          "x": 1010,
+          "y": 520,
+          "titre": "Couleur du canal",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "b.6",
+          "x": 1023,
+          "y": 712,
+          "titre": "Appliquer",
+          "texte": "On n'y touche pas.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "d5a",
+      "code": "D5-a",
+      "titre": "Maintenance · Fonction auxiliaire",
+      "groupe": "D5 · Maintenance",
+      "intro": "Menu technique : non utilisé.",
+      "type": "capture",
+      "image": "images/dx/d5a.jpg",
+      "largeur": 1458,
+      "hauteur": 879,
+      "pastilles": [
+        {
+          "id": "a.1",
+          "x": 265,
+          "y": 296,
+          "titre": "Activer le chauffage",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 190,
+            "y": 236,
+            "largeur": 1012,
+            "hauteur": 507,
+            "libelle": "menu technique · non utilisé"
+          }
+        },
+        {
+          "id": "a.2",
+          "x": 370,
+          "y": 330,
+          "titre": "Températures",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.3",
+          "x": 258,
+          "y": 387,
+          "titre": "Appliquer",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "d5b",
+      "code": "D5-b",
+      "titre": "Maintenance · Contrôle de la plateforme",
+      "groupe": "D5 · Maintenance",
+      "intro": "Menu technique : non utilisé.",
+      "type": "capture",
+      "image": "images/dx/d5b.jpg",
+      "largeur": 1460,
+      "hauteur": 878,
+      "pastilles": [
+        {
+          "id": "b.1",
+          "x": 400,
+          "y": 290,
+          "titre": "Contrôle de lampe",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 190,
+            "y": 236,
+            "largeur": 1012,
+            "hauteur": 507,
+            "libelle": "menu technique · non utilisé"
+          }
+        },
+        {
+          "id": "b.2",
+          "x": 530,
+          "y": 290,
+          "titre": "Tester",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "b.3",
+          "x": 275,
+          "y": 368,
+          "titre": "Correspondance / retard / distance",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "b.4",
+          "x": 471,
+          "y": 714,
+          "titre": "Appliquer",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "d6a",
+      "code": "D6-a",
+      "titre": "Paramètres avancés · Paramètres du logiciel",
+      "groupe": "D6 · Paramètres avancés",
+      "intro": "Menu technique : non utilisé.",
+      "type": "capture",
+      "image": "images/dx/d6a.jpg",
+      "largeur": 1461,
+      "hauteur": 879,
+      "pastilles": [
+        {
+          "id": "a.1",
+          "x": 400,
+          "y": 278,
+          "titre": "Langue d'affichage",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 190,
+            "y": 236,
+            "largeur": 1012,
+            "hauteur": 507,
+            "libelle": "menu technique · non utilisé"
+          }
+        },
+        {
+          "id": "a.2",
+          "x": 400,
+          "y": 307,
+          "titre": "Unité",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.3",
+          "x": 400,
+          "y": 336,
+          "titre": "Sélectionner",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.4",
+          "x": 511,
+          "y": 417,
+          "titre": "Appliquer",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "d6b",
+      "code": "D6-b",
+      "titre": "Paramètres avancés · Interface de communication",
+      "groupe": "D6 · Paramètres avancés",
+      "intro": "Menu technique : non utilisé.",
+      "type": "capture",
+      "image": "images/dx/d6b.jpg",
+      "largeur": 1459,
+      "hauteur": 879,
+      "pastilles": [
+        {
+          "id": "b.1",
+          "x": 505,
+          "y": 300,
+          "titre": "Canaux / IP",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 190,
+            "y": 236,
+            "largeur": 1012,
+            "hauteur": 507,
+            "libelle": "menu technique · non utilisé"
+          }
+        },
+        {
+          "id": "b.2",
+          "x": 335,
+          "y": 555,
+          "titre": "Ajouter / Supprimer / Actualiser",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "b.3",
+          "x": 531,
+          "y": 555,
+          "titre": "Définir la fin d'impression",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "b.4",
+          "x": 757,
+          "y": 590,
+          "titre": "Appliquer",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "d7a",
+      "code": "D7-a",
+      "titre": "Informations · Version",
+      "groupe": "D7 · Informations",
+      "intro": "Menu technique : non utilisé.",
+      "type": "capture",
+      "image": "images/dx/d7a.jpg",
+      "largeur": 1456,
+      "hauteur": 879,
+      "pastilles": [
+        {
+          "id": "a.1",
+          "x": 262,
+          "y": 259,
+          "titre": "Version du firmware",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 190,
+            "y": 236,
+            "largeur": 1012,
+            "hauteur": 507,
+            "libelle": "menu technique · non utilisé"
+          }
+        },
+        {
+          "id": "a.2",
+          "x": 390,
+          "y": 259,
+          "titre": "Mise à jour du firmware",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.3",
+          "x": 395,
+          "y": 298,
+          "titre": "Version PrintX",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "a.4",
+          "x": 520,
+          "y": 470,
+          "titre": "Informations détaillées",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        }
+      ]
+    },
+    {
+      "id": "d7b",
+      "code": "D7-b",
+      "titre": "Informations · Impression",
+      "groupe": "D7 · Informations",
+      "intro": "Menu technique : non utilisé.",
+      "type": "capture",
+      "image": "images/dx/d7b.jpg",
+      "largeur": 1461,
+      "hauteur": 882,
+      "pastilles": [
+        {
+          "id": "b.1",
+          "x": 362,
+          "y": 345,
+          "titre": "Informations sur l'impression",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise",
+          "zone": {
+            "x": 190,
+            "y": 236,
+            "largeur": 1012,
+            "hauteur": 507,
+            "libelle": "menu technique · non utilisé"
+          }
+        },
+        {
+          "id": "b.2",
+          "x": 686,
+          "y": 345,
+          "titre": "Informations sur l'encre",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "b.3",
+          "x": 985,
+          "y": 290,
+          "titre": "Mot de passe de la scène",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        },
+        {
+          "id": "b.4",
+          "x": 525,
+          "y": 620,
+          "titre": "Historique des impressions",
+          "texte": "Menu technique : non utilisé.",
+          "etat": "non_utilise"
+        }
+      ]
+    }
+  ],
+  "navigation": {
+    "menus_haut": {
+      "y": 150,
+      "boutons": [
+        {
+          "code": "D1",
+          "x": 243,
+          "ecran": "d1"
+        },
+        {
+          "code": "D2",
+          "x": 377,
+          "ecran": "d2"
+        },
+        {
+          "code": "D3",
+          "x": 511,
+          "ecran": "d3a"
+        },
+        {
+          "code": "D4",
+          "x": 645,
+          "ecran": "d4a"
+        },
+        {
+          "code": "D5",
+          "x": 787,
+          "ecran": "d5a"
+        },
+        {
+          "code": "D6",
+          "x": 926,
+          "ecran": "d6a"
+        },
+        {
+          "code": "D7",
+          "x": 1060,
+          "ecran": "d7a"
+        },
+        {
+          "code": "D8",
+          "x": 1195,
+          "ecran": null,
+          "titre": "Quitter",
+          "texte": "Ferme le logiciel DXonJet."
+        }
+      ]
+    },
+    "sous_menus": {
+      "x": 123,
+      "y_premier": 248,
+      "ecart": 33,
+      "groupes": {
+        "d3": [
+          "d3a",
+          "d3b",
+          "d3c"
+        ],
+        "d4": [
+          "d4a",
+          "d4b"
+        ],
+        "d5": [
+          "d5a",
+          "d5b"
+        ],
+        "d6": [
+          "d6a",
+          "d6b"
+        ],
+        "d7": [
+          "d7a",
+          "d7b"
+        ]
+      }
+    }
+  }
+}

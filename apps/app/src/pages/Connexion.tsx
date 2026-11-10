@@ -1,8 +1,10 @@
 import { FormEvent, useState } from 'react';
 import { useAuth } from '../lib/auth';
+import { useEspace } from '../lib/espace';
 
 export default function Connexion() {
   const { connexion } = useAuth();
+  const { espace } = useEspace();
   const [identifiant, setId] = useState('');
   const [motDePasse, setMdp] = useState('');
   const [erreur, setErreur] = useState('');
@@ -23,8 +25,8 @@ export default function Connexion() {
 
   return (
     <div className="connexion">
-      <img src="/icone.svg" alt="" width={72} height={72} />
-      <h1>Réglages décapage</h1>
+      <img src={`${espace.icones}icone.svg`} alt="" width={72} height={72} />
+      <h1>{espace.nomApp}</h1>
       <form onSubmit={soumettre} className="form">
         <label>
           Identifiant
