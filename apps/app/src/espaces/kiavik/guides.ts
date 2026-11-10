@@ -7,6 +7,8 @@ export interface Pastille {
   id: string; x: number; y: number; titre: string; texte: string;
   conseil?: string; niveau?: 'avertissement' | 'astuce' | 'a_completer';
   etat?: 'actif' | 'non_utilise' | 'preregle'; zone?: Zone; special?: string;
+  /** Mots-clés pour la recherche (synonymes, mots du client : « bouché », « pause »…). */
+  mots_cles?: string[];
 }
 export interface Ecran {
   id: string; code: string; titre: string; groupe: string; intro?: string;
@@ -37,23 +39,31 @@ export interface Navigation {
 /** Pastille de navigation : vers un autre écran (`vers`) ou simple information (`info`). */
 export interface PastilleNav { id: string; label: string; x: number; y: number; vers?: string; info?: Pastille; actif?: boolean }
 
-const cache = new Map<string, Guide>();
+const cache = new Map<string, Promise<Guide>>();
+
+/** Guide complet (gardé en mémoire pendant la session). */
+export function chargerGuide(slug: string): Promise<Guide> {
+  let p = cache.get(slug);
+  if (!p) {
+    p = api<Guide>(`/guides/${slug}`);
+    p.catch(() => cache.delete(slug));
+    cache.set(slug, p);
+  }
+  return p;
+}
 
 export function useGuide(slug: string) {
-  const [guide, setGuide] = useState<Guide | undefined>(cache.get(slug));
+  const [guide, setGuide] = useState<Guide>();
   const [erreur, setErreur] = useState<unknown>();
   useEffect(() => {
-    if (cache.has(slug)) {
-      setGuide(cache.get(slug));
-      return;
-    }
+    let actif = true;
     setGuide(undefined);
-    api<Guide>(`/guides/${slug}`)
-      .then((g) => {
-        cache.set(slug, g);
-        setGuide(g);
-      })
-      .catch(setErreur);
+    chargerGuide(slug)
+      .then((g) => actif && setGuide(g))
+      .catch((e) => actif && setErreur(e));
+    return () => {
+      actif = false;
+    };
   }, [slug]);
   return { guide, erreur };
 }

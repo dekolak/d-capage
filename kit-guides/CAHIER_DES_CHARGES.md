@@ -56,7 +56,7 @@ Liste extensible (ajouter un module = une ligne en base ou dans le seed, pas de 
 
 ### Format (voir les JSON)
 - `ecrans[]` : `id`, `code` (filigrane, ex. `T3`, `D3-a`), `titre`, `groupe` (menu repliable), `intro`, `type` (`capture` ou `fenetre_recreee`), `image`, `largeur`, `hauteur`, `pastilles[]`.
-- `pastilles[]` : `id` (ex. `3.2`, `B.5`), `x`, `y` **en pixels de l'image** (afficher en % : x/largeur, y/hauteur), `titre`, `texte`, `conseil` (facultatif), `niveau`, `etat`, `zone` (facultatif), `special` (facultatif).
+- `pastilles[]` : `id` (ex. `3.2`, `B.5`), `x`, `y` **en pixels de l'image** (afficher en % : x/largeur, y/hauteur), `titre`, `texte`, `conseil` (facultatif), `niveau`, `etat`, `zone` (facultatif), `special` (facultatif), `mots_cles` (facultatif, liste de mots pour la recherche).
   - `etat` : `actif` (pastille bleue), `non_utilise` (pastille grise), `preregle` (grise, réglage automatique).
   - `zone` : rectangle voilé sur la capture (gris pour non utilisé, orange léger pour préréglé) avec son `libelle`.
   - `niveau` du conseil : `avertissement` (encadré rouge ⚠️), `astuce` (💡), `a_completer` (bleu — **visible seulement par l'admin**).

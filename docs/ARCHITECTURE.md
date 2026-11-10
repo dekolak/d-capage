@@ -72,6 +72,7 @@ docs/                       documentation
 - `GET /api/guides/:slug` exige le module `guide-<slug>` (`@ModuleRequis` accepte une fonction de la requête). Les conseils `a_completer` ne partent qu'à l'admin.
 - `modes-blanc.json` est rattaché à l'écran qu'il cite (`ecran: "t4"`) et renvoyé dans `modesBlanc`.
 - App (`apps/app/src/espaces/kiavik/`) : `/guides` (liste, ouvre directement s'il n'y a qu'un guide), `/guides/<guide>/<écran>?p=<pastille>`. Capture + pastilles (en % de l'image), zones voilées, pastilles de navigation tirées de `navigation` (onglets T1–T11, boutons E / A, menus D1–D8 et sous-menus), fiche en bas d'écran, zoom 240 %, menu repliable par groupe, liste des repères, fenêtres Windows recréées (`Fenetres.tsx`). Admin : option « afficher les repères » (filigrane du code écran).
+- **Recherche** (`/recherche`, `recherche.ts`) : sur le téléphone, dans les guides du compte (titre, `mots_cles`, texte et conseil des pastilles, titre de l'écran). Sans accents, début de mot, une faute de frappe tolérée. Un résultat ouvre l'écran sur le repère (`?p=`). Plus tard : procédures et animations dans les résultats.
 
 ## Données (apps/api/prisma/schema.prisma)
 | Table | Rôle |
