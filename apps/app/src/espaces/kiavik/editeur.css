@@ -73,3 +73,4 @@ main:has(.ed) { max-width: 1440px; }
 .dg-texte { margin: 0; white-space: pre-wrap; font: inherit; font-size: 14px; background: var(--fond); padding: 10px; border-radius: var(--r-sm); width: 100%; box-sizing: border-box; }
 .dg-message { margin: 0; font-style: italic; }
 .ed-ligne:not(:has(> .ed-li))::before { display: none; }
+.ed-actions { display: flex; gap: 10px; flex-wrap: wrap; }

@@ -104,7 +104,7 @@ export default function Recherche() {
               <div className="gx-resultats">
                 {procs.map((p) => (
                   <Link key={p.id} className="carte gx-resultat" to={`/procedures/${p.id}`}>
-                    <b>📋 {p.titre}</b>
+                    <b>{p.diagnostic ? '🩺' : '📋'} {p.titre}</b>
                     {p.resume && <span className="muted petit">{p.resume}</span>}
                   </Link>
                 ))}

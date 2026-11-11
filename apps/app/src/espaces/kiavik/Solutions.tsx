@@ -4,6 +4,7 @@ import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { t } from '../../lib/i18n';
+import { CaptureBouton } from './CaptureBouton';
 import { ImageApi, lienGuide, Solution, useProcedures, useSolutions } from './donneesProcedures';
 import { Animation, chargerGuide } from './guides';
 import { normaliser } from './recherche';
@@ -70,6 +71,7 @@ export function SolutionDetail() {
   const [s, setS] = useState<Solution>();
   const [erreur, setErreur] = useState<unknown>();
   const [grand, setGrand] = useState(false);
+  const [apercu, setApercu] = useState(false); // « Voir le bouton » sans quitter la fiche
   const { liste: procedures } = useProcedures();
   const [anims, setAnims] = useState<Animation[]>([]);
   useEffect(() => {
@@ -108,12 +110,25 @@ export function SolutionDetail() {
         {s.photo && <ImageApi chemin={s.photo} className="gx-etape-photo" onClick={() => setGrand(true)} />}
       </div>
       <div className="gx-proc-lies">
-        {lien && <Link to={lien} className="btn petit">{s.pastille ? t('kiavik.procedures.voirBoutonId', { id: s.pastille }) : t('kiavik.procedures.voirBouton')}</Link>}
+        {lien && (
+          <button type="button" className="btn petit" onClick={() => setApercu(true)}>
+            {s.pastille ? t('kiavik.procedures.voirBoutonId', { id: s.pastille }) : t('kiavik.procedures.voirBouton')}
+          </button>
+        )}
         {anims.map((a) => (
           <Link key={a.id} to={`/guides/${s.guide}/animation/${a.id}`} className="btn petit">{t('kiavik.guide.voirAnimation', { titre: a.titre })}</Link>
         ))}
         {proc && <Link to={`/procedures/${proc.id}`} className="btn petit">{t('kiavik.guide.voirProcedure', { titre: proc.titre })}</Link>}
       </div>
+      {apercu && s.guide && s.ecran && (
+        <div className="pv-fond" onClick={() => setApercu(false)}>
+          <div className="pv-fiche" role="dialog" aria-modal="true" onClick={(x) => x.stopPropagation()}>
+            <button type="button" className="gx-fermer" aria-label={t('commun.fermer')} onClick={() => setApercu(false)}>✕</button>
+            <h3>{s.titre}</h3>
+            <CaptureBouton guide={s.guide} ecran={s.ecran} pastille={s.pastille} />
+          </div>
+        </div>
+      )}
       {grand && s.photo && (
         <div className="gx-plein" onClick={() => setGrand(false)}>
           <ImageApi chemin={s.photo} />
