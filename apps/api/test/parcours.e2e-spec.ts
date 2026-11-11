@@ -494,7 +494,15 @@ describe('Parcours complet', () => {
     const ph = await http.post(`/api/admin/procedures/etapes/${e2}/photo`).set(auth(admin)).attach('photo', JPEG, 'a.jpg');
     expect(ph.status).toBe(201);
     const urlPhoto = ph.body.etapes[0].photo;
-    expect(urlPhoto).toContain(`/procedures/etapes/${e2}/photo`);
+    expect(urlPhoto).toBe(`/procedures/photos/${ph.body.etapes[0].photos[0].id}`);
+    // plusieurs photos : ajout à la fin, ordre, suppression d'une seule
+    const ph2 = (await http.post(`/api/admin/procedures/etapes/${e2}/photo`).set(auth(admin)).attach('photo', JPEG, 'b.jpg')).body.etapes[0].photos;
+    expect(ph2).toHaveLength(2);
+    const inv = (await http.post(`/api/admin/procedures/photos/${ph2[1].id}/deplacer`).set(auth(admin)).send({ sens: -1 })).body.etapes[0].photos;
+    expect(inv.map((x: any) => x.id)).toEqual([ph2[1].id, ph2[0].id]);
+    const une = (await http.delete(`/api/admin/procedures/photos/${ph2[1].id}`).set(auth(admin))).body.etapes[0];
+    expect(une.photos.map((x: any) => x.id)).toEqual([ph2[0].id]);
+    expect(une.photo).toBe(urlPhoto);
 
     // le client ne voit pas le brouillon, ni sa photo ; ne peut pas modifier
     expect((await http.get(`/api/procedures/${p.id}`).set(P)).status).toBe(404);
@@ -587,7 +595,9 @@ describe('Parcours complet', () => {
     expect(qcp.id).not.toBe(q.id);
     expect(qcp.choix[0]).toMatchObject({ libelle: 'Oui', suite: 'etape', etapeCibleId: allumerCp.id });
     expect(cp.etapes.find((e: any) => e.brancheId === qcp.choix[1].id).texte).toBe('Vérifier le bouton Pompe');
-    expect(allumerCp.photo).toContain(`/procedures/etapes/${allumerCp.id}/photo`);
+    expect(allumerCp.photos).toHaveLength(1);
+    expect(allumerCp.photo).toBe(`/procedures/photos/${allumerCp.photos[0].id}`);
+    expect((await http.get(`/api/procedures/etapes/${allumerCp.id}/photo`).set(A)).headers['content-type']).toBe('image/jpeg'); // ancienne adresse
     expect((await http.get(`/api${allumerCp.photo}`).set(A)).headers['content-type']).toBe('image/jpeg');
     expect((await http.post(`/api/admin/procedures/${p.id}/dupliquer`).set(C)).status).toBe(403);
     await http.delete(`/api/admin/procedures/${cp.id}`).set(A).expect(200);

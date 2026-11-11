@@ -12,7 +12,11 @@ export interface ChoixDto {
   conclusion?: string | null; solutionId?: string | null; procedureCibleId?: string | null;
 }
 
-const avecEtapes = { etapes: { orderBy: { ordre: 'asc' }, include: { choix: { orderBy: { ordre: 'asc' } } } } } satisfies Prisma.ProcedureInclude;
+const avecEtapes = {
+  etapes: { orderBy: { ordre: 'asc' }, include: { choix: { orderBy: { ordre: 'asc' } }, photos: { orderBy: { ordre: 'asc' } } } },
+} satisfies Prisma.ProcedureInclude;
+/** Photos par étape, au plus. */
+export const MAX_PHOTOS = 8;
 type ProcedureComplete = Prisma.ProcedureGetPayload<{ include: typeof avecEtapes }>;
 
 /** Procédures Kiavik : lecture pour les clients (publiées), édition pour l'admin. */
@@ -25,10 +29,12 @@ export class ProceduresService {
     return {
       id: p.id, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee, ordre: p.ordre, updatedAt: p.updatedAt,
       ...(admin ? { description: p.description, prompt: p.prompt, resumeIa: p.resumeIa, resumeIaLe: p.resumeIaLe } : {}),
-      etapes: p.etapes.map(({ photoCle, photoMaj, procedureId: _p, note, choix, ...e }) => ({
+      etapes: p.etapes.map(({ photos, procedureId: _p, note, choix, ...e }) => ({
         ...e,
         ...(admin ? { note } : {}),
-        photo: photoCle ? `/procedures/etapes/${e.id}/photo?v=${photoMaj?.getTime() ?? 0}` : null,
+        // adresse fixe par photo (une photo n'est jamais modifiée, seulement ajoutée ou supprimée)
+        photos: photos.map((ph) => ({ id: ph.id, url: `/procedures/photos/${ph.id}` })),
+        photo: photos[0] ? `/procedures/photos/${photos[0].id}` : null,
         choix: choix.map(({ etapeId: _e, signification, ...c }) => ({ ...c, ...(admin ? { signification } : {}) })),
       })),
     };
@@ -101,9 +107,9 @@ export class ProceduresService {
           },
         });
         idEtape.set(e.id, n.id);
-        if (e.photoCle) {
-          const cle = `procedures/${copie.id}/${n.id}-${Date.now()}.${e.photoCle.split('.').pop()}`;
-          if (await this.stockage.copier(e.photoCle, cle)) await this.prisma.etapeProcedure.update({ where: { id: n.id }, data: { photoCle: cle, photoMaj: new Date() } });
+        for (const ph of e.photos) {
+          const cle = `procedures/${copie.id}/${n.id}-${Date.now()}-${ph.ordre}.${ph.cle.split('.').pop()}`;
+          if (await this.stockage.copier(ph.cle, cle)) await this.prisma.photoEtape.create({ data: { etapeId: n.id, ordre: ph.ordre, cle } });
         }
         for (const c of e.choix) {
           const nc = await this.prisma.choixEtape.create({
@@ -129,9 +135,9 @@ export class ProceduresService {
   }
 
   async supprimer(id: string) {
-    const p = await this.prisma.procedure.findUnique({ where: { id }, include: { etapes: true } });
+    const p = await this.prisma.procedure.findUnique({ where: { id }, include: { etapes: { include: { photos: true } } } });
     if (!p) throw new NotFoundException();
-    for (const e of p.etapes) if (e.photoCle) await this.stockage.supprimer(e.photoCle);
+    for (const e of p.etapes) for (const ph of e.photos) await this.stockage.supprimer(ph.cle);
     await this.prisma.procedure.delete({ where: { id } });
     return { ok: true };
   }
@@ -213,9 +219,12 @@ export class ProceduresService {
   /** Photos d'étapes et de tous leurs détours (supprimés en cascade avec elles). */
   private async photosSous(etapeIds: string[]): Promise<string[]> {
     if (!etapeIds.length) return [];
-    const etapes = await this.prisma.etapeProcedure.findMany({ where: { id: { in: etapeIds } }, select: { photoCle: true, choix: { select: { detour: { select: { id: true } } } } } });
+    const etapes = await this.prisma.etapeProcedure.findMany({
+      where: { id: { in: etapeIds } },
+      select: { photos: { select: { cle: true } }, choix: { select: { detour: { select: { id: true } } } } },
+    });
     const enfants = etapes.flatMap((e) => e.choix.flatMap((c) => c.detour.map((x) => x.id)));
-    return [...etapes.flatMap((e) => (e.photoCle ? [e.photoCle] : [])), ...(await this.photosSous(enfants))];
+    return [...etapes.flatMap((e) => e.photos.map((ph) => ph.cle)), ...(await this.photosSous(enfants))];
   }
 
   async supprimerEtape(etapeId: string) {
@@ -226,23 +235,54 @@ export class ProceduresService {
     return this.modifiee(e.procedureId);
   }
 
+  /** Ajoute une photo à la fin des photos de l'étape. */
   async photo(etapeId: string, f?: Express.Multer.File) {
     const e = await this.etape(etapeId);
     if (!f) throw new BadRequestException('Photo manquante');
     const fmt = formatImage(f.buffer);
     if (!fmt) throw new BadRequestException('Image PNG, JPEG ou WebP attendue');
+    const nb = await this.prisma.photoEtape.count({ where: { etapeId } });
+    if (nb >= MAX_PHOTOS) throw new BadRequestException(`${MAX_PHOTOS} photos au plus par étape`);
+    const ordre = ((await this.prisma.photoEtape.aggregate({ where: { etapeId }, _max: { ordre: true } }))._max.ordre ?? -1) + 1;
     const cle = `procedures/${e.procedureId}/${etapeId}-${Date.now()}.${fmt}`;
     await this.stockage.ecrire(cle, f.buffer);
-    if (e.photoCle) await this.stockage.supprimer(e.photoCle);
-    await this.prisma.etapeProcedure.update({ where: { id: etapeId }, data: { photoCle: cle, photoMaj: new Date() } });
+    await this.prisma.photoEtape.create({ data: { etapeId, ordre, cle } });
     return this.modifiee(e.procedureId);
   }
 
-  async retirerPhoto(etapeId: string) {
+  /** Retire toutes les photos de l'étape. */
+  async retirerPhotos(etapeId: string) {
     const e = await this.etape(etapeId);
-    if (e.photoCle) await this.stockage.supprimer(e.photoCle);
-    await this.prisma.etapeProcedure.update({ where: { id: etapeId }, data: { photoCle: null, photoMaj: null } });
+    const photos = await this.prisma.photoEtape.findMany({ where: { etapeId } });
+    await this.prisma.photoEtape.deleteMany({ where: { etapeId } });
+    for (const ph of photos) await this.stockage.supprimer(ph.cle);
     return this.modifiee(e.procedureId);
+  }
+
+  async retirerPhoto(photoId: string) {
+    const ph = await this.photoParId(photoId);
+    await this.prisma.photoEtape.delete({ where: { id: photoId } });
+    await this.stockage.supprimer(ph.cle);
+    return this.modifiee(ph.etape.procedureId);
+  }
+
+  /** Avancer (-1) ou reculer (+1) une photo dans l'ordre de l'étape. */
+  async deplacerPhoto(photoId: string, sens: -1 | 1) {
+    const ph = await this.photoParId(photoId);
+    const liste = await this.prisma.photoEtape.findMany({ where: { etapeId: ph.etapeId }, orderBy: { ordre: 'asc' } });
+    const i = liste.findIndex((x) => x.id === photoId);
+    const j = i + sens;
+    if (j >= 0 && j < liste.length) {
+      [liste[i], liste[j]] = [liste[j], liste[i]];
+      await this.prisma.$transaction(liste.map((x, n) => this.prisma.photoEtape.update({ where: { id: x.id }, data: { ordre: n } })));
+    }
+    return this.modifiee(ph.etape.procedureId);
+  }
+
+  private async photoParId(id: string) {
+    const ph = await this.prisma.photoEtape.findUnique({ where: { id }, include: { etape: { select: { procedureId: true } } } });
+    if (!ph) throw new NotFoundException('Photo introuvable');
+    return ph;
   }
 
   // ---------- questions : réponses possibles ----------
@@ -312,13 +352,17 @@ export class ProceduresService {
     return c;
   }
 
-  /** Photo d'une étape (procédure publiée, ou admin). */
-  async lirePhoto(etapeId: string, admin: boolean) {
-    const e = await this.prisma.etapeProcedure.findUnique({ where: { id: etapeId }, include: { procedure: { select: { publiee: true } } } });
-    if (!e?.photoCle || (!admin && !e.procedure.publiee)) throw new NotFoundException();
-    const flux = this.stockage.lire(e.photoCle);
+  /** Photo (procédure publiée, ou admin). Par son id, ou la première photo d'une étape (`etapeId`, anciennes adresses). */
+  async lirePhoto(q: { id?: string; etapeId?: string }, admin: boolean) {
+    const ph = await this.prisma.photoEtape.findFirst({
+      where: q.id ? { id: q.id } : { etapeId: q.etapeId },
+      orderBy: { ordre: 'asc' },
+      include: { etape: { select: { procedure: { select: { publiee: true } } } } },
+    });
+    if (!ph || (!admin && !ph.etape.procedure.publiee)) throw new NotFoundException();
+    const flux = this.stockage.lire(ph.cle);
     if (!flux) throw new NotFoundException();
-    return { flux, ext: e.photoCle.split('.').pop()! };
+    return { flux, ext: ph.cle.split('.').pop()! };
   }
 
   private async existe(id: string) {

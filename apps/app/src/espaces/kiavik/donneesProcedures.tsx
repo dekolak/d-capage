@@ -12,7 +12,9 @@ export interface ResumeProcedure {
   liens: { guide: string; ecran: string; pastille: string | null }[];
 }
 export interface Etape {
-  id: string; ordre: number; texte: string; avertissement: string | null; photo: string | null;
+  id: string; ordre: number; texte: string; avertissement: string | null;
+  /** Première photo (adresse), et toutes les photos dans l'ordre. */
+  photo: string | null; photos: { id: string; url: string }[];
   guide: string | null; ecran: string | null; pastille: string | null;
   /** Étape de contrôle : réponse Oui / Non ; si Non, astuce `solutionId` proposée. */
   controle: boolean; solutionId: string | null;

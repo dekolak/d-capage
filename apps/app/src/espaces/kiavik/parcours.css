@@ -84,3 +84,15 @@
 .md-fin.md-contact { color: var(--ko); } .md-fin.md-resolu { color: var(--ok); }
 .md-reponses { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-size: 14px; }
 .md-reponses b { color: var(--od); margin-left: 4px; }
+
+/* galerie de photos d'une étape */
+.ga { position: relative; width: 100%; }
+.ga-bande { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0; border-radius: 10px; scrollbar-width: none; }
+.ga-bande::-webkit-scrollbar { display: none; }
+.ga-photo { flex: 0 0 100%; scroll-snap-align: center; }
+.ga-compteur { position: absolute; right: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 12px; font-weight: 700; pointer-events: none; }
+.ga-compteur.plein { bottom: calc(16px + env(safe-area-inset-bottom)); right: 50%; transform: translateX(50%); }
+.ga-plein { z-index: 80; }
+.ga-fleche { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, 0.85); font-size: 28px; line-height: 1; cursor: pointer; }
+.ga-fleche:disabled { opacity: 0.3; }
+.ga-fleche.g { left: 10px; } .ga-fleche.d { right: 10px; }

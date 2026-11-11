@@ -47,6 +47,7 @@ Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procé
 - **L'écran de modification** (pensé pour le PC, utilisable sur téléphone) : à gauche le **schéma**, à droite l'élément choisi. Cliquez sur une étape, une question ou une réponse pour la modifier. « **+** » (au survol, entre deux étapes) insère une étape à cet endroit.
 - **Contrôle Oui / Non simple** : cocher « Contrôle Oui / Non simple » sur une étape. Le client répond **Oui** (l'étape est cochée) ou **Non** : on lui affiche alors l'astuce choisie (ou « Corrigez le problème avant de continuer »).
 - Dans le **parcours guidé**, le client peut faire lire les étapes à voix haute (🔊) ; l'écran reste allumé pendant le parcours.
+- **Photos** : jusqu'à **8 par étape** (« 📷 Ajouter des photos », plusieurs à la fois). Flèches ← → pour l'ordre (la première est la principale), ✕ pour en retirer une. Le client les fait défiler au doigt, et les ouvre en plein écran.
 - **⧉ Dupliquer** (en bas de l'écran de modification) : copie complète en brouillon (étapes, questions, détours, photos), pour partir d'une procédure proche.
 - **Ordre** : flèches ↑ ↓. **Publier** : case en haut (brouillon = visible seulement par l'admin).
 - **Parties** : écrire une étape « **Montage — Vérifier la courroie** » la range sous le titre « Montage » (utile pour les longues check-lists).

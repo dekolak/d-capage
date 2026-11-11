@@ -4,7 +4,8 @@ import { Avancement } from './avancement';
 import { CaptureBouton } from './CaptureBouton';
 import { AideNon } from './Controle';
 import { FinDiagnostic } from './FinDiagnostic';
-import { ImageApi, Procedure } from './donneesProcedures';
+import { Procedure } from './donneesProcedures';
+import { Galerie } from './Galerie';
 import { decouperEtape } from './ProcedureDetail';
 import { useVoix } from './voix';
 import './parcours.css';
@@ -121,8 +122,8 @@ export function ParcoursGuide({ p, av, onFermer }: { p: Procedure; av: Avancemen
             <p className="pg-consigne">{texte}</p>
             {e.avertissement && <div className="gx-warn">⚠️ {e.avertissement}</div>}
             {e.controle && av.non.includes(e.id) && <AideNon e={e} />}
-            {e.photo ? (
-              <ImageApi chemin={e.photo} className="pg-photo" />
+            {e.photos.length ? (
+              <Galerie key={e.id} photos={e.photos} className="pg-photo" />
             ) : e.guide && e.ecran ? (
               <CaptureBouton key={e.id} guide={e.guide} ecran={e.ecran} pastille={e.pastille} zoomDepart />
             ) : null}
