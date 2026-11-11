@@ -3,7 +3,9 @@ import { AppEspace, ICONES } from '../types';
 import Animation from './Animation';
 import GuideEcran from './GuideEcran';
 import Guides from './Guides';
-import { AdminProcedure, AdminProcedures } from './AdminProcedures';
+import { AdminProcedures } from './AdminProcedures';
+import { AdminProcedure } from './EditeurProcedure';
+import { AdminDiagnostics } from './AdminDiagnostics';
 import { AdminSolution, AdminSolutions } from './AdminSolutions';
 import Solutions, { SolutionDetail } from './Solutions';
 import ProcedureDetail from './ProcedureDetail';
@@ -35,6 +37,7 @@ export const kiavik: AppEspace = {
       <Route path="/admin/solutions/:id" element={<AdminSolution />} />
       <Route path="/admin/procedures" element={<AdminProcedures />} />
       <Route path="/admin/procedures/:id" element={<AdminProcedure />} />
+      <Route path="/admin/diagnostics" element={<AdminDiagnostics />} />
       <Route path="/recherche" element={<Recherche />} />
     </>
   ),

@@ -1,18 +1,23 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
-import { IsBoolean, IsIn, IsInt, IsOptional, IsString, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
-import { Moi, ModuleRequis, Principal, Roles } from '../auth/decorators';
+import { IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
+import { AutoriseCleApi, Moi, ModuleRequis, Principal, Roles } from '../auth/decorators';
 import { MIME_IMAGE } from '../stockage/stockage.service';
+import { SUITES } from './chemin';
+import { DiagnosticsService } from './diagnostics.service';
 import { ProceduresService } from './procedures.service';
 
 class ProcedureDto {
   @IsString() @MinLength(2) @MaxLength(120) titre!: string;
   @IsOptional() @IsString() @MinLength(2) @MaxLength(40) categorie?: string;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(400) resume?: string | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) description?: string | null;
 }
 class ModifierProcedureDto {
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) description?: string | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) prompt?: string | null;
   @IsOptional() @IsString() @MinLength(2) @MaxLength(120) titre?: string;
   @IsOptional() @IsString() @MinLength(2) @MaxLength(40) categorie?: string;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(400) resume?: string | null;
@@ -26,11 +31,37 @@ class LienEtapeDto {
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(500) avertissement?: string | null;
   @IsOptional() @IsBoolean() controle?: boolean;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) solutionId?: string | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(2000) note?: string | null;
 }
 class EtapeDto extends LienEtapeDto {
   @IsString() @MinLength(2) @MaxLength(2000) texte!: string;
   /** Place de la nouvelle étape (0 = en premier) ; à la fin si absent. */
   @IsOptional() @IsInt() @Min(0) position?: number;
+  /** Détour : id de la réponse dont l'étape fait partie ; absent = route principale. */
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) brancheId?: string | null;
+}
+class NouveauChoixDto {
+  @IsString() @MinLength(1) @MaxLength(120) libelle!: string;
+}
+class ChoixDto {
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(120) libelle?: string;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(1000) signification?: string | null;
+  @IsOptional() @IsIn(SUITES) suite?: string;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) etapeCibleId?: string | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(2000) conclusion?: string | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) solutionId?: string | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) procedureCibleId?: string | null;
+}
+class EnvoiDiagnosticDto {
+  /** Réponses : id de la question → id de la réponse. */
+  @IsObject() reponses!: Record<string, string>;
+  @IsOptional() @IsString() @MaxLength(2000) message?: string;
+}
+class PromptDto {
+  @IsString() @MaxLength(10000) texte!: string;
+}
+class LuDto {
+  @IsBoolean() lu!: boolean;
 }
 class ModifierEtapeDto extends LienEtapeDto {
   @IsOptional() @IsString() @MinLength(2) @MaxLength(2000) texte?: string;
@@ -45,7 +76,14 @@ const estAdmin = (m: Principal) => m.role === Role.ADMIN;
 @ModuleRequis('procedures-kiavik')
 @Controller('procedures')
 export class ProceduresController {
-  constructor(private procedures: ProceduresService) {}
+  constructor(private procedures: ProceduresService, private diagnostics: DiagnosticsService) {}
+
+  /** Le client envoie le résultat d'un diagnostic (ses réponses) : admins prévenus, webhook `diagnostic.envoye`. */
+  @Post(':id/diagnostic')
+  envoyer(@Param('id') id: string, @Body() d: EnvoiDiagnosticDto, @Moi() moi: Principal) {
+    const reponses = Object.fromEntries(Object.entries(d.reponses).filter(([k, v]) => typeof k === 'string' && typeof v === 'string').slice(0, 300));
+    return this.diagnostics.envoyer(id, { id: moi.id, admin: estAdmin(moi) }, reponses, d.message);
+  }
 
   @Get()
   lister(@Moi() moi: Principal) {
@@ -117,5 +155,75 @@ export class AdminProceduresController {
   @Delete('etapes/:id/photo')
   retirerPhoto(@Param('id') id: string) {
     return this.procedures.retirerPhoto(id);
+  }
+
+  // réponses d'une question
+  @Post('etapes/:id/choix')
+  ajouterChoix(@Param('id') id: string, @Body() d: NouveauChoixDto) {
+    return this.procedures.ajouterChoix(id, d.libelle.trim());
+  }
+
+  @Patch('choix/:id')
+  modifierChoix(@Param('id') id: string, @Body() d: ChoixDto) {
+    return this.procedures.modifierChoix(id, d);
+  }
+
+  @Post('choix/:id/deplacer')
+  deplacerChoix(@Param('id') id: string, @Body() d: DeplacerDto) {
+    return this.procedures.deplacerChoix(id, d.sens);
+  }
+
+  @Delete('choix/:id')
+  supprimerChoix(@Param('id') id: string) {
+    return this.procedures.supprimerChoix(id);
+  }
+}
+
+/** Diagnostics reçus des clients (admin, ou n8n avec une clé API). */
+@Roles(Role.ADMIN)
+@AutoriseCleApi()
+@Controller('admin/diagnostics')
+export class AdminDiagnosticsController {
+  constructor(private diagnostics: DiagnosticsService) {}
+
+  @Get()
+  lister(@Query('nonLus') nonLus?: string) {
+    return this.diagnostics.lister(nonLus === '1' || nonLus === 'true');
+  }
+
+  @Patch(':id')
+  marquer(@Param('id') id: string, @Body() d: LuDto) {
+    return this.diagnostics.marquer(id, d.lu);
+  }
+}
+
+/**
+ * Préparation pour l'IA (admin, ou n8n avec une clé API) : catalogue des procédures, export de l'arbre d'une procédure,
+ * prompt général de l'espace.
+ */
+@Roles(Role.ADMIN)
+@AutoriseCleApi()
+@Controller('ia')
+export class IaController {
+  constructor(private diagnostics: DiagnosticsService) {}
+
+  @Get('catalogue')
+  catalogue() {
+    return this.diagnostics.catalogue();
+  }
+
+  @Get('procedures/:id')
+  exporter(@Param('id') id: string) {
+    return this.diagnostics.exporter(id);
+  }
+
+  @Get('prompt')
+  async prompt() {
+    return { texte: await this.diagnostics.promptGeneral() };
+  }
+
+  @Put('prompt')
+  definirPrompt(@Body() d: PromptDto) {
+    return this.diagnostics.definirPromptGeneral(d.texte);
   }
 }

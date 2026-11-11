@@ -5,6 +5,10 @@ import { useAuth } from '../../lib/auth';
 export interface ResumeProcedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string;
   nbEtapes: number; textes: string[];
+  /** Contient des questions (diagnostic). */
+  diagnostic?: boolean;
+  /** Admin seulement. */
+  description?: string | null;
   liens: { guide: string; ecran: string; pastille: string | null }[];
 }
 export interface Etape {
@@ -12,10 +16,27 @@ export interface Etape {
   guide: string | null; ecran: string | null; pastille: string | null;
   /** Étape de contrôle : réponse Oui / Non ; si Non, astuce `solutionId` proposée. */
   controle: boolean; solutionId: string | null;
+  /** Détour : l'étape fait partie de la réponse `brancheId` ; null = route principale. */
+  brancheId: string | null;
+  /** Réponses possibles : l'étape est une question si elle en a. */
+  choix: Choix[];
+  /** Admin seulement : note interne (pour l'admin et l'IA). */
+  note?: string | null;
+}
+/** Réponse à une question : détour, puis suite (retour, étape, resolu, contact). */
+export interface Choix {
+  id: string; ordre: number; libelle: string; suite: 'retour' | 'etape' | 'resolu' | 'contact'; etapeCibleId: string | null;
+  conclusion: string | null; solutionId: string | null; procedureCibleId: string | null;
+  /** Admin seulement. */
+  signification?: string | null;
 }
 export interface Procedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string; etapes: Etape[];
+  /** Admin seulement (pour l'IA). */
+  description?: string | null; prompt?: string | null; resumeIa?: string | null; resumeIaLe?: string | null;
 }
+/** La procédure contient des questions (diagnostic). */
+export const estDiagnostic = (p: Procedure) => p.etapes.some((e) => e.choix.length > 0);
 
 export const MODULE_PROCEDURES = 'procedures-kiavik';
 

@@ -1,0 +1,56 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Chargement, Erreur } from '../../components/Composants';
+import { api } from '../../lib/api';
+import './editeur.css';
+
+interface Diagnostic {
+  id: string; texte: string; message: string | null; lu: boolean; createdAt: string;
+  resultat: { fin: { type: 'termine' | 'resolu' | 'contact' | 'en_cours'; texte: string } };
+  user: { id: string; identifiant: string; nom: string | null };
+  procedure: { id: string; titre: string };
+}
+
+const ICONE = { termine: '🎉', resolu: '✅', contact: '📞', en_cours: '⏳' } as const;
+
+/** Administration → Diagnostics reçus : résultats envoyés par les clients (« question : réponse »). */
+export function AdminDiagnostics() {
+  const [liste, setListe] = useState<Diagnostic[]>();
+  const [erreur, setErreur] = useState<unknown>();
+  const [nonLus, setNonLus] = useState(false);
+  const charger = () => api<{ diagnostics: Diagnostic[] }>(`/admin/diagnostics${nonLus ? '?nonLus=1' : ''}`).then((r) => setListe(r.diagnostics)).catch(setErreur);
+  useEffect(() => {
+    charger();
+  }, [nonLus]);
+  const marquer = async (d: Diagnostic, lu: boolean) => {
+    setListe((l) => l?.map((x) => (x.id === d.id ? { ...x, lu } : x)));
+    await api(`/admin/diagnostics/${d.id}`, { method: 'PATCH', json: { lu } }).catch(setErreur);
+  };
+  return (
+    <div className="page gx">
+      <Link to="/admin/procedures" className="btn-lien">← Procédures</Link>
+      <h1>Diagnostics reçus</h1>
+      <p className="muted petit">Résultats envoyés par les clients à la fin d'un diagnostic. Ils partent aussi vers n8n (événement <code>diagnostic.envoye</code>, avec le paquet prêt pour l'IA).</p>
+      <label className="gx-controle-edit"><input type="checkbox" checked={nonLus} onChange={(e) => setNonLus(e.target.checked)} /><span>Non lus seulement</span></label>
+      <Erreur e={erreur} />
+      {!liste ? <Chargement /> : liste.length === 0 ? <p className="muted">Aucun diagnostic reçu.</p> : (
+        <div className="gx-resultats">
+          {liste.map((d) => (
+            <div key={d.id} className={`carte dg-recu ${d.lu ? 'lu' : ''}`}>
+              <div className="gx-etape-tete">
+                <b>{ICONE[d.resultat.fin.type] ?? '🩺'} {d.procedure.titre}</b>
+                <small className="muted">{new Date(d.createdAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</small>
+              </div>
+              <span className="petit">
+                <Link to={`/admin/comptes/${d.user.id}/activite`}>{d.user.nom ? `${d.user.nom} (${d.user.identifiant})` : d.user.identifiant}</Link>
+              </span>
+              <pre className="dg-texte">{d.texte}</pre>
+              {d.message && <p className="dg-message">💬 {d.message}</p>}
+              <button type="button" className="btn petit" onClick={() => marquer(d, !d.lu)}>{d.lu ? 'Marquer non lu' : '✓ Marquer lu'}</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

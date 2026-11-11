@@ -2,8 +2,6 @@ import { Link } from 'react-router-dom';
 import { t } from '../../lib/i18n';
 import { Etape, useSolutions } from './donneesProcedures';
 
-/** Réponses aux étapes de contrôle : ids des étapes répondues « Non » (gardées sur le téléphone). */
-export const cleNon = (procedure: string) => `kiavik.controles.${procedure}`;
 
 /** Boutons Oui / Non d'une étape de contrôle. */
 export function OuiNon({ oui, non, onOui, onNon, grand = false }: { oui: boolean; non: boolean; onOui(): void; onNon(): void; grand?: boolean }) {

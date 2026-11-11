@@ -1,0 +1,50 @@
+import { useEffect, useMemo, useState } from 'react';
+import { calculerChemin } from './chemin';
+import { Choix, Etape, Procedure } from './donneesProcedures';
+
+/** Lit / garde une valeur JSON sur le téléphone. */
+function useGarde<T>(cle: string, defaut: T) {
+  const [v, setV] = useState<T>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(cle) ?? '') as T;
+    } catch {
+      return defaut;
+    }
+  });
+  useEffect(() => {
+    localStorage.setItem(cle, JSON.stringify(v));
+  }, [cle, v]);
+  return [v, setV] as const;
+}
+
+/**
+ * Avancement d'un client dans une procédure, gardé sur le téléphone :
+ * étapes cochées, étapes de contrôle répondues « Non », réponses aux questions (diagnostic) et chemin qui en découle.
+ */
+export function useAvancement(p: Procedure | undefined, id: string) {
+  const [faites, setFaites] = useGarde<string[]>(`kiavik.etapes.${id}`, []);
+  const [non, setNon] = useGarde<string[]>(`kiavik.controles.${id}`, []);
+  const [reponses, setReponses] = useGarde<Record<string, string>>(`kiavik.reponses.${id}`, {});
+  const chemin = useMemo(() => calculerChemin<Choix, Etape>(p?.etapes ?? [], reponses), [p, reponses]);
+
+  return {
+    faites, non, reponses, chemin,
+    basculer: (e: string) => setFaites((f) => (f.includes(e) ? f.filter((x) => x !== e) : [...f, e])),
+    cocher: (e: string) => setFaites((f) => (f.includes(e) ? f : [...f, e])),
+    /** Étape de contrôle : « Oui » la coche, « Non » affiche l'aide. */
+    controler: (e: string, oui: boolean) => {
+      setFaites((f) => (oui ? [...f.filter((x) => x !== e), e] : f.filter((x) => x !== e)));
+      setNon((n) => (oui ? n.filter((x) => x !== e) : [...n.filter((x) => x !== e), e]));
+    },
+    /** Question : choisit la réponse (le chemin se recalcule). */
+    repondre: (question: string, choix: string) => setReponses((r) => ({ ...r, [question]: choix })),
+    recommencer: () => {
+      setFaites([]);
+      setNon([]);
+      setReponses({});
+    },
+    /** Étapes faites (cochées, contrôlées « Oui » ou questions répondues) parmi celles du chemin. */
+    nbFaites: chemin.pas.filter(({ e }) => faites.includes(e.id) || (e.choix.length > 0 && !!reponses[e.id])).length,
+  };
+}
+export type Avancement = ReturnType<typeof useAvancement>;

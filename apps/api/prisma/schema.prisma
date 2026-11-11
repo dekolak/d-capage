@@ -59,22 +59,23 @@ model User {
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt
 
-  machines         UserMachine[]
-  fiches           Fiche[]
-  evaluations      Evaluation[]
-  apiKeys          ApiKey[]
-  lecturesAnnonces AnnonceLecture[]
-  reponsesAnnonces AnnonceReponse[]
-  demandesAide     DemandeAide[]
+  machines           UserMachine[]
+  fiches             Fiche[]
+  evaluations        Evaluation[]
+  apiKeys            ApiKey[]
+  lecturesAnnonces   AnnonceLecture[]
+  reponsesAnnonces   AnnonceReponse[]
+  demandesAide       DemandeAide[]
   /// Modules accessibles (et donc espaces : Lazzeko, Kiavik…) — voir src/espaces/espaces.ts.
-  modules          UserModule[]
+  modules            UserModule[]
   /// Conditions d'utilisation acceptées, par espace.
-  acceptations     AcceptationConditions[]
+  acceptations       AcceptationConditions[]
+  activites          Activite[]
+  demandesMotDePasse DemandeMotDePasse[]
+  abonnementsPush    AbonnementPush[]
+  diagnostics        DiagnosticEnvoye[]
 
   @@index([numeroOdoo])
-  activites               Activite[]
-  demandesMotDePasse      DemandeMotDePasse[]
-  abonnementsPush         AbonnementPush[]
 }
 
 /// Accès d'un compte à un module (slug défini dans src/espaces/espaces.ts, ex. reglages-decapage).
@@ -467,26 +468,36 @@ model AnnonceReponse {
 
 /// Procédure Kiavik (pas à pas), créée et modifiée par l'admin depuis l'app.
 model Procedure {
-  id        String           @id @default(cuid())
+  id          String             @id @default(cuid())
   /// Clé fixe des procédures livrées par le seed (kit-guides/procedures.json) ; null si créée dans l'app.
-  cle       String?          @unique
-  titre     String
-  categorie String           @default("Impression")
-  resume    String?
+  cle         String?            @unique
+  titre       String
+  categorie   String             @default("Impression")
+  resume      String?
   /// Module requis pour la voir.
-  module    String           @default("procedures-kiavik")
-  publiee   Boolean          @default(false)
-  ordre     Int              @default(0)
-  etapes    EtapeProcedure[]
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  module      String             @default("procedures-kiavik")
+  publiee     Boolean            @default(false)
+  ordre       Int                @default(0)
+  /// Description détaillée (à quoi elle sert, quand l'utiliser, symptômes) : pour l'admin, et le catalogue lu par l'IA.
+  description String?
+  /// Consignes données à l'IA pour cette procédure (complètent le prompt général de l'espace).
+  prompt      String?
+  /// Résumé de la procédure généré par l'IA (plus tard), avec sa date.
+  resumeIa    String?
+  resumeIaLe  DateTime?
+  etapes      EtapeProcedure[]
+  /// Réponses (choix) qui renvoient vers cette procédure.
+  choixVers   ChoixEtape[]       @relation("ProcedureCible")
+  diagnostics DiagnosticEnvoye[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 }
 
 /// Étape d'une procédure : texte, avertissement, photo et lien vers une pastille d'un guide, tous facultatifs sauf le texte.
 model EtapeProcedure {
-  id            String    @id @default(cuid())
+  id            String       @id @default(cuid())
   procedureId   String
-  procedure     Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  procedure     Procedure    @relation(fields: [procedureId], references: [id], onDelete: Cascade)
   ordre         Int
   texte         String
   avertissement String?
@@ -497,9 +508,18 @@ model EtapeProcedure {
   ecran         String?
   pastille      String?
   /// Étape de contrôle : le client répond Oui / Non ; si Non, l'astuce `solutionId` lui est proposée.
-  controle      Boolean   @default(false)
+  controle      Boolean      @default(false)
   solutionId    String?
-  solution      Solution? @relation(fields: [solutionId], references: [id], onDelete: SetNull)
+  solution      Solution?    @relation(fields: [solutionId], references: [id], onDelete: SetNull)
+  /// Détour : l'étape appartient à la réponse `brancheId` d'une question ; null = route principale.
+  brancheId     String?
+  branche       ChoixEtape?  @relation("Detour", fields: [brancheId], references: [id], onDelete: Cascade)
+  /// Note interne (pourquoi cette question, ce qu'on cherche) : pour l'admin et l'IA, jamais montrée au client.
+  note          String?
+  /// Réponses possibles : l'étape est une question si elle en a.
+  choix         ChoixEtape[] @relation("Question")
+  /// Réponses qui sautent vers cette étape.
+  sautsVers     ChoixEtape[] @relation("Saut")
 
   @@index([procedureId, ordre])
 }
@@ -523,27 +543,72 @@ model CorrectionGuide {
 /// Fiche « Astuces & solutions » (Kiavik) : un symptôme, pourquoi, que faire, liens vers un bouton et une procédure.
 /// Créée et modifiée par l'admin depuis l'app ; sert aussi de base de connaissances (recherche, futur assistant).
 model Solution {
-  id            String    @id @default(cuid())
+  id             String           @id @default(cuid())
   /// Clé fixe des fiches livrées par le seed (kit-guides/solutions.json) ; null si créée dans l'app.
-  cle           String?   @unique
-  titre         String
-  categorie     String    @default("Impression")
-  cause         String?
-  texte         String
-  avertissement String?
-  motsCles      String[]
-  guide         String?
-  ecran         String?
-  pastille      String?
-  procedureId   String?
-  photoCle      String?
-  photoMaj      DateTime?
-  module        String    @default("procedures-kiavik")
-  publiee       Boolean   @default(false)
-  ordre         Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  cle            String?          @unique
+  titre          String
+  categorie      String           @default("Impression")
+  cause          String?
+  texte          String
+  avertissement  String?
+  motsCles       String[]
+  guide          String?
+  ecran          String?
+  pastille       String?
+  procedureId    String?
+  photoCle       String?
+  photoMaj       DateTime?
+  module         String           @default("procedures-kiavik")
+  publiee        Boolean          @default(false)
+  ordre          Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
   etapesControle EtapeProcedure[]
+  choix          ChoixEtape[]
+}
+
+/// Réponse possible à une question (étape d'une procédure) : détour (étapes `detour`), puis suite.
+model ChoixEtape {
+  id               String           @id @default(cuid())
+  etapeId          String
+  etape            EtapeProcedure   @relation("Question", fields: [etapeId], references: [id], onDelete: Cascade)
+  ordre            Int
+  libelle          String
+  /// Ce que la réponse veut dire (ex. « problème d'alimentation probable ») : pour l'admin et l'IA.
+  signification    String?
+  /// Suite après le détour : retour (on reprend après la question), etape (aller à etapeCibleId), resolu ou contact (fin).
+  suite            String           @default("retour")
+  etapeCibleId     String?
+  etapeCible       EtapeProcedure?  @relation("Saut", fields: [etapeCibleId], references: [id], onDelete: SetNull)
+  /// Conclusion d'une fin : cause probable, gravité, intervention ou non.
+  conclusion       String?
+  /// Astuce montrée avec cette réponse.
+  solutionId       String?
+  solution         Solution?        @relation(fields: [solutionId], references: [id], onDelete: SetNull)
+  /// Procédure proposée avec cette réponse.
+  procedureCibleId String?
+  procedureCible   Procedure?       @relation("ProcedureCible", fields: [procedureCibleId], references: [id], onDelete: SetNull)
+  detour           EtapeProcedure[] @relation("Detour")
+
+  @@index([etapeId, ordre])
+}
+
+/// Résultat d'un diagnostic envoyé par un client (chemin question : réponse), pour l'admin et n8n / l'IA.
+model DiagnosticEnvoye {
+  id          String    @id @default(cuid())
+  procedureId String
+  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// { chemin: [{ question, reponse, signification? }], fin: { type, texte?, conclusion? } }
+  resultat    Json
+  /// Résumé lisible « question : réponse », une ligne par réponse.
+  texte       String
+  message     String?
+  lu          Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@index([createdAt])
 }
 
 /// Journal d'activité d'un client (connexions, pages consultées, recherches), visible par l'admin, effacé après 12 mois.

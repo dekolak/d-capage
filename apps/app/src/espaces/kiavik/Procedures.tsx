@@ -54,7 +54,7 @@ export function ListeProcedures({ liste }: { liste: ResumeProcedure[] }) {
     <div className="gx-resultats">
       {liste.map((p) => (
         <Link key={p.id} to={`/procedures/${p.id}`} className="carte gx-resultat">
-          <b>📋 {p.titre}</b>
+          <b>{p.diagnostic ? '🩺' : '📋'} {p.titre}</b>
           {p.resume && <span className="muted petit">{p.resume}</span>}
           <span className="petit muted">
             {tn('kiavik.procedures.etapes', p.nbEtapes)}
