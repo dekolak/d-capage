@@ -578,6 +578,26 @@ describe('Parcours complet', () => {
     expect((await http.get('/api/ia/catalogue').set(C)).status).toBe(403);
     await http.put('/api/ia/prompt').set(A).send({ texte: '' }).expect(200);
 
+    // « pas clair ? » : un seul signalement ouvert par client et par étape ; l'admin le traite
+    await http.post(`/api/procedures/etapes/${q.id}/signaler`).set(C).send({ message: 'Je ne sais pas où écouter' }).expect(201);
+    await http.post(`/api/procedures/etapes/${q.id}/signaler`).set(C).send({ message: 'Près de la bouteille ?' }).expect(201);
+    let sig = (await http.get(`/api/admin/procedures/${p.id}/signalements`).set(A)).body;
+    expect(sig).toHaveLength(1);
+    expect(sig[0]).toMatchObject({ etapeId: q.id, message: 'Près de la bouteille ?', traite: false });
+    expect((await http.get('/api/admin/procedures/signalements/ouverts').set(A)).body[p.id]).toBe(1);
+    await http.patch(`/api/admin/procedures/signalements/${sig[0].id}`).set(A).send({ traite: true }).expect(200);
+    expect((await http.get('/api/admin/procedures/signalements/ouverts').set(A)).body[p.id]).toBeUndefined();
+    expect((await http.get(`/api/admin/procedures/${p.id}/signalements`).set(C)).status).toBe(403);
+
+    // statistiques anonymes : deux tentatives (Non → contact ; Oui, arrêtée sur « Tester les buses »), les admins ne comptent pas
+    const tester = (await http.get(`/api/procedures/${p.id}`).set(A)).body.etapes.find((e: any) => e.texte === 'Tester les buses');
+    await http.put(`/api/procedures/${p.id}/suivi`).set(C).send({ session: `s1-${id}`, reponses: { [q.id]: non.id }, faites: 2, total: 3, derniere: q.id, fin: 'contact' }).expect(200);
+    await http.put(`/api/procedures/${p.id}/suivi`).set(C).send({ session: `s2-${id}`, reponses: { [q.id]: oui.id }, faites: 2, total: 3, derniere: tester.id, fin: null }).expect(200);
+    await http.put(`/api/procedures/${p.id}/suivi`).set(A).send({ session: `s3-${id}`, reponses: { [q.id]: oui.id }, faites: 1, total: 3, fin: 'termine' }).expect(200);
+    expect((await http.put(`/api/procedures/${p.id}/suivi`).set(C).send({ session: `s4-${id}`, reponses: {}, faites: 0, total: 1, fin: 'bof' })).status).toBe(400);
+    const st = (await http.get(`/api/admin/procedures/${p.id}/stats`).set(A)).body;
+    expect(st).toMatchObject({ tentatives: 2, terminees: 1, fins: { contact: 1 }, choix: { [oui.id]: 1, [non.id]: 1 }, arrets: { [tester.id]: 1 }, envoyes: 2 });
+
     // historique du client
     const miens = (await http.get('/api/procedures/diagnostics/miens').set(C)).body;
     expect(miens.map((x: any) => x.id)).toEqual([oui1.id, env.id]);

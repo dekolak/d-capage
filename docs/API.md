@@ -72,6 +72,10 @@ Les conseils `niveau: "a_completer"` (notes internes) ne sont envoyés qu'à l'a
 | GET | `/procedures` (publiées ; admin : toutes) → titre, catégorie, `nbEtapes`, `liens` vers les guides | module |
 | GET | `/procedures/:id` (étapes, avec `photos: [{id, url}]` et `photo` = la première), `/procedures/photos/:id`, `/procedures/etapes/:id/photo` (première photo, anciennes adresses) | module |
 | POST | `/procedures/:id/diagnostic` `{reponses: {idQuestion: idReponse}, message?}` → le serveur recalcule le chemin, garde le résultat, notifie les admins, webhook `diagnostic.envoye` | module |
+| POST | `/procedures/etapes/:id/signaler` `{message?}` : « pas clair ? » (un signalement ouvert par client et par étape ; admins notifiés, webhook `etape.signalee`) | module |
+| PUT | `/procedures/:id/suivi` `{session, reponses, faites, total, derniere?, fin?}` : avancement anonyme d'une tentative (statistiques ; ignoré pour les admins) | module |
+| GET · PATCH | `/admin/procedures/:id/signalements`, `/admin/procedures/signalements/ouverts` (nombre par procédure) ; `/admin/procedures/signalements/:id {traite}` | admin |
+| GET | `/admin/procedures/:id/stats` → `{tentatives, terminees, fins, choix: {idReponse: n}, arrets: {idEtape: n}, envoyes, depuis}` | admin |
 | GET | `/procedures/diagnostics/miens` : diagnostics envoyés par le client connecté | module |
 | POST | `/admin/procedures/:id/dupliquer` : copie complète en brouillon (étapes, questions, détours, sauts, photos) | admin |
 | POST · PATCH · DELETE | `/admin/procedures[/:id]` `{titre, categorie?, resume?, description?, prompt?, publiee?, ordre?}` | admin |
@@ -159,7 +163,7 @@ Retrouver un compte par n° client : `GET /api/users?numeroOdoo=C00123`.
 
 ## Webhooks (envoi vers un service externe, ex. modération IA)
 - Configurés dans Administration → *Envoi vers une API* : une ou plusieurs adresses, événements choisis.
-- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`, `aide.demandee`, `diagnostic.envoye` (`{diagnostic: {id, procedure, chemin: [{question, reponse, signification?}], fin: {type, texte, conclusion?}, texte, message}, user, ia: {promptGeneral, prompt, description, paquet}}`), `motdepasse.demande` (`{demande: {id, email?, message, espace, creeLe}, user: {id, identifiant, nom, numeroOdoo} | null}` — `user` vide pour une demande faite avec un email ; jamais le code ; recette n8n dans [ADMIN.md](ADMIN.md)).
+- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`, `aide.demandee`, `etape.signalee` (`{signalement: {id, message, creeLe}, etape: {id, texte, procedure}, user}`), `diagnostic.envoye` (`{diagnostic: {id, procedure, chemin: [{question, reponse, signification?}], fin: {type, texte, conclusion?}, texte, message}, user, ia: {promptGeneral, prompt, description, paquet}}`), `motdepasse.demande` (`{demande: {id, email?, message, espace, creeLe}, user: {id, identifiant, nom, numeroOdoo} | null}` — `user` vide pour une demande faite avec un email ; jamais le code ; recette n8n dans [ADMIN.md](ADMIN.md)).
 - `POST` JSON signé : `X-Decapage-Signature: sha256=<HMAC-SHA256(secret, corps)>`, plus `X-Decapage-Evenement` et `X-Decapage-Livraison`.
 - File d'envoi en base : rien n'est perdu au redémarrage, 6 tentatives espacées (jusqu'à 2 h), journal dans l'admin.
 - Le corps contient le texte à modérer et l'adresse pour agir (`moderation.url`). Le service répond avec une clé API :

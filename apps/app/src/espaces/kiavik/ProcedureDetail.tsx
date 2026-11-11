@@ -8,6 +8,7 @@ import { useAvancement } from './avancement';
 import { AideNon, OuiNon } from './Controle';
 import { FinDiagnostic } from './FinDiagnostic';
 import { Galerie } from './Galerie';
+import { PasClair } from './PasClair';
 import { estDiagnostic, Etape, lienGuide, Procedure, useSolutions } from './donneesProcedures';
 import { ParcoursGuide } from './ParcoursGuide';
 import './guides.css';
@@ -112,6 +113,7 @@ export default function ProcedureDetail() {
                     {e.pastille ? t('kiavik.procedures.voirBoutonId', { id: e.pastille }) : t('kiavik.procedures.voirBouton')}
                   </button>
                 )}
+                <PasClair etape={e.id} />
               </div>
             </li>
             </Fragment>

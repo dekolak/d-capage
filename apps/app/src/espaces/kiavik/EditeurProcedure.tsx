@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { createContext, Fragment, useContext, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
@@ -21,6 +21,15 @@ const MAX_PHOTOS = 8;
 const CATEGORIES = ['Mise en route', 'Diagnostic', 'Impression', 'Réglages', 'Entretien'];
 type Maj = (chemin: string, opts: RequestInit & { json?: unknown }) => Promise<Procedure | null>;
 type Sel = { type: 'etape' | 'choix'; id: string } | null;
+
+interface Stats {
+  tentatives: number; terminees: number; envoyes: number; depuis: string | null;
+  fins: Record<string, number>; choix: Record<string, number>; arrets: Record<string, number>;
+}
+interface Signalement { id: string; etapeId: string; message: string | null; traite: boolean; createdAt: string; user: { id: string; identifiant: string; nom: string | null } }
+/** Statistiques et « pas clair » de la procédure, pour le schéma et le panneau. */
+const Suivi = createContext<{ stats?: Stats; signalements: Signalement[]; traiter(s: Signalement, traite: boolean): void }>({ signalements: [], traiter: () => {} });
+const pourcent = (n: number, total: number) => (total ? Math.round((n / total) * 100) : 0);
 
 const SUITES: { v: Choix['suite']; l: string }[] = [
   { v: 'retour', l: '↩ Revenir sur la route (après la question)' },
@@ -45,8 +54,14 @@ function libelleSuite(c: Choix, p: Procedure) {
 }
 
 /** Problèmes à corriger dans l'arbre. */
-function alertes(p: Procedure): { texte: string; sel: Sel }[] {
+function alertes(p: Procedure, signalements: Signalement[] = []): { texte: string; sel: Sel }[] {
   const l: { texte: string; sel: Sel }[] = [];
+  const ouverts = new Map<string, number>();
+  for (const s of signalements) if (!s.traite) ouverts.set(s.etapeId, (ouverts.get(s.etapeId) ?? 0) + 1);
+  for (const [etapeId, n] of ouverts) {
+    const e = p.etapes.find((x) => x.id === etapeId);
+    if (e) l.push({ texte: `« ${court(decouperEtape(e.texte).texte, 40)} » : ${n} client${n > 1 ? 's trouvent' : ' trouve'} cette étape pas claire.`, sel: { type: 'etape', id: e.id } });
+  }
   const principale = lignePour(p, null);
   for (const e of p.etapes) {
     const q = court(decouperEtape(e.texte).texte, 40);
@@ -104,6 +119,7 @@ function Inserer({ p, position, brancheId, maj, choisir, libelle = '+' }: { p: P
 /** Une ligne du schéma : route principale (profondeur 0) ou détour d'une réponse. */
 function Ligne({ p, brancheId, profondeur, sel, choisir, maj }: { p: Procedure; brancheId: string | null; profondeur: number; sel: Sel; choisir(s: Sel): void; maj: Maj }) {
   const etapes = lignePour(p, brancheId);
+  const { stats, signalements } = useContext(Suivi);
   return (
     <ol className={`ed-ligne ${profondeur ? 'detour' : 'principale'}`}>
       {etapes.map((e, k) => {
@@ -124,6 +140,11 @@ function Ligne({ p, brancheId, profondeur, sel, choisir, maj }: { p: Procedure; 
                   {e.guide && <span title="Bouton lié">👆</span>}
                   {e.avertissement && <span title="Avertissement">⚠️</span>}
                   {e.note && <span title="Note pour l'IA">📝</span>}
+                  {(() => {
+                    const n = signalements.filter((s) => s.etapeId === e.id && !s.traite).length;
+                    return n > 0 && <span className="ed-badge-pc" title="Signalé « pas clair »">❓{n}</span>;
+                  })()}
+                  {!!stats?.arrets[e.id] && <span className="ed-badge-arret" title="Tentatives arrêtées à cette étape">⏸{stats.arrets[e.id]}</span>}
                 </span>
               </button>
               {question && (
@@ -132,6 +153,11 @@ function Ligne({ p, brancheId, profondeur, sel, choisir, maj }: { p: Procedure; 
                     <div key={c.id} className={`ed-branche c${ci % 4}`}>
                       <button type="button" className={`ed-reponse ${sel?.id === c.id ? 'sel' : ''}`} onClick={() => choisir({ type: 'choix', id: c.id })}>
                         {c.libelle} →
+                        {stats && (() => {
+                          const total = e.choix.reduce((t, x) => t + (stats.choix[x.id] ?? 0), 0);
+                          const n = stats.choix[c.id] ?? 0;
+                          return total > 0 && <span className="ed-stat" title={`${n} réponse${n > 1 ? 's' : ''} sur ${total}`}>{n} · {pourcent(n, total)} %</span>;
+                        })()}
                       </button>
                       <Ligne p={p} brancheId={c.id} profondeur={profondeur + 1} sel={sel} choisir={choisir} maj={maj} />
                       <button type="button" className={`ed-suite s-${c.suite}`} onClick={() => choisir({ type: 'choix', id: c.id })}>{libelleSuite(c, p)}</button>
@@ -280,6 +306,7 @@ function EtapeEditeur({ p, e, guides, astuces, maj, choisir }: { p: Procedure; e
       {modifie && (
         <button type="button" className="btn prim" disabled={texte.trim().length < 2 || (!!lien.guide && !lien.ecran)} onClick={enregistrer}>Enregistrer</button>
       )}
+      <SignalementsEtape etapeId={e.id} />
       {question ? (
         <div className="ed-liste-choix">
           <b>Réponses</b>
@@ -294,6 +321,45 @@ function EtapeEditeur({ p, e, guides, astuces, maj, choisir }: { p: Procedure; e
         <button type="button" className="btn" onClick={enQuestion}>❓ Transformer en question (réponses Oui / Non, à modifier)</button>
       )}
     </div>
+  );
+}
+
+/** « Pas clair » envoyés par les clients sur cette étape. */
+function SignalementsEtape({ etapeId }: { etapeId: string }) {
+  const { signalements, traiter } = useContext(Suivi);
+  const l = signalements.filter((s) => s.etapeId === etapeId);
+  if (!l.length) return null;
+  return (
+    <div className="ed-signalements">
+      <b>❓ « Pas clair ? » ({l.filter((s) => !s.traite).length} à traiter)</b>
+      {l.map((s) => (
+        <div key={s.id} className={`ed-signalement ${s.traite ? 'traite' : ''}`}>
+          <span className="petit">
+            <b>{s.user.nom ?? s.user.identifiant}</b> · {new Date(s.createdAt).toLocaleDateString('fr-FR')}
+            {s.message ? ` : « ${s.message} »` : ' (sans message)'}
+          </span>
+          <button type="button" className="btn petit" onClick={() => traiter(s, !s.traite)}>{s.traite ? 'Rouvrir' : '✓ Traité'}</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Bandeau de statistiques au-dessus du schéma. */
+function ResumeStats() {
+  const { stats } = useContext(Suivi);
+  if (!stats) return null;
+  if (!stats.tentatives) return <p className="petit muted ed-stats">📊 Pas encore de statistiques : elles apparaîtront quand des clients suivront la procédure.</p>;
+  const f = stats.fins;
+  return (
+    <p className="petit ed-stats">
+      📊 <b>{stats.tentatives}</b> tentative{stats.tentatives > 1 ? 's' : ''} · <b>{stats.terminees}</b> terminée{stats.terminees > 1 ? 's' : ''}
+      {f.resolu > 0 && <> · ✅ {f.resolu} résolu{f.resolu > 1 ? 's' : ''}</>}
+      {f.contact > 0 && <> · 📞 {f.contact} à contacter</>}
+      {f.termine > 0 && <> · 🎉 {f.termine} jusqu'au bout</>}
+      {stats.envoyes > 0 && <> · 📤 {stats.envoyes} résultat{stats.envoyes > 1 ? 's' : ''} envoyé{stats.envoyes > 1 ? 's' : ''}</>}
+      <br /><span className="muted">Anonymes, sans les admins{stats.depuis ? `, depuis le ${new Date(stats.depuis).toLocaleDateString('fr-FR')}` : ''}. ⏸ = tentatives arrêtées à cette étape ; sur les réponses : nombre et part des choix.</span>
+    </p>
   );
 }
 
@@ -426,6 +492,8 @@ export function AdminProcedure() {
   const [erreur, setErreur] = useState<unknown>();
   const [infos, setInfos] = useState({ titre: '', categorie: '', resume: '', description: '' });
   const [sel, setSel] = useState<Sel>(null);
+  const [stats, setStats] = useState<Stats>();
+  const [signalements, setSignalements] = useState<Signalement[]>([]);
 
   const appliquer = (x: Procedure) => {
     setP(x);
@@ -435,7 +503,13 @@ export function AdminProcedure() {
   useEffect(() => {
     api<Procedure>(`/procedures/${id}`).then(appliquer).catch(setErreur);
     chargerProcedures().then(setProcedures).catch(() => {});
+    api<Stats>(`/admin/procedures/${id}/stats`).then(setStats).catch(() => {});
+    api<Signalement[]>(`/admin/procedures/${id}/signalements`).then(setSignalements).catch(() => {});
   }, [id]);
+  const traiter = (s: Signalement, traite: boolean) => {
+    setSignalements((l) => l.map((x) => (x.id === s.id ? { ...x, traite } : x)));
+    api(`/admin/procedures/signalements/${s.id}`, { method: 'PATCH', json: { traite } }).catch(setErreur);
+  };
   /** Envoie une modification ; la procédure à jour si elle a réussi. */
   const maj: Maj = async (chemin, opts) => {
     setErreur(undefined);
@@ -454,7 +528,7 @@ export function AdminProcedure() {
   const categories = [...new Set([...CATEGORIES, p.categorie])];
   const etapeSel = sel?.type === 'etape' ? p.etapes.find((e) => e.id === sel.id) : undefined;
   const choixSel = sel?.type === 'choix' ? p.etapes.flatMap((e) => e.choix).find((c) => c.id === sel.id) : undefined;
-  const avertissements = alertes(p);
+  const avertissements = alertes(p, signalements);
 
   return (
     <div className="page gx ed">
@@ -494,9 +568,11 @@ export function AdminProcedure() {
         <div className="ed-col"><BlocIa key={`${p.prompt}|${p.resumeIa}`} p={p} maj={maj} /></div>
       </div>
 
+      <Suivi.Provider value={{ stats, signalements, traiter }}>
       <div className="ed-plan">
         <section className="carte ed-schema">
           <h4>Schéma <small className="muted">· cliquez sur une étape, une question ou une réponse pour la modifier</small></h4>
+          <ResumeStats />
           {avertissements.length > 0 && (
             <ul className="ed-alertes">
               {avertissements.map((a, k) => (
@@ -525,6 +601,7 @@ export function AdminProcedure() {
           )}
         </aside>
       </div>
+      </Suivi.Provider>
 
       <p className="ed-liens">
         <Link to={`/procedures/${p.id}`}>Voir comme un client ›</Link>

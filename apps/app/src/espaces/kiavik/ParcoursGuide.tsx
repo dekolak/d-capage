@@ -6,6 +6,7 @@ import { AideNon } from './Controle';
 import { FinDiagnostic } from './FinDiagnostic';
 import { Procedure } from './donneesProcedures';
 import { Galerie } from './Galerie';
+import { PasClair } from './PasClair';
 import { decouperEtape } from './ProcedureDetail';
 import { useVoix } from './voix';
 import './parcours.css';
@@ -128,6 +129,7 @@ export function ParcoursGuide({ p, av, onFermer }: { p: Procedure; av: Avancemen
               <CaptureBouton key={e.id} guide={e.guide} ecran={e.ecran} pastille={e.pastille} zoomDepart />
             ) : null}
             {e.photo && e.guide && e.ecran && <CaptureBouton key={`${e.id}-c`} guide={e.guide} ecran={e.ecran} pastille={e.pastille} />}
+            <PasClair key={`${e.id}-pc`} etape={e.id} />
           </div>
           {e.choix.length > 0 ? (
             <div className="pg-pied dg-pied">

@@ -96,3 +96,9 @@
 .ga-fleche { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, 0.85); font-size: 28px; line-height: 1; cursor: pointer; }
 .ga-fleche:disabled { opacity: 0.3; }
 .ga-fleche.g { left: 10px; } .ga-fleche.d { right: 10px; }
+
+/* « Pas clair ? » */
+.pc-lien { background: none; border: 0; padding: 0; color: var(--g); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; justify-self: start; }
+.pc-merci { color: var(--ok); font-size: 13px; font-weight: 600; }
+.pc-form { display: grid; gap: 6px; width: 100%; }
+.pc-form > span { display: flex; gap: 8px; }
