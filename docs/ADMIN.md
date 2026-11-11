@@ -69,9 +69,10 @@ Rien n'est envoyé à une IA par l'app : tout passe par n8n, où vous choisissez
 - **Description** de chaque procédure : à quoi elle sert, quand l'utiliser, symptômes. Le **catalogue** des descriptions (`GET /api/ia/catalogue`, clé API) permet à une IA de proposer la bonne procédure.
 - **Notes** (sur les étapes et questions), **significations** (sur les réponses), **conclusions** (sur les fins) : jamais montrées au client, elles expliquent l'arbre à l'IA.
 - **Prompt général** (Administration → Procédures, en bas) et **prompt de la procédure** (bloc 🤖 IA) : les consignes données à l'IA ; celui de la procédure complète le général.
-- **Résumé automatique** : prévu pour plus tard (généré par l'IA, signalé « à refaire » après une modification).
-- **⬇ Exporter l'arbre** : le JSON que lit l'IA (`GET /api/ia/procedures/:id`).
-- Le webhook `diagnostic.envoye` contient le résultat (`question : réponse`) et un **paquet** tout prêt pour l'IA (prompts + description + résultat + message). À mentionner dans les conditions d'utilisation avant d'envoyer des réponses de clients à une IA.
+- **Résumé automatique** (bloc 🤖 IA) : texte fabriqué par l'app à partir du schéma, **sans IA**, toujours à jour : étapes numérotées, parties, questions, réponses et leur signification, détours, suites, conclusions, notes, boutons liés.
+- **📋 Copier le résumé** ou **📋 Copier avec les prompts** (consignes générales + prompt de la procédure + résumé) : à coller dans l'IA de votre choix. **⬇ JSON** : la même chose pour une machine (`GET /api/ia/procedures/:id`, champs `resumeTexte` et `paquet`).
+- Dans **Diagnostics reçus**, **📋 Copier pour l'IA** sur chaque résultat : prompts + résumé de la procédure + réponses et message du client.
+- Le webhook `diagnostic.envoye` contient le résultat (`question : réponse`) et le même **paquet** tout prêt pour l'IA (prompts + résumé de la procédure + résultat + message). À mentionner dans les conditions d'utilisation avant d'envoyer des réponses de clients à une IA.
 
 ## Sans réseau (atelier)
 - Les pages déjà ouvertes restent lisibles sans connexion (procédures, photos, astuces, guides, captures) ; un bandeau « 📴 Hors ligne » le signale.

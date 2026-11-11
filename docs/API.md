@@ -84,8 +84,8 @@ Les conseils `niveau: "a_completer"` (notes internes) ne sont envoyés qu'à l'a
 | DELETE | `/admin/procedures/photos/:id` ; POST `…/deplacer {sens}` (ordre des photos) | admin |
 | POST | `/admin/procedures/etapes/:id/choix` `{libelle}` : ajoute une réponse (l'étape devient une question) | admin |
 | PATCH · DELETE | `/admin/procedures/choix/:id` `{libelle?, signification?, suite?: retour\|etape\|resolu\|contact, etapeCibleId?, conclusion?, solutionId?, procedureCibleId?}` ; POST `…/deplacer {sens}` | admin |
-| GET · PATCH | `/admin/diagnostics[?nonLus=1]` (résultats reçus) ; `/admin/diagnostics/:id {lu}` | admin ou clé API |
-| GET | `/ia/catalogue` (procédures publiées : description, `diagnostic`, lien + prompt général) ; `/ia/procedures/:id` (arbre : route, questions, réponses, détours, notes, significations, conclusions, prompts) | admin ou clé API |
+| GET · PATCH | `/admin/diagnostics[?nonLus=1]` (résultats reçus) ; `/admin/diagnostics/:id {lu}` ; GET `/admin/diagnostics/:id/paquet` (texte prêt pour l'IA) | admin ou clé API |
+| GET | `/ia/catalogue` (procédures publiées : description, `diagnostic`, lien + prompt général) ; `/ia/procedures/:id` (arbre : route, questions, réponses, détours, notes, significations, conclusions, prompts ; `resumeTexte` = résumé texte automatique, `paquet` = prompts + résumé, prêt à coller dans une IA) | admin ou clé API |
 | GET · PUT | `/ia/prompt` `{texte}` : prompt général de l'espace | admin ou clé API |
 
 ### Mot de passe oublié et notifications

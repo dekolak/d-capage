@@ -12,7 +12,7 @@ main:has(.ed) { max-width: 1440px; }
 .ed-manque { margin-left: 6px; color: var(--g2); font-style: italic; }
 .ed-ia { display: grid; gap: 10px; }
 .ed-ia code { font-size: 12px; }
-.ed-resume-ia { padding: 10px; border-radius: var(--r-sm); background: var(--fond); color: var(--g); font-size: 14px; white-space: pre-wrap; }
+.ed-resume-ia { margin: 0; padding: 10px; border-radius: var(--r-sm); background: var(--fond); color: var(--t); font: inherit; font-size: 13px; line-height: 1.45; white-space: pre-wrap; max-height: 420px; overflow: auto; font-weight: 400; }
 .ed-champ { display: grid; gap: 6px; font-weight: 600; font-size: 14px; }
 
 /* schéma */
@@ -89,3 +89,4 @@ main:has(.ed) { max-width: 1440px; }
 .ed-signalements { display: grid; gap: 6px; padding: 10px; border-radius: var(--r-sm); background: #fdecea; }
 .ed-signalement { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
 .ed-signalement.traite { opacity: 0.55; }
+.dg-paquet { display: grid; gap: 10px; max-height: 90vh; overflow: auto; }

@@ -576,6 +576,14 @@ describe('Parcours complet', () => {
     expect(ex.prompt).toBe('Sois bref');
     expect(ex.route[1]).toMatchObject({ question: true, note: 'commande ?', reponses: [{ libelle: 'Oui', suite: 'retour' }, { libelle: 'Non', suite: 'contact', detour: [{ texte: 'Vérifier le bouton Pompe' }] }] });
     expect((await http.get('/api/ia/catalogue').set(C)).status).toBe(403);
+    // résumé texte automatique (sans IA) et paquet à coller dans une IA
+    expect(ex.resumeTexte).toContain('❓ Tu entends la pompe ?');
+    expect(ex.resumeTexte).toContain('→ Non (pas de commande) :');
+    expect(ex.resumeTexte).toContain('FIN : contacter Kiavik — Panne de pompe');
+    expect(ex.paquet).toMatch(/^# Consignes générales\nTu es l'assistant Kiavik\.\n\n# Consignes pour « Diag .* »\nSois bref\n\n# Procédure\nProcédure : Diag/);
+    const pq = (await http.get(`/api/admin/diagnostics/${env.id}/paquet`).set(A)).body.texte;
+    expect(pq).toContain('# Résultat du client\nTu entends la pompe ? : Non');
+    expect(pq).toContain('# Message du client\naide');
     await http.put('/api/ia/prompt').set(A).send({ texte: '' }).expect(200);
 
     // « pas clair ? » : un seul signalement ouvert par client et par étape ; l'admin le traite
