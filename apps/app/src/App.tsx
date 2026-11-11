@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { Annonces } from './components/Annonces';
 import { Chargement } from './components/Composants';
+import { BoutonPartager } from './components/Partager';
 import { APPS } from './espaces';
 import { useAuth } from './lib/auth';
 import { useEspace } from './lib/espace';
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      {admin && <BoutonPartager flottant />}
       <nav className="onglets">
         {app.onglets.map((o) =>
           o.plus ? (

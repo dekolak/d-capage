@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
+import { BoutonPartager } from '../../components/Partager';
 import { useAuth } from '../../lib/auth';
 import { Fenetre } from './Fenetres';
 import { CANAUX_DEPART, CommandesInteractif, EtatCanaux, Interactif } from './Interactifs';
@@ -154,6 +155,7 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
           <div className="gx-fiche" role="dialog" aria-label={pastille.titre}>
             <button type="button" className="gx-fermer" aria-label={t('commun.fermer')} onClick={() => choisir(null)}>✕</button>
             <FichePastille guide={guide} e={e} p={pastille} onOuvrir={(id) => aller(id)} />
+            <div className="gx-partage"><BoutonPartager titre={`${guide.nom} · ${e.code} · ${pastille.id} ${pastille.titre}`} /></div>
           </div>
         </>
       )}

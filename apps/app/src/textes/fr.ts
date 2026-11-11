@@ -29,6 +29,12 @@ const fr = {
   "commun.tags.nouveau": "Nouveau choix dans « {groupe} »",
   "commun.tags.retirer": "Retirer {nom}",
   "commun.tags.tous": "Tous",
+  // ---------- Partage (admin) ----------
+  "partage.bouton": "Partager",
+  "partage.texte": "{titre} — à voir dans l'app {app} :",
+  "partage.lien": "Lien de la page",
+  "partage.copier": "Copier le lien",
+  "partage.copie": "Lien copié ✓",
   // ---------- Connexion ----------
   "connexion.bouton": "Se connecter",
   "connexion.enCours": "Connexion…",

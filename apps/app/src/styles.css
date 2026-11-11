@@ -447,3 +447,12 @@ input[type='datetime-local'], input[type='number'] { width: 100%; min-height: 48
 .cases-modules legend { font-weight: 700; font-size: 13px; padding: 0 4px; }
 .cases-modules label { display: flex; align-items: center; gap: 8px; font-weight: 500; margin: 4px 0; }
 .badge-espace { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; color: #fff; background: var(--c, var(--g)); }
+
+/* Partage d'une page (admin) */
+.partage-flottant { position: fixed; z-index: 55; right: 14px; bottom: calc(92px + env(safe-area-inset-bottom)); width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--o); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px color-mix(in srgb, var(--o) 40%, transparent); cursor: pointer; }
+.btn.petit svg { width: 16px; height: 16px; }
+.btn.petit:has(svg) { display: inline-flex; gap: 6px; align-items: center; }
+.partage-fond { position: fixed; inset: 0; z-index: 80; background: rgba(0, 0, 0, 0.35); display: flex; align-items: flex-end; justify-content: center; padding: 12px; }
+.partage-menu { width: min(420px, 100%); display: grid; gap: 8px; margin-bottom: env(safe-area-inset-bottom); }
+.partage-menu input { width: 100%; font-size: 13px; }
+.partage-menu .btn { text-align: center; text-decoration: none; }
