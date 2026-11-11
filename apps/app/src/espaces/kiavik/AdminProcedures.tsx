@@ -233,6 +233,7 @@ export function AdminProcedure() {
         <label>
           Nouvelle étape
           <textarea rows={2} value={nouvelle} placeholder="Ex. Mettez l'impression en pause." onChange={(e) => setNouvelle(e.target.value)} />
+          <small className="muted">Astuce : « Montage — Vérifier la courroie » range l'étape sous le titre « Montage ».</small>
         </label>
         <button
           type="button"

@@ -191,3 +191,5 @@
 .sx-bloc { margin-bottom: 10px; display: grid; gap: 6px; }
 .sx-bloc h4 { margin: 0; }
 .sx-bloc p { margin: 0; font-size: 16px; }
+.gx-partie { list-style: none; margin: 10px 0 -2px; }
+.gx-partie h4 { margin: 0; color: var(--od); }
