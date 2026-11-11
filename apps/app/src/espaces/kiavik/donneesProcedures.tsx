@@ -54,6 +54,44 @@ export function useProcedures() {
   return { liste, erreur, acces };
 }
 
+/** Fiche « Astuces & solutions ». */
+export interface Solution {
+  id: string; titre: string; categorie: string; cause: string | null; texte: string; avertissement: string | null; motsCles: string[];
+  guide: string | null; ecran: string | null; pastille: string | null; procedureId: string | null;
+  photo: string | null; publiee: boolean; ordre: number; updatedAt: string;
+}
+
+let cacheSolutions: Promise<Solution[]> | null = null;
+export function chargerSolutions(): Promise<Solution[]> {
+  if (!cacheSolutions) {
+    cacheSolutions = api<Solution[]>('/solutions');
+    cacheSolutions.catch(() => (cacheSolutions = null));
+  }
+  return cacheSolutions;
+}
+export const viderSolutions = () => (cacheSolutions = null);
+
+/** Fiches « Astuces & solutions » (même accès que les procédures). */
+export function useSolutions() {
+  const acces = useAccesProcedures();
+  const [liste, setListe] = useState<Solution[]>();
+  const [erreur, setErreur] = useState<unknown>();
+  useEffect(() => {
+    if (!acces) {
+      setListe([]);
+      return;
+    }
+    let actif = true;
+    chargerSolutions()
+      .then((l) => actif && setListe(l))
+      .catch((e) => actif && setErreur(e));
+    return () => {
+      actif = false;
+    };
+  }, [acces]);
+  return { liste, erreur, acces };
+}
+
 /** Adresse de l'écran du guide pour le lien d'une étape. */
 export const lienGuide = (l: { guide: string | null; ecran: string | null; pastille: string | null }) =>
   l.guide && l.ecran ? `/guides/${l.guide}/${l.ecran}${l.pastille ? `?p=${encodeURIComponent(l.pastille)}` : ''}` : null;

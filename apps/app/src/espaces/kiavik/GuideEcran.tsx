@@ -6,7 +6,7 @@ import { EditeurPastille } from './Corrections';
 import { useAuth } from '../../lib/auth';
 import { Fenetre } from './Fenetres';
 import { CANAUX_DEPART, CommandesInteractif, EtatCanaux, Interactif } from './Interactifs';
-import { useProcedures } from './donneesProcedures';
+import { useProcedures, useSolutions } from './donneesProcedures';
 import { choisirModeBlanc, ecranCite, Ecran, groupes, Guide, modeBlancChoisi, Pastille, PastilleNav, pastillesNavigation, useGuide } from './guides';
 import './guides.css';
 import { t } from '../../lib/i18n';
@@ -204,6 +204,8 @@ function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: P
   const { liste } = useProcedures();
   const anims = (guide.animations ?? []).filter((a) => a.liens?.some(([ec, id]) => ec === e.id && id === p.id));
   const liees = (liste ?? []).filter((x) => x.liens.some((l) => l.guide === guide.slug && l.ecran === e.id && l.pastille === p.id));
+  const { liste: solutions } = useSolutions();
+  const astuces = (solutions ?? []).filter((x) => x.guide === guide.slug && x.ecran === e.id && x.pastille === p.id);
   const { moi } = useAuth();
   const [edition, setEdition] = useState(false);
   // fiche modifiée : on referme le formulaire si l'on change de bouton
@@ -235,6 +237,13 @@ function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: P
         <button type="button" className="btn prim petit gx-ouvrir" onClick={() => onOuvrir(lien.id)}>
           {t('kiavik.guide.ouvrirEcran', { code: lien.code })}
         </button>
+      )}
+      {astuces.length > 0 && (
+        <div className="gx-proc-lies">
+          {astuces.map((x) => (
+            <Link key={x.id} to={`/solutions/${x.id}`} className="btn petit">{t('kiavik.guide.voirSolution', { titre: x.titre })}</Link>
+          ))}
+        </div>
       )}
       {(liees.length > 0 || anims.length > 0) && (
         <div className="gx-proc-lies">

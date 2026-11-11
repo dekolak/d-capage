@@ -58,7 +58,7 @@ export function AdminProcedures() {
 }
 
 /** Choix d'un bouton de guide (guide → écran → pastille) pour une étape. */
-function useGuidesAdmin() {
+export function useGuidesAdmin() {
   const [guides, setGuides] = useState<Guide[]>([]);
   useEffect(() => {
     api<ResumeGuide[]>('/guides')
@@ -69,9 +69,9 @@ function useGuidesAdmin() {
   return guides;
 }
 
-type Lien = { guide: string | null; ecran: string | null; pastille: string | null };
+export type Lien = { guide: string | null; ecran: string | null; pastille: string | null };
 
-function ChoixBouton({ guides, valeur, onChange }: { guides: Guide[]; valeur: Lien; onChange(l: Lien): void }) {
+export function ChoixBouton({ guides, valeur, onChange }: { guides: Guide[]; valeur: Lien; onChange(l: Lien): void }) {
   const g = guides.find((x) => x.slug === valeur.guide);
   const e = g?.ecrans.find((x) => x.id === valeur.ecran);
   const boutons = useMemo(() => {

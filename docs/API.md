@@ -75,6 +75,13 @@ Les conseils `niveau: "a_completer"` (notes internes) ne sont envoyés qu'à l'a
 | POST | `/admin/procedures/:id/etapes` `{texte, avertissement?, guide?, ecran?, pastille?}` | admin |
 | PATCH · DELETE | `/admin/procedures/etapes/:id` ; POST `…/deplacer {sens: -1\|1}` ; POST · DELETE `…/photo` (multipart `photo`) | admin |
 
+### Astuces & solutions (module `procedures-kiavik`)
+| Méthode | Route | Accès |
+|---|---|---|
+| GET | `/solutions` (publiées ; admin : toutes), `/solutions/:id`, `/solutions/:id/photo` | module |
+| POST · PATCH · DELETE | `/admin/solutions[/:id]` `{titre, texte, categorie?, cause?, avertissement?, motsCles?, guide?, ecran?, pastille?, procedureId?, publiee?}` | admin |
+| POST · DELETE | `/admin/solutions/:id/photo` (multipart `photo`) | admin |
+
 ### Corrections des guides (admin)
 | Méthode | Route | Accès |
 |---|---|---|

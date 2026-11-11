@@ -93,6 +93,12 @@ export default function Admin() {
           <span>›</span>
         </Link>
       )}
+      {espaceOuvert.modules.some((m) => m.slug === 'procedures-kiavik') && (
+        <Link to="/admin/solutions" className="bandeau lien-bandeau">
+          <span><b>💡 Astuces & solutions</b> : problèmes déjà résolus, astuces</span>
+          <span>›</span>
+        </Link>
+      )}
       <Link to="/admin/webhooks" className="bandeau lien-bandeau">
         <span><b>Envoi vers une API</b> : fiches et avis (modération IA)</span>
         <span>›</span>

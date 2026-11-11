@@ -1,0 +1,45 @@
+{
+ "_note": "Fiches « Astuces & solutions » de départ, reprises des précautions des guides. Chargées par le seed seulement si leur clé n'existe pas ; ensuite elles se modifient dans l'app (Administration → Astuces & solutions), le seed ne les écrase jamais. lien = [guide, écran, pastille].",
+ "solutions": [
+  {
+   "cle": "couleurs-floues-offre",
+   "titre": "Les couleurs sont floues ou les lignes des grilles sont doublées",
+   "categorie": "Impression",
+   "cause": "Les encres ne tombent pas exactement au même endroit : le réglage Offre n'est plus bon.",
+   "texte": "Dans DXonJet, menu D4 Calibrage : imprimez la mire avec Composition des encres, lisez la valeur où les deux moitiés des lignes sont alignées, puis corrigez l'Offre (valeur négative : on la déduit, positive : on l'ajoute). Recommencez jusqu'à l'alignement sur le zéro. L'animation « Régler l'Offre » montre chaque étape.",
+   "motsCles": ["flou", "doublé", "décalage", "superposition", "offset", "alignement", "mire"],
+   "lien": ["dxonjet", "d4a", "a.6"],
+   "publiee": true
+  },
+  {
+   "cle": "fichier-rip-introuvable",
+   "titre": "Le fichier RIPé n'apparaît pas dans DXonJet",
+   "categorie": "Impression",
+   "cause": "La liste des fichiers du dossier ne s'est pas rafraîchie.",
+   "texte": "Dans D1 Sélection de fichier, cliquez sur un autre dossier, puis revenez sur le bon dossier : la liste se met à jour et le fichier apparaît.",
+   "motsCles": ["fichier", "introuvable", "absent", "RIP", "dossier", "liste"],
+   "lien": ["dxonjet", "d1", "1.1"],
+   "publiee": true
+  },
+  {
+   "cle": "pompe-encre-active",
+   "titre": "La pompe à encre continue de tourner",
+   "categorie": "Entretien",
+   "cause": "Une fois activée, la pompe à encre reste active.",
+   "texte": "Appuyez de nouveau sur le bouton Pompe à encre du panneau de commande pour la désactiver.",
+   "motsCles": ["pompe", "encre", "tourne", "bruit"],
+   "lien": ["dxonjet", "dc", "P.9"],
+   "publiee": true
+  },
+  {
+   "cle": "impression-trop-longue",
+   "titre": "L'impression est trop longue",
+   "categorie": "Réglages",
+   "cause": "La plage du mode de protection d'encre est grande : plus elle est grande, plus le temps d'impression s'allonge.",
+   "texte": "Dans D3 Réglage des paramètres, vérifiez le mode de protection d'encre (plage) et réduisez-la si possible.",
+   "motsCles": ["lent", "long", "durée", "temps", "protection", "plage"],
+   "lien": ["dxonjet", "d3a", "a.1"],
+   "publiee": true
+  }
+ ]
+}
