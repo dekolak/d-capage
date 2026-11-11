@@ -516,6 +516,97 @@
           ]
         }
       ]
+    },
+    {
+      "cle": "ma-changer-filtres",
+      "titre": "Changer les filtres à encre",
+      "categorie": "Entretien",
+      "resume": "Remplacer les filtres à encre un par un, sans faire couler l'encre, puis remettre la machine en route et tout tester.",
+      "description": "Entretien de la machine DXonJet : remplacement des filtres à encre (un par couleur). À faire quand les filtres sont encrassés ou à l'échéance d'entretien. Machine hors tension, tête à la bonne hauteur ; on démonte le capot (et si possible le support de la lampe UV), on remplace chaque filtre en le gardant plus haut que le réservoir, on vérifie les nappes de la tête, on remonte, puis nettoyage avec un pompage plus long et tous les tests.",
+      "prompt": "Tu aides un client Kiavik à changer les filtres à encre d'une machine DXonJet. Réponds en étapes courtes. Insiste sur la sécurité : machine hors tension avant d'ouvrir le capot. Rappelle de garder le filtre plus haut que le réservoir pour que l'encre ne coule pas, et de changer les filtres un par un. Ne conseille jamais de forcer sur les nappes de la tête ni de démonter l'électronique : en cas de doute, oriente vers le support Kiavik.",
+      "publiee": false,
+      "etapes": [
+        {
+          "texte": "Sécurité — Vérifier que la machine est éteinte et débranchée.",
+          "avertissement": "Ne jamais ouvrir le capot machine sous tension."
+        },
+        {
+          "texte": "Sécurité — Vérifier que le bloc tête est à la bonne hauteur.",
+          "controle": true
+        },
+        {
+          "texte": "Préparation — Fermer les bouchons (idéalement, les vider avant)."
+        },
+        {
+          "texte": "Démontage — Retirer les vis qui maintiennent le capot, puis enlever le capot.",
+          "avertissement": "Garder les vis de côté : elles servent au remontage."
+        },
+        {
+          "texte": "Démontage — Facultatif mais conseillé : dévisser le support de la lampe UV et le décaler pour avoir de la place.",
+          "note": "Étape facultative : elle facilite l'accès aux filtres."
+        },
+        {
+          "texte": "Filtres — Sortir le premier filtre de son emplacement."
+        },
+        {
+          "texte": "Filtres — Tenir le filtre plus haut que le réservoir.",
+          "avertissement": "Si le filtre descend sous le réservoir, l'encre coule. À deux personnes, c'est beaucoup plus simple : une tient le filtre, l'autre fait le branchement."
+        },
+        {
+          "texte": "Filtres — Couper le tuyau et le brancher sur le nouveau filtre."
+        },
+        {
+          "texte": "Filtres — Remettre le filtre à sa place."
+        },
+        {
+          "texte": "Filtres — Recommencer avec les filtres suivants, un par un.",
+          "note": "Un filtre à la fois pour ne pas mélanger les couleurs ni les tuyaux."
+        },
+        {
+          "texte": "Vérification — Les nappes (câbles blancs qui relient la tête) sont bien branchées ?",
+          "controle": true,
+          "avertissement": "Les nappes sont fragiles : ne pas tirer ni forcer dessus."
+        },
+        {
+          "texte": "Remontage — Remettre le support de la lampe UV, le capot et toutes les vis."
+        },
+        {
+          "texte": "Remontage — Tout est bien remonté ? Sinon, revenir aux étapes précédentes.",
+          "controle": true
+        },
+        {
+          "texte": "Remise en route — Rebrancher et allumer la machine, ouvrir DXonJet."
+        },
+        {
+          "texte": "Remise en route — Faire un nettoyage avec un pompage plus long, pour remplir les nouveaux filtres d'encre.",
+          "lien": [
+            "dxonjet",
+            "dc",
+            "P.9"
+          ]
+        },
+        {
+          "texte": "Remise en route — Lancer un nettoyage des têtes.",
+          "lien": [
+            "dxonjet",
+            "dc",
+            "P.10"
+          ]
+        },
+        {
+          "texte": "Tests — Faire le test des buses.",
+          "lien": [
+            "dxonjet",
+            "dc",
+            "P.5"
+          ]
+        },
+        {
+          "texte": "Tests — Toutes les buses sont bonnes et l'encre arrive dans toutes les couleurs ?",
+          "controle": true,
+          "note": "Si une couleur manque : filtre mal branché ou pas encore rempli. Refaire un pompage, sinon vérifier le branchement du filtre de cette couleur."
+        }
+      ]
     }
   ]
 }
