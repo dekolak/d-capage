@@ -827,8 +827,8 @@
    "photos": {
     "avant": {
      "image": "images/dx/offre_grilles_avant.jpg",
-     "largeur": 480,
-     "hauteur": 667
+     "largeur": 600,
+     "hauteur": 800
     },
     "mur": {
      "image": "images/dx/offre_mire_mur.jpg",
@@ -847,8 +847,8 @@
     },
     "apres": {
      "image": "images/dx/offre_grilles_apres.jpg",
-     "largeur": 600,
-     "hauteur": 800
+     "largeur": 480,
+     "hauteur": 667
     }
    },
    "scenes": [
@@ -859,8 +859,8 @@
      "etapes": [
       {
        "cur": [
-        118,
-        420
+        255,
+        280
        ],
        "ring": 1,
        "cap": "Les couleurs sont mal superposées : sur l'impression test, les lignes des grilles sont doublées ou en marches d'escalier. Il faut régler l'Offre.",
@@ -1065,8 +1065,8 @@
      "etapes": [
       {
        "cur": [
-        255,
-        280
+        118,
+        420
        ],
        "cap": "Les grilles sont nettes : les couleurs sont bien superposées.",
        "d": 4200
