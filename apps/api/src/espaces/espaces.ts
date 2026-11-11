@@ -58,7 +58,7 @@ export const ESPACES: EspaceDef[] = [
     modules: [
       { slug: 'guide-flexiprint', nom: 'Guide Flexiprint' },
       { slug: 'guide-dxonjet', nom: 'Guide DXonJet' },
-      { slug: 'procedures-kiavik', nom: 'Procédures' },
+      { slug: 'procedures-kiavik', nom: 'Procédures et astuces' },
     ],
   },
 ];

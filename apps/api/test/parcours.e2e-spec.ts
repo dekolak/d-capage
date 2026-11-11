@@ -571,4 +571,44 @@ describe('Parcours complet', () => {
     expect(g3.animations.find((a: any) => a.id === 'offre-composition').photos.avant.image).toMatch(/offre_grilles_avant/);
     expect((await http.get(image)).status).toBe(404);
   });
+
+  it('astuces & solutions : fiches de départ, création par l\'admin, brouillon invisible, liens vérifiés, photo', async () => {
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'solutions' })).body.cle;
+    await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `sam-${id}`, motDePasse: 'motdepasse1', modules: ['procedures-kiavik'] }).expect(201);
+    const ts = (await http.post('/api/auth/connexion').send({ identifiant: `sam-${id}`, motDePasse: 'motdepasse1' })).body.jeton;
+    const C = { ...auth(ts), 'X-Espace': 'kiavik' };
+    const { version } = (await http.get('/api/conditions?espace=kiavik').set(C)).body;
+    await http.post('/api/moi/conditions').set(C).send({ version }).expect(201);
+
+    // fiches livrées par le seed
+    const depart = (await http.get('/api/solutions').set(C)).body;
+    expect(depart.find((s: any) => s.titre.startsWith('Les couleurs sont floues'))).toMatchObject({ guide: 'dxonjet', ecran: 'd4a', pastille: 'a.6', publiee: true });
+
+    // création (brouillon) par l'admin, liens vérifiés
+    expect((await http.post('/api/admin/solutions').set(C).send({ titre: 'pirate', texte: 'x' })).status).toBe(403);
+    expect((await http.post('/api/admin/solutions').set(auth(admin)).send({ titre: 'Essai lien', texte: 'xx', guide: 'dxonjet', ecran: 'd4a', pastille: 'zz' })).status).toBe(400);
+    expect((await http.post('/api/admin/solutions').set(auth(admin)).send({ titre: 'Essai proc', texte: 'xx', procedureId: 'inconnue' })).status).toBe(400);
+    const proc = (await http.get('/api/procedures').set(auth(admin))).body[0];
+    const s = (await http.post('/api/admin/solutions').set(auth(admin)).send({
+      titre: `Tête qui frotte ${id}`, texte: 'Reculer la tête.', cause: 'Distance trop faible', motsCles: ['frotte', ' frotte ', 'tête'],
+      guide: 'dxonjet', ecran: 'd3a', pastille: 'a.4', procedureId: proc.id,
+    })).body;
+    expect(s).toMatchObject({ publiee: false, motsCles: ['frotte', 'tête'], procedureId: proc.id });
+    expect((await http.get(`/api/solutions/${s.id}`).set(C)).status).toBe(404);
+    expect((await http.get('/api/solutions').set(C)).body.some((x: any) => x.id === s.id)).toBe(false);
+
+    // photo, publication
+    const ph = await http.post(`/api/admin/solutions/${s.id}/photo`).set(auth(admin)).attach('photo', JPEG, 'a.jpg');
+    expect(ph.status).toBe(201);
+    expect((await http.get(`/api${ph.body.photo}`).set(C)).status).toBe(404); // brouillon
+    await http.patch(`/api/admin/solutions/${s.id}`).set(auth(admin)).send({ publiee: true, cause: '' }).expect(200);
+    const lue = (await http.get(`/api/solutions/${s.id}`).set(C)).body;
+    expect(lue.cause).toBeNull();
+    expect((await http.get(`/api${lue.photo}`).set(C)).headers['content-type']).toBe('image/jpeg');
+
+    // module requis
+    expect((await http.get('/api/solutions').set({ ...auth(alice), 'X-Espace': 'kiavik' })).body.code).toBe('MODULE_NON_AUTORISE');
+    await http.delete(`/api/admin/solutions/${s.id}`).set(auth(admin)).expect(200);
+    expect((await http.get(`/api/solutions/${s.id}`).set(C)).status).toBe(404);
+  });
 });

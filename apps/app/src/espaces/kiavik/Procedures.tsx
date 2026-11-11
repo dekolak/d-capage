@@ -29,6 +29,10 @@ export default function Procedures() {
     <div className="page gx">
       <h1>{t('kiavik.procedures.titre')}</h1>
       {moi?.role === 'ADMIN' && <Link to="/admin/procedures" className="btn petit gx-admin-lien">{t('kiavik.procedures.gerer')}</Link>}
+      <Link to="/solutions" className="bandeau lien-bandeau">
+        <span><b>{t('kiavik.solutions.titre')}</b>{t('kiavik.solutions.bandeau')}</span>
+        <span>›</span>
+      </Link>
       {liste.length > 4 && (
         <div className="gx-recherche">
           <input type="search" placeholder={t('kiavik.procedures.filtrer')} value={q} onChange={(e) => setQ(e.target.value)} aria-label={t('kiavik.procedures.filtrerChamp')} />

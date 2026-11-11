@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { ResumeGuide } from './guides';
-import { useProcedures } from './donneesProcedures';
+import { useProcedures, useSolutions } from './donneesProcedures';
+import { ListeSolutions } from './Solutions';
 import { ListeProcedures } from './Procedures';
 import './guides.css';
 import './animations.css';
@@ -12,6 +13,7 @@ import { t } from '../../lib/i18n';
 /** Accueil Kiavik : les guides du compte côte à côte en haut, les procédures en dessous. */
 export default function Guides() {
   const { liste: procedures, acces: accesProcedures } = useProcedures();
+  const { liste: solutions } = useSolutions();
   const [guides, setGuides] = useState<ResumeGuide[]>();
   const [erreur, setErreur] = useState<unknown>();
   useEffect(() => {
@@ -54,6 +56,13 @@ export default function Guides() {
               )),
             )}
           </div>
+        </>
+      )}
+      {accesProcedures && solutions && solutions.length > 0 && (
+        <>
+          <h2>{t('kiavik.solutions.titre')}</h2>
+          <ListeSolutions liste={solutions.slice(0, 3)} />
+          {solutions.length > 3 && <p><Link to="/solutions" className="lien">{t('kiavik.solutions.toutes', { n: solutions.length })}</Link></p>}
         </>
       )}
       {accesProcedures && (

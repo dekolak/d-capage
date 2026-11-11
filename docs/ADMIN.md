@@ -48,6 +48,13 @@ Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procé
 - Les clients doivent avoir le module **Procédures** (case à cocher sur leur compte).
 - Au départ : 2 procédures FlexiPRINT publiées (reprises du prototype) et 4 brouillons DXonJet à compléter.
 
+## Kiavik : astuces & solutions
+Administration → **💡 Astuces & solutions** (espace Kiavik), ou depuis la page Procédures.
+- Une fiche = **le problème ou l'astuce** (titre), **pourquoi** (facultatif), **que faire**, une **précaution** facultative, une photo, des **mots-clés**, le **bouton du guide** et la **procédure** liés.
+- Brouillon tant que « Publiée » n'est pas cochée. Les clients (module Procédures) les voient sur l'accueil, en tête de la recherche et dans la fiche du bouton lié (« 💡 … »).
+- 4 fiches de départ reprises des précautions des guides (Offre, fichier RIPé introuvable, pompe à encre, impression trop longue).
+- Ces fiches serviront aussi de base au futur assistant IA : plus elles sont nombreuses et précises, meilleures seront ses réponses.
+
 ## Kiavik : corriger les guides depuis le téléphone
 En étant connecté en admin :
 - **Fiche d'un bouton** : toucher le bouton dans le guide → **✏️ Modifier** → titre, texte, conseil (💡 astuce, ⚠️ avertissement ou « à compléter » visible seulement par l'admin), mots-clés pour la recherche → **Enregistrer**. Le badge « modifié dans l'app » le signale.

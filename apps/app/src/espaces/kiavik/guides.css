@@ -186,3 +186,8 @@
 .cx-photo { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .cx-photo img { width: 90px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--bord); }
 .cx-badge { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: #fff1d6; color: #8a5a00; }
+
+/* Astuces & solutions */
+.sx-bloc { margin-bottom: 10px; display: grid; gap: 6px; }
+.sx-bloc h4 { margin: 0; }
+.sx-bloc p { margin: 0; font-size: 16px; }

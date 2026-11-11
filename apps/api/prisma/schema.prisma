@@ -512,3 +512,28 @@ model CorrectionGuide {
 
   @@unique([guide, type, cle])
 }
+
+/// Fiche « Astuces & solutions » (Kiavik) : un symptôme, pourquoi, que faire, liens vers un bouton et une procédure.
+/// Créée et modifiée par l'admin depuis l'app ; sert aussi de base de connaissances (recherche, futur assistant).
+model Solution {
+  id            String    @id @default(cuid())
+  /// Clé fixe des fiches livrées par le seed (kit-guides/solutions.json) ; null si créée dans l'app.
+  cle           String?   @unique
+  titre         String
+  categorie     String    @default("Impression")
+  cause         String?
+  texte         String
+  avertissement String?
+  motsCles      String[]
+  guide         String?
+  ecran         String?
+  pastille      String?
+  procedureId   String?
+  photoCle      String?
+  photoMaj      DateTime?
+  module        String    @default("procedures-kiavik")
+  publiee       Boolean   @default(false)
+  ordre         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}

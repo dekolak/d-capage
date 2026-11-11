@@ -4,7 +4,8 @@
  *  2. catalogue : chaque fichier machines/<fabricant>/<variante>/v<N>.json est validé puis publié ;
  *  3. groupes de tags et tags de départ ;
  *  4. procédures Kiavik de départ (kit-guides/procedures.json), créées seulement si leur clé n'existe pas
- *     (elles se modifient ensuite dans l'app : le seed ne les écrase jamais).
+ *     (elles se modifient ensuite dans l'app : le seed ne les écrase jamais) ;
+ *  5. fiches « Astuces & solutions » de départ (kit-guides/solutions.json), même principe.
  */
 import 'dotenv/config';
 import { PrismaClient, Prisma } from '@prisma/client';
@@ -141,10 +142,34 @@ async function procedures() {
   console.log(`Procédures : ${crees} créée(s), ${liste.length - crees} déjà présente(s)`);
 }
 
+interface SolutionSeed {
+  cle: string; titre: string; categorie: string; cause?: string; texte: string; avertissement?: string;
+  motsCles?: string[]; lien?: [string, string, string]; publiee?: boolean;
+}
+
+async function solutions() {
+  const fichier = join(RACINE_KIT, 'solutions.json');
+  if (!existsSync(fichier)) return;
+  const liste: SolutionSeed[] = JSON.parse(readFileSync(fichier, 'utf8')).solutions;
+  let crees = 0;
+  for (const [i, s] of liste.entries()) {
+    if (await prisma.solution.findUnique({ where: { cle: s.cle } })) continue;
+    await prisma.solution.create({
+      data: {
+        cle: s.cle, titre: s.titre, categorie: s.categorie, cause: s.cause, texte: s.texte, avertissement: s.avertissement,
+        motsCles: s.motsCles ?? [], guide: s.lien?.[0], ecran: s.lien?.[1], pastille: s.lien?.[2], publiee: s.publiee ?? false, ordre: i,
+      },
+    });
+    crees++;
+  }
+  console.log(`Astuces & solutions : ${crees} créée(s), ${liste.length - crees} déjà présente(s)`);
+}
+
 admin()
   .then(catalogue)
   .then(tags)
   .then(procedures)
+  .then(solutions)
   .catch((e) => {
     console.error(e);
     process.exitCode = 1;

@@ -3,8 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { chargerGuide, Guide, ResumeGuide } from './guides';
-import { useProcedures } from './donneesProcedures';
+import { useProcedures, useSolutions } from './donneesProcedures';
 import { normaliser, rechercher } from './recherche';
+import { ListeSolutions } from './Solutions';
 import './guides.css';
 import { t } from '../../lib/i18n';
 
@@ -39,6 +40,15 @@ export default function Recherche() {
     );
   }, [guides, q]);
   const { liste: procedures } = useProcedures();
+  const { liste: solutions } = useSolutions();
+  const astuces = useMemo(() => {
+    const mots = normaliser(q).split(' ').filter(Boolean);
+    if (!mots.length) return [];
+    return (solutions ?? []).filter((s) => {
+      const txt = normaliser(`${s.titre} ${s.categorie} ${s.cause ?? ''} ${s.texte} ${s.motsCles.join(' ')}`).split(' ');
+      return mots.every((m) => txt.some((w) => w.startsWith(m)));
+    });
+  }, [solutions, q]);
   const procs = useMemo(() => {
     const mots = normaliser(q).split(' ').filter(Boolean);
     if (!mots.length) return [];
@@ -69,10 +79,16 @@ export default function Recherche() {
         <Chargement />
       ) : !q.trim() ? (
         <p className="muted">{t('kiavik.recherche.aide')}</p>
-      ) : !resultats.length && !procs.length && !anims.length ? (
+      ) : !resultats.length && !procs.length && !anims.length && !astuces.length ? (
         <p className="muted">{t('kiavik.recherche.aucun', { q })}</p>
       ) : (
         <>
+          {astuces.length > 0 && (
+            <>
+              <h4>{t('kiavik.recherche.solutions', { n: astuces.length })}</h4>
+              <ListeSolutions liste={astuces} />
+            </>
+          )}
           {procs.length > 0 && (
             <>
               <h4>{t('kiavik.recherche.procedures', { n: procs.length })}</h4>
