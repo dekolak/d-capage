@@ -3,5 +3,5 @@ import { CorrectionsService } from './corrections.service';
 import { AdminGuidesController, GuidesController } from './guides.controller';
 import { GuidesService } from './guides.service';
 
-@Module({ controllers: [GuidesController, AdminGuidesController], providers: [GuidesService, CorrectionsService], exports: [GuidesService] })
+@Module({ controllers: [GuidesController, AdminGuidesController], providers: [GuidesService, CorrectionsService], exports: [GuidesService, CorrectionsService] })
 export class GuidesModule {}

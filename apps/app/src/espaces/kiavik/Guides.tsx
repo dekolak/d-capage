@@ -4,7 +4,7 @@ import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { t, tn } from '../../lib/i18n';
-import { ICONES_CATEGORIES, trierCategories, useProcedures, useSolutions } from './donneesProcedures';
+import { trierCategories, useCategories, useProcedures, useSolutions } from './donneesProcedures';
 import { ResumeGuide } from './guides';
 import { ListeProcedures } from './Procedures';
 import { ListeSolutions } from './Solutions';
@@ -22,6 +22,7 @@ export default function Guides() {
   const { moi } = useAuth();
   const { liste: procedures, acces: accesProcedures } = useProcedures();
   const { liste: solutions } = useSolutions();
+  const cats = useCategories();
   const [guides, setGuides] = useState<ResumeGuide[]>();
   const [erreur, setErreur] = useState<unknown>();
   const [ouvertes, setOuvertes] = useState<string[]>(() => {
@@ -39,10 +40,12 @@ export default function Guides() {
   const prenom = moi?.nom?.split(' ')[0];
   const guidees = guides.flatMap((g) => g.animations.map((a) => ({ ...a, guide: g.slug })));
   // sections par catégorie : procédures guidées (animations), procédures et diagnostics, astuces
+  // ordre, icônes et sections masquées : Administration → Accueil et catégories
+  const masquees = (cats ?? []).filter((c) => c.masquee).map((c) => c.nom);
   const categories = trierCategories([
     ...guidees.map((a) => a.categorie ?? ''),
     ...(accesProcedures ? [...(procedures ?? []).map((p) => p.categorie), ...(solutions ?? []).map((x) => x.categorie)] : []),
-  ]);
+  ], cats).filter((c) => !masquees.includes(c));
   const basculer = (cat: string) => {
     // une seule section ouverte à la fois : en ouvrir une ferme les autres
     const l = ouvertes.includes(cat) ? [] : [cat];
@@ -89,7 +92,7 @@ export default function Guides() {
         return (
           <section key={cat} className={`kh-cat ${ouverte ? 'ouverte' : ''}`}>
             <button type="button" className="kh-cat-tete" aria-expanded={ouverte} onClick={() => basculer(cat)}>
-              <span className="kh-cat-icone" aria-hidden="true">{ICONES_CATEGORIES[cat] ?? '📁'}</span>
+              <span className="kh-cat-icone" aria-hidden="true">{cats?.find((c) => c.nom === cat)?.icone ?? '📁'}</span>
               <span className="kh-cat-nom">
                 <b>{cat || t('kiavik.accueil.autres')}</b>
                 <small>

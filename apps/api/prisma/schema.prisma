@@ -719,3 +719,16 @@ model SuiviParcours {
 
   @@index([procedureId])
 }
+
+/// Catégorie de l'accueil Kiavik (sections repliables) : nom, icône, ordre, masquée.
+/// Les procédures, astuces et animations s'y rangent par leur champ texte `categorie` (= `nom`).
+model CategorieAccueil {
+  id        String   @id @default(cuid())
+  nom       String   @unique
+  icone     String   @default("📁")
+  ordre     Int      @default(0)
+  /// Masquée : sa section n'apparaît pas sur l'accueil (le contenu reste dans les listes et la recherche).
+  masquee   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

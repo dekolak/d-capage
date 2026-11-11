@@ -3,6 +3,7 @@ import { CorrectionGuide, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, StockageService } from '../stockage/stockage.service';
 import { Guide, GuidesService } from './guides.service';
+import { assurerCategorie } from '../categories/assurer';
 
 /** Champs d'une fiche de bouton modifiables dans l'app. */
 export interface CorrectionPastille {
@@ -20,6 +21,7 @@ type Scene = { cap?: string; etapes?: { cap?: string; corrige?: boolean }[]; cor
  * Elles sont enregistrées en base et appliquées par-dessus les fichiers d'origine : une mise à jour des fichiers
  * ne les efface pas, et supprimer une correction revient à l'original.
  */
+
 @Injectable()
 export class CorrectionsService {
   constructor(private prisma: PrismaService, private stockage: StockageService, private guides: GuidesService) {}
@@ -113,8 +115,9 @@ export class CorrectionsService {
   }
 
   /** Catégorie d'une animation sur l'accueil. */
-  categorieAnimation(slug: string, anim: string, categorie: string) {
+  async categorieAnimation(slug: string, anim: string, categorie: string) {
     this.animation(slug, anim);
+    await assurerCategorie(this.prisma, categorie);
     return this.enregistrer(slug, 'animation', anim, { valeur: { categorie: categorie.trim() } });
   }
 

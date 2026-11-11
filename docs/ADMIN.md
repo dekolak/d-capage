@@ -43,7 +43,10 @@ Administration → **💬 Messages**.
 ## Kiavik : accueil
 - En haut : la recherche et **les deux logiciels** (toujours visibles).
 - Dessous : une **section repliable par catégorie** (🚀 Mise en route, 🩺 Diagnostic, 🖨️ Impression, 🎛️ Réglages, 🧽 Entretien, puis les autres) avec ses procédures guidées (animations), procédures, diagnostics et astuces. Le client ouvre ce qui l'intéresse (une seule section ouverte à la fois : en ouvrir une ferme les autres) ; le téléphone se souvient de la section ouverte.
-- La catégorie vient du champ **Catégorie** des procédures et des astuces. Pour une **animation** : ouvrir l'animation → « ✏️ Modifier cette scène » → **Catégorie sur l'accueil** (« Revenir à l'original » pour reprendre celle du fichier).
+- **Administration → 🏠 Accueil et catégories** : tout le classement au même endroit.
+  - **Catégories** (à gauche, dans l'ordre de l'accueil) : ↑ ↓ pour l'ordre, ✏️ pour **renommer** et changer l'**icône** (tout son contenu suit, animations comprises), 👁 / 🙈 pour **masquer** la section de l'accueil (le contenu reste dans les listes et la recherche), 🗑 pour **supprimer** (si elle n'est pas vide : choisir la catégorie qui reçoit son contenu), **+ Ajouter** une catégorie (même vide). Cliquer sur une catégorie filtre la liste.
+  - **Liste** (à droite) : toutes les procédures, diagnostics, astuces et animations, avec **filtres** (catégorie, type, logiciel, publié / brouillon) et recherche par titre. Le menu de chaque ligne la **range** dans une autre catégorie ; cocher plusieurs lignes pour les ranger d'un coup. « ⚠️ catégorie inconnue » signale un élément rangé dans une catégorie qui n'existe plus.
+- La catégorie se choisit aussi dans le menu **Catégorie** d'une procédure, d'une astuce, ou d'une animation (ouvrir l'animation → « ✏️ Modifier cette scène » → **Catégorie sur l'accueil**, « Revenir à l'original » pour reprendre celle du fichier).
 
 ## Kiavik : procédures
 Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procédures → « Gérer les procédures »).

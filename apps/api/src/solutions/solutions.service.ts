@@ -3,6 +3,7 @@ import { Solution } from '@prisma/client';
 import { GuidesService } from '../guides/guides.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, StockageService } from '../stockage/stockage.service';
+import { assurerCategorie } from '../categories/assurer';
 
 export interface SolutionDto {
   titre?: string; categorie?: string; cause?: string | null; texte?: string; avertissement?: string | null; motsCles?: string[];
@@ -34,6 +35,7 @@ export class SolutionsService {
     const r: Record<string, unknown> = { ...d };
     for (const k of ['cause', 'avertissement'] as const) if (d[k] !== undefined) r[k] = d[k]?.trim() || null;
     for (const k of ['titre', 'texte', 'categorie'] as const) if (d[k] !== undefined) r[k] = d[k]!.trim();
+    if (d.categorie !== undefined) await assurerCategorie(this.prisma, d.categorie);
     if (d.motsCles) r.motsCles = [...new Set(d.motsCles.map((m) => m.trim()).filter(Boolean))];
     if (d.guide !== undefined || d.ecran !== undefined || d.pastille !== undefined) {
       if (!d.guide || !d.ecran) Object.assign(r, { guide: null, ecran: null, pastille: null });

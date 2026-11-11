@@ -4,6 +4,7 @@ import { GuidesService } from '../guides/guides.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, StockageService } from '../stockage/stockage.service';
 import { SUITES } from './chemin';
+import { assurerCategorie } from '../categories/assurer';
 
 export interface LienDto { guide?: string | null; ecran?: string | null; pastille?: string | null }
 export interface ControleDto { controle?: boolean; solutionId?: string | null }
@@ -74,6 +75,7 @@ export class ProceduresService {
 
   // ---------- admin ----------
   async creer(d: { titre: string; categorie?: string; resume?: string | null; description?: string | null }) {
+    await assurerCategorie(this.prisma, d.categorie ?? 'Impression');
     const ordre = ((await this.prisma.procedure.aggregate({ _max: { ordre: true } }))._max.ordre ?? -1) + 1;
     const p = await this.prisma.procedure.create({ data: { ...d, ordre }, include: avecEtapes });
     return this.vue(p);
@@ -135,6 +137,7 @@ export class ProceduresService {
       if (d.suivanteId === id) throw new BadRequestException('Une procédure ne peut pas se proposer elle-même');
       await this.existe(d.suivanteId);
     }
+    if (typeof d.categorie === 'string') await assurerCategorie(this.prisma, d.categorie);
     await this.prisma.procedure.update({ where: { id }, data: d });
     return this.lire(id, true);
   }
