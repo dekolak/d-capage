@@ -2,6 +2,7 @@ import { createContext, Fragment, useContext, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
+import { copier } from '../../lib/copier';
 import { compresser } from '../../lib/image';
 import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
 import { Choix, Etape, ImageApi, Procedure, ResumeProcedure, Solution, chargerProcedures, estDiagnostic, viderProcedures } from './donneesProcedures';
@@ -443,23 +444,41 @@ function ChoixEditeur({ p, c, astuces, procedures, maj, choisir }: { p: Procedur
   );
 }
 
-/** Bloc IA : prompt de la procédure, résumé IA (plus tard), export de l'arbre. */
+/** Bouton de copie avec retour « ✓ Copié ». */
+function BoutonCopier({ texte, libelle }: { texte: string | undefined; libelle: string }) {
+  const [ok, setOk] = useState(false);
+  return (
+    <button type="button" className="btn petit" disabled={!texte}
+      onClick={async () => {
+        if (texte && (await copier(texte))) {
+          setOk(true);
+          setTimeout(() => setOk(false), 2000);
+        }
+      }}>
+      {ok ? '✓ Copié' : libelle}
+    </button>
+  );
+}
+
+/**
+ * Bloc IA : prompt de la procédure, résumé texte automatique (fabriqué par l'app à partir du schéma, sans IA),
+ * copie du résumé seul ou précédé des prompts (à coller dans une IA), export JSON.
+ */
 function BlocIa({ p, maj }: { p: Procedure; maj: Maj }) {
   const [prompt, setPrompt] = useState(p.prompt ?? '');
   const [erreur, setErreur] = useState<unknown>();
-  const aRefaire = !!p.resumeIa && !!p.resumeIaLe && new Date(p.updatedAt) > new Date(p.resumeIaLe);
-  const exporter = async () => {
-    try {
-      const donnees = await api<unknown>(`/ia/procedures/${p.id}`);
-      const url = URL.createObjectURL(new Blob([JSON.stringify(donnees, null, 2)], { type: 'application/json' }));
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `procedure-${p.titre.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      setErreur(e);
-    }
+  const [ex, setEx] = useState<{ resumeTexte: string; paquet: string }>();
+  useEffect(() => {
+    api<{ resumeTexte: string; paquet: string }>(`/ia/procedures/${p.id}`).then(setEx).catch(setErreur);
+  }, [p.id, p.updatedAt]);
+  const exporter = () => {
+    if (!ex) return;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(ex, null, 2)], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `procedure-${p.titre.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
   return (
     <div className="carte form ed-ia">
@@ -471,12 +490,16 @@ function BlocIa({ p, maj }: { p: Procedure; maj: Maj }) {
         <button type="button" className="btn prim petit" onClick={() => maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { prompt: prompt.trim() || null } })}>Enregistrer le prompt</button>
       )}
       <div className="ed-champ">
-        <span>Résumé automatique {aRefaire && <span className="gx-brouillon">à refaire</span>}</span>
-        <div className="ed-resume-ia">{p.resumeIa ?? 'Bientôt : généré par l\'IA à partir de la procédure (description, questions, réponses, conclusions).'}</div>
-        {p.resumeIaLe && <small className="muted">Généré le {new Date(p.resumeIaLe).toLocaleDateString('fr-FR')}</small>}
+        <span>Résumé automatique <small className="muted">(fabriqué à partir du schéma, toujours à jour)</small></span>
+        <pre className="ed-resume-ia">{ex?.resumeTexte ?? '…'}</pre>
       </div>
       <Erreur e={erreur} />
-      <button type="button" className="btn petit" onClick={exporter}>⬇ Exporter l'arbre (JSON, ce que lit l'IA)</button>
+      <div className="ed-actions">
+        <BoutonCopier texte={ex?.resumeTexte} libelle="📋 Copier le résumé" />
+        <BoutonCopier texte={ex?.paquet} libelle="📋 Copier avec les prompts" />
+        <button type="button" className="btn petit" disabled={!ex} onClick={exporter}>⬇ JSON</button>
+      </div>
+      <small className="muted">« Copier avec les prompts » : consignes générales + prompt de la procédure + résumé, prêt à coller dans une IA.</small>
     </div>
   );
 }
@@ -565,7 +588,7 @@ export function AdminProcedure() {
             )}
           </div>
         </div>
-        <div className="ed-col"><BlocIa key={`${p.prompt}|${p.resumeIa}`} p={p} maj={maj} /></div>
+        <div className="ed-col"><BlocIa key={p.prompt ?? ''} p={p} maj={maj} /></div>
       </div>
 
       <Suivi.Provider value={{ stats, signalements, traiter }}>

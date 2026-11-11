@@ -179,6 +179,15 @@ export class GuidesService implements OnModuleInit {
   }
 
   /** Le lien guide / écran / pastille existe-t-il ? (pastille d'écran ou bouton de navigation, ex. E, D8) */
+  /** Libellé lisible d'un lien vers un bouton : « Pompe à encre » — DXonJet, écran DC, P.9. */
+  libelleLien(guide: string, ecran: string, pastille?: string | null): string {
+    const g = this.guides.find((x) => x.slug === guide);
+    const e = g?.ecrans.find((x) => x.id === ecran);
+    const p = pastille ? e?.pastilles.find((x) => x.id === pastille) : undefined;
+    const ou = [g?.nom.split(' ')[0] ?? guide, `écran ${e?.code ?? ecran}`, pastille].filter(Boolean).join(', ');
+    return p ? `« ${p.titre} » — ${ou}` : e ? `écran « ${e.titre} » — ${ou}` : ou;
+  }
+
   lienValide(guide: string, ecran: string, pastille?: string | null): boolean {
     const g = this.guides.find((x) => x.slug === guide);
     const e = g?.ecrans.find((x) => x.id === ecran);

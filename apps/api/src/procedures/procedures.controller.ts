@@ -273,6 +273,12 @@ export class AdminDiagnosticsController {
     return this.diagnostics.lister(nonLus === '1' || nonLus === 'true');
   }
 
+  /** Texte prêt à coller dans une IA : prompts, résumé de la procédure, réponses et message du client. */
+  @Get(':id/paquet')
+  paquet(@Param('id') id: string) {
+    return this.diagnostics.paquetDiagnostic(id);
+  }
+
   @Patch(':id')
   marquer(@Param('id') id: string, @Body() d: LuDto) {
     return this.diagnostics.marquer(id, d.lu);

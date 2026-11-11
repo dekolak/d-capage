@@ -1,10 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ActiviteService } from '../activite/activite.service';
+import { GuidesService } from '../guides/guides.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PushService } from '../push/push.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { calculerChemin, sansPartie } from './chemin';
+
+/** « Partie — texte » → partie. */
+const partieDe = (texte: string) => /^(.{2,40}?)\s+—\s+([\s\S]+)$/.exec(texte)?.[1]?.trim() ?? null;
 
 const ESPACE = 'kiavik';
 const clePrompt = (espace: string) => `ia.prompt:${espace}`;
@@ -15,6 +19,7 @@ const arbre = {
     include: {
       choix: { orderBy: { ordre: 'asc' }, include: { solution: { select: { id: true, titre: true } }, procedureCible: { select: { id: true, titre: true } } } },
       _count: { select: { photos: true } },
+      solution: { select: { titre: true } },
     },
   },
 } satisfies Prisma.ProcedureInclude;
@@ -33,7 +38,13 @@ export const LIBELLES_FIN = { termine: 'Parcours terminé', resolu: 'Problème r
  */
 @Injectable()
 export class DiagnosticsService {
-  constructor(private prisma: PrismaService, private push: PushService, private webhooks: WebhooksService, private activite: ActiviteService) {}
+  constructor(
+    private prisma: PrismaService,
+    private push: PushService,
+    private webhooks: WebhooksService,
+    private activite: ActiviteService,
+    private guides: GuidesService,
+  ) {}
 
   async promptGeneral(): Promise<string> {
     const l = await this.prisma.parametre.findUnique({ where: { cle: clePrompt(ESPACE) } });
@@ -77,15 +88,72 @@ export class DiagnosticsService {
     return { chemin, fin, texte };
   }
 
-  /** Paquet texte prêt à envoyer à une IA : prompts, description, résultat du client. */
-  private paquet(general: string, p: Arbre, texte: string, message?: string | null) {
+  /**
+   * Résumé texte de la procédure, fabriqué automatiquement (sans IA) à partir de l'arbre : étapes numérotées,
+   * questions, réponses (avec leur signification), détours, suites, conclusions, notes. Toujours à jour.
+   */
+  resume(p: Arbre): string {
+    const lignes = new Map<string, EtapeArbre[]>();
+    for (const e of p.etapes) lignes.set(e.brancheId ?? '', [...(lignes.get(e.brancheId ?? '') ?? []), e]);
+    const principale = lignes.get('') ?? [];
+    const out: string[] = [`Procédure : ${p.titre}`, `Catégorie : ${p.categorie}`];
+    if (p.resume) out.push(`Résumé : ${p.resume}`);
+    if (p.description) out.push(`Description : ${p.description}`);
+    out.push('', 'Étapes :');
+    const suite = (c: ChoixArbre) => {
+      if (c.suite === 'resolu') return `FIN : problème résolu${c.conclusion ? ` — ${c.conclusion}` : ''}`;
+      if (c.suite === 'contact') return `FIN : contacter Kiavik${c.conclusion ? ` — ${c.conclusion}` : ''}`;
+      if (c.suite === 'etape') {
+        const k = principale.findIndex((x) => x.id === c.etapeCibleId);
+        return k >= 0 ? `↪ aller à l'étape ${k + 1}` : '↪ aller à une étape (non choisie)';
+      }
+      return '↩ retour sur la route principale';
+    };
+    const ecrire = (k: string, marge: string) => {
+      let partie: string | null = null;
+      (lignes.get(k) ?? []).forEach((e, n) => {
+        const p2 = k ? null : partieDe(e.texte);
+        if (p2 && p2 !== partie) out.push(`${marge}[${p2}]`);
+        partie = p2 ?? partie;
+        const tete = k ? '- ' : `${n + 1}. `;
+        const infos = [
+          e.avertissement && `⚠️ ${e.avertissement}`,
+          e.guide && e.ecran && `bouton ${this.guides.libelleLien(e.guide, e.ecran, e.pastille)}`,
+          e._count.photos && `${e._count.photos} photo${e._count.photos > 1 ? 's' : ''}`,
+          e.controle && `contrôle Oui / Non${e.solution ? ` ; si Non : astuce « ${e.solution.titre} »` : ''}`,
+        ].filter(Boolean);
+        out.push(`${marge}${tete}${e.choix.length ? '❓ ' : ''}${sansPartie(e.texte)}${infos.length ? ` (${infos.join(' ; ')})` : ''}`);
+        if (e.note) out.push(`${marge}   Note : ${e.note}`);
+        for (const c of e.choix) {
+          out.push(`${marge}   → ${c.libelle}${c.signification ? ` (${c.signification})` : ''} :`);
+          ecrire(c.id, `${marge}      `);
+          out.push(`${marge}      ${suite(c)}`);
+          if (c.solution) out.push(`${marge}      💡 astuce : ${c.solution.titre}`);
+          if (c.procedureCible) out.push(`${marge}      📋 procédure : ${c.procedureCible.titre}`);
+        }
+      });
+    };
+    ecrire('', '');
+    if (!principale.length) out.push('(aucune étape)');
+    return out.join('\n');
+  }
+
+  /** Paquet texte prêt à coller dans une IA : prompts, résumé de la procédure, puis (s'il y a lieu) résultat et message du client. */
+  private paquet(general: string, p: Arbre, texte?: string, message?: string | null) {
     return [
       general && `# Consignes générales\n${general}`,
       p.prompt && `# Consignes pour « ${p.titre} »\n${p.prompt}`,
-      `# Procédure\n${p.titre}${p.description ? `\n${p.description}` : ''}`,
-      `# Résultat du client\n${texte}`,
+      `# Procédure\n${this.resume(p)}`,
+      texte && `# Résultat du client\n${texte}`,
       message && `# Message du client\n${message}`,
     ].filter(Boolean).join('\n\n');
+  }
+
+  /** Paquet d'un diagnostic reçu (bouton « Copier pour l'IA »). */
+  async paquetDiagnostic(id: string) {
+    const d = await this.prisma.diagnosticEnvoye.findUnique({ where: { id } });
+    if (!d) throw new NotFoundException();
+    return { texte: this.paquet(await this.promptGeneral(), await this.charger(d.procedureId), d.texte, d.message) };
   }
 
   async envoyer(procedureId: string, user: { id: string; admin: boolean }, reponses: Record<string, string>, message?: string) {
@@ -187,6 +255,9 @@ export class DiagnosticsService {
       id: p.id, titre: p.titre, categorie: p.categorie, resume: p.resume, description: p.description, publiee: p.publiee,
       promptGeneral: await this.promptGeneral(), prompt: p.prompt,
       resumeIa: p.resumeIa, resumeIaLe: p.resumeIaLe, modifieeLe: p.updatedAt,
+      /** Résumé texte automatique (sans IA), et le même précédé des prompts : prêt à coller dans une IA. */
+      resumeTexte: this.resume(p),
+      paquet: this.paquet(await this.promptGeneral(), p),
       route: ligne(''),
     };
   }
