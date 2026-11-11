@@ -42,7 +42,7 @@ Administration → **💬 Messages**.
 
 ## Kiavik : accueil
 - En haut : la recherche et **les deux logiciels** (toujours visibles).
-- Dessous : une **section repliable par catégorie** (🚀 Mise en route, 🩺 Diagnostic, 🖨️ Impression, 🎛️ Réglages, 🧽 Entretien, puis les autres) avec ses procédures guidées (animations), procédures, diagnostics et astuces. Le client ouvre ce qui l'intéresse ; le téléphone se souvient des sections ouvertes.
+- Dessous : une **section repliable par catégorie** (🚀 Mise en route, 🩺 Diagnostic, 🖨️ Impression, 🎛️ Réglages, 🧽 Entretien, puis les autres) avec ses procédures guidées (animations), procédures, diagnostics et astuces. Le client ouvre ce qui l'intéresse (une seule section ouverte à la fois : en ouvrir une ferme les autres) ; le téléphone se souvient de la section ouverte.
 - La catégorie vient du champ **Catégorie** des procédures et des astuces. Pour une **animation** : ouvrir l'animation → « ✏️ Modifier cette scène » → **Catégorie sur l'accueil** (« Revenir à l'original » pour reprendre celle du fichier).
 
 ## Kiavik : procédures

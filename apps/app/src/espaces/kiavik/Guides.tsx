@@ -16,7 +16,7 @@ const CLE_OUVERTES = 'kiavik.accueil.ouvertes';
 /**
  * Accueil Kiavik : recherche, les logiciels (miniature de l'écran, dans l'ordre du travail, toujours visibles),
  * puis une section repliable par catégorie (Mise en route, Diagnostic, Impression…) avec ses procédures guidées
- * (animations), procédures, diagnostics et astuces. Les sections ouvertes sont gardées sur le téléphone.
+ * (animations), procédures, diagnostics et astuces. Une seule section ouverte à la fois, gardée sur le téléphone.
  */
 export default function Guides() {
   const { moi } = useAuth();
@@ -44,7 +44,8 @@ export default function Guides() {
     ...(accesProcedures ? [...(procedures ?? []).map((p) => p.categorie), ...(solutions ?? []).map((x) => x.categorie)] : []),
   ]);
   const basculer = (cat: string) => {
-    const l = ouvertes.includes(cat) ? ouvertes.filter((x) => x !== cat) : [...ouvertes, cat];
+    // une seule section ouverte à la fois : en ouvrir une ferme les autres
+    const l = ouvertes.includes(cat) ? [] : [cat];
     setOuvertes(l);
     localStorage.setItem(CLE_OUVERTES, JSON.stringify(l));
   };
