@@ -847,8 +847,8 @@
     },
     "apres": {
      "image": "images/dx/offre_grilles_apres.jpg",
-     "largeur": 480,
-     "hauteur": 667
+     "largeur": 400,
+     "hauteur": 615
     }
    },
    "scenes": [
@@ -1065,11 +1065,12 @@
      "etapes": [
       {
        "cur": [
-        118,
-        420
+        133,
+        168
        ],
-       "cap": "Les grilles sont nettes : les couleurs sont bien superposées.",
-       "d": 4200
+       "cap": "Le résultat attendu : les carrés des grilles sont bien nets, les couleurs sont bien superposées.",
+       "d": 4200,
+       "ring": 1
       }
      ]
     }
