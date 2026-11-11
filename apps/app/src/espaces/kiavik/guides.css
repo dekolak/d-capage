@@ -177,3 +177,4 @@
 .ix-apercu span { position: absolute; left: 4px; right: 4px; bottom: 4px; background: #000b; color: #fff; font-size: max(9px, 1cqw); padding: 3px 6px; border-radius: 3px; }
 .ix-indice { position: absolute; z-index: 2; color: #e8541e; font-weight: 700; font-size: max(9px, 1.1cqw); display: flex; align-items: center; pointer-events: none; }
 .ix-commandes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.gx-partage { margin-top: 12px; }

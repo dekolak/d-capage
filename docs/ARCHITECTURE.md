@@ -122,6 +122,7 @@ docs/                       documentation
 - La validation et les indicateurs utilisent le **même code** que l'API (`machine-kit`, importé en source).
 - Photos compressées sur le téléphone (1600 px + miniature 400 px) avant envoi.
 - Brouillon de la fiche en cours conservé localement (hors photos).
+- **Partage (admin)** : `components/Partager.tsx`, lien de la page affichée sur l'adresse de l'espace (`navigator.share`, sinon WhatsApp / SMS / copier).
 - **Traduction** : textes dans `src/textes/<langue>.ts` (`fr.ts` = référence), `src/lib/i18n.tsx` ; langue du compte (`User.langue`), sinon celle du téléphone, sinon français ; texte manquant → français. Voir [TRADUCTION.md](TRADUCTION.md).
 
 ## Avis et modération
