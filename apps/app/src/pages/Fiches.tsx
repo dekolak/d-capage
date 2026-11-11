@@ -5,6 +5,7 @@ import { Chargement, Erreur, FiltreTags } from '../components/Composants';
 import { api, GroupeTag, MaMachine, PageFiches } from '../lib/api';
 import { brouillonUtile, lireBrouillon } from '../lib/brouillon';
 import { nomMachine } from '../lib/util';
+import { noterRecherche } from '../lib/activite';
 import { t, tn } from '../lib/i18n';
 
 /** Mes réglages : recherche texte + filtres machine et tags (combinables). */
@@ -35,6 +36,13 @@ export default function Fiches() {
 
   const nbFiltres = tags.length + (machine ? 1 : 0);
   const filtre = nbFiltres > 0 || q.trim() !== '';
+
+  // journal d'activité : recherche notée quand le client arrête de taper
+  useEffect(() => {
+    if (!data || q.trim().length < 2) return;
+    const h = setTimeout(() => noterRecherche(q.trim(), data.total, '/'), 1500);
+    return () => clearTimeout(h);
+  }, [q, data]);
 
   return (
     <div className="page">

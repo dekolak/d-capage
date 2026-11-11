@@ -74,6 +74,11 @@ docs/                       documentation
 - App (`apps/app/src/espaces/kiavik/`) : `/guides` = accueil (guides côte à côte dans l'ordre des modules de `espaces.ts`, procédures en dessous), `/guides/<guide>/<écran>?p=<pastille>`. Capture + pastilles (en % de l'image), zones voilées, pastilles de navigation tirées de `navigation` (onglets T1–T11, boutons E / A, menus D1–D8 et sous-menus), fiche en bas d'écran, zoom 240 %, menu repliable par groupe, liste des repères, fenêtres Windows recréées (`Fenetres.tsx`). Admin : option « afficher les repères » (filigrane du code écran).
 - **Recherche** (`/recherche`, `recherche.ts`) : sur le téléphone, dans les guides du compte (titre, `mots_cles`, texte et conseil des pastilles, titre de l'écran). Sans accents, début de mot, une faute de frappe tolérée. Un résultat ouvre l'écran sur le repère (`?p=`). Plus tard : procédures et animations dans les résultats.
 
+## Journal d'activité
+- Table `Activite` (`userId`, `espace`, `type` = `connexion` | `page` | `recherche`, `chemin`, `detail`, `resultats`) ; clients seulement (pas les admins), effacée après 12 mois (`activite.service.ts`, nettoyage quotidien).
+- Connexion notée par l'API à l'identification ; pages (titre lu à l'écran) et recherches (Kiavik, mes réglages, communauté) envoyées par l'app (`lib/activite.ts`, `POST /api/activite`), en arrière-plan, sans jamais bloquer.
+- Admin : `pages/AdminActivite.tsx` (`/admin/comptes/:id/activite`). Base des futures statistiques (recherches sans résultat).
+
 ## Astuces & solutions (Kiavik)
 - Table `Solution` (titre = symptôme, `cause`, `texte` = que faire, `avertissement`, `motsCles`, lien `guide`/`ecran`/`pastille`, `procedureId`, photo, `publiee`, `cle` pour celles du seed). Module `procedures-kiavik` (nom affiché « Procédures et astuces »).
 - Fiches de départ : `kit-guides/solutions.json` (créées seulement si leur clé n'existe pas). API `apps/api/src/solutions/` ; app `Solutions.tsx` (liste, fiche), `AdminSolutions.tsx`.

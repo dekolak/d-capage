@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CarteFiche } from '../components/CarteFiche';
 import { Chargement, Erreur, FiltreTags } from '../components/Composants';
 import { api, Fabricant, GroupeTag, MaMachine, PageFiches } from '../lib/api';
+import { noterRecherche } from '../lib/activite';
 import { t, tn } from '../lib/i18n';
 
 /** Réglages partagés : même machine + mêmes tags, triés par note. */
@@ -39,6 +40,13 @@ export default function Communaute() {
     return () => clearTimeout(h);
   }, [varianteId, tags, tri, q, meilleurs]);
 
+
+  // journal d'activité : recherche notée quand le client arrête de taper
+  useEffect(() => {
+    if (!data || q.trim().length < 2) return;
+    const h = setTimeout(() => noterRecherche(q.trim(), data.total, '/communaute'), 1500);
+    return () => clearTimeout(h);
+  }, [q, data]);
 
   return (
     <div className="page">

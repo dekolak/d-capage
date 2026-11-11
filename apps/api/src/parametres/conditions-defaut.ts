@@ -17,7 +17,7 @@ Lazzeko peut masquer ou supprimer une fiche, une photo ou un avis qui ne respect
 Lazzeko ne réutilise vos photos en dehors de l'application (site internet, réseaux sociaux, documentation) que si vous l'avez accepté. Cet accord est facultatif, ne conditionne pas l'accès à l'application et peut être retiré à tout moment depuis votre compte ; le retrait vaut pour les utilisations futures.
 
 5. Vos données
-L'application conserve votre identifiant, votre nom, vos machines et vos publications pour faire fonctionner le service. Vous pouvez supprimer vos fiches à tout moment et demander la suppression de votre compte en contactant Lazzeko.
+L'application conserve votre identifiant, votre nom, vos machines et vos publications pour faire fonctionner le service. Pour vous aider au mieux, l'application enregistre aussi votre activité (connexions, pages consultées, recherches) ; ce journal n'est visible que par Lazzeko et il est effacé au bout de 12 mois. Vous pouvez supprimer vos fiches à tout moment et demander la suppression de votre compte en contactant Lazzeko.
 
 6. Évolution des conditions
 Si ces conditions changent, elles vous seront présentées à nouveau lors de votre prochaine connexion.`;
@@ -32,6 +32,6 @@ L'application donne accès aux guides des machines et aux procédures Kiavik ass
 Les guides et procédures sont réservés à votre usage et à celui de votre entreprise. Ils ne remplacent pas la documentation officielle du fabricant ni les consignes de sécurité de votre atelier.
 
 3. Vos données
-L'application conserve votre identifiant, votre nom et vos réponses aux messages éventuels pour faire fonctionner le service. Vous pouvez demander la suppression de votre compte en contactant Kiavik.`;
+L'application conserve votre identifiant, votre nom et vos réponses aux messages éventuels pour faire fonctionner le service. Pour vous aider au mieux, elle enregistre aussi votre activité (connexions, pages consultées, recherches) ; ce journal n'est visible que par Kiavik et il est effacé au bout de 12 mois. Vous pouvez demander la suppression de votre compte en contactant Kiavik.`;
 
 export const CONDITIONS_DEFAUT: Record<string, string> = { lazzeko: CONDITIONS_LAZZEKO, kiavik: CONDITIONS_KIAVIK };

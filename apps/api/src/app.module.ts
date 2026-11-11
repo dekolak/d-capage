@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { ActiviteModule } from './activite/activite.module';
 import { AnnoncesModule } from './annonces/annonces.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AuthGuard } from './auth/auth.guard';
@@ -32,6 +33,7 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     ...(existsSync(APP_DIST) ? [ServeStaticModule.forRoot({ rootPath: APP_DIST, exclude: ['/api/{*chemin}'] })] : []),
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    ActiviteModule,
     StockageModule,
     ParametresModule,
     EspacesModule,

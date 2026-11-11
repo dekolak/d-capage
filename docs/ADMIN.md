@@ -62,6 +62,13 @@ En étant connecté en admin :
 - Visible tout de suite par tous les clients, sans redéploiement. **↺ Revenir à l'original** annule la correction.
 - Les corrections sont gardées à part : une mise à jour de l'app ne les efface pas. Déplacer une pastille ou créer une animation reste à faire dans les fichiers du projet.
 
+## Activité d'un client
+Administration → Comptes → toucher le client → **Voir son activité** (connexions, pages consultées, recherches).
+- Période : 24 h, 7, 30 ou 90 jours ; classé par jour, du plus récent au plus ancien. Toucher une page l'ouvre.
+- 🔑 connexion · 📄 page (écran du guide et bouton ouvert, procédure, animation, astuce…) · 🔍 recherche avec le nombre de résultats ; **« aucun résultat » en rouge** : mots-clés ou fiche à ajouter.
+- Les admins ne sont pas enregistrés. Le journal est **effacé automatiquement après 12 mois**.
+- **Conditions d'utilisation** : le journal doit y être mentionné. Le texte par défaut le dit ; pour les conditions déjà en ligne, ajouter dans Administration → Conditions (Lazzeko et Kiavik), partie « Vos données » : « Pour vous aider au mieux, l'application enregistre aussi votre activité (connexions, pages consultées, recherches) ; ce journal n'est visible que par [Lazzeko / Kiavik] et il est effacé au bout de 12 mois. » (les clients l'acceptent à leur prochaine ouverture).
+
 ## Partager une page avec un client
 Bouton rond **Partager** (en bas à droite, visible seulement par l'admin), et bouton **Partager** dans la fiche d'un bouton des guides.
 - Sur téléphone : menu de partage habituel (SMS, WhatsApp, mail…). Sur ordinateur : WhatsApp, SMS ou **Copier le lien**.

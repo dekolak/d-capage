@@ -199,6 +199,7 @@ export default function Admin() {
                     </select>
                   </label>
                 )}
+                {u.role !== 'ADMIN' && <p><Link to={`/admin/comptes/${u.id}/activite`} className="lien">Voir son activité (connexions, pages, recherches) ›</Link></p>}
                 {lazzeko(u.modules) && <>
                 <Link to={`/admin/fiches?userId=${u.id}`} className="lien">Voir ses fiches ({u._count?.fiches ?? 0}) ›</Link>
                 <br />

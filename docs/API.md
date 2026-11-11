@@ -75,6 +75,14 @@ Les conseils `niveau: "a_completer"` (notes internes) ne sont envoyés qu'à l'a
 | POST | `/admin/procedures/:id/etapes` `{texte, avertissement?, guide?, ecran?, pastille?}` | admin |
 | PATCH · DELETE | `/admin/procedures/etapes/:id` ; POST `…/deplacer {sens: -1\|1}` ; POST · DELETE `…/photo` (multipart `photo`) | admin |
 
+### Journal d'activité
+| Méthode | Route | Accès |
+|---|---|---|
+| POST | `/activite` `{type: page\|recherche, chemin?, detail?, resultats?}` (ignoré pour un admin) | connecté |
+| GET | `/admin/users/:id/activite?jours=1..365` → `{user, jours, activites}` | admin |
+
+Les connexions sont notées automatiquement par `POST /auth/connexion`.
+
 ### Astuces & solutions (module `procedures-kiavik`)
 | Méthode | Route | Accès |
 |---|---|---|
