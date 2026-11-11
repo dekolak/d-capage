@@ -62,6 +62,19 @@ En étant connecté en admin :
 - Visible tout de suite par tous les clients, sans redéploiement. **↺ Revenir à l'original** annule la correction.
 - Les corrections sont gardées à part : une mise à jour de l'app ne les efface pas. Déplacer une pastille ou créer une animation reste à faire dans les fichiers du projet.
 
+## Mot de passe oublié (sans email)
+1. Le client touche **« Mot de passe oublié ? »** sur l'écran de connexion, tape son identifiant (et un message facultatif : nom, entreprise…).
+2. Vous êtes prévenu : **notification sur votre téléphone** et compteur rouge sur Administration → **🔐 Mots de passe oubliés**.
+3. Vérifiez que c'est bien votre client (appel, numéro connu), touchez **🔑 Générer le code** : un code à 6 chiffres, **valable 1 heure**, une seule fois, 5 essais au plus. **Envoyer (SMS, WhatsApp…)** prépare le message avec le code.
+4. Le client choisit « J'ai reçu mon code », saisit le code et son nouveau mot de passe : il est connecté directement. Vous ne connaissez jamais son mot de passe.
+- Un nouveau code remplace l'ancien ; « Annuler » ferme la demande. 3 demandes par heure et par compte au plus ; la réponse affichée est la même si l'identifiant n'existe pas. Tout est noté dans l'activité du client (🔐).
+
+### Notifications sur votre téléphone
+Administration → **🔔 Notifications sur ce téléphone → Activer** (une fois par téléphone ; une notification d'essai confirme). Sur **iPhone**, ajoutez d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil, iOS 16.4 ou plus) et ouvrez-la depuis l'icône. Les notifications vont à tous les téléphones des admins qui les ont activées.
+
+### Plus tard avec n8n
+Chaque demande envoie aussi le webhook **`motdepasse.demande`** (identifiant, nom, n° Odoo, message ; **jamais le code**) : à abonner dans Administration → Envoi vers une API pour, par exemple, prévenir sur WhatsApp ou retrouver le client dans Odoo.
+
 ## Activité d'un client
 Administration → Comptes → toucher le client → **Voir son activité** (connexions, pages consultées, recherches).
 - Période : 24 h, 7, 30 ou 90 jours ; classé par jour, du plus récent au plus ancien. Toucher une page l'ouvre.

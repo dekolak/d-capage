@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 /** Durée de conservation du journal (indiquée dans les conditions d'utilisation). */
 export const CONSERVATION_JOURS = 365;
 
-export interface NouvelleActivite { type: 'connexion' | 'page' | 'recherche'; espace?: string | null; chemin?: string; detail?: string; resultats?: number }
+export interface NouvelleActivite { type: 'connexion' | 'page' | 'recherche' | 'motdepasse'; espace?: string | null; chemin?: string; detail?: string; resultats?: number }
 
 /**
  * Journal d'activité des clients (pas des admins) : connexions, pages consultées, recherches.

@@ -6,6 +6,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { ActiviteModule } from './activite/activite.module';
 import { AnnoncesModule } from './annonces/annonces.module';
+import { MotDePasseModule } from './mot-de-passe/mot-de-passe.module';
+import { PushModule } from './push/push.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
@@ -34,6 +36,7 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     ActiviteModule,
+    PushModule,
     StockageModule,
     ParametresModule,
     EspacesModule,
@@ -50,6 +53,7 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     GuidesModule,
     ProceduresModule,
     SolutionsModule,
+    MotDePasseModule,
   ],
   controllers: [HealthController],
   // Toutes les routes sont protégées par défaut (@Public() pour ouvrir).

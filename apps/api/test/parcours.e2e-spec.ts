@@ -634,4 +634,56 @@ describe('Parcours complet', () => {
     const ja = (await http.get(`/api/admin/users/${adminId}/activite?jours=1`).set(auth(admin))).body;
     expect(ja.activites.some((a: any) => a.chemin === '/admin')).toBe(false);
   });
+
+  it('mot de passe oublié : demande, code donné par l\'admin (1 h, usage unique), nouveau mot de passe', async () => {
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'mdp' })).body.cle;
+    const ident = `mia-${id}`;
+    await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: ident, motDePasse: 'ancienmotdepasse', nom: 'Mia' }).expect(201);
+
+    // même réponse que l'identifiant existe ou non
+    expect((await http.post('/api/auth/mot-de-passe-oublie').send({ identifiant: `inconnu-${id}` })).body).toEqual({ ok: true });
+    expect((await http.post('/api/auth/mot-de-passe-oublie').set('X-Espace', 'lazzeko').send({ identifiant: ident, message: 'Mia, atelier Lyon' })).body).toEqual({ ok: true });
+    expect((await http.get('/api/admin/mots-de-passe').set(auth(alice))).status).toBe(403);
+    const liste = (await http.get('/api/admin/mots-de-passe').set(auth(admin))).body;
+    const d = liste.demandes.find((x: any) => x.user.identifiant === ident);
+    expect(d).toMatchObject({ statut: 'EN_ATTENTE', message: 'Mia, atelier Lyon' });
+    expect(liste.enAttente).toBeGreaterThan(0);
+
+    // pas de code demandé : rien à réinitialiser
+    expect((await http.post('/api/auth/reinitialiser').send({ identifiant: ident, code: '000000', nouveau: 'nouveaumotdepasse' })).status).toBe(400);
+    const { code, expire } = (await http.post(`/api/admin/mots-de-passe/${d.id}/code`).set(auth(admin))).body;
+    expect(code).toMatch(/^\d{6}$/);
+    expect(new Date(expire).getTime() - Date.now()).toBeGreaterThan(59 * 60_000); // valable 1 h
+    const faux = code === '123456' ? '654321' : '123456';
+    expect((await http.post('/api/auth/reinitialiser').send({ identifiant: ident, code: faux, nouveau: 'nouveaumotdepasse' })).body.message).toBe('Code incorrect ou expiré');
+    expect((await http.post('/api/auth/reinitialiser').send({ identifiant: ident, code, nouveau: 'court' })).status).toBe(400);
+    const ok = await http.post('/api/auth/reinitialiser').send({ identifiant: ident, code, nouveau: 'nouveaumotdepasse' });
+    expect(ok.status).toBe(200);
+    expect(ok.body.jeton).toBeTruthy();
+    expect((await http.post('/api/auth/connexion').send({ identifiant: ident, motDePasse: 'ancienmotdepasse' })).status).toBe(401);
+    expect((await http.post('/api/auth/connexion').send({ identifiant: ident, motDePasse: 'nouveaumotdepasse' })).status).toBe(200);
+    // usage unique
+    expect((await http.post('/api/auth/reinitialiser').send({ identifiant: ident, code, nouveau: 'encoreunautre' })).status).toBe(400);
+    const apres = (await http.get('/api/admin/mots-de-passe').set(auth(admin))).body.demandes.find((x: any) => x.id === d.id);
+    expect(apres.statut).toBe('UTILISEE');
+
+    // 5 essais au plus
+    await http.post('/api/auth/mot-de-passe-oublie').send({ identifiant: ident }).expect(200);
+    const d2 = (await http.get('/api/admin/mots-de-passe').set(auth(admin))).body.demandes.find((x: any) => x.user.identifiant === ident && x.statut === 'EN_ATTENTE');
+    const c2 = (await http.post(`/api/admin/mots-de-passe/${d2.id}/code`).set(auth(admin))).body.code;
+    const f2 = c2 === '111111' ? '222222' : '111111';
+    for (let k = 0; k < 5; k++) await http.post('/api/auth/reinitialiser').send({ identifiant: ident, code: f2, nouveau: 'nouveaumotdepasse2' }).expect(400);
+    expect((await http.post('/api/auth/reinitialiser').send({ identifiant: ident, code: c2, nouveau: 'nouveaumotdepasse2' })).status).toBe(400);
+
+    // 3 demandes par heure au plus (la 4e est ignorée)
+    await http.post('/api/auth/mot-de-passe-oublie').send({ identifiant: ident, message: 'troisième' }).expect(200);
+    await http.post('/api/auth/mot-de-passe-oublie').send({ identifiant: ident, message: 'quatrième' }).expect(200);
+    const msgs = (await http.get('/api/admin/mots-de-passe').set(auth(admin))).body.demandes.filter((x: any) => x.user.identifiant === ident).map((x: any) => x.message);
+    expect(msgs).toContain('troisième');
+    expect(msgs).not.toContain('quatrième');
+
+    // notifications : clé publique pour l'admin seulement
+    expect(typeof (await http.get('/api/push/cle').set(auth(admin))).body.cle).toBe('string');
+    expect((await http.get('/api/push/cle').set(auth(alice))).status).toBe(403);
+  });
 });

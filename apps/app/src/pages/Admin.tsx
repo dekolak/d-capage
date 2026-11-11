@@ -4,6 +4,7 @@ import { Erreur } from '../components/Composants';
 import { api, Fabricant, MaMachine } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { LANGUES, NOMS_LANGUES } from '../lib/i18n';
+import { abonnementActuel, activerNotifications, desactiverNotifications } from '../lib/notifications';
 import { date } from '../lib/util';
 
 interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; modules: string[]; espaces: string[]; conditions: Record<string, { version: number }>; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null; langue: string | null }
@@ -71,6 +72,7 @@ export default function Admin() {
     <div className="page">
       <h1>Administration</h1>
       <Erreur e={err} />
+      <MotsDePasseEtNotifications />
       <Link to="/admin/messages" className="bandeau lien-bandeau">
         <span><b>💬 Messages</b> : bulles d'info à l'ouverture de l'app</span>
         <span>›</span>
@@ -392,5 +394,49 @@ function CasesModules({ valeur, onChange }: { valeur: string[]; onChange: (modul
         </fieldset>
       ))}
     </div>
+  );
+}
+
+/** Demandes de mot de passe en attente (compteur) et notifications sur ce téléphone. */
+function MotsDePasseEtNotifications() {
+  const [attente, setAttente] = useState(0);
+  const [abonne, setAbonne] = useState<boolean | null>(null);
+  const [info, setInfo] = useState('');
+  useEffect(() => {
+    api<{ enAttente: number }>('/admin/mots-de-passe').then((r) => setAttente(r.enAttente)).catch(() => {});
+    abonnementActuel().then((a) => setAbonne(!!a));
+  }, []);
+  return (
+    <>
+      <Link to="/admin/mots-de-passe" className="bandeau lien-bandeau">
+        <span><b>🔐 Mots de passe oubliés</b>{attente > 0 && <span className="badge-rouge">{attente}</span>} : donner un code au client</span>
+        <span>›</span>
+      </Link>
+      <div className="bandeau">
+        <span>
+          <b>🔔 Notifications sur ce téléphone</b> : {abonne ? 'activées' : 'pour être prévenu des demandes'}
+          {info && <><br /><small>{info}</small></>}
+        </span>
+        {abonne ? (
+          <button type="button" className="btn petit" onClick={async () => { await desactiverNotifications(); setAbonne(false); setInfo('Notifications désactivées sur ce téléphone.'); }}>Désactiver</button>
+        ) : (
+          <button
+            type="button"
+            className="btn petit prim"
+            onClick={async () => {
+              try {
+                const r = await activerNotifications();
+                setAbonne(true);
+                setInfo(`Activées : notification d'essai envoyée (${r.telephones} téléphone(s)).`);
+              } catch (e) {
+                setInfo((e as Error).message);
+              }
+            }}
+          >
+            Activer
+          </button>
+        )}
+      </div>
+    </>
   );
 }

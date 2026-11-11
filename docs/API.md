@@ -75,6 +75,14 @@ Les conseils `niveau: "a_completer"` (notes internes) ne sont envoyés qu'à l'a
 | POST | `/admin/procedures/:id/etapes` `{texte, avertissement?, guide?, ecran?, pastille?}` | admin |
 | PATCH · DELETE | `/admin/procedures/etapes/:id` ; POST `…/deplacer {sens: -1\|1}` ; POST · DELETE `…/photo` (multipart `photo`) | admin |
 
+### Mot de passe oublié et notifications
+| Méthode | Route | Accès |
+|---|---|---|
+| POST | `/auth/mot-de-passe-oublie` `{identifiant, message?}` → `{ok: true}` (toujours, 3 demandes / h / compte) | public |
+| POST | `/auth/reinitialiser` `{identifiant, code (6 chiffres), nouveau}` → `{jeton}` (« Code incorrect ou expiré » sinon) | public |
+| GET | `/admin/mots-de-passe` → `{enAttente, demandes}` ; POST `/admin/mots-de-passe/:id/code` → `{code, expire}` (1 h) ; POST `…/:id/annuler` | admin |
+| GET | `/push/cle` ; POST · DELETE `/push/abonnement` (abonnement Web Push du téléphone) ; POST `/push/test` | admin |
+
 ### Journal d'activité
 | Méthode | Route | Accès |
 |---|---|---|
@@ -142,7 +150,7 @@ Retrouver un compte par n° client : `GET /api/users?numeroOdoo=C00123`.
 
 ## Webhooks (envoi vers un service externe, ex. modération IA)
 - Configurés dans Administration → *Envoi vers une API* : une ou plusieurs adresses, événements choisis.
-- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`, `aide.demandee`.
+- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`, `aide.demandee`, `motdepasse.demande` (`{demande: {id, message, espace, creeLe}, user: {id, identifiant, nom, numeroOdoo}}`, sans le code).
 - `POST` JSON signé : `X-Decapage-Signature: sha256=<HMAC-SHA256(secret, corps)>`, plus `X-Decapage-Evenement` et `X-Decapage-Livraison`.
 - File d'envoi en base : rien n'est perdu au redémarrage, 6 tentatives espacées (jusqu'à 2 h), journal dans l'admin.
 - Le corps contient le texte à modérer et l'adresse pour agir (`moderation.url`). Le service répond avec une clé API :

@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useEspace } from '../lib/espace';
 import { t } from '../lib/i18n';
+import MotDePasseOublie from './MotDePasseOublie';
 
 export default function Connexion() {
   const { connexion } = useAuth();
@@ -10,6 +11,7 @@ export default function Connexion() {
   const [motDePasse, setMdp] = useState('');
   const [erreur, setErreur] = useState('');
   const [envoi, setEnvoi] = useState(false);
+  const [oubli, setOubli] = useState(false);
 
   const soumettre = async (e: FormEvent) => {
     e.preventDefault();
@@ -23,6 +25,8 @@ export default function Connexion() {
       setEnvoi(false);
     }
   };
+
+  if (oubli) return <MotDePasseOublie identifiantInitial={identifiant} onRetour={() => setOubli(false)} />;
 
   return (
     <div className="connexion">
@@ -39,6 +43,7 @@ export default function Connexion() {
         </label>
         {erreur && <div className="alerte">{erreur}</div>}
         <button className="btn prim large" disabled={envoi}>{envoi ? t('connexion.enCours') : t('connexion.bouton')}</button>
+        <button type="button" className="btn-lien petit" onClick={() => setOubli(true)}>{t('mdp.lien')}</button>
       </form>
     </div>
   );
