@@ -1,0 +1,30 @@
+/* Administration → Accueil et catégories */
+.ca-grille { display: grid; gap: 14px; grid-template-columns: minmax(300px, 400px) 1fr; align-items: start; }
+@media (max-width: 860px) { .ca-grille { grid-template-columns: 1fr; } }
+.ca-cats ul, .ca-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ca-cat { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px; border-radius: 10px; }
+.ca-cat.actif { background: color-mix(in srgb, var(--o) 12%, transparent); }
+.ca-cat.masquee .ca-nom { opacity: .6; }
+.ca-cat.edition input { flex: 1; min-width: 120px; }
+.ca-cat.edition .btn { min-height: 40px; }
+.ca-nom { flex: 1 1 100%; min-width: 0; text-align: left; background: none; border: 0; padding: 4px; cursor: pointer; font: inherit; color: inherit; display: flex; gap: 6px; align-items: center; }
+.ca-actions { display: flex; gap: 4px; margin-left: 28px; }
+.ca-actions .btn { min-height: 34px; padding: 0 10px; }
+.ca-cat { border: 1px solid var(--bord); }
+.ca-suppr { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; }
+.ca-sans { margin-top: 8px; }
+.ca-ajout { display: flex; gap: 6px; margin-top: 12px; }
+.ca-ajout input { flex: 1; min-width: 0; }
+.ca-filtres { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.ca-filtres input { flex: 1; min-width: 160px; }
+.ca-lot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--bord); margin-bottom: 6px; font-size: 14px; }
+.ca-lot span { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ca-liste li { display: flex; gap: 8px; align-items: center; padding: 6px; border-radius: 8px; }
+.ca-liste li.coche { background: color-mix(in srgb, var(--o) 10%, transparent); }
+.ca-titre { flex: 1; min-width: 0; display: grid; }
+.ca-titre small { display: flex; gap: 6px; align-items: center; }
+.ca-liste select { max-width: 45%; }
+.ca select { width: auto; min-height: 40px; padding: 6px 30px 6px 10px; font-size: 15px; }
+.ca input[type='text'], .ca input[type='search'] { min-height: 40px; padding: 6px 10px; font-size: 15px; }
+.ca-filtres input[type='search'] { border: 1px solid var(--bord-fort); border-radius: var(--r-sm); }
+.ca-liste input[type='checkbox'], .ca-lot input[type='checkbox'] { width: 18px; height: 18px; }

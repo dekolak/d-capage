@@ -26,6 +26,7 @@ async function preparer(progres: (fait: number, total: number) => void) {
     api<Solution[]>('/solutions').catch(() => [] as Solution[]),
     api<ResumeGuide[]>('/guides').catch(() => [] as ResumeGuide[]),
     api('/procedures/diagnostics/miens').catch(() => null),
+    api('/categories').catch(() => null),
   ]);
   for (const p of procedures)
     taches.push(async () => {

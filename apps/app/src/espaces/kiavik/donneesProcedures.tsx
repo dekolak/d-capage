@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 
@@ -46,13 +47,59 @@ export const estDiagnostic = (p: Procedure) => p.etapes.some((e) => e.choix.leng
 
 export const MODULE_PROCEDURES = 'procedures-kiavik';
 
-/** Catégories proposées, dans l'ordre de l'accueil (les autres suivent, par ordre alphabétique). */
-export const CATEGORIES = ['Mise en route', 'Diagnostic', 'Impression', 'Réglages', 'Entretien'];
-export const ICONES_CATEGORIES: Record<string, string> = { 'Mise en route': '🚀', Diagnostic: '🩺', Impression: '🖨️', Réglages: '🎛️', Entretien: '🧽' };
-/** Tri des catégories : celles de CATEGORIES d'abord, dans leur ordre. */
-export function trierCategories(l: string[]): string[] {
-  const rang = (c: string) => (CATEGORIES.includes(c) ? CATEGORIES.indexOf(c) : CATEGORIES.length);
+/** Catégorie de l'accueil (Administration → Accueil et catégories) : nom, icône, ordre, masquée. */
+export interface Categorie { id: string; nom: string; icone: string; ordre: number; masquee: boolean }
+
+let cacheCategories: Promise<Categorie[]> | null = null;
+export function chargerCategories(): Promise<Categorie[]> {
+  if (!cacheCategories) {
+    cacheCategories = api<Categorie[]>('/categories');
+    cacheCategories.catch(() => (cacheCategories = null));
+  }
+  return cacheCategories;
+}
+export const viderCategories = () => (cacheCategories = null);
+
+/** Catégories de l'accueil, dans leur ordre. */
+export function useCategories() {
+  const [liste, setListe] = useState<Categorie[]>();
+  useEffect(() => {
+    let actif = true;
+    chargerCategories()
+      .then((l) => actif && setListe(l))
+      .catch(() => actif && setListe([]));
+    return () => {
+      actif = false;
+    };
+  }, []);
+  return liste;
+}
+
+/** Tri des noms de catégories : dans l'ordre de l'administration, les inconnues à la fin (ordre alphabétique). */
+export function trierCategories(l: string[], cats: Categorie[] = []): string[] {
+  const rang = (c: string) => {
+    const i = cats.findIndex((x) => x.nom === c);
+    return i < 0 ? cats.length : i;
+  };
   return [...new Set(l)].sort((a, b) => rang(a) - rang(b) || a.localeCompare(b, 'fr'));
+}
+
+/** Choix de la catégorie dans les écrans d'administration (les catégories se créent dans « Accueil et catégories »). */
+export function ChoixCategorie({ valeur, onChange }: { valeur: string; onChange: (v: string) => void }) {
+  const cats = useCategories();
+  const noms = [...(cats ?? []).map((c) => c.nom), ...(valeur && !cats?.some((c) => c.nom === valeur) ? [valeur] : [])];
+  return (
+    <>
+      <select value={valeur} onChange={(e) => onChange(e.target.value)}>
+        {!valeur && <option value="">—</option>}
+        {noms.map((n) => {
+          const c = cats?.find((x) => x.nom === n);
+          return <option key={n} value={n}>{c ? `${c.icone} ${n}${c.masquee ? ' (masquée)' : ''}` : n}</option>;
+        })}
+      </select>
+      <Link to="/admin/categories" className="petit">Gérer les catégories ›</Link>
+    </>
+  );
 }
 
 /** Le compte a-t-il les procédures ? */

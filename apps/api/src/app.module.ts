@@ -17,6 +17,7 @@ import { FichesModule } from './fiches/fiches.module';
 import { GuidesModule } from './guides/guides.module';
 import { ProceduresModule } from './procedures/procedures.module';
 import { SolutionsModule } from './solutions/solutions.module';
+import { CategoriesModule } from './categories/categories.module';
 import { HealthController } from './health.controller';
 import { MachinesModule } from './machines/machines.module';
 import { PhotosModule } from './photos/photos.module';
@@ -53,6 +54,7 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     GuidesModule,
     ProceduresModule,
     SolutionsModule,
+    CategoriesModule,
     MotDePasseModule,
   ],
   controllers: [HealthController],

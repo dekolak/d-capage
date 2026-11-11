@@ -85,6 +85,7 @@ docs/                       documentation
 - Admin : `pages/AdminActivite.tsx` (`/admin/comptes/:id/activite`). Base des futures statistiques (recherches sans résultat).
 
 ## Astuces & solutions (Kiavik)
+- Table `CategorieAccueil` (`nom` unique, `icone`, `ordre`, `masquee`) : sections de l'accueil Kiavik. Les procédures, astuces et animations y sont rangées par leur texte `categorie` (= `nom`, pas de clé étrangère) ; une catégorie utilisée est créée si elle manque (`categories/assurer.ts`, seed). Module `categories/` : `GET /categories` (accueil, tout compte connecté), `admin/categories` (éléments, ajouter, renommer — le contenu suit, animations par `CorrectionGuide` —, ordre, masquer, supprimer avec `?vers=`, `ranger` en lot). App : `AdminCategories.tsx`, `useCategories` / `ChoixCategorie` (`donneesProcedures.tsx`).
 - Table `Solution` (titre = symptôme, `cause`, `texte` = que faire, `avertissement`, `motsCles`, lien `guide`/`ecran`/`pastille`, `procedureId`, photo, `publiee`, `cle` pour celles du seed). Module `procedures-kiavik` (nom affiché « Procédures et astuces »).
 - Fiches de départ : `kit-guides/solutions.json` (créées seulement si leur clé n'existe pas). API `apps/api/src/solutions/` ; app `Solutions.tsx` (liste, fiche), `AdminSolutions.tsx`.
 - Affichées sur l'accueil, en tête de la recherche et dans la fiche du bouton lié ; base de connaissances du futur assistant IA.

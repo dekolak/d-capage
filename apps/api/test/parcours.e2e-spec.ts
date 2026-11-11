@@ -649,6 +649,69 @@ describe('Parcours complet', () => {
     await http.delete(`/api/admin/procedures/${p.id}`).set(A).expect(200);
   });
 
+  it('accueil et catégories : ajouter, renommer (le contenu suit), ordre, masquer, ranger, supprimer en déplaçant', async () => {
+    const A = auth(admin);
+    const cle = (await http.post('/api/admin/cles-api').set(A).send({ nom: 'categories' })).body.cle;
+    await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `cat-${id}`, motDePasse: 'motdepasse1', modules: ['procedures-kiavik'] }).expect(201);
+    const C = { ...auth((await http.post('/api/auth/connexion').send({ identifiant: `cat-${id}`, motDePasse: 'motdepasse1' })).body.jeton), 'X-Espace': 'kiavik' };
+    const { version } = (await http.get('/api/conditions?espace=kiavik').set(C)).body;
+    await http.post('/api/moi/conditions').set(C).send({ version }).expect(201);
+    const cats = async () => (await http.get('/api/categories').set(C)).body as any[];
+    const cat = async (nom: string) => (await cats()).find((c) => c.nom === nom);
+
+    // reprises du départ (avec leurs icônes), dans l'ordre de l'accueil
+    expect((await cats()).map((c) => c.nom)).toEqual(expect.arrayContaining(['Mise en route', 'Diagnostic', 'Impression']));
+    expect(await cat('Diagnostic')).toMatchObject({ icone: '🩺' });
+
+    // ajouter (admin seulement, pas de doublon), une catégorie tapée sur une procédure est créée aussi
+    expect((await http.post('/api/admin/categories').set(C).send({ nom: `Blanc ${id}` })).status).toBe(403);
+    await http.post('/api/admin/categories').set(A).send({ nom: `Blanc ${id}`, icone: '⚪' }).expect(201);
+    expect((await http.post('/api/admin/categories').set(A).send({ nom: `Blanc ${id}` })).status).toBe(400);
+    const p = (await http.post('/api/admin/procedures').set(A).send({ titre: `Proc ${id}`, categorie: `Auto ${id}` })).body;
+    expect(await cat(`Auto ${id}`)).toMatchObject({ icone: '📁' });
+
+    // ranger : procédure, astuce, animation (catégorie corrigée)
+    const s = (await http.post('/api/admin/solutions').set(A).send({ titre: `Astuce ${id}`, texte: 'xx' })).body;
+    const g = (await http.get('/api/guides').set(A)).body.find((x: any) => x.animations.length);
+    const anim = g.animations[0];
+    expect((await http.post('/api/admin/categories/ranger').set(A).send({ categorie: `Blanc ${id}`, elements: [{ type: 'animation', id: anim.id }] })).status).toBe(400);
+    await http.post('/api/admin/categories/ranger').set(A).send({
+      categorie: `Blanc ${id}`, elements: [{ type: 'procedure', id: p.id }, { type: 'astuce', id: s.id }, { type: 'animation', id: anim.id, guide: g.slug }],
+    }).expect(201);
+    const dans = async (nom: string) => (await http.get('/api/admin/categories/elements').set(A)).body.filter((e: any) => e.categorie === nom).map((e: any) => e.type).sort();
+    expect(await dans(`Blanc ${id}`)).toEqual(['animation', 'astuce', 'procedure']);
+
+    // renommer : garde icône et ordre, tout le contenu suit
+    const b = await cat(`Blanc ${id}`);
+    expect((await http.patch(`/api/admin/categories/${b.id}`).set(A).send({ nom: 'Impression' })).status).toBe(400);
+    await http.patch(`/api/admin/categories/${b.id}`).set(A).send({ nom: `Blanc bis ${id}` }).expect(200);
+    expect(await cat(`Blanc bis ${id}`)).toMatchObject({ id: b.id, icone: '⚪', ordre: b.ordre });
+    expect(await cat(`Blanc ${id}`)).toBeUndefined();
+    expect(await dans(`Blanc bis ${id}`)).toEqual(['animation', 'astuce', 'procedure']);
+    expect((await http.get(`/api/procedures/${p.id}`).set(A)).body.categorie).toBe(`Blanc bis ${id}`);
+    expect((await http.get('/api/guides').set(A)).body.find((x: any) => x.slug === g.slug).animations[0].categorie).toBe(`Blanc bis ${id}`);
+
+    // ordre et masquée
+    let l = (await http.post(`/api/admin/categories/${b.id}/deplacer`).set(A).send({ sens: -1 })).body;
+    expect(l.findIndex((c: any) => c.id === b.id)).toBe(l.length - 3);
+    await http.patch(`/api/admin/categories/${b.id}`).set(A).send({ masquee: true, icone: '🎨' }).expect(200);
+    expect(await cat(`Blanc bis ${id}`)).toMatchObject({ masquee: true, icone: '🎨' });
+
+    // supprimer : vide directement, sinon il faut dire où va le contenu
+    const auto = await cat(`Auto ${id}`);
+    await http.delete(`/api/admin/categories/${auto.id}`).set(A).expect(200);
+    expect((await http.delete(`/api/admin/categories/${b.id}`).set(A)).status).toBe(400);
+    const imp = await cat('Impression');
+    await http.delete(`/api/admin/categories/${b.id}?vers=${imp.id}`).set(A).expect(200);
+    expect(await cat(`Blanc bis ${id}`)).toBeUndefined();
+    expect((await http.get(`/api/procedures/${p.id}`).set(A)).body.categorie).toBe('Impression');
+
+    // ménage
+    await http.delete(`/api/admin/guides/${g.slug}/animations/${anim.id}/categorie`).set(A).expect(200);
+    await http.delete(`/api/admin/procedures/${p.id}`).set(A).expect(200);
+    await http.delete(`/api/admin/solutions/${s.id}`).set(A).expect(200);
+  });
+
   it('langue du compte : choisie par le client, par l\'admin ou à la création (clé API)', async () => {
     const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'langue' })).body.cle;
     const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `lea-${id}`, motDePasse: 'motdepasse1', langue: 'en' })).body;

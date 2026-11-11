@@ -4,12 +4,11 @@ import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { compresser } from '../../lib/image';
 import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
-import { chargerProcedures, chargerSolutions, ImageApi, ResumeProcedure, Solution, viderSolutions } from './donneesProcedures';
+import { chargerProcedures, chargerSolutions, ChoixCategorie, ImageApi, ResumeProcedure, Solution, viderSolutions } from './donneesProcedures';
 import './guides.css';
 
 /* Administration → Astuces & solutions (admin, en français). */
 
-const CATEGORIES = ['Impression', 'Réglages', 'Entretien'];
 
 export function AdminSolutions() {
   const nav = useNavigate();
@@ -94,7 +93,6 @@ export function AdminSolution() {
   };
 
   if (!s) return erreur ? <Erreur e={erreur} /> : <Chargement />;
-  const categories = [...new Set([...CATEGORIES, s.categorie])];
   const enregistrer = async () => {
     setEnvoi(true);
     const fait = await maj(`/admin/solutions/${s.id}`, {
@@ -129,8 +127,7 @@ export function AdminSolution() {
         <label>Le problème ou l'astuce (titre)<input type="text" value={f.titre} maxLength={160} onChange={(e) => setF({ ...f, titre: e.target.value })} /></label>
         <label>
           Catégorie
-          <input type="text" list="categories-solutions" value={f.categorie} onChange={(e) => setF({ ...f, categorie: e.target.value })} />
-          <datalist id="categories-solutions">{categories.map((c) => <option key={c} value={c} />)}</datalist>
+          <ChoixCategorie valeur={f.categorie} onChange={(categorie) => setF({ ...f, categorie })} />
         </label>
         <label>Pourquoi ? (facultatif)<textarea rows={2} value={f.cause} maxLength={1000} onChange={(e) => setF({ ...f, cause: e.target.value })} /></label>
         <label>Que faire ?<textarea rows={5} value={f.texte} maxLength={3000} onChange={(e) => setF({ ...f, texte: e.target.value })} /></label>

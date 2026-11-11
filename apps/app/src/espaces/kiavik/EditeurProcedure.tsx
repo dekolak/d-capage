@@ -5,7 +5,7 @@ import { api } from '../../lib/api';
 import { copier } from '../../lib/copier';
 import { compresser } from '../../lib/image';
 import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
-import { CATEGORIES, Choix, Etape, ImageApi, Procedure, ResumeProcedure, Solution, chargerProcedures, estDiagnostic, viderProcedures } from './donneesProcedures';
+import { ChoixCategorie, Choix, Etape, ImageApi, Procedure, ResumeProcedure, Solution, chargerProcedures, estDiagnostic, viderProcedures } from './donneesProcedures';
 import { Guide } from './guides';
 import { decouperEtape } from './ProcedureDetail';
 import { useSolutions } from './donneesProcedures';
@@ -547,7 +547,6 @@ export function AdminProcedure() {
 
   if (!p) return erreur ? <Erreur e={erreur} /> : <Chargement />;
   const infosModifiees = infos.titre !== p.titre || infos.categorie !== p.categorie || infos.resume !== (p.resume ?? '') || infos.description !== (p.description ?? '');
-  const categories = [...new Set([...CATEGORIES, p.categorie])];
   const etapeSel = sel?.type === 'etape' ? p.etapes.find((e) => e.id === sel.id) : undefined;
   const choixSel = sel?.type === 'choix' ? p.etapes.flatMap((e) => e.choix).find((c) => c.id === sel.id) : undefined;
   const avertissements = alertes(p, signalements);
@@ -585,8 +584,7 @@ export function AdminProcedure() {
           <div className="carte form">
             <label>Titre<input type="text" value={infos.titre} onChange={(e) => setInfos({ ...infos, titre: e.target.value })} /></label>
             <label>Catégorie
-              <input type="text" list="categories-procedures" value={infos.categorie} onChange={(e) => setInfos({ ...infos, categorie: e.target.value })} />
-              <datalist id="categories-procedures">{categories.map((c) => <option key={c} value={c} />)}</datalist>
+              <ChoixCategorie valeur={infos.categorie} onChange={(categorie) => setInfos({ ...infos, categorie })} />
             </label>
             <label>Résumé (court, vu par le client dans la liste)<textarea rows={2} value={infos.resume} onChange={(e) => setInfos({ ...infos, resume: e.target.value })} /></label>
             <label>Description (pour vous et l'IA : à quoi elle sert, quand l'utiliser, symptômes, machine)

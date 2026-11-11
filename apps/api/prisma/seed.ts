@@ -231,11 +231,33 @@ async function conditionsJournal() {
   }
 }
 
+/** Catégories de l'accueil Kiavik : ajoute celles qui sont utilisées mais absentes (jamais ne modifie ni ne supprime). */
+async function categoriesAccueil() {
+  const noms = new Set<string>();
+  for (const p of await prisma.procedure.findMany({ select: { categorie: true }, distinct: ['categorie'] })) noms.add(p.categorie);
+  for (const s of await prisma.solution.findMany({ select: { categorie: true }, distinct: ['categorie'] })) noms.add(s.categorie);
+  const fichier = join(RACINE_KIT, 'animations.json');
+  if (existsSync(fichier)) {
+    const json = JSON.parse(readFileSync(fichier, 'utf8'));
+    const anims: { categorie?: string }[] = Array.isArray(json) ? json : Object.values(json).flatMap((v) => (Array.isArray(v) ? v : []));
+    for (const a of anims) if (typeof a?.categorie === 'string') noms.add(a.categorie);
+  }
+  let crees = 0;
+  for (const nom of [...noms].map((n) => n.trim()).filter(Boolean)) {
+    if (await prisma.categorieAccueil.findUnique({ where: { nom } })) continue;
+    const ordre = ((await prisma.categorieAccueil.aggregate({ _max: { ordre: true } }))._max.ordre ?? -1) + 1;
+    await prisma.categorieAccueil.create({ data: { nom, ordre } });
+    crees++;
+  }
+  console.log(`Catégories de l'accueil : ${crees} ajoutée(s)`);
+}
+
 admin()
   .then(catalogue)
   .then(tags)
   .then(procedures)
   .then(solutions)
+  .then(categoriesAccueil)
   .then(conditionsJournal)
   .catch((e) => {
     console.error(e);

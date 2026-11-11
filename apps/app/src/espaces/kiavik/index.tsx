@@ -7,6 +7,7 @@ import { AdminProcedures } from './AdminProcedures';
 import MesDiagnostics from './MesDiagnostics';
 import { AdminProcedure } from './EditeurProcedure';
 import { AdminDiagnostics } from './AdminDiagnostics';
+import { AdminCategories } from './AdminCategories';
 import { AdminSolution, AdminSolutions } from './AdminSolutions';
 import Solutions, { SolutionDetail } from './Solutions';
 import ProcedureDetail from './ProcedureDetail';
@@ -40,6 +41,7 @@ export const kiavik: AppEspace = {
       <Route path="/admin/procedures" element={<AdminProcedures />} />
       <Route path="/admin/procedures/:id" element={<AdminProcedure />} />
       <Route path="/admin/diagnostics" element={<AdminDiagnostics />} />
+      <Route path="/admin/categories" element={<AdminCategories />} />
       <Route path="/recherche" element={<Recherche />} />
     </>
   ),
