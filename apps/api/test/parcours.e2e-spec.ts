@@ -433,7 +433,8 @@ describe('Parcours complet', () => {
     const dx = (await http.get('/api/guides/dxonjet').set(K)).body;
     const offre = dx.animations.find((a: any) => a.id === 'offre-composition');
     expect(offre.liens).toContainEqual(['d4a', 'a.6']);
-    expect(offre.photos.decalee.image).toMatch(/^\/api\/guides\/images\/dx\/offre_/);
+    expect(offre.photos.mireMoins4.image).toMatch(/^\/api\/guides\/images\/dx\/offre_mire_moins4\.svg$/);
+    expect((await http.get(offre.photos.mireMoins4.image)).headers['content-type']).toContain('image/svg+xml');
     expect(aCompleter(dx)).toEqual([]);
     expect(notesAdmin).toBeGreaterThanOrEqual(aCompleter(dx).length);
     expect(dx.ecrans[0].image).toMatch(/^\/api\/guides\/images\//);
