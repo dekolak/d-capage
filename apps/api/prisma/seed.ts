@@ -5,7 +5,8 @@
  *  3. groupes de tags et tags de départ ;
  *  4. procédures Kiavik de départ (kit-guides/procedures.json), créées seulement si leur clé n'existe pas
  *     (elles se modifient ensuite dans l'app : le seed ne les écrase jamais) ;
- *  5. fiches « Astuces & solutions » de départ (kit-guides/solutions.json), même principe.
+ *  5. fiches « Astuces & solutions » de départ (kit-guides/solutions.json), même principe ;
+ *  6. conditions d'utilisation : mention du journal d'activité ajoutée une seule fois (nouvelle version à accepter).
  */
 import 'dotenv/config';
 import { PrismaClient, Prisma } from '@prisma/client';
@@ -13,6 +14,8 @@ import { chargerConfig } from '@decapage/machine-kit';
 import * as bcrypt from 'bcryptjs';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { ESPACES } from '../src/espaces/espaces';
+import { CONDITIONS_DEFAUT } from '../src/parametres/conditions-defaut';
 
 const prisma = new PrismaClient();
 const RACINE_MACHINES = join(__dirname, '../../../machines');
@@ -165,11 +168,48 @@ async function solutions() {
   console.log(`Astuces & solutions : ${crees} créée(s), ${liste.length - crees} déjà présente(s)`);
 }
 
+/** Ajoute la mention du journal d'activité aux conditions en vigueur (partie « Vos données »), une seule fois. */
+const REPERE_JOURNAL = 'enregistre aussi votre activité';
+export function ajouterMentionJournal(texte: string, societe: string): string {
+  if (texte.includes(REPERE_JOURNAL)) return texte;
+  const phrase = `Pour vous aider au mieux, l'application enregistre aussi votre activité (connexions, pages consultées, recherches) ; ce journal n'est visible que par ${societe} et il est effacé au bout de 12 mois.`;
+  const lignes = texte.split('\n');
+  const titre = lignes.findIndex((l) => /^\s*\d+\.\s*Vos données/i.test(l));
+  const para = titre >= 0 ? lignes.findIndex((l, i) => i > titre && l.trim() !== '') : -1;
+  if (para >= 0) {
+    lignes[para] = `${lignes[para].trimEnd()} ${phrase}`;
+    return lignes.join('\n');
+  }
+  return `${texte.trimEnd()}\n\nJournal d'activité\n${phrase}`;
+}
+
+async function conditionsJournal() {
+  for (const e of ESPACES) {
+    const cle = `conditions:${e.slug}`;
+    const ligne = await prisma.parametre.findUnique({ where: { cle } });
+    const v = (ligne?.valeur ?? {}) as { version?: number; texte?: string };
+    if (!ligne) {
+      // Conditions par défaut jamais publiées : les comptes ont accepté la version 1 de l'ancien texte par défaut,
+      // qui ne citait pas le journal. On publie le texte actuel (qui le cite) en version 2.
+      await prisma.parametre.create({ data: { cle, valeur: { version: 2, texte: CONDITIONS_DEFAUT[e.slug] ?? '' } } });
+      console.log(`Conditions ${e.slug} : version 2 publiée (mention du journal d'activité)`);
+      continue;
+    }
+    const texte = v.texte ?? CONDITIONS_DEFAUT[e.slug] ?? '';
+    const nouveau = ajouterMentionJournal(texte, e.nom);
+    if (nouveau === texte) continue;
+    const version = (v.version ?? 1) + 1;
+    await prisma.parametre.update({ where: { cle }, data: { valeur: { version, texte: nouveau } } });
+    console.log(`Conditions ${e.slug} : mention du journal d'activité ajoutée (version ${version})`);
+  }
+}
+
 admin()
   .then(catalogue)
   .then(tags)
   .then(procedures)
   .then(solutions)
+  .then(conditionsJournal)
   .catch((e) => {
     console.error(e);
     process.exitCode = 1;
