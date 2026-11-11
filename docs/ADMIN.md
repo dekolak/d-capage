@@ -40,6 +40,11 @@ Administration → **💬 Messages**.
 - **Machines** : miniature PNG par modèle (machine entière, fond transparent ou clair, ~800 × 800 px). Une variante peut avoir la sienne.
 - **Envoi vers une API** : webhooks pour une modération automatique (voir [API.md](API.md)).
 
+## Kiavik : accueil
+- En haut : la recherche et **les deux logiciels** (toujours visibles).
+- Dessous : une **section repliable par catégorie** (🚀 Mise en route, 🩺 Diagnostic, 🖨️ Impression, 🎛️ Réglages, 🧽 Entretien, puis les autres) avec ses procédures guidées (animations), procédures, diagnostics et astuces. Le client ouvre ce qui l'intéresse ; le téléphone se souvient des sections ouvertes.
+- La catégorie vient du champ **Catégorie** des procédures et des astuces. Pour une **animation** : ouvrir l'animation → « ✏️ Modifier cette scène » → **Catégorie sur l'accueil** (« Revenir à l'original » pour reprendre celle du fichier).
+
 ## Kiavik : procédures
 Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procédures → « Gérer les procédures »).
 - **Créer** : un titre, puis ajouter les étapes une par une (texte, avertissement facultatif, photo prise avec le téléphone).

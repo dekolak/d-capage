@@ -5,7 +5,7 @@ import { api } from '../../lib/api';
 import { copier } from '../../lib/copier';
 import { compresser } from '../../lib/image';
 import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
-import { Choix, Etape, ImageApi, Procedure, ResumeProcedure, Solution, chargerProcedures, estDiagnostic, viderProcedures } from './donneesProcedures';
+import { CATEGORIES, Choix, Etape, ImageApi, Procedure, ResumeProcedure, Solution, chargerProcedures, estDiagnostic, viderProcedures } from './donneesProcedures';
 import { Guide } from './guides';
 import { decouperEtape } from './ProcedureDetail';
 import { useSolutions } from './donneesProcedures';
@@ -19,7 +19,6 @@ import './editeur.css';
  */
 
 const MAX_PHOTOS = 8;
-const CATEGORIES = ['Mise en route', 'Diagnostic', 'Impression', 'Réglages', 'Entretien'];
 type Maj = (chemin: string, opts: RequestInit & { json?: unknown }) => Promise<Procedure | null>;
 type Sel = { type: 'etape' | 'choix'; id: string } | null;
 

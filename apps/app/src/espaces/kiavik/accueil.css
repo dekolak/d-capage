@@ -34,3 +34,17 @@
 .kh-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 46px; height: 46px; border-radius: 50%; background: color-mix(in srgb, var(--o) 92%, transparent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35); }
 .kh-guidee b { font-size: 15px; line-height: 1.25; padding: 0 4px; }
 .kh-guidee small { padding: 0 4px; }
+
+/* sections repliables par catégorie */
+.kh-cat { border-radius: var(--r); background: var(--carte); box-shadow: var(--ombre); overflow: hidden; }
+.kh-cat-tete { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; background: none; border: 0; cursor: pointer; text-align: left; font: inherit; color: var(--t); }
+.kh-cat-icone { flex: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; background: color-mix(in srgb, var(--o) 10%, var(--carte)); }
+.kh-cat-nom { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.kh-cat-nom b { font-size: 17px; }
+.kh-cat-nom small { color: var(--g); font-size: 13px; }
+.kh-cat-chevron { flex: none; font-size: 26px; line-height: 1; color: var(--g2); transition: transform 0.2s; }
+.kh-cat.ouverte .kh-cat-chevron { transform: rotate(90deg); }
+.kh-cat-corps { display: grid; gap: 12px; padding: 0 14px 14px; animation: kh-ouvre 0.18s ease-out; }
+.kh-cat-corps .gx-resultats .carte { box-shadow: none; border: 1px solid var(--bord); }
+@keyframes kh-ouvre { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.kh-tout { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }

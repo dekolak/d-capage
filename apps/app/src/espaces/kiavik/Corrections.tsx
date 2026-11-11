@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { compresser } from '../../lib/image';
+import { CATEGORIES } from './donneesProcedures';
 import { Animation, Ecran, EtapeAnim, Guide, mettreAJourGuide, Pastille, SceneBlanc, SceneEcrans } from './guides';
 
 /*
@@ -184,6 +185,28 @@ function PhotoScene({ image, corrige, onRemplacer, onOriginal }: { image?: strin
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Catégorie d'une animation sur l'accueil (admin). */
+export function CategorieAnimation({ guide, a }: { guide: Guide; a: Animation }) {
+  const [v, setV] = useState(a.categorie ?? '');
+  const [err, setErr] = useState<unknown>();
+  const url = `${base(guide)}/animations/${enc(a.id)}/categorie`;
+  const faire = (opts: RequestInit & { json?: unknown }) => envoyer(url, opts).catch(setErr);
+  return (
+    <div className="cx-categorie">
+      <label>
+        Catégorie sur l'accueil
+        <input type="text" list="categories-accueil" value={v} onChange={(e) => setV(e.target.value)} />
+        <datalist id="categories-accueil">{CATEGORIES.map((c) => <option key={c} value={c} />)}</datalist>
+      </label>
+      <span>
+        {v.trim() !== (a.categorie ?? '') && <button type="button" className="btn prim petit" disabled={v.trim().length < 2} onClick={() => faire({ method: 'PUT', json: { categorie: v.trim() } })}>Enregistrer</button>}
+        {a.categorieCorrigee && <button type="button" className="btn petit" onClick={() => faire({ method: 'DELETE' })}>Revenir à l'original</button>}
+      </span>
+      <Erreur e={err} />
     </div>
   );
 }

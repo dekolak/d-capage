@@ -4,16 +4,19 @@ import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { t, tn } from '../../lib/i18n';
-import { useProcedures, useSolutions } from './donneesProcedures';
+import { ICONES_CATEGORIES, trierCategories, useProcedures, useSolutions } from './donneesProcedures';
 import { ResumeGuide } from './guides';
 import { ListeProcedures } from './Procedures';
 import { ListeSolutions } from './Solutions';
 import './guides.css';
 import './accueil.css';
 
+const CLE_OUVERTES = 'kiavik.accueil.ouvertes';
+
 /**
- * Accueil Kiavik : recherche, les logiciels (miniature de l'écran, dans l'ordre du travail),
- * les procédures guidées (animations), les astuces & solutions et les procédures.
+ * Accueil Kiavik : recherche, les logiciels (miniature de l'écran, dans l'ordre du travail, toujours visibles),
+ * puis une section repliable par catégorie (Mise en route, Diagnostic, Impression…) avec ses procédures guidées
+ * (animations), procédures, diagnostics et astuces. Les sections ouvertes sont gardées sur le téléphone.
  */
 export default function Guides() {
   const { moi } = useAuth();
@@ -21,6 +24,13 @@ export default function Guides() {
   const { liste: solutions } = useSolutions();
   const [guides, setGuides] = useState<ResumeGuide[]>();
   const [erreur, setErreur] = useState<unknown>();
+  const [ouvertes, setOuvertes] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CLE_OUVERTES) ?? '[]');
+    } catch {
+      return [];
+    }
+  });
   useEffect(() => {
     api<ResumeGuide[]>('/guides').then(setGuides).catch(setErreur);
   }, []);
@@ -28,6 +38,16 @@ export default function Guides() {
   if (!guides) return <Chargement />;
   const prenom = moi?.nom?.split(' ')[0];
   const guidees = guides.flatMap((g) => g.animations.map((a) => ({ ...a, guide: g.slug })));
+  // sections par catégorie : procédures guidées (animations), procédures et diagnostics, astuces
+  const categories = trierCategories([
+    ...guidees.map((a) => a.categorie ?? ''),
+    ...(accesProcedures ? [...(procedures ?? []).map((p) => p.categorie), ...(solutions ?? []).map((x) => x.categorie)] : []),
+  ]);
+  const basculer = (cat: string) => {
+    const l = ouvertes.includes(cat) ? ouvertes.filter((x) => x !== cat) : [...ouvertes, cat];
+    setOuvertes(l);
+    localStorage.setItem(CLE_OUVERTES, JSON.stringify(l));
+  };
 
   return (
     <div className="page kh">
@@ -60,51 +80,59 @@ export default function Guides() {
         </section>
       )}
 
-      {guidees.length > 0 && (
-        <section>
-          <div className="kh-titre">
-            <h2>{t('kiavik.accueil.proceduresGuidees')}</h2>
-            <span className="muted petit">{t('kiavik.accueil.proceduresGuideesIntro')}</span>
-          </div>
-          <div className="kh-defile">
-            {guidees.map((a) => (
-              <Link key={`${a.guide}/${a.id}`} to={`/guides/${a.guide}/animation/${a.id}`} className="kh-guidee">
-                <span className="kh-image">
-                  {a.image && <img src={a.image} alt="" loading="lazy" />}
-                  <span className="kh-play">▶</span>
-                </span>
-                <b>{a.titre}</b>
-                {a.nbScenes ? <small className="muted">{tn('kiavik.accueil.scenes', a.nbScenes)}</small> : null}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {accesProcedures && solutions && solutions.length > 0 && (
-        <section>
-          <div className="kh-titre">
-            <h2>{t('kiavik.solutions.titre')}</h2>
-            {solutions.length > 3 && <Link to="/solutions" className="lien petit">{t('kiavik.accueil.toutVoir')}</Link>}
-          </div>
-          <ListeSolutions liste={solutions.slice(0, 3)} />
-        </section>
-      )}
+      {categories.map((cat) => {
+        const anims = guidees.filter((a) => (a.categorie ?? '') === cat);
+        const procs = (procedures ?? []).filter((p) => p.categorie === cat);
+        const astuces = (solutions ?? []).filter((s) => s.categorie === cat);
+        const ouverte = ouvertes.includes(cat);
+        return (
+          <section key={cat} className={`kh-cat ${ouverte ? 'ouverte' : ''}`}>
+            <button type="button" className="kh-cat-tete" aria-expanded={ouverte} onClick={() => basculer(cat)}>
+              <span className="kh-cat-icone" aria-hidden="true">{ICONES_CATEGORIES[cat] ?? '📁'}</span>
+              <span className="kh-cat-nom">
+                <b>{cat || t('kiavik.accueil.autres')}</b>
+                <small>
+                  {[
+                    anims.length && tn('kiavik.accueil.nbAnimations', anims.length),
+                    procs.length && tn('kiavik.accueil.nbProcedures', procs.length),
+                    astuces.length && tn('kiavik.accueil.nbAstuces', astuces.length),
+                  ].filter(Boolean).join(' · ')}
+                </small>
+              </span>
+              <span className="kh-cat-chevron" aria-hidden="true">›</span>
+            </button>
+            {ouverte && (
+              <div className="kh-cat-corps">
+                {anims.length > 0 && (
+                  <div className="kh-defile">
+                    {anims.map((a) => (
+                      <Link key={`${a.guide}/${a.id}`} to={`/guides/${a.guide}/animation/${a.id}`} className="kh-guidee">
+                        <span className="kh-image">
+                          {a.image && <img src={a.image} alt="" loading="lazy" />}
+                          <span className="kh-play">▶</span>
+                        </span>
+                        <b>{a.titre}</b>
+                        {a.nbScenes ? <small className="muted">{tn('kiavik.accueil.scenes', a.nbScenes)}</small> : null}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {procs.length > 0 && <ListeProcedures liste={procs} />}
+                {astuces.length > 0 && <ListeSolutions liste={astuces} />}
+              </div>
+            )}
+          </section>
+        );
+      })}
 
       {accesProcedures && (
-        <section>
-          <div className="kh-titre">
-            <h2>{t('kiavik.accueil.procedures')}</h2>
-            {procedures && procedures.length > 4 && <Link to="/procedures" className="lien petit">{t('kiavik.accueil.toutVoir')}</Link>}
-          </div>
-          {!procedures ? (
-            <Chargement />
-          ) : procedures.length ? (
-            <ListeProcedures liste={procedures.slice(0, 4)} />
-          ) : (
-            <div className="carte"><span className="muted">{t('kiavik.accueil.aucuneProcedure')}</span></div>
-          )}
-        </section>
+        <nav className="kh-tout">
+          <Link to="/procedures" className="lien petit">{t('kiavik.accueil.toutesProcedures')}</Link>
+          {solutions && solutions.length > 0 && <Link to="/solutions" className="lien petit">{t('kiavik.accueil.toutesAstuces')}</Link>}
+        </nav>
+      )}
+      {accesProcedures && procedures && !procedures.length && !guidees.length && (
+        <div className="carte"><span className="muted">{t('kiavik.accueil.aucuneProcedure')}</span></div>
       )}
       {!guides.length && !accesProcedures && <p className="muted">{t('kiavik.accueil.aucunGuide')}</p>}
     </div>

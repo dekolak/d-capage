@@ -42,6 +42,15 @@ export const estDiagnostic = (p: Procedure) => p.etapes.some((e) => e.choix.leng
 
 export const MODULE_PROCEDURES = 'procedures-kiavik';
 
+/** Catégories proposées, dans l'ordre de l'accueil (les autres suivent, par ordre alphabétique). */
+export const CATEGORIES = ['Mise en route', 'Diagnostic', 'Impression', 'Réglages', 'Entretien'];
+export const ICONES_CATEGORIES: Record<string, string> = { 'Mise en route': '🚀', Diagnostic: '🩺', Impression: '🖨️', Réglages: '🎛️', Entretien: '🧽' };
+/** Tri des catégories : celles de CATEGORIES d'abord, dans leur ordre. */
+export function trierCategories(l: string[]): string[] {
+  const rang = (c: string) => (CATEGORIES.includes(c) ? CATEGORIES.indexOf(c) : CATEGORIES.length);
+  return [...new Set(l)].sort((a, b) => rang(a) - rang(b) || a.localeCompare(b, 'fr'));
+}
+
 /** Le compte a-t-il les procédures ? */
 export function useAccesProcedures() {
   const { moi } = useAuth();
