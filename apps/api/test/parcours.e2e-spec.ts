@@ -525,4 +525,50 @@ describe('Parcours complet', () => {
     expect((await http.patch('/api/moi/preferences').set(auth(alice)).send({ langue: 'xx' })).status).toBe(400);
     expect((await http.patch(`/api/users/${u.id}`).set(auth(admin)).send({ langue: 'fr' })).body.langue).toBe('fr');
   });
+
+  it('corrections des guides par l\'admin : fiche d\'un bouton, sous-titre, photo, retour à l\'original', async () => {
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'corrections' })).body.cle;
+    await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `zoe-${id}`, motDePasse: 'motdepasse1', modules: ['guide-dxonjet'] }).expect(201);
+    const tz = (await http.post('/api/auth/connexion').send({ identifiant: `zoe-${id}`, motDePasse: 'motdepasse1' })).body.jeton;
+    const Z = { ...auth(tz), 'X-Espace': 'kiavik' };
+    const { version } = (await http.get('/api/conditions?espace=kiavik').set(Z)).body;
+    await http.post('/api/moi/conditions').set(Z).send({ version }).expect(201);
+    const a6 = (g: any) => g.ecrans.find((e: any) => e.id === 'd4a').pastilles.find((p: any) => p.id === 'a.6');
+    const origine = a6((await http.get('/api/guides/dxonjet').set(Z)).body);
+
+    // fiche d'un bouton
+    const url = '/api/admin/guides/dxonjet/pastilles/d4a/a.6';
+    expect((await http.put(url).set(Z).send({ titre: 'pirate', texte: 'x' })).status).toBe(403);
+    expect((await http.put('/api/admin/guides/dxonjet/pastilles/d4a/zz').set(auth(admin)).send({ titre: 'Essai', texte: 'x' })).status).toBe(404);
+    const g1 = (await http.put(url).set(auth(admin)).send({ titre: `Offre ${id}`, texte: 'Nouveau texte', conseil: 'Note interne', niveau: 'a_completer', mots_cles: ['offset', ' offset ', 'mire'] })).body;
+    expect(a6(g1)).toMatchObject({ titre: `Offre ${id}`, corrige: true, niveau: 'a_completer', mots_cles: ['offset', 'mire'] });
+    const vuClient = a6((await http.get('/api/guides/dxonjet').set(Z)).body);
+    expect(vuClient).toMatchObject({ titre: `Offre ${id}`, texte: 'Nouveau texte' });
+    expect(vuClient.conseil).toBeUndefined(); // note « à compléter » : admin seulement
+    expect(vuClient.corrige).toBeUndefined();
+
+    // sous-titre d'une animation
+    const anim = '/api/admin/guides/dxonjet/animations/offre-composition';
+    const g2 = (await http.put(`${anim}/etapes/0/0`).set(auth(admin)).send({ cap: `Nouveau sous-titre ${id}` })).body;
+    expect(g2.animations.find((a: any) => a.id === 'offre-composition').scenes[0].etapes[0]).toMatchObject({ cap: `Nouveau sous-titre ${id}`, corrige: true });
+    expect((await http.put(`${anim}/etapes/0/9`).set(auth(admin)).send({ cap: 'xx' })).status).toBe(404);
+
+    // photo
+    const ph = await http.post(`${anim}/photos/avant`).set(auth(admin)).attach('photo', JPEG, 'a.jpg');
+    expect(ph.status).toBe(201);
+    const image = ph.body.animations.find((a: any) => a.id === 'offre-composition').photos.avant.image;
+    expect(image).toMatch(/^\/api\/guides\/corrections\/.+\/photo/);
+    const img = await http.get(image);
+    expect(img.status).toBe(200);
+    expect(img.headers['content-type']).toBe('image/jpeg');
+    expect((await http.post(`${anim}/photos/avant`).set(auth(admin)).attach('photo', Buffer.from('pas une image'), 'a.jpg')).status).toBe(400);
+
+    // retour à l'original
+    await http.delete(url).set(auth(admin)).expect(200);
+    await http.delete(`${anim}/etapes/0/0`).set(auth(admin)).expect(200);
+    const g3 = (await http.delete(`${anim}/photos/avant`).set(auth(admin))).body;
+    expect(a6(g3)).toMatchObject({ titre: origine.titre, texte: origine.texte });
+    expect(g3.animations.find((a: any) => a.id === 'offre-composition').photos.avant.image).toMatch(/offre_grilles_avant/);
+    expect((await http.get(image)).status).toBe(404);
+  });
 });

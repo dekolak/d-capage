@@ -496,3 +496,19 @@ model EtapeProcedure {
 
   @@index([procedureId, ordre])
 }
+
+/// Correction d'un guide Kiavik faite par l'admin depuis l'app, appliquée par-dessus les fichiers d'origine (kit-guides).
+/// type « pastille » (cle = écran/pastille : titre, texte, conseil, niveau, mots-clés), « etape » (cle = animation/scène/étape : sous-titre),
+/// « photo » (cle = animation/photo : photo remplacée, fichier dans le stockage). Supprimer = revenir à l'original.
+model CorrectionGuide {
+  id        String   @id @default(cuid())
+  guide     String
+  type      String
+  cle       String
+  valeur    Json     @default("{}")
+  photoCle  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([guide, type, cle])
+}

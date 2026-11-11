@@ -74,6 +74,11 @@ docs/                       documentation
 - App (`apps/app/src/espaces/kiavik/`) : `/guides` = accueil (guides côte à côte dans l'ordre des modules de `espaces.ts`, procédures en dessous), `/guides/<guide>/<écran>?p=<pastille>`. Capture + pastilles (en % de l'image), zones voilées, pastilles de navigation tirées de `navigation` (onglets T1–T11, boutons E / A, menus D1–D8 et sous-menus), fiche en bas d'écran, zoom 240 %, menu repliable par groupe, liste des repères, fenêtres Windows recréées (`Fenetres.tsx`). Admin : option « afficher les repères » (filigrane du code écran).
 - **Recherche** (`/recherche`, `recherche.ts`) : sur le téléphone, dans les guides du compte (titre, `mots_cles`, texte et conseil des pastilles, titre de l'écran). Sans accents, début de mot, une faute de frappe tolérée. Un résultat ouvre l'écran sur le repère (`?p=`). Plus tard : procédures et animations dans les résultats.
 
+## Corrections des guides depuis l'app
+- Table `CorrectionGuide` (`guide`, `type` = `pastille` | `etape` | `photo`, `cle`, `valeur` JSON, `photoCle`) : corrections de l'admin **appliquées par-dessus** les fichiers `kit-guides/` à chaque `GET /api/guides/:slug` (`corrections.service.ts`). Supprimer une correction = revenir à l'original ; les fichiers d'origine ne sont jamais modifiés.
+- Photos remplacées : dans le stockage (`guides/…`), servies par `GET /api/guides/corrections/:id/photo` ; affichées en `object-fit: cover` dans le cadre de la photo d'origine (les coordonnées du curseur ne changent pas).
+- App : `espaces/kiavik/Corrections.tsx` (formulaire de la fiche d'un bouton, sous-titres et photos d'une scène) ; `mettreAJourGuide()` met à jour les écrans ouverts.
+
 ## Écrans interactifs (T5, T9)
 - Champ `interactif` d'un écran dans le JSON du guide (zones en pixels de l'image) : `echantillon` (T5 : poignées d'angle, taille réelle en cm, `remise` = pastille qui annule) et `canaux` (T9 : case, lignes des canaux, zone d'aperçu, images `ch_*` ; le blanc suit le mode choisi en T4, gardé sur le téléphone).
 - App : `Interactifs.tsx`. Sur T9, gros boutons sous la capture (les cases de la capture sont trop petites au doigt).

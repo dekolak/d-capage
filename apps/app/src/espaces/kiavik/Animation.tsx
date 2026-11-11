@@ -1,9 +1,11 @@
 import { CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
+import { EditeurScene } from './Corrections';
 import { Fenetre } from './Fenetres';
 import { Animation as Anim, EtapeAnim, EtatAnim, TexteAnim, Guide, ModeBlanc, SceneBlanc, SceneEcrans, useGuide } from './guides';
 import { useVoix } from './voix';
+import { useAuth } from '../../lib/auth';
 import './animations.css';
 import './guides.css';
 import { t } from '../../lib/i18n';
@@ -33,6 +35,8 @@ function aplatir(a: Anim): Temps[] {
 function Lecteur({ guide, a }: { guide: Guide; a: Anim }) {
   const temps = useMemo(() => aplatir(a), [a]);
   const voix = useVoix();
+  const admin = useAuth().moi?.role === 'ADMIN';
+  const [edition, setEdition] = useState(false);
   const [pos, setPos] = useState(0);
   const [clicFait, setClicFait] = useState(true);
   const [lecture, setLecture] = useState(false);
@@ -131,6 +135,13 @@ function Lecteur({ guide, a }: { guide: Guide; a: Anim }) {
       </div>
       {voix.active && (voix.sansVoix || !voix.dispo) && <p className="muted petit">{t('kiavik.anim.sansVoix')}</p>}
 
+      {admin && (
+        <p>
+          <button type="button" className="btn petit" onClick={() => setEdition(!edition)}>{edition ? 'Fermer la modification' : '✏️ Modifier cette scène'}</button>
+        </p>
+      )}
+      {admin && edition && <EditeurScene guide={guide} a={a} scene={tp.scene} />}
+
       <h4>{t('kiavik.anim.etapes')}</h4>
       <ol className="an-scenes">
         {a.scenes.map((s, i) => (
@@ -228,7 +239,7 @@ function VueEcrans({ guide, a, t: tp, clicFait, vitesse }: { guide: Guide; a: An
           <div><b>{t('kiavik.anim.fin.mur')}</b><span>{t('kiavik.anim.fin.impression')}</span></div>
         </div>
       ) : photo ? (
-        <img src={photo.image} alt="" draggable={false} />
+        <img src={photo.image} alt="" draggable={false} style={{ objectFit: 'cover' }} />
       ) : ecran?.type === 'capture' && ecran.image ? (
         <img src={ecran.image} alt="" draggable={false} />
       ) : ecran ? (

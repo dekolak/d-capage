@@ -75,6 +75,16 @@ Les conseils `niveau: "a_completer"` (notes internes) ne sont envoyés qu'à l'a
 | POST | `/admin/procedures/:id/etapes` `{texte, avertissement?, guide?, ecran?, pastille?}` | admin |
 | PATCH · DELETE | `/admin/procedures/etapes/:id` ; POST `…/deplacer {sens: -1\|1}` ; POST · DELETE `…/photo` (multipart `photo`) | admin |
 
+### Corrections des guides (admin)
+| Méthode | Route | Accès |
+|---|---|---|
+| PUT · DELETE | `/admin/guides/:slug/pastilles/:ecran/:pastille` `{titre, texte, conseil?, niveau?, mots_cles?}` | admin |
+| PUT · DELETE | `/admin/guides/:slug/animations/:anim/etapes/:scene/:etape` `{cap}` | admin |
+| POST · DELETE | `/admin/guides/:slug/animations/:anim/photos/:photo` (multipart `photo`) | admin |
+| GET | `/guides/corrections/:id/photo` | public |
+
+Chaque route renvoie le guide corrigé ; `DELETE` = revenir à l'original.
+
 ### Administration
 | Méthode | Route | Accès |
 |---|---|---|

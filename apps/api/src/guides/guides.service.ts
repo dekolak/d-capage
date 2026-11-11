@@ -19,6 +19,9 @@ export interface Pastille {
   etat?: 'actif' | 'non_utilise' | 'preregle';
   zone?: { x: number; y: number; largeur: number; hauteur: number; libelle?: string };
   special?: string;
+  mots_cles?: string[];
+  /** Modifié dans l'app (admin). */
+  corrige?: boolean;
 }
 export interface Ecran {
   id: string;
@@ -32,6 +35,7 @@ export interface Ecran {
   largeur: number;
   hauteur: number;
   pastilles: Pastille[];
+  corrige?: boolean;
   /** Zone interactive (T5 : échantillon à taille réelle ; T9 : aperçu canal par canal). */
   interactif?: { type: string; images?: Record<string, string> } & Record<string, unknown>;
 }
@@ -141,11 +145,21 @@ export class GuidesService implements OnModuleInit {
       }));
   }
 
-  /** Guide complet ; les conseils « à compléter » (notes internes) ne sont envoyés qu'à l'admin. */
-  guide(slug: string, admin: boolean): Guide {
+  /** Guide tel que dans les fichiers (sans les corrections faites dans l'app). */
+  brut(slug: string): Guide {
     const g = this.guides.find((x) => x.slug === slug);
     if (!g) throw new NotFoundException('Guide introuvable');
-    if (admin) return g;
+    return g;
+  }
+
+  /** Guide complet ; les conseils « à compléter » (notes internes) ne sont envoyés qu'à l'admin. */
+  guide(slug: string, admin: boolean): Guide {
+    const g = this.brut(slug);
+    return admin ? g : this.pourClient(g);
+  }
+
+  /** Retire les notes internes (conseils « à compléter »). */
+  pourClient(g: Guide): Guide {
     return {
       ...g,
       ecrans: g.ecrans.map((e) => ({
