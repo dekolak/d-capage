@@ -73,6 +73,8 @@ model User {
 
   @@index([numeroOdoo])
   activites               Activite[]
+  demandesMotDePasse      DemandeMotDePasse[]
+  abonnementsPush         AbonnementPush[]
 }
 
 /// Accès d'un compte à un module (slug défini dans src/espaces/espaces.ts, ex. reglages-decapage).
@@ -555,4 +557,34 @@ model Activite {
 
   @@index([userId, createdAt])
   @@index([createdAt])
+}
+
+/// Mot de passe oublié : le client demande, l'admin génère un code (6 chiffres, 1 h, usage unique) et le lui donne.
+model DemandeMotDePasse {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message    String?
+  /// EN_ATTENTE | CODE_ENVOYE | UTILISEE | ANNULEE
+  statut     String    @default("EN_ATTENTE")
+  codeHash   String?
+  codeExpire DateTime?
+  essais     Int       @default(0)
+  espace     String?
+  createdAt  DateTime  @default(now())
+  traiteeLe  DateTime?
+
+  @@index([userId, createdAt])
+  @@index([statut])
+}
+
+/// Abonnement aux notifications d'un téléphone (Web Push), pour les admins.
+model AbonnementPush {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
 }

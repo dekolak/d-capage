@@ -29,6 +29,7 @@ La base PostgreSQL est incluse dans ce compose (service `db`) : pas besoin de re
 | `ADMIN_IDENTIFIANT` | facultatif, `admin` par défaut |
 | `PUBLIC_URL` | facultatif, `https://app.lazzeko.com` par défaut (liens envoyés aux webhooks) |
 | `MODERATION_PREALABLE_AVIS` | facultatif, `true` = avis avec texte en attente jusqu'à validation |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | facultatif : clés des notifications ; sinon générées au premier usage et gardées en base (ne pas les changer ensuite, sinon réactiver les notifications sur chaque téléphone) |
 
 Le compte admin n'est créé qu'au premier démarrage.
 

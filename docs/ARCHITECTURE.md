@@ -74,6 +74,11 @@ docs/                       documentation
 - App (`apps/app/src/espaces/kiavik/`) : `/guides` = accueil (guides côte à côte dans l'ordre des modules de `espaces.ts`, procédures en dessous), `/guides/<guide>/<écran>?p=<pastille>`. Capture + pastilles (en % de l'image), zones voilées, pastilles de navigation tirées de `navigation` (onglets T1–T11, boutons E / A, menus D1–D8 et sous-menus), fiche en bas d'écran, zoom 240 %, menu repliable par groupe, liste des repères, fenêtres Windows recréées (`Fenetres.tsx`). Admin : option « afficher les repères » (filigrane du code écran).
 - **Recherche** (`/recherche`, `recherche.ts`) : sur le téléphone, dans les guides du compte (titre, `mots_cles`, texte et conseil des pastilles, titre de l'écran). Sans accents, début de mot, une faute de frappe tolérée. Un résultat ouvre l'écran sur le repère (`?p=`). Plus tard : procédures et animations dans les résultats.
 
+## Mot de passe oublié et notifications
+- Table `DemandeMotDePasse` (statut `EN_ATTENTE` → `CODE_ENVOYE` → `UTILISEE` / `ANNULEE`, code **haché** bcrypt, expiration 1 h, essais ≤ 5) ; `mot-de-passe/` (API). Demande → notification aux admins + webhook `motdepasse.demande` (n8n) ; le client saisit le code et est connecté.
+- Notifications : Web Push (`push/`, bibliothèque `web-push`), table `AbonnementPush` (téléphones des admins). Clés VAPID dans les variables `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`, sinon générées une fois et gardées en base (`Parametre` « vapid »). Le service worker (`public/sw.js`) affiche la notification et ouvre la bonne page.
+- App : `pages/MotDePasseOublie.tsx` (client), `pages/AdminMotsDePasse.tsx`, `lib/notifications.ts`.
+
 ## Journal d'activité
 - Table `Activite` (`userId`, `espace`, `type` = `connexion` | `page` | `recherche`, `chemin`, `detail`, `resultats`) ; clients seulement (pas les admins), effacée après 12 mois (`activite.service.ts`, nettoyage quotidien).
 - Connexion notée par l'API à l'identification ; pages (titre lu à l'écran) et recherches (Kiavik, mes réglages, communauté) envoyées par l'app (`lib/activite.ts`, `POST /api/activite`), en arrière-plan, sans jamais bloquer.

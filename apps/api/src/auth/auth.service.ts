@@ -12,6 +12,10 @@ export class AuthService {
     return bcrypt.hash(motDePasse, 12);
   }
 
+  static verifier(motDePasse: string, hash: string) {
+    return bcrypt.compare(motDePasse, hash);
+  }
+
   async connexion(identifiant: string, motDePasse: string, espace?: string) {
     const user = await this.prisma.user.findUnique({ where: { identifiant: identifiant.trim().toLowerCase() } });
     // Même message dans tous les cas pour ne pas révéler si l'identifiant existe.

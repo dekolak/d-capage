@@ -10,6 +10,7 @@ import Accueil from './pages/Accueil';
 import { noterPage, titrePage } from './lib/activite';
 import Admin from './pages/Admin';
 import AdminActivite from './pages/AdminActivite';
+import AdminMotsDePasse from './pages/AdminMotsDePasse';
 import AdminAnnonces from './pages/AdminAnnonces';
 import AdminAvis from './pages/AdminAvis';
 import AdminCatalogue from './pages/AdminCatalogue';
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="/conditions" element={<Conditions />} />
           {admin && <Route path="/admin" element={<Admin />} />}
           {admin && <Route path="/admin/comptes/:id/activite" element={<AdminActivite />} />}
+          {admin && <Route path="/admin/mots-de-passe" element={<AdminMotsDePasse />} />}
           {admin && <Route path="/admin/fiches" element={<AdminFiches />} />}
           {admin && <Route path="/admin/avis" element={<AdminAvis />} />}
           {admin && <Route path="/admin/messages" element={<AdminAnnonces />} />}
