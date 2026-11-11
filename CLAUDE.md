@@ -16,6 +16,7 @@ Lire d'abord [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) et [docs/BONNES-PRATIQ
 - Pas de couleur ni de nom de société en dur dans les écrans communs (variables CSS, `useEspace()`).
 - Pas de texte en dur dans les écrans clients : clé dans `apps/app/src/textes/fr.ts` + `t()` (voir [docs/TRADUCTION.md](docs/TRADUCTION.md)). L'administration reste en français.
 - Mettre à jour la doc (`README.md`, `docs/`) dans la même pull request.
+- Nouvelle procédure ou diagnostic résumé par l'utilisateur : suivre [docs/CREER-PROCEDURE.md](docs/CREER-PROCEDURE.md) (brouillon dans `kit-guides/procedures.json`, il finit dans l'app).
 
 ## Base locale
 `docker compose up -d db` (ou `service postgresql start`) ; base `decapage` (utilisateur `decapage` / `decapage`) ; une base vide (ex. `decapage_ombre`) sert à `prisma migrate diff`.

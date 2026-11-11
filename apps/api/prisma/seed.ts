@@ -119,7 +119,7 @@ async function tags() {
   console.log(`Tags : ${TAGS.reduce((n, g) => n + g.tags.length, 0)}`);
 }
 
-interface EtapeSeed { texte: string; avertissement?: string; note?: string; lien?: [string, string, string]; choix?: ChoixSeed[] }
+interface EtapeSeed { texte: string; avertissement?: string; note?: string; lien?: [string, string, string]; controle?: boolean; choix?: ChoixSeed[] }
 /** Réponse d'une question : détour (`etapes`), puis suite (retour par défaut, resolu, contact). */
 interface ChoixSeed { libelle: string; signification?: string; suite?: 'retour' | 'resolu' | 'contact'; conclusion?: string; etapes?: EtapeSeed[] }
 interface ProcedureSeed {
@@ -131,7 +131,7 @@ async function creerEtapes(procedureId: string, etapes: EtapeSeed[], brancheId: 
   for (const [n, e] of etapes.entries()) {
     const etape = await prisma.etapeProcedure.create({
       data: {
-        procedureId, brancheId, ordre: n, texte: e.texte, avertissement: e.avertissement, note: e.note,
+        procedureId, brancheId, ordre: n, texte: e.texte, avertissement: e.avertissement, note: e.note, controle: e.controle ?? false,
         guide: e.lien?.[0], ecran: e.lien?.[1], pastille: e.lien?.[2],
       },
     });
