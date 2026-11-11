@@ -108,7 +108,7 @@ docs/                       documentation
 - Tables `Procedure` (titre, catégorie, résumé, publiée, ordre, `cle` pour celles du seed) et `EtapeProcedure` (texte, avertissement, photo, lien `guide` / `ecran` / `pastille`, tous facultatifs sauf le texte). Les liens d'une procédure vers les guides = ceux de ses étapes.
 - Procédures de départ dans `kit-guides/procedures.json` (reprises des animations du prototype + 4 brouillons DXonJet) : le seed les crée **seulement si leur clé n'existe pas**, puis elles se modifient dans l'app (jamais écrasées).
 - API `apps/api/src/procedures/` : lecture (`/procedures`, publiées seulement pour les clients), admin (`/admin/procedures`, étapes, ordre, photo). Un lien vers un bouton inexistant est refusé.
-- App : accueil (procédures sous les logiciels), onglet Procédures (par catégorie), détail (étapes à cocher gardées sur le téléphone, photos agrandissables, « Voir le bouton »), « 📋 Voir la procédure » dans la fiche d'une pastille, procédures dans la recherche, Administration → Procédures (`AdminProcedures.tsx`).
+- App : accueil (procédures sous les logiciels), onglet Procédures (par catégorie), détail (étapes à cocher gardées sur le téléphone, photos agrandissables, « Voir le bouton » en aperçu par-dessus la liste via `CaptureBouton.tsx`), parcours guidé plein écran (`ParcoursGuide.tsx` : une étape à la fois, capture zoomée sur le bouton ou photo, « Fait, suivant » coche la liste, glisser au doigt, reprise à l'étape gardée dans `kiavik.parcours.<id>`), « 📋 Voir la procédure » dans la fiche d'une pastille, procédures dans la recherche, Administration → Procédures (`AdminProcedures.tsx`).
 
 ## Données (apps/api/prisma/schema.prisma)
 | Table | Rôle |

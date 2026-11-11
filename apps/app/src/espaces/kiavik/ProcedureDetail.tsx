@@ -3,7 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { ImageApi, lienGuide, Procedure } from './donneesProcedures';
+import { CaptureBouton } from './CaptureBouton';
+import { Etape, ImageApi, lienGuide, Procedure } from './donneesProcedures';
+import { ParcoursGuide } from './ParcoursGuide';
 import './guides.css';
 import { t } from '../../lib/i18n';
 
@@ -21,6 +23,8 @@ export default function ProcedureDetail() {
   const [p, setP] = useState<Procedure>();
   const [erreur, setErreur] = useState<unknown>();
   const [grand, setGrand] = useState<string | null>(null);
+  const [vue, setVue] = useState<Etape | null>(null); // « Voir le bouton » sans quitter la liste
+  const [parcours, setParcours] = useState(false);
   const cle = `kiavik.etapes.${id}`;
   const [faites, setFaites] = useState<string[]>(() => JSON.parse(localStorage.getItem(cle) ?? '[]'));
 
@@ -47,6 +51,11 @@ export default function ProcedureDetail() {
       </p>
       {p.resume && <p>{p.resume}</p>}
       {p.etapes.length > 0 && (
+        <button type="button" className="btn prim large pg-lancer" onClick={() => setParcours(true)}>
+          {fait > 0 && fait < p.etapes.length ? t('kiavik.parcours.reprendre') : t('kiavik.parcours.demarrer')}
+        </button>
+      )}
+      {p.etapes.length > 0 && (
         <div className="gx-progres" aria-label={t('kiavik.procedures.progression', { fait, n: p.etapes.length })}>
           <i style={{ width: `${(fait / p.etapes.length) * 100}%` }} />
         </div>
@@ -69,9 +78,9 @@ export default function ProcedureDetail() {
                 {e.avertissement && <div className="gx-warn">⚠️ {e.avertissement}</div>}
                 {e.photo && <ImageApi chemin={e.photo} className="gx-etape-photo" onClick={() => setGrand(e.photo)} />}
                 {lien && (
-                  <Link to={lien} className="btn petit gx-voir">
+                  <button type="button" className="btn petit gx-voir" onClick={() => setVue(e)}>
                     {e.pastille ? t('kiavik.procedures.voirBoutonId', { id: e.pastille }) : t('kiavik.procedures.voirBouton')}
-                  </Link>
+                  </button>
                 )}
               </div>
             </li>
@@ -82,6 +91,16 @@ export default function ProcedureDetail() {
       {fait > 0 && (
         <button type="button" className="btn petit" onClick={() => setFaites([])}>{t('kiavik.procedures.recommencer')}</button>
       )}
+      {vue && vue.guide && vue.ecran && (
+        <div className="pv-fond" onClick={() => setVue(null)}>
+          <div className="pv-fiche" role="dialog" aria-modal="true" onClick={(x) => x.stopPropagation()}>
+            <button type="button" className="gx-fermer" aria-label={t('commun.fermer')} onClick={() => setVue(null)}>✕</button>
+            <h3>{decouperEtape(vue.texte).texte}</h3>
+            <CaptureBouton guide={vue.guide} ecran={vue.ecran} pastille={vue.pastille} />
+          </div>
+        </div>
+      )}
+      {parcours && <ParcoursGuide p={p} faites={faites} setFaites={setFaites} onFermer={() => setParcours(false)} />}
       {grand && (
         <div className="gx-plein" onClick={() => setGrand(null)}>
           <ImageApi chemin={grand} />
