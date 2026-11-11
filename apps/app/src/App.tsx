@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Annonces } from './components/Annonces';
 import { Chargement } from './components/Composants';
+import { BandeauHorsLigne } from './components/HorsLigne';
 import { BoutonPartager } from './components/Partager';
 import { APPS } from './espaces';
 import { useAuth } from './lib/auth';
@@ -53,6 +54,7 @@ export default function App() {
   return (
     <div key={espace.slug} className="app-espace">
       <main>
+        <BandeauHorsLigne />
         {!admin && <Annonces />}
         {!admin && <JournalPages />}
         <Routes>

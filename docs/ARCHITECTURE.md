@@ -154,6 +154,12 @@ docs/                       documentation
 - `Evaluation.statut` : `VISIBLE`, `EN_ATTENTE` (modération préalable), `MASQUE` ; `moderePar` = `admin` ou `auto` (service externe via clé API). Seuls les avis visibles comptent dans la moyenne.
 - Fiches : `masquee` + `moderationRaison` + `moderePar`.
 
+## Hors ligne
+- `src/lib/horsLigne.ts` : chaque lecture de l'API (GET, hors administration) est gardée dans le cache `decapage-api` du navigateur ; sans réseau, `api()` relit la dernière version. Cache vidé quand le jeton change (déconnexion, autre compte).
+- File d'envoi (`envoyerOuPlusTard` dans `api.ts`, `localStorage decapage.envois`, une entrée par clé) : renvoyée au démarrage, au retour du réseau (`online`) et toutes les minutes ; un refus du serveur abandonne l'envoi.
+- `public/sw.js` (v4) : app en cache (réseau d'abord), captures des guides en cache d'abord (`decapage-images-v1`). `/moi` sans réseau ne déconnecte plus.
+- Kiavik : `PreparerHorsLigne.tsx` charge procédures + photos, astuces, guides + toutes leurs images ; bandeau `components/HorsLigne.tsx`.
+
 ## Webhooks (préparation de la modération par IA)
 - `Webhook` (url, secret, événements) et `WebhookLivraison` (file persistante : statut, tentatives, prochain essai, dernier code / erreur).
 - Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`. Envoi en arrière-plan, signé HMAC-SHA256, sans jamais bloquer l'utilisateur.
@@ -168,4 +174,5 @@ docs/                       documentation
 6. ✅ Espaces Lazzeko / Kiavik (modules, conditions, marque par adresse).
 7. Kiavik : ✅ guides FlexiPRINT et DXonJet (`kit-guides/`), recherche, procédures, animations, écrans interactifs T5 / T9.
 8. Traduction : ✅ app prête (textes dans `src/textes/`, langue par compte) ; à venir : anglais, puis les contenus (voir [TRADUCTION.md](TRADUCTION.md)).
-9. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran, mode hors ligne complet (file d'envoi).
+9. Hors ligne : ✅ lecture des pages déjà ouvertes (Kiavik et Lazzeko), préparation Kiavik, file d'envoi (diagnostics, « pas clair ? », suivi) ; à venir : file d'envoi des fiches Lazzeko.
+10. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran.

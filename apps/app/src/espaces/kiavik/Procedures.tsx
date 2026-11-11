@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { useAuth } from '../../lib/auth';
 import { ResumeProcedure, useProcedures } from './donneesProcedures';
+import { PreparerHorsLigne } from './PreparerHorsLigne';
 import { normaliser } from './recherche';
 import './guides.css';
 import { t, tn } from '../../lib/i18n';
@@ -51,6 +52,7 @@ export default function Procedures() {
           <ListeProcedures liste={l} />
         </section>
       ))}
+      <PreparerHorsLigne />
     </div>
   );
 }

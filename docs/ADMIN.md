@@ -73,6 +73,12 @@ Rien n'est envoyé à une IA par l'app : tout passe par n8n, où vous choisissez
 - **⬇ Exporter l'arbre** : le JSON que lit l'IA (`GET /api/ia/procedures/:id`).
 - Le webhook `diagnostic.envoye` contient le résultat (`question : réponse`) et un **paquet** tout prêt pour l'IA (prompts + description + résultat + message). À mentionner dans les conditions d'utilisation avant d'envoyer des réponses de clients à une IA.
 
+## Sans réseau (atelier)
+- Les pages déjà ouvertes restent lisibles sans connexion (procédures, photos, astuces, guides, captures) ; un bandeau « 📴 Hors ligne » le signale.
+- Onglet Procédures, en bas : **📥 Atelier sans réseau → Préparer ce téléphone** charge tout à l'avance (procédures et photos, astuces, guides et leurs captures). À refaire de temps en temps (« Mettre à jour »).
+- Sans réseau, le résultat d'un diagnostic, un « pas clair ? » et le suivi des statistiques sont **mis de côté** et partent tout seuls au retour de la connexion (le bandeau indique combien sont en attente).
+- L'administration n'est pas gardée hors ligne. Les pages gardées sont effacées à la déconnexion.
+
 ## Kiavik : astuces & solutions
 Administration → **💡 Astuces & solutions** (espace Kiavik), ou depuis la page Procédures.
 - Une fiche = **le problème ou l'astuce** (titre), **pourquoi** (facultatif), **que faire**, une **précaution** facultative, une photo, des **mots-clés**, le **bouton du guide** et la **procédure** liés.

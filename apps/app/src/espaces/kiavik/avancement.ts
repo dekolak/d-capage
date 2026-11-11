@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api } from '../../lib/api';
+import { envoyerOuPlusTard } from '../../lib/api';
 import { calculerChemin } from './chemin';
 import { Choix, estDiagnostic, Etape, Procedure } from './donneesProcedures';
 
@@ -28,6 +28,7 @@ export function useAvancement(p: Procedure | undefined, id: string) {
   const [reponses, setReponses] = useGarde<Record<string, string>>(`kiavik.reponses.${id}`, {});
   // réponses déjà envoyées à Kiavik (pour ne pas envoyer deux fois le même résultat)
   const [envoyees, setEnvoyees] = useGarde<string | null>(`kiavik.envoye.${id}`, null);
+  const [plusTard, setPlusTard] = useGarde<boolean>(`kiavik.envoyePlusTard.${id}`, false);
   const chemin = useMemo(() => calculerChemin<Choix, Etape>(p?.etapes ?? [], reponses), [p, reponses]);
   // tentative en cours (identifiant tiré au hasard, anonyme) : pour les statistiques
   const [session, setSession] = useGarde<string | null>(`kiavik.session.${id}`, null);
@@ -44,7 +45,7 @@ export function useAvancement(p: Procedure | undefined, id: string) {
     const derniere = faitesIci.length ? faitesIci[faitesIci.length - 1].e.id : chemin.pas[0]?.e.id ?? null;
     const fin = estDiagnostic(p) ? chemin.fin?.type ?? null : chemin.pas.length > 0 && faitesIci.length >= chemin.pas.length ? 'termine' : null;
     const minuteur = setTimeout(() => {
-      api(`/procedures/${p.id}/suivi`, { method: 'PUT', json: { session, reponses, faites: faitesIci.length, total: chemin.pas.length, derniere, fin } }).catch(() => {});
+      envoyerOuPlusTard(`/procedures/${p.id}/suivi`, 'PUT', { session, reponses, faites: faitesIci.length, total: chemin.pas.length, derniere, fin }, `suivi:${session}`).catch(() => {});
     }, 1500);
     return () => clearTimeout(minuteur);
   }, [p, id, faites, non, reponses, session, chemin]);
@@ -69,7 +70,12 @@ export function useAvancement(p: Procedure | undefined, id: string) {
     },
     /** Le résultat actuel a déjà été envoyé. */
     envoye: envoyees === JSON.stringify(reponses),
-    marquerEnvoye: () => setEnvoyees(JSON.stringify(reponses)),
+    /** Envoi parti (ou mis de côté, sans réseau : il partira tout seul). */
+    marquerEnvoye: (enAttente = false) => {
+      setEnvoyees(JSON.stringify(reponses));
+      setPlusTard(enAttente);
+    },
+    envoyePlusTard: plusTard,
     /** Étapes faites (cochées, contrôlées « Oui » ou questions répondues) parmi celles du chemin. */
     nbFaites,
   };

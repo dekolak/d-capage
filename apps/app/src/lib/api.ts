@@ -1,5 +1,6 @@
 import type { ConfigMachine, Indicateur, Valeurs } from '@decapage/machine-kit';
 import fr from '../textes/fr';
+import { aGarder, garder, mettreDeCote, relire, viderCache, viderFile } from './horsLigne';
 import { Cle, langue, t as tr } from './i18n';
 
 const BASE = (import.meta.env.VITE_API_URL ?? '') + '/api';
@@ -7,7 +8,11 @@ const CLE_JETON = 'decapage.jeton';
 
 export const jeton = {
   get: () => localStorage.getItem(CLE_JETON),
-  set: (t: string | null) => (t ? localStorage.setItem(CLE_JETON, t) : localStorage.removeItem(CLE_JETON)),
+  set: (t: string | null) => {
+    // autre compte ou déconnexion : on oublie les pages gardées pour le hors ligne
+    if (t !== localStorage.getItem(CLE_JETON)) viderCache();
+    return t ? localStorage.setItem(CLE_JETON, t) : localStorage.removeItem(CLE_JETON);
+  },
 };
 
 export class ErreurApi extends Error {
@@ -37,9 +42,15 @@ export async function api<T = unknown>(chemin: string, opts: RequestInit & { jso
     headers.set('Content-Type', 'application/json');
     body = JSON.stringify(opts.json);
   }
-  const r = await fetch(BASE + chemin, { ...opts, headers, body }).catch(() => {
-    throw new ErreurApi(0, tr('erreur.reseau'));
-  });
+  const lecture = (opts.method ?? 'GET').toUpperCase() === 'GET' && aGarder(chemin);
+  const url = BASE + chemin;
+  let r = await fetch(url, { ...opts, headers, body }).catch(() => undefined);
+  if (!r) {
+    // hors ligne : dernière version gardée sur le téléphone
+    const gardee = lecture ? await relire(url) : undefined;
+    if (!gardee) throw new ErreurApi(0, tr('erreur.reseau'));
+    r = gardee;
+  } else if (lecture) garder(url, r);
   if (r.status === 401 && t) {
     jeton.set(null);
     surDeconnexion();
@@ -138,4 +149,30 @@ export async function envoyerPhoto(ficheId: string, type: TypePhoto, image: { fi
   fd.append('fichier', image.fichier, 'photo.jpg');
   fd.append('miniature', image.miniature, 'min.jpg');
   return api<PhotoRef>(`/fiches/${ficheId}/photos`, { method: 'POST', body: fd });
+}
+
+/**
+ * Envoi qui peut attendre le réseau : sans connexion, il est mis de côté et repartira tout seul.
+ * Renvoie 'envoye' ou 'plusTard'. `cle` : un seul envoi en attente par clé (le plus récent).
+ */
+export async function envoyerOuPlusTard(chemin: string, method: 'POST' | 'PUT', json: unknown, cle?: string): Promise<'envoye' | 'plusTard'> {
+  try {
+    await api(chemin, { method, json });
+    return 'envoye';
+  } catch (e) {
+    if (!(e instanceof ErreurApi) || e.status !== 0) throw e;
+    mettreDeCote({ chemin, method, json, cle });
+    return 'plusTard';
+  }
+}
+
+/** Renvoie les envois mis de côté (au démarrage, au retour du réseau). */
+export function renvoyerEnAttente() {
+  if (!jeton.get()) return;
+  void viderFile((e) => api(e.chemin, { method: e.method, json: e.json }));
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', renvoyerEnAttente);
+  setTimeout(renvoyerEnAttente, 3000);
+  setInterval(renvoyerEnAttente, 60_000);
 }
