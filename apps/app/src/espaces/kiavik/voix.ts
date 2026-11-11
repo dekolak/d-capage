@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { langue } from '../../lib/i18n';
+import { langue, t } from '../../lib/i18n';
 
 /**
  * Voix off des animations (speechSynthesis) dans la langue de l'app. Règles de Teddy (français) :
@@ -20,9 +20,12 @@ function rang(v: SpeechSynthesisVoice): number {
 
 export const debitVoix = (vitesse: number) => 0.6 + ((vitesse - 0.25) / 1.75) * 1.0;
 
-/** Phrase orale : sans symboles (… « » → émojis). */
+/** Phrase orale : sans symboles (… « » → émojis), calculs lus en mots (90 − 4 = 86 → « 90 moins 4 égale 86 »). */
 export const texteOral = (s: string) =>
   s
+    .replace(/(\d)\s*[−-]\s*(\d)/g, `$1 ${t('kiavik.anim.oral.moins')} $2`)
+    .replace(/(\d)\s*\+\s*(\d)/g, `$1 ${t('kiavik.anim.oral.plus')} $2`)
+    .replace(/(\d)\s*=\s*(\d)/g, `$1 ${t('kiavik.anim.oral.egale')} $2`)
     .replace(/…/g, ' ')
     .replace(/[«»→👉📄💻🧱🎨⬜]/gu, ' ')
     .replace(/\s+/g, ' ')

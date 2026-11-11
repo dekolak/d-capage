@@ -578,7 +578,7 @@
           "y": 702,
           "titre": "Aligner la composition (Offre)",
           "texte": "Aligne les encres : corrige le décalage quand les couleurs sont mal superposées (lignes des grilles en marches d'escalier). Seul réglage de cet écran qu'on utilise : la case Offre et le bouton Composition des encres.",
-          "conseil": "Touchez Composition des encres pour imprimer la mire. Lisez la valeur où les deux moitiés des lignes sont alignées (positive au-dessus du zéro, négative en dessous), ajoutez-la à l'Offre ou retirez-la, Appliquer, puis recommencez jusqu'à l'alignement sur le 0.",
+          "conseil": "Touchez Composition des encres pour imprimer la mire. Lisez la valeur où les deux moitiés des lignes sont alignées (positive au-dessus du zéro, négative en dessous). Négative : on la déduit de l'Offre (ex. 90 − 4 = 86) ; positive : on l'ajoute (ex. 90 + 4 = 94). Appliquer, puis recommencer jusqu'à l'alignement sur le 0.",
           "etat": "actif",
           "niveau": "astuce",
           "mots_cles": [
