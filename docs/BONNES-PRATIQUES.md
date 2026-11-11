@@ -71,7 +71,7 @@
 ### Animations Kiavik
 - Modifier un sous-titre ou une durée : `kit-guides/animations.json` (champ `cap`, `d` en ms), puis redéployer. Le sous-titre est aussi la phrase lue par la voix off.
 - Lier une animation à un bouton : ajouter `["<écran>", "<pastille>"]` dans ses `liens`.
-- Nouvelle animation à partir d'une vidéo : tirer les images utiles avec `ffmpeg` (`-ss <seconde> -frames:v 1 -vf crop=…`), les mettre dans `kit-guides/images/`, les déclarer dans `photos` ; les étapes sur le logiciel utilisent les captures du guide (coordonnées en pixels de la capture ou de la photo). Faire valider les étapes par Teddy.
+- Nouvelle animation à partir d'une vidéo : tirer les images utiles avec `ffmpeg` (`-ss <seconde> -frames:v 1 -vf crop=…`), les mettre dans `kit-guides/images/`, les déclarer dans `photos` ; les étapes sur le logiciel utilisent les captures du guide (coordonnées en pixels de la capture ou de la photo). Une photo peu lisible au téléphone peut être remplacée par une image simulée (SVG dans `kit-guides/images/`). Faire valider les étapes par Teddy.
 
 ### Procédures Kiavik
 - Elles se créent dans l'app (Administration → Procédures) : rien à déployer.
