@@ -5,6 +5,7 @@ import { api } from '../../lib/api';
 import { chargerGuide, Guide, ResumeGuide } from './guides';
 import { useProcedures, useSolutions } from './donneesProcedures';
 import { normaliser, rechercher } from './recherche';
+import { noterRecherche } from '../../lib/activite';
 import { ListeSolutions } from './Solutions';
 import './guides.css';
 import { t } from '../../lib/i18n';
@@ -58,6 +59,14 @@ export default function Recherche() {
     });
   }, [procedures, q]);
   const plusieurs = (guides?.length ?? 0) > 1;
+
+  // journal d'activité : la recherche est notée quand le client arrête de taper
+  const total = resultats.length + procs.length + anims.length + astuces.length;
+  useEffect(() => {
+    if (!guides || q.trim().length < 2) return;
+    const h = setTimeout(() => noterRecherche(q.trim(), total, `/recherche?q=${encodeURIComponent(q.trim())}`), 1500);
+    return () => clearTimeout(h);
+  }, [q, total, guides]);
 
   return (
     <div className="page gx">

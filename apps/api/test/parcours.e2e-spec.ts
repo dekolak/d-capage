@@ -611,4 +611,27 @@ describe('Parcours complet', () => {
     await http.delete(`/api/admin/solutions/${s.id}`).set(auth(admin)).expect(200);
     expect((await http.get(`/api/solutions/${s.id}`).set(C)).status).toBe(404);
   });
+
+  it('journal d\'activité : connexions, pages et recherches des clients, visible par l\'admin', async () => {
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'activite' })).body.cle;
+    const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `leo-${id}`, motDePasse: 'motdepasse1', modules: ['guide-dxonjet'] })).body;
+    const tl = (await http.post('/api/auth/connexion').set('X-Espace', 'kiavik').send({ identifiant: `leo-${id}`, motDePasse: 'motdepasse1' })).body.jeton;
+    const L = { ...auth(tl), 'X-Espace': 'kiavik' };
+    await http.post('/api/activite').set(L).send({ type: 'page', chemin: '/guides/dxonjet/d4a?p=a.6', detail: 'D4-a → Offre' }).expect(204);
+    await http.post('/api/activite').set(L).send({ type: 'recherche', detail: 'encre qui coule', resultats: 0, chemin: '/recherche' }).expect(204);
+    expect((await http.post('/api/activite').set(L).send({ type: 'pirate' })).status).toBe(400);
+    // l'admin n'est pas enregistré
+    await http.post('/api/activite').set(auth(admin)).send({ type: 'page', chemin: '/admin' }).expect(204);
+    await new Promise((r) => setTimeout(r, 300)); // enregistrement en arrière-plan
+
+    expect((await http.get(`/api/admin/users/${u.id}/activite`).set(L)).status).toBe(403);
+    const j = (await http.get(`/api/admin/users/${u.id}/activite?jours=1`).set(auth(admin))).body;
+    expect(j.user.identifiant).toBe(`leo-${id}`);
+    expect(j.activites.map((a: any) => a.type)).toEqual(['recherche', 'page', 'connexion']); // du plus récent au plus ancien
+    expect(j.activites[0]).toMatchObject({ detail: 'encre qui coule', resultats: 0, espace: 'kiavik' });
+    expect(j.activites[2].espace).toBe('kiavik');
+    const adminId = (await http.get('/api/moi').set(auth(admin))).body.id;
+    const ja = (await http.get(`/api/admin/users/${adminId}/activite?jours=1`).set(auth(admin))).body;
+    expect(ja.activites.some((a: any) => a.chemin === '/admin')).toBe(false);
+  });
 });

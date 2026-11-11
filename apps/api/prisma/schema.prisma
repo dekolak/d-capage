@@ -72,6 +72,7 @@ model User {
   acceptations     AcceptationConditions[]
 
   @@index([numeroOdoo])
+  activites               Activite[]
 }
 
 /// Accès d'un compte à un module (slug défini dans src/espaces/espaces.ts, ex. reglages-decapage).
@@ -536,4 +537,22 @@ model Solution {
   ordre         Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+/// Journal d'activité d'un client (connexions, pages consultées, recherches), visible par l'admin, effacé après 12 mois.
+model Activite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  espace    String?
+  /// connexion | page | recherche
+  type      String
+  chemin    String?
+  /// Titre de la page ou texte recherché.
+  detail    String?
+  resultats Int?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }

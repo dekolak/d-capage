@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Annonces } from './components/Annonces';
 import { Chargement } from './components/Composants';
 import { BoutonPartager } from './components/Partager';
@@ -7,7 +7,9 @@ import { APPS } from './espaces';
 import { useAuth } from './lib/auth';
 import { useEspace } from './lib/espace';
 import Accueil from './pages/Accueil';
+import { noterPage, titrePage } from './lib/activite';
 import Admin from './pages/Admin';
+import AdminActivite from './pages/AdminActivite';
 import AdminAnnonces from './pages/AdminAnnonces';
 import AdminAvis from './pages/AdminAvis';
 import AdminCatalogue from './pages/AdminCatalogue';
@@ -51,11 +53,13 @@ export default function App() {
     <div key={espace.slug} className="app-espace">
       <main>
         {!admin && <Annonces />}
+        {!admin && <JournalPages />}
         <Routes>
           {app.routes()}
           <Route path="/compte" element={<Compte />} />
           <Route path="/conditions" element={<Conditions />} />
           {admin && <Route path="/admin" element={<Admin />} />}
+          {admin && <Route path="/admin/comptes/:id/activite" element={<AdminActivite />} />}
           {admin && <Route path="/admin/fiches" element={<AdminFiches />} />}
           {admin && <Route path="/admin/avis" element={<AdminAvis />} />}
           {admin && <Route path="/admin/messages" element={<AdminAnnonces />} />}
@@ -80,6 +84,19 @@ export default function App() {
       </nav>
     </div>
   );
+}
+
+/** Journal d'activité : chaque page ouverte par un client (titre lu une fois la page affichée). */
+function JournalPages() {
+  const loc = useLocation();
+  useEffect(() => {
+    // la page de recherche n'est notée qu'une fois : chaque recherche est notée à part
+    const chemin = loc.pathname === '/recherche' ? loc.pathname : loc.pathname + loc.search;
+    const h = setTimeout(() => noterPage(chemin, titrePage()), 1500);
+    return () => clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loc.pathname, loc.pathname === '/recherche' ? '' : loc.search]);
+  return null;
 }
 
 function Ic({ d }: { d: string }) {

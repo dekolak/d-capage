@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { IsString, MinLength } from 'class-validator';
 import { AuthService } from './auth.service';
-import { Public } from './decorators';
+import { Public, EspaceCourant } from './decorators';
 
 class ConnexionDto {
   @IsString() @MinLength(1) identifiant!: string;
@@ -15,7 +15,7 @@ export class AuthController {
   @Public()
   @Post('connexion')
   @HttpCode(200)
-  connexion(@Body() dto: ConnexionDto) {
-    return this.auth.connexion(dto.identifiant, dto.motDePasse);
+  connexion(@Body() dto: ConnexionDto, @EspaceCourant() espace: string) {
+    return this.auth.connexion(dto.identifiant, dto.motDePasse, espace);
   }
 }
