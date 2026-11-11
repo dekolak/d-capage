@@ -429,7 +429,9 @@ describe('Parcours complet', () => {
     const aCompleter = (g: any) => g.ecrans.flatMap((e: any) => e.pastilles).filter((p: any) => p.niveau === 'a_completer');
     const notesAdmin = aCompleter((await http.get('/api/guides/dxonjet').set(auth(admin))).body).length; // peut tomber à 0 quand tout est complété
     await http.patch(`/api/users/${emma.id}`).set(auth(admin)).send({ modules: ['guide-flexiprint', 'guide-dxonjet'] }).expect(200);
-    expect((await http.get('/api/guides').set(K)).body.map((g: any) => g.slug)).toEqual(['flexiprint', 'dxonjet']);
+    const accueil = (await http.get('/api/guides').set(K)).body;
+    expect(accueil.map((g: any) => g.slug)).toEqual(['flexiprint', 'dxonjet']);
+    expect(accueil[1]).toMatchObject({ nomCourt: 'DXonJet', role: 'Imprimer sur le mur', miniature: '/api/guides/images/dx/d1.jpg' });
     const dx = (await http.get('/api/guides/dxonjet').set(K)).body;
     const offre = dx.animations.find((a: any) => a.id === 'offre-composition');
     expect(offre.liens).toContainEqual(['d4a', 'a.6']);

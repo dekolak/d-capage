@@ -1,6 +1,9 @@
 {
   "slug": "flexiprint",
   "nom": "FlexiPRINT UV DXonJet Edition",
+  "nom_court": "FlexiPRINT",
+  "role": "Préparer le fichier",
+  "miniature": "images/m0.jpg",
   "marque": "kiavik",
   "description": "Logiciel RIP : prépare le fichier pour la machine.",
   "ecrans": [

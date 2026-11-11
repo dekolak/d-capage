@@ -2,16 +2,21 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
-import { ResumeGuide } from './guides';
+import { useAuth } from '../../lib/auth';
+import { t, tn } from '../../lib/i18n';
 import { useProcedures, useSolutions } from './donneesProcedures';
-import { ListeSolutions } from './Solutions';
+import { ResumeGuide } from './guides';
 import { ListeProcedures } from './Procedures';
+import { ListeSolutions } from './Solutions';
 import './guides.css';
-import './animations.css';
-import { t } from '../../lib/i18n';
+import './accueil.css';
 
-/** Accueil Kiavik : les guides du compte côte à côte en haut, les procédures en dessous. */
+/**
+ * Accueil Kiavik : recherche, les logiciels (miniature de l'écran, dans l'ordre du travail),
+ * les procédures guidées (animations), les astuces & solutions et les procédures.
+ */
 export default function Guides() {
+  const { moi } = useAuth();
   const { liste: procedures, acces: accesProcedures } = useProcedures();
   const { liste: solutions } = useSolutions();
   const [guides, setGuides] = useState<ResumeGuide[]>();
@@ -21,61 +26,85 @@ export default function Guides() {
   }, []);
   if (erreur) return <div className="page"><Erreur e={erreur} /></div>;
   if (!guides) return <Chargement />;
+  const prenom = moi?.nom?.split(' ')[0];
+  const guidees = guides.flatMap((g) => g.animations.map((a) => ({ ...a, guide: g.slug })));
+
   return (
-    <div className="page">
+    <div className="page kh">
+      <header className="kh-tete">
+        <h1>{prenom ? t('kiavik.accueil.bonjour', { nom: prenom }) : t('kiavik.accueil.bonjourSans')}</h1>
+        <p className="muted">{t('kiavik.accueil.question')}</p>
+        <Link to="/recherche" className="kh-recherche">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16M21 21l-4.3-4.3" /></svg>
+          <span>{t('kiavik.accueil.rechercher')}</span>
+        </Link>
+      </header>
+
       {guides.length > 0 && (
-        <>
-          <h1>{t('kiavik.accueil.logiciels')}</h1>
-          {guides.length > 1 && (
-            <div className="gx-chemin" aria-label="Le chemin d'une impression">
-              <span>{t('kiavik.accueil.image')}</span>›<span>1. {guides[0].nom.split(' ')[0]}</span>›<span>{t('kiavik.accueil.fichierRip')}</span>›<span>2. {guides[1].nom.split(' ')[0]}</span>›<span>{t('kiavik.accueil.mur')}</span>
-            </div>
-          )}
-          <div className={`gx-tuiles ${guides.length === 1 ? 'une' : ''}`}>
+        <section>
+          <h2>{t('kiavik.accueil.vosLogiciels')}</h2>
+          <div className={`kh-logiciels ${guides.length === 1 ? 'un' : ''}`}>
             {guides.map((g, i) => (
-              <Link key={g.slug} to={`/guides/${g.slug}`} className="carte gx-tuile">
-                {guides.length > 1 && <span className="gx-etape">{i + 1}</span>}
-                <b>{g.nom}</b>
-                {g.description && <span className="muted petit">{g.description}</span>}
+              <Link key={g.slug} to={`/guides/${g.slug}`} className="kh-logiciel">
+                <span className="kh-ecran">
+                  {g.miniature ? <img src={g.miniature} alt="" loading="lazy" /> : <span className="kh-vide" />}
+                  {guides.length > 1 && <span className="kh-num">{i + 1}</span>}
+                </span>
+                <span className="kh-nom">
+                  <b>{g.nomCourt}</b>
+                  {g.role && <small>{g.role}</small>}
+                </span>
               </Link>
             ))}
           </div>
-        </>
+        </section>
       )}
-      {guides.some((g) => g.animations.length) && (
-        <>
-          <h2>{t('kiavik.accueil.animations')}</h2>
-          <div className="an-cartes">
-            {guides.flatMap((g) =>
-              g.animations.map((a) => (
-                <Link key={`${g.slug}/${a.id}`} to={`/guides/${g.slug}/animation/${a.id}`} className="carte an-carte">
-                  <span className="an-img">{a.image && <img src={a.image} alt="" />}<span className="an-play">▶</span></span>
-                  <b>{a.titre}</b>
-                  {a.resume && <span className="muted petit">{a.resume}</span>}
-                </Link>
-              )),
-            )}
+
+      {guidees.length > 0 && (
+        <section>
+          <div className="kh-titre">
+            <h2>{t('kiavik.accueil.proceduresGuidees')}</h2>
+            <span className="muted petit">{t('kiavik.accueil.proceduresGuideesIntro')}</span>
           </div>
-        </>
+          <div className="kh-defile">
+            {guidees.map((a) => (
+              <Link key={`${a.guide}/${a.id}`} to={`/guides/${a.guide}/animation/${a.id}`} className="kh-guidee">
+                <span className="kh-image">
+                  {a.image && <img src={a.image} alt="" loading="lazy" />}
+                  <span className="kh-play">▶</span>
+                </span>
+                <b>{a.titre}</b>
+                {a.nbScenes ? <small className="muted">{tn('kiavik.accueil.scenes', a.nbScenes)}</small> : null}
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
+
       {accesProcedures && solutions && solutions.length > 0 && (
-        <>
-          <h2>{t('kiavik.solutions.titre')}</h2>
+        <section>
+          <div className="kh-titre">
+            <h2>{t('kiavik.solutions.titre')}</h2>
+            {solutions.length > 3 && <Link to="/solutions" className="lien petit">{t('kiavik.accueil.toutVoir')}</Link>}
+          </div>
           <ListeSolutions liste={solutions.slice(0, 3)} />
-          {solutions.length > 3 && <p><Link to="/solutions" className="lien">{t('kiavik.solutions.toutes', { n: solutions.length })}</Link></p>}
-        </>
+        </section>
       )}
+
       {accesProcedures && (
-        <>
-          <h2>{t('kiavik.accueil.procedures')}</h2>
+        <section>
+          <div className="kh-titre">
+            <h2>{t('kiavik.accueil.procedures')}</h2>
+            {procedures && procedures.length > 4 && <Link to="/procedures" className="lien petit">{t('kiavik.accueil.toutVoir')}</Link>}
+          </div>
           {!procedures ? (
             <Chargement />
           ) : procedures.length ? (
-            <ListeProcedures liste={procedures} />
+            <ListeProcedures liste={procedures.slice(0, 4)} />
           ) : (
             <div className="carte"><span className="muted">{t('kiavik.accueil.aucuneProcedure')}</span></div>
           )}
-        </>
+        </section>
       )}
       {!guides.length && !accesProcedures && <p className="muted">{t('kiavik.accueil.aucunGuide')}</p>}
     </div>

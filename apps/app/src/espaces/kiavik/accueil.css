@@ -1,0 +1,36 @@
+/* Accueil Kiavik */
+.kh section { margin-top: 22px; }
+.kh h2 { margin: 0 0 10px; }
+.kh-titre { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.kh-titre h2 { margin: 0; }
+
+.kh-tete { padding: 18px 16px 16px; margin: -4px -4px 0; border-radius: 22px; background: linear-gradient(135deg, var(--o-doux), var(--carte) 70%); box-shadow: var(--ombre); }
+.kh-tete h1 { margin: 0 0 2px; }
+.kh-tete p { margin: 0 0 14px; }
+.kh-recherche { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 14px; border-radius: 14px; background: var(--carte); border: 1px solid var(--bord-fort); color: var(--g); text-decoration: none; font-size: 15px; }
+.kh-recherche svg { flex: none; color: var(--o); }
+
+.kh-logiciels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.kh-logiciels.un { grid-template-columns: 1fr; }
+.kh-logiciel { display: grid; border-radius: 18px; overflow: hidden; background: var(--carte); box-shadow: var(--ombre); text-decoration: none; color: inherit; border: 2px solid transparent; transition: transform 0.12s, border-color 0.12s; }
+.kh-logiciel:active { transform: scale(0.98); border-color: var(--o); }
+.kh-ecran { position: relative; display: block; aspect-ratio: 16 / 10; background: #e9ecf1; overflow: hidden; }
+.kh-ecran img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+.kh-ecran::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 -30px 30px -24px rgba(0, 0, 0, 0.25); pointer-events: none; }
+.kh-num { position: absolute; left: 8px; top: 8px; width: 28px; height: 28px; border-radius: 9px; background: var(--o); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+.kh-nom { display: grid; gap: 1px; padding: 10px 12px 12px; }
+.kh-nom b { font-size: 17px; }
+.kh-nom small { color: var(--g); font-size: 13px; }
+
+.kh-defile { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; padding: 2px 16px 10px; margin: 0 -16px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.kh-defile > * { flex: 0 0 72%; }
+.kh-defile::after { content: ''; flex: 0 0 4px; } /* marge après la dernière carte */
+.kh-defile::-webkit-scrollbar { display: none; }
+@media (min-width: 640px) { .kh-defile > * { flex-basis: 40%; } }
+.kh-guidee { scroll-snap-align: start; display: grid; gap: 4px; align-content: start; padding: 8px 8px 12px; border-radius: 18px; background: var(--carte); box-shadow: var(--ombre); text-decoration: none; color: inherit; }
+.kh-guidee:active { transform: scale(0.98); }
+.kh-image { position: relative; display: block; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 10; background: #e9ecf1; margin-bottom: 4px; }
+.kh-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kh-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 46px; height: 46px; border-radius: 50%; background: color-mix(in srgb, var(--o) 92%, transparent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35); }
+.kh-guidee b { font-size: 15px; line-height: 1.25; padding: 0 4px; }
+.kh-guidee small { padding: 0 4px; }

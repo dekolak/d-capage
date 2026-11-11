@@ -1,6 +1,9 @@
 {
   "slug": "dxonjet",
   "nom": "DXonJet (PrintX)",
+  "nom_court": "DXonJet",
+  "role": "Imprimer sur le mur",
+  "miniature": "images/dx/d1.jpg",
   "marque": "kiavik",
   "description": "Logiciel de la machine : ouvre le fichier RIPé et imprime sur le mur.",
   "ecrans": [
