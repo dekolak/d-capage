@@ -10,6 +10,8 @@ export interface ResumeProcedure {
 export interface Etape {
   id: string; ordre: number; texte: string; avertissement: string | null; photo: string | null;
   guide: string | null; ecran: string | null; pastille: string | null;
+  /** Étape de contrôle : réponse Oui / Non ; si Non, astuce `solutionId` proposée. */
+  controle: boolean; solutionId: string | null;
 }
 export interface Procedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string; etapes: Etape[];

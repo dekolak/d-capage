@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { compresser } from '../../lib/image';
 import { chargerGuide, Guide, pastillesNavigation, ResumeGuide } from './guides';
-import { chargerProcedures, Etape, ImageApi, Procedure, ResumeProcedure, viderProcedures } from './donneesProcedures';
+import { chargerProcedures, Etape, ImageApi, Procedure, ResumeProcedure, Solution, useSolutions, viderProcedures } from './donneesProcedures';
 import './guides.css';
 
 const CATEGORIES = ['Impression', 'Réglages', 'Entretien'];
@@ -101,12 +101,35 @@ export function ChoixBouton({ guides, valeur, onChange }: { guides: Guide[]; val
   );
 }
 
-function EtapeEditeur({ e, n, total, guides, maj }: { e: Etape; n: number; total: number; guides: Guide[]; maj(chemin: string, opts: RequestInit & { json?: unknown }): Promise<boolean> }) {
+type Maj = (chemin: string, opts: RequestInit & { json?: unknown }) => Promise<boolean>;
+
+/** « + Insérer une étape ici » : ajoute une étape à la place `position`. */
+function Inserer({ procedure, position, maj }: { procedure: string; position: number; maj: Maj }) {
+  const [ouvert, setOuvert] = useState(false);
+  const [texte, setTexte] = useState('');
+  if (!ouvert) return <li className="gx-inserer"><button type="button" className="btn-lien petit" onClick={() => setOuvert(true)}>+ Insérer une étape ici</button></li>;
+  return (
+    <li className="carte form gx-inserer-form">
+      <textarea rows={2} autoFocus value={texte} placeholder="Texte de la nouvelle étape" onChange={(ev) => setTexte(ev.target.value)} />
+      <span className="gx-inserer-actions">
+        <button type="button" className="btn prim petit" disabled={texte.trim().length < 2}
+          onClick={() => maj(`/admin/procedures/${procedure}/etapes`, { method: 'POST', json: { texte: texte.trim(), position } }).then((ok) => ok && setOuvert(false))}>
+          Insérer
+        </button>
+        <button type="button" className="btn petit" onClick={() => setOuvert(false)}>Annuler</button>
+      </span>
+    </li>
+  );
+}
+
+function EtapeEditeur({ e, n, total, guides, astuces, maj }: { e: Etape; n: number; total: number; guides: Guide[]; astuces: Solution[]; maj: Maj }) {
+  const [controle, setControle] = useState(e.controle);
+  const [solutionId, setSolutionId] = useState(e.solutionId);
   const [texte, setTexte] = useState(e.texte);
   const [avert, setAvert] = useState(e.avertissement ?? '');
   const [lien, setLien] = useState<Lien>({ guide: e.guide, ecran: e.ecran, pastille: e.pastille });
   const [envoi, setEnvoi] = useState(false);
-  const modifie = texte !== e.texte || avert !== (e.avertissement ?? '') || lien.guide !== e.guide || lien.ecran !== e.ecran || lien.pastille !== e.pastille;
+  const modifie = texte !== e.texte || avert !== (e.avertissement ?? '') || lien.guide !== e.guide || lien.ecran !== e.ecran || lien.pastille !== e.pastille || controle !== e.controle || solutionId !== e.solutionId;
   const lienIncomplet = !!lien.guide && !lien.ecran;
   const photo = async (f?: File) => {
     if (!f) return;
@@ -129,6 +152,19 @@ function EtapeEditeur({ e, n, total, guides, maj }: { e: Etape; n: number; total
       <textarea rows={3} value={texte} onChange={(ev) => setTexte(ev.target.value)} aria-label="Texte de l'étape" />
       <input type="text" value={avert} placeholder="⚠️ Avertissement (facultatif)" onChange={(ev) => setAvert(ev.target.value)} />
       <ChoixBouton guides={guides} valeur={lien} onChange={setLien} />
+      <label className="gx-controle-edit">
+        <input type="checkbox" checked={controle} onChange={(ev) => setControle(ev.target.checked)} />
+        <span><b>Étape de contrôle</b> : le client répond Oui / Non (écrire une question, ex. « Les buses sont propres ? »)</span>
+      </label>
+      {controle && (
+        <label className="gx-controle-edit">
+          <span>Si Non, proposer l'astuce :</span>
+          <select value={solutionId ?? ''} onChange={(ev) => setSolutionId(ev.target.value || null)}>
+            <option value="">(aucune, juste « Corrigez puis répondez Oui »)</option>
+            {astuces.map((s) => <option key={s.id} value={s.id}>{s.titre}{s.publiee ? '' : ' (brouillon)'}</option>)}
+          </select>
+        </label>
+      )}
       <div className="gx-etape-photo-edit">
         {e.photo && <ImageApi chemin={e.photo} className="gx-etape-photo" />}
         <label className="btn petit">
@@ -142,7 +178,7 @@ function EtapeEditeur({ e, n, total, guides, maj }: { e: Etape; n: number; total
           type="button"
           className="btn prim petit"
           disabled={texte.trim().length < 2 || lienIncomplet}
-          onClick={() => maj(`/admin/procedures/etapes/${e.id}`, { method: 'PATCH', json: { texte: texte.trim(), avertissement: avert.trim() || null, ...lien } })}
+          onClick={() => maj(`/admin/procedures/etapes/${e.id}`, { method: 'PATCH', json: { texte: texte.trim(), avertissement: avert.trim() || null, ...lien, controle, solutionId: controle ? solutionId : null } })}
         >
           Enregistrer l'étape
         </button>
@@ -156,6 +192,7 @@ export function AdminProcedure() {
   const { id = '' } = useParams();
   const nav = useNavigate();
   const guides = useGuidesAdmin();
+  const { liste: astuces } = useSolutions();
   const [p, setP] = useState<Procedure>();
   const [erreur, setErreur] = useState<unknown>();
   const [infos, setInfos] = useState({ titre: '', categorie: '', resume: '' });
@@ -226,7 +263,10 @@ export function AdminProcedure() {
       <h4>Étapes</h4>
       <ol className="gx-etapes-edit">
         {p.etapes.map((e, n) => (
-          <EtapeEditeur key={JSON.stringify(e)} e={e} n={n} total={p.etapes.length} guides={guides} maj={maj} />
+          <Fragment key={JSON.stringify(e)}>
+            <Inserer procedure={p.id} position={n} maj={maj} />
+            <EtapeEditeur e={e} n={n} total={p.etapes.length} guides={guides} astuces={astuces ?? []} maj={maj} />
+          </Fragment>
         ))}
       </ol>
       <div className="carte form">

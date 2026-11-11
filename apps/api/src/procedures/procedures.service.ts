@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, StockageService } from '../stockage/stockage.service';
 
 export interface LienDto { guide?: string | null; ecran?: string | null; pastille?: string | null }
+export interface ControleDto { controle?: boolean; solutionId?: string | null }
 
 const avecEtapes = { etapes: { orderBy: { ordre: 'asc' } } } satisfies Prisma.ProcedureInclude;
 type ProcedureComplete = Prisma.ProcedureGetPayload<{ include: typeof avecEtapes }>;
@@ -73,23 +74,45 @@ export class ProceduresService {
     return { guide: l.guide, ecran: l.ecran, pastille: l.pastille || null };
   }
 
-  async ajouterEtape(id: string, d: { texte: string; avertissement?: string | null } & LienDto) {
+  /** Contrôle Oui / Non et astuce proposée si Non (l'astuce doit exister). */
+  private async verifierControle(d: ControleDto) {
+    const r: { controle?: boolean; solutionId?: string | null } = {};
+    if (d.controle !== undefined) r.controle = d.controle;
+    if (d.solutionId !== undefined) {
+      if (d.solutionId && !(await this.prisma.solution.findUnique({ where: { id: d.solutionId }, select: { id: true } })))
+        throw new BadRequestException('Astuce introuvable');
+      r.solutionId = d.solutionId || null;
+    }
+    return r;
+  }
+
+  async ajouterEtape(id: string, d: { texte: string; avertissement?: string | null; position?: number } & LienDto & ControleDto) {
     await this.existe(id);
-    const ordre = ((await this.prisma.etapeProcedure.aggregate({ where: { procedureId: id }, _max: { ordre: true } }))._max.ordre ?? -1) + 1;
-    await this.prisma.etapeProcedure.create({
-      data: { procedureId: id, ordre, texte: d.texte, avertissement: d.avertissement || null, ...this.verifierLien(d) },
-    });
+    const liste = await this.prisma.etapeProcedure.findMany({ where: { procedureId: id }, orderBy: { ordre: 'asc' }, select: { id: true } });
+    const place = Math.min(d.position ?? liste.length, liste.length);
+    const lien = this.verifierLien(d);
+    const controle = await this.verifierControle(d);
+    await this.prisma.$transaction([
+      // on décale les étapes suivantes, puis on insère
+      ...liste.slice(place).map((x, k) => this.prisma.etapeProcedure.update({ where: { id: x.id }, data: { ordre: place + k + 1 } })),
+      ...liste.slice(0, place).map((x, k) => this.prisma.etapeProcedure.update({ where: { id: x.id }, data: { ordre: k } })),
+      this.prisma.etapeProcedure.create({
+        data: { procedureId: id, ordre: place, texte: d.texte, avertissement: d.avertissement || null, ...lien, ...controle },
+      }),
+    ]);
     return this.lire(id, true);
   }
 
-  async modifierEtape(etapeId: string, d: { texte?: string; avertissement?: string | null } & LienDto) {
+  async modifierEtape(etapeId: string, d: { texte?: string; avertissement?: string | null } & LienDto & ControleDto) {
     const e = await this.etape(etapeId);
+    const controle = await this.verifierControle(d);
     await this.prisma.etapeProcedure.update({
       where: { id: etapeId },
       data: {
         ...(d.texte !== undefined ? { texte: d.texte } : {}),
         ...(d.avertissement !== undefined ? { avertissement: d.avertissement || null } : {}),
         ...this.verifierLien(d),
+        ...controle,
       },
     });
     return this.lire(e.procedureId, true);

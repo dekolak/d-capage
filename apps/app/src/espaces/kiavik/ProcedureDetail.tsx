@@ -4,6 +4,7 @@ import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { CaptureBouton } from './CaptureBouton';
+import { AideNon, cleNon, OuiNon } from './Controle';
 import { Etape, ImageApi, lienGuide, Procedure } from './donneesProcedures';
 import { ParcoursGuide } from './ParcoursGuide';
 import './guides.css';
@@ -27,6 +28,7 @@ export default function ProcedureDetail() {
   const [parcours, setParcours] = useState(false);
   const cle = `kiavik.etapes.${id}`;
   const [faites, setFaites] = useState<string[]>(() => JSON.parse(localStorage.getItem(cle) ?? '[]'));
+  const [non, setNon] = useState<string[]>(() => JSON.parse(localStorage.getItem(cleNon(id)) ?? '[]'));
 
   useEffect(() => {
     api<Procedure>(`/procedures/${id}`).then(setP).catch(setErreur);
@@ -34,10 +36,18 @@ export default function ProcedureDetail() {
   useEffect(() => {
     localStorage.setItem(cle, JSON.stringify(faites));
   }, [cle, faites]);
+  useEffect(() => {
+    localStorage.setItem(cleNon(id), JSON.stringify(non));
+  }, [id, non]);
 
   if (erreur) return <div className="page"><Erreur e={erreur} /><Link to="/procedures">{t('kiavik.procedures.retourListe')}</Link></div>;
   if (!p) return <Chargement />;
   const basculer = (e: string) => setFaites((f) => (f.includes(e) ? f.filter((x) => x !== e) : [...f, e]));
+  // étape de contrôle : « Oui » la coche, « Non » affiche l'aide
+  const repondre = (e: string, oui: boolean) => {
+    setFaites((f) => (oui ? [...f.filter((x) => x !== e), e] : f.filter((x) => x !== e)));
+    setNon((n) => (oui ? n.filter((x) => x !== e) : [...n.filter((x) => x !== e), e]));
+  };
   const fait = p.etapes.filter((e) => faites.includes(e.id)).length;
 
   return (
@@ -69,12 +79,14 @@ export default function ProcedureDetail() {
           return (
             <Fragment key={e.id}>
             {partie && partie !== precedente && <li className="gx-partie" aria-hidden="true"><h4>{partie}</h4></li>}
-            <li className={`carte gx-etape-carte ${ok ? 'fait' : ''}`}>
-              <button type="button" className="gx-coche" aria-pressed={ok} aria-label={t('kiavik.procedures.etapeFaite', { n: i + 1 })} onClick={() => basculer(e.id)}>
-                {ok ? '✓' : i + 1}
+            <li className={`carte gx-etape-carte ${ok ? 'fait' : ''} ${e.controle && non.includes(e.id) ? 'non' : ''}`}>
+              <button type="button" className="gx-coche" aria-pressed={ok} aria-label={t('kiavik.procedures.etapeFaite', { n: i + 1 })} onClick={() => (e.controle ? repondre(e.id, !ok) : basculer(e.id))}>
+                {ok ? '✓' : e.controle && non.includes(e.id) ? '✕' : i + 1}
               </button>
               <div className="gx-etape-corps">
-                <p>{texte}</p>
+                <p className={e.controle ? 'gx-question' : undefined}>{texte}</p>
+                {e.controle && <OuiNon oui={ok} non={non.includes(e.id)} onOui={() => repondre(e.id, true)} onNon={() => repondre(e.id, false)} />}
+                {e.controle && non.includes(e.id) && <AideNon e={e} />}
                 {e.avertissement && <div className="gx-warn">⚠️ {e.avertissement}</div>}
                 {e.photo && <ImageApi chemin={e.photo} className="gx-etape-photo" onClick={() => setGrand(e.photo)} />}
                 {lien && (
@@ -88,8 +100,8 @@ export default function ProcedureDetail() {
           );
         })}
       </ol>
-      {fait > 0 && (
-        <button type="button" className="btn petit" onClick={() => setFaites([])}>{t('kiavik.procedures.recommencer')}</button>
+      {(fait > 0 || non.length > 0) && (
+        <button type="button" className="btn petit" onClick={() => { setFaites([]); setNon([]); }}>{t('kiavik.procedures.recommencer')}</button>
       )}
       {vue && vue.guide && vue.ecran && (
         <div className="pv-fond" onClick={() => setVue(null)}>
@@ -100,7 +112,7 @@ export default function ProcedureDetail() {
           </div>
         </div>
       )}
-      {parcours && <ParcoursGuide p={p} faites={faites} setFaites={setFaites} onFermer={() => setParcours(false)} />}
+      {parcours && <ParcoursGuide p={p} faites={faites} setFaites={setFaites} non={non} repondre={repondre} recommencer={() => { setFaites([]); setNon([]); }} onFermer={() => setParcours(false)} />}
       {grand && (
         <div className="gx-plein" onClick={() => setGrand(null)}>
           <ImageApi chemin={grand} />
