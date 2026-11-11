@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createReadStream, existsSync } from 'node:fs';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 
@@ -32,6 +32,16 @@ export class StockageService {
   lire(cle: string): Readable | null {
     const p = this.chemin(cle);
     return existsSync(p) ? createReadStream(p) : null;
+  }
+
+  /** Copie un fichier ; false si la source n'existe pas. */
+  async copier(source: string, cible: string): Promise<boolean> {
+    const s = this.chemin(source);
+    if (!existsSync(s)) return false;
+    const c = this.chemin(cible);
+    await mkdir(dirname(c), { recursive: true });
+    await copyFile(s, c);
+    return true;
   }
 
   async supprimer(cle: string) {

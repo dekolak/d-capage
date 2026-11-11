@@ -72,6 +72,56 @@ export class ProceduresService {
     return this.vue(p);
   }
 
+  /**
+   * Copie complète d'une procédure (brouillon) : étapes, questions, réponses, détours, sauts et photos.
+   * Les étapes sont recréées ligne par ligne : la route principale, puis les détours dont la réponse est déjà copiée.
+   */
+  async dupliquer(id: string) {
+    const p = await this.prisma.procedure.findUnique({ where: { id }, include: avecEtapes });
+    if (!p) throw new NotFoundException('Procédure introuvable');
+    const ordre = ((await this.prisma.procedure.aggregate({ _max: { ordre: true } }))._max.ordre ?? -1) + 1;
+    const copie = await this.prisma.procedure.create({
+      data: {
+        titre: `${p.titre} (copie)`.slice(0, 120), categorie: p.categorie, resume: p.resume, description: p.description, prompt: p.prompt,
+        publiee: false, ordre,
+      },
+    });
+    const idEtape = new Map<string, string>();
+    const idChoix = new Map<string, string>();
+    const sauts: { choix: string; cible: string }[] = [];
+    let restantes = [...p.etapes];
+    while (restantes.length) {
+      const pretes = restantes.filter((e) => !e.brancheId || idChoix.has(e.brancheId));
+      if (!pretes.length) break;
+      for (const e of pretes) {
+        const n = await this.prisma.etapeProcedure.create({
+          data: {
+            procedureId: copie.id, brancheId: e.brancheId ? idChoix.get(e.brancheId)! : null, ordre: e.ordre, texte: e.texte,
+            avertissement: e.avertissement, note: e.note, guide: e.guide, ecran: e.ecran, pastille: e.pastille, controle: e.controle, solutionId: e.solutionId,
+          },
+        });
+        idEtape.set(e.id, n.id);
+        if (e.photoCle) {
+          const cle = `procedures/${copie.id}/${n.id}-${Date.now()}.${e.photoCle.split('.').pop()}`;
+          if (await this.stockage.copier(e.photoCle, cle)) await this.prisma.etapeProcedure.update({ where: { id: n.id }, data: { photoCle: cle, photoMaj: new Date() } });
+        }
+        for (const c of e.choix) {
+          const nc = await this.prisma.choixEtape.create({
+            data: {
+              etapeId: n.id, ordre: c.ordre, libelle: c.libelle, signification: c.signification, suite: c.suite, conclusion: c.conclusion,
+              solutionId: c.solutionId, procedureCibleId: c.procedureCibleId,
+            },
+          });
+          idChoix.set(c.id, nc.id);
+          if (c.etapeCibleId) sauts.push({ choix: nc.id, cible: c.etapeCibleId });
+        }
+      }
+      restantes = restantes.filter((e) => !pretes.includes(e));
+    }
+    for (const s of sauts) await this.prisma.choixEtape.update({ where: { id: s.choix }, data: { etapeCibleId: idEtape.get(s.cible) ?? null } });
+    return this.lire(copie.id, true);
+  }
+
   async modifier(id: string, d: Prisma.ProcedureUpdateInput) {
     await this.existe(id);
     await this.prisma.procedure.update({ where: { id }, data: d });

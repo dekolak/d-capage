@@ -47,6 +47,7 @@ Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procé
 - **L'écran de modification** (pensé pour le PC, utilisable sur téléphone) : à gauche le **schéma**, à droite l'élément choisi. Cliquez sur une étape, une question ou une réponse pour la modifier. « **+** » (au survol, entre deux étapes) insère une étape à cet endroit.
 - **Contrôle Oui / Non simple** : cocher « Contrôle Oui / Non simple » sur une étape. Le client répond **Oui** (l'étape est cochée) ou **Non** : on lui affiche alors l'astuce choisie (ou « Corrigez le problème avant de continuer »).
 - Dans le **parcours guidé**, le client peut faire lire les étapes à voix haute (🔊) ; l'écran reste allumé pendant le parcours.
+- **⧉ Dupliquer** (en bas de l'écran de modification) : copie complète en brouillon (étapes, questions, détours, photos), pour partir d'une procédure proche.
 - **Ordre** : flèches ↑ ↓. **Publier** : case en haut (brouillon = visible seulement par l'admin).
 - **Parties** : écrire une étape « **Montage — Vérifier la courroie** » la range sous le titre « Montage » (utile pour les longues check-lists).
 - Les clients doivent avoir le module **Procédures** (case à cocher sur leur compte).
@@ -58,7 +59,7 @@ Un diagnostic est une procédure avec des **questions** : la suite dépend de la
 - Chaque réponse ouvre un **détour** : ses propres étapes (« + étape dans ce détour » dans le schéma), qui peuvent contenir une autre question.
 - **Ensuite** (sur la réponse) : **↩ revenir sur la route** après la question (par défaut), **↪ aller à une étape** de la route principale, **✅ fin : problème résolu** ou **📞 fin : contacter Kiavik**, avec une **conclusion** montrée au client (cause probable, que faire). Une réponse peut aussi proposer une astuce ou une autre procédure.
 - Le schéma signale les oublis (réponse unique, saut sans étape, fin sans conclusion, retour en arrière qui peut faire une boucle).
-- Le client suit le bon chemin dans la liste et dans le parcours guidé ; « Vérification » indique qu'il est dans un détour. À la fin, il voit ses réponses et peut **📤 envoyer le résultat à Kiavik** (avec un message) : vous recevez une **notification**, le résultat est dans Administration → Procédures → **🩺 Diagnostics reçus**, et il part vers n8n (webhook **`diagnostic.envoye`**).
+- Le client suit le bon chemin dans la liste et dans le parcours guidé ; « Vérification » indique qu'il est dans un détour. À la fin, il voit ses réponses et peut **📤 envoyer le résultat à Kiavik** (avec un message) : vous recevez une **notification**, le résultat est dans Administration → Procédures → **🩺 Diagnostics reçus**, et il part vers n8n (webhook **`diagnostic.envoye`**). Le même résultat ne peut pas être envoyé deux fois ; le client retrouve ses envois dans **🩺 Mes diagnostics** (onglet Procédures).
 
 ### Préparer l'IA
 Rien n'est envoyé à une IA par l'app : tout passe par n8n, où vous choisissez l'IA.

@@ -570,6 +570,28 @@ describe('Parcours complet', () => {
     expect((await http.get('/api/ia/catalogue').set(C)).status).toBe(403);
     await http.put('/api/ia/prompt').set(A).send({ texte: '' }).expect(200);
 
+    // historique du client
+    const miens = (await http.get('/api/procedures/diagnostics/miens').set(C)).body;
+    expect(miens.map((x: any) => x.id)).toEqual([oui1.id, env.id]);
+    expect(miens[1]).toMatchObject({ message: 'aide', procedure: { id: p.id }, resultat: { fin: { type: 'contact', conclusion: 'Panne de pompe' } } });
+
+    // copie complète (brouillon) : détour, réponses, saut vers une étape, photo
+    const allumer = (await http.get(`/api/procedures/${p.id}`).set(A)).body.etapes.find((e: any) => e.texte === 'Allumer');
+    await http.patch(`/api/admin/procedures/choix/${oui.id}`).set(A).send({ suite: 'etape', etapeCibleId: allumer.id }).expect(200);
+    await http.post(`/api/admin/procedures/etapes/${allumer.id}/photo`).set(A).attach('photo', JPEG, 'a.jpg').expect(201);
+    const cp = (await http.post(`/api/admin/procedures/${p.id}/dupliquer`).set(A)).body;
+    expect(cp).toMatchObject({ titre: `Diag ${id} (copie)`, publiee: false, description: 'Pompe à encre', prompt: 'Sois bref' });
+    expect(cp.etapes).toHaveLength(4);
+    const qcp = cp.etapes.find((e: any) => e.choix.length);
+    const allumerCp = cp.etapes.find((e: any) => e.texte === 'Allumer');
+    expect(qcp.id).not.toBe(q.id);
+    expect(qcp.choix[0]).toMatchObject({ libelle: 'Oui', suite: 'etape', etapeCibleId: allumerCp.id });
+    expect(cp.etapes.find((e: any) => e.brancheId === qcp.choix[1].id).texte).toBe('Vérifier le bouton Pompe');
+    expect(allumerCp.photo).toContain(`/procedures/etapes/${allumerCp.id}/photo`);
+    expect((await http.get(`/api${allumerCp.photo}`).set(A)).headers['content-type']).toBe('image/jpeg');
+    expect((await http.post(`/api/admin/procedures/${p.id}/dupliquer`).set(C)).status).toBe(403);
+    await http.delete(`/api/admin/procedures/${cp.id}`).set(A).expect(200);
+
     // supprimer la question supprime ses réponses et leurs détours
     d = (await http.delete(`/api/admin/procedures/etapes/${q.id}`).set(A)).body;
     expect(d.etapes.map((e: any) => e.texte)).toEqual(['Allumer', 'Tester les buses']);

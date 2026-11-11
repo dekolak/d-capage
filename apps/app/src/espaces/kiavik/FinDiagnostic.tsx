@@ -54,9 +54,14 @@ export function FinDiagnostic({ p, av, children }: { p: Procedure; av: Avancemen
 function Envoyer({ p, av, contact }: { p: Procedure; av: Avancement; contact: boolean }) {
   const [ouvert, setOuvert] = useState(false);
   const [message, setMessage] = useState('');
-  const [etat, setEtat] = useState<'' | 'envoi' | 'ok'>('');
+  const [etat, setEtat] = useState<'' | 'envoi'>('');
   const [erreur, setErreur] = useState<unknown>();
-  if (etat === 'ok') return <p className="succes">{t('kiavik.diagnostic.envoye')}</p>;
+  if (av.envoye)
+    return (
+      <p className="succes">
+        {t('kiavik.diagnostic.envoye')} <Link to="/diagnostics">{t('kiavik.diagnostic.mesDiagnostics')}</Link>
+      </p>
+    );
   if (!ouvert)
     return (
       <button type="button" className={`btn ${contact ? 'prim' : ''}`} onClick={() => setOuvert(true)}>
@@ -68,7 +73,8 @@ function Envoyer({ p, av, contact }: { p: Procedure; av: Avancement; contact: bo
     setErreur(undefined);
     try {
       await api(`/procedures/${p.id}/diagnostic`, { method: 'POST', json: { reponses: av.reponses, message: message.trim() || undefined } });
-      setEtat('ok');
+      setEtat('');
+      av.marquerEnvoye();
     } catch (e) {
       setErreur(e);
       setEtat('');

@@ -4,6 +4,7 @@ import Animation from './Animation';
 import GuideEcran from './GuideEcran';
 import Guides from './Guides';
 import { AdminProcedures } from './AdminProcedures';
+import MesDiagnostics from './MesDiagnostics';
 import { AdminProcedure } from './EditeurProcedure';
 import { AdminDiagnostics } from './AdminDiagnostics';
 import { AdminSolution, AdminSolutions } from './AdminSolutions';
@@ -31,6 +32,7 @@ export const kiavik: AppEspace = {
       <Route path="/guides/:slug/:ecran?" element={<GuideEcran />} />
       <Route path="/procedures" element={<Procedures />} />
       <Route path="/procedures/:id" element={<ProcedureDetail />} />
+      <Route path="/diagnostics" element={<MesDiagnostics />} />
       <Route path="/solutions" element={<Solutions />} />
       <Route path="/solutions/:id" element={<SolutionDetail />} />
       <Route path="/admin/solutions" element={<AdminSolutions />} />

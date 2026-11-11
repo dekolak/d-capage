@@ -506,6 +506,21 @@ export function AdminProcedure() {
       <p className="ed-liens">
         <Link to={`/procedures/${p.id}`}>Voir comme un client ›</Link>
       </p>
+      <div className="ed-actions">
+        <button type="button" className="btn"
+          onClick={async () => {
+            if (!confirm('Créer une copie de cette procédure (en brouillon), avec ses étapes, questions et photos ?')) return;
+            try {
+              const copie = await api<Procedure>(`/admin/procedures/${p.id}/dupliquer`, { method: 'POST' });
+              viderProcedures();
+              setSel(null);
+              nav(`/admin/procedures/${copie.id}`);
+            } catch (e) {
+              setErreur(e);
+            }
+          }}>
+          ⧉ Dupliquer
+        </button>
       <button type="button" className="btn danger"
         onClick={async () => {
           if (!confirm('Supprimer cette procédure et ses photos ?')) return;
@@ -515,6 +530,7 @@ export function AdminProcedure() {
         }}>
         Supprimer la procédure
       </button>
+      </div>
     </div>
   );
 }

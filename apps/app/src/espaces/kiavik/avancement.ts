@@ -25,6 +25,8 @@ export function useAvancement(p: Procedure | undefined, id: string) {
   const [faites, setFaites] = useGarde<string[]>(`kiavik.etapes.${id}`, []);
   const [non, setNon] = useGarde<string[]>(`kiavik.controles.${id}`, []);
   const [reponses, setReponses] = useGarde<Record<string, string>>(`kiavik.reponses.${id}`, {});
+  // réponses déjà envoyées à Kiavik (pour ne pas envoyer deux fois le même résultat)
+  const [envoyees, setEnvoyees] = useGarde<string | null>(`kiavik.envoye.${id}`, null);
   const chemin = useMemo(() => calculerChemin<Choix, Etape>(p?.etapes ?? [], reponses), [p, reponses]);
 
   return {
@@ -42,7 +44,11 @@ export function useAvancement(p: Procedure | undefined, id: string) {
       setFaites([]);
       setNon([]);
       setReponses({});
+      setEnvoyees(null);
     },
+    /** Le résultat actuel a déjà été envoyé. */
+    envoye: envoyees === JSON.stringify(reponses),
+    marquerEnvoye: () => setEnvoyees(JSON.stringify(reponses)),
     /** Étapes faites (cochées, contrôlées « Oui » ou questions répondues) parmi celles du chemin. */
     nbFaites: chemin.pas.filter(({ e }) => faites.includes(e.id) || (e.choix.length > 0 && !!reponses[e.id])).length,
   };

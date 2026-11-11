@@ -72,6 +72,8 @@ Les conseils `niveau: "a_completer"` (notes internes) ne sont envoyés qu'à l'a
 | GET | `/procedures` (publiées ; admin : toutes) → titre, catégorie, `nbEtapes`, `liens` vers les guides | module |
 | GET | `/procedures/:id` (étapes), `/procedures/etapes/:id/photo` | module |
 | POST | `/procedures/:id/diagnostic` `{reponses: {idQuestion: idReponse}, message?}` → le serveur recalcule le chemin, garde le résultat, notifie les admins, webhook `diagnostic.envoye` | module |
+| GET | `/procedures/diagnostics/miens` : diagnostics envoyés par le client connecté | module |
+| POST | `/admin/procedures/:id/dupliquer` : copie complète en brouillon (étapes, questions, détours, sauts, photos) | admin |
 | POST · PATCH · DELETE | `/admin/procedures[/:id]` `{titre, categorie?, resume?, description?, prompt?, publiee?, ordre?}` | admin |
 | POST | `/admin/procedures/:id/etapes` `{texte, avertissement?, note?, guide?, ecran?, pastille?, controle?, solutionId?, position?, brancheId?}` (position : place dans la ligne, 0 = en premier ; `brancheId` : réponse dont l'étape fait partie = détour) | admin |
 | PATCH · DELETE | `/admin/procedures/etapes/:id` (mêmes champs, `controle` + `solutionId` = étape Oui / Non ; supprimer une question supprime ses réponses et détours) ; POST `…/deplacer {sens: -1\|1}` (dans sa ligne) ; POST · DELETE `…/photo` (multipart `photo`) | admin |

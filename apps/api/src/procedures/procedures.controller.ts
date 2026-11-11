@@ -90,6 +90,12 @@ export class ProceduresController {
     return this.procedures.lister(estAdmin(moi));
   }
 
+  /** Diagnostics envoyés par le client connecté. */
+  @Get('diagnostics/miens')
+  mesDiagnostics(@Moi() moi: Principal) {
+    return this.diagnostics.miens(moi.id);
+  }
+
   @Get(':id')
   lire(@Param('id') id: string, @Moi() moi: Principal) {
     return this.procedures.lire(id, estAdmin(moi));
@@ -113,6 +119,12 @@ export class AdminProceduresController {
   @Post()
   creer(@Body() d: ProcedureDto) {
     return this.procedures.creer(d);
+  }
+
+  /** Copie complète (brouillon) : étapes, questions, détours, photos. */
+  @Post(':id/dupliquer')
+  dupliquer(@Param('id') id: string) {
+    return this.procedures.dupliquer(id);
   }
 
   @Patch(':id')

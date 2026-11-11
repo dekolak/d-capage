@@ -77,3 +77,10 @@
 .dg-resume li b { color: var(--od); margin-left: 4px; }
 .dg-envoi { display: grid; gap: 8px; }
 .pg .dg-fin { box-shadow: none; background: none; }
+
+/* mes diagnostics */
+.md-carte { display: grid; gap: 6px; }
+.md-carte .gx-etape-tete a { color: inherit; text-decoration: none; }
+.md-fin.md-contact { color: var(--ko); } .md-fin.md-resolu { color: var(--ok); }
+.md-reponses { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-size: 14px; }
+.md-reponses b { color: var(--od); margin-left: 4px; }

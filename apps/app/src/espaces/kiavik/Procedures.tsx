@@ -33,6 +33,12 @@ export default function Procedures() {
         <span><b>{t('kiavik.solutions.titre')}</b>{t('kiavik.solutions.bandeau')}</span>
         <span>›</span>
       </Link>
+      {liste.some((p) => p.diagnostic) && (
+        <Link to="/diagnostics" className="bandeau lien-bandeau">
+          <span><b>{t('kiavik.diagnostic.mesDiagnostics')}</b>{t('kiavik.diagnostic.bandeau')}</span>
+          <span>›</span>
+        </Link>
+      )}
       {liste.length > 4 && (
         <div className="gx-recherche">
           <input type="search" placeholder={t('kiavik.procedures.filtrer')} value={q} onChange={(e) => setQ(e.target.value)} aria-label={t('kiavik.procedures.filtrerChamp')} />

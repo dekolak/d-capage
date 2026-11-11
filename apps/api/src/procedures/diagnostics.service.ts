@@ -109,6 +109,16 @@ export class DiagnosticsService {
     return { ok: true, id: d.id, texte: r.texte };
   }
 
+  /** Diagnostics envoyés par un client (son historique). */
+  async miens(userId: string) {
+    return this.prisma.diagnosticEnvoye.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      select: { id: true, texte: true, message: true, resultat: true, createdAt: true, procedure: { select: { id: true, titre: true } } },
+    });
+  }
+
   /** Diagnostics reçus (admin, ou n8n avec une clé API). */
   async lister(nonLus = false) {
     const l = await this.prisma.diagnosticEnvoye.findMany({
