@@ -63,7 +63,7 @@ Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procé
 - **Ordre** : flèches ↑ ↓. **Publier** : case en haut (brouillon = visible seulement par l'admin).
 - **Parties** : écrire une étape « **Montage — Vérifier la courroie** » la range sous le titre « Montage » (utile pour les longues check-lists).
 - Les clients doivent avoir le module **Procédures** (case à cocher sur leur compte).
-- Au départ : le brouillon **Diagnostic : la pompe à encre** (exemple de diagnostic, voir ci-dessous), la check-list **Mise en route et nettoyage de la machine** (v1 de Teddy, 26 étapes en 8 parties), 2 procédures FlexiPRINT publiées (reprises du prototype) et 4 brouillons DXonJet à compléter.
+- Au départ : le brouillon **Changer les filtres à encre** (entretien, 18 étapes en 7 parties), le brouillon **Diagnostic : la pompe à encre** (exemple de diagnostic, voir ci-dessous), la check-list **Mise en route et nettoyage de la machine** (v1 de Teddy, 26 étapes en 8 parties), 2 procédures FlexiPRINT publiées (reprises du prototype) et 4 brouillons DXonJet à compléter.
 
 ## Kiavik : diagnostics (questions et détours)
 Un diagnostic est une procédure avec des **questions** : la suite dépend de la réponse du client.
