@@ -120,7 +120,7 @@ async function tags() {
 }
 
 interface EtapeSeed { texte: string; avertissement?: string; lien?: [string, string, string] }
-interface ProcedureSeed { cle: string; titre: string; categorie: string; resume?: string; publiee?: boolean; etapes: EtapeSeed[] }
+interface ProcedureSeed { cle: string; titre: string; categorie: string; resume?: string; publiee?: boolean; ordre?: number; etapes: EtapeSeed[] }
 
 async function procedures() {
   const fichier = join(RACINE_KIT, 'procedures.json');
@@ -131,7 +131,7 @@ async function procedures() {
     if (await prisma.procedure.findUnique({ where: { cle: p.cle } })) continue;
     await prisma.procedure.create({
       data: {
-        cle: p.cle, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee ?? false, ordre: i,
+        cle: p.cle, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee ?? false, ordre: p.ordre ?? i,
         etapes: {
           create: p.etapes.map((e, n) => ({
             ordre: n, texte: e.texte, avertissement: e.avertissement,

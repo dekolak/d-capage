@@ -45,8 +45,9 @@ Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procé
 - **Créer** : un titre, puis ajouter les étapes une par une (texte, avertissement facultatif, photo prise avec le téléphone).
 - **Lier un bouton** : sur une étape, choisir le logiciel, l'écran puis le bouton. Le client voit « 👆 Voir le bouton » dans l'étape, et « 📋 Voir la procédure » quand il touche ce bouton dans le guide.
 - **Ordre** : flèches ↑ ↓. **Publier** : case en haut (brouillon = visible seulement par l'admin).
+- **Parties** : écrire une étape « **Montage — Vérifier la courroie** » la range sous le titre « Montage » (utile pour les longues check-lists).
 - Les clients doivent avoir le module **Procédures** (case à cocher sur leur compte).
-- Au départ : 2 procédures FlexiPRINT publiées (reprises du prototype) et 4 brouillons DXonJet à compléter.
+- Au départ : la check-list **Mise en route et nettoyage de la machine** (v1 de Teddy, 26 étapes en 8 parties), 2 procédures FlexiPRINT publiées (reprises du prototype) et 4 brouillons DXonJet à compléter.
 
 ## Kiavik : astuces & solutions
 Administration → **💡 Astuces & solutions** (espace Kiavik), ou depuis la page Procédures.

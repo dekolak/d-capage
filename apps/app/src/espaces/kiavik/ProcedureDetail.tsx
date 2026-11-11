@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
@@ -6,6 +6,12 @@ import { useAuth } from '../../lib/auth';
 import { ImageApi, lienGuide, Procedure } from './donneesProcedures';
 import './guides.css';
 import { t } from '../../lib/i18n';
+
+/** « Partie — texte » : l'étape se range sous le titre « Partie » (ex. « Montage — Vérifier la courroie »). */
+export function decouperEtape(texte: string): { partie: string | null; texte: string } {
+  const m = /^(.{2,40}?)\s+—\s+([\s\S]+)$/.exec(texte);
+  return m ? { partie: m[1].trim(), texte: m[2] } : { partie: null, texte };
+}
 
 /** Une procédure : étapes à cocher (gardées sur le téléphone), photos agrandissables, « Voir le bouton ». */
 export default function ProcedureDetail() {
@@ -49,13 +55,17 @@ export default function ProcedureDetail() {
         {p.etapes.map((e, i) => {
           const lien = lienGuide(e);
           const ok = faites.includes(e.id);
+          const { partie, texte } = decouperEtape(e.texte);
+          const precedente = i > 0 ? decouperEtape(p.etapes[i - 1].texte).partie : null;
           return (
-            <li key={e.id} className={`carte gx-etape-carte ${ok ? 'fait' : ''}`}>
+            <Fragment key={e.id}>
+            {partie && partie !== precedente && <li className="gx-partie" aria-hidden="true"><h4>{partie}</h4></li>}
+            <li className={`carte gx-etape-carte ${ok ? 'fait' : ''}`}>
               <button type="button" className="gx-coche" aria-pressed={ok} aria-label={t('kiavik.procedures.etapeFaite', { n: i + 1 })} onClick={() => basculer(e.id)}>
                 {ok ? '✓' : i + 1}
               </button>
               <div className="gx-etape-corps">
-                <p>{e.texte}</p>
+                <p>{texte}</p>
                 {e.avertissement && <div className="gx-warn">⚠️ {e.avertissement}</div>}
                 {e.photo && <ImageApi chemin={e.photo} className="gx-etape-photo" onClick={() => setGrand(e.photo)} />}
                 {lien && (
@@ -65,6 +75,7 @@ export default function ProcedureDetail() {
                 )}
               </div>
             </li>
+            </Fragment>
           );
         })}
       </ol>
