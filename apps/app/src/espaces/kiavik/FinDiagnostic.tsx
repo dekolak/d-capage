@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
+import { envoyerOuPlusTard } from '../../lib/api';
 import { t } from '../../lib/i18n';
 import { Avancement } from './avancement';
 import { decouperEtape } from './ProcedureDetail';
@@ -57,7 +57,9 @@ function Envoyer({ p, av, contact }: { p: Procedure; av: Avancement; contact: bo
   const [etat, setEtat] = useState<'' | 'envoi'>('');
   const [erreur, setErreur] = useState<unknown>();
   if (av.envoye)
-    return (
+    return av.envoyePlusTard ? (
+      <p className="succes">{t('kiavik.diagnostic.envoiPlusTard')}</p>
+    ) : (
       <p className="succes">
         {t('kiavik.diagnostic.envoye')} <Link to="/diagnostics">{t('kiavik.diagnostic.mesDiagnostics')}</Link>
       </p>
@@ -72,9 +74,9 @@ function Envoyer({ p, av, contact }: { p: Procedure; av: Avancement; contact: bo
     setEtat('envoi');
     setErreur(undefined);
     try {
-      await api(`/procedures/${p.id}/diagnostic`, { method: 'POST', json: { reponses: av.reponses, message: message.trim() || undefined } });
+      const r = await envoyerOuPlusTard(`/procedures/${p.id}/diagnostic`, 'POST', { reponses: av.reponses, message: message.trim() || undefined }, `diagnostic:${p.id}`);
       setEtat('');
-      av.marquerEnvoye();
+      av.marquerEnvoye(r === 'plusTard');
     } catch (e) {
       setErreur(e);
       setEtat('');

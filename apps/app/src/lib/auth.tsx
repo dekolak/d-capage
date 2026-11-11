@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
-import { api, jeton, Moi, onConditions, onDeconnexion } from './api';
+import { api, ErreurApi, jeton, Moi, onConditions, onDeconnexion } from './api';
 
 interface Ctx {
   moi: Moi | null;
@@ -29,7 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Nouvelles conditions publiées pendant l'utilisation : on relit le compte, l'écran d'accueil s'affiche.
     onConditions(() => api<Moi>('/moi').then(setMoi).catch(() => {}));
     if (!jeton.get()) return setPret(true);
-    api<Moi>('/moi').then(setMoi).catch(() => jeton.set(null)).finally(() => setPret(true));
+    // sans réseau (et sans copie gardée), on garde la session : seule l'API peut dire qu'elle n'est plus valable
+    api<Moi>('/moi').then(setMoi).catch((e) => { if (!(e instanceof ErreurApi && e.status === 0)) jeton.set(null); }).finally(() => setPret(true));
   }, []);
 
   const connexion = async (identifiant: string, motDePasse: string) => {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
+import { envoyerOuPlusTard } from '../../lib/api';
 import { t } from '../../lib/i18n';
 
 /** « ❓ Pas clair ? » : le client signale une étape difficile à comprendre (message facultatif). */
@@ -13,7 +13,7 @@ export function PasClair({ etape }: { etape: string }) {
   const envoyer = async () => {
     setEtat('envoi');
     try {
-      await api(`/procedures/etapes/${etape}/signaler`, { method: 'POST', json: { message: message.trim() || undefined } });
+      await envoyerOuPlusTard(`/procedures/etapes/${etape}/signaler`, 'POST', { message: message.trim() || undefined }, `signaler:${etape}`);
       setEtat('ok');
     } catch (e) {
       setErreur(e);
