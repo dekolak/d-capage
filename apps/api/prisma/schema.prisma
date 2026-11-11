@@ -74,6 +74,7 @@ model User {
   demandesMotDePasse DemandeMotDePasse[]
   abonnementsPush    AbonnementPush[]
   diagnostics        DiagnosticEnvoye[]
+  signalements       SignalementEtape[]
 
   @@index([numeroOdoo])
 }
@@ -489,6 +490,7 @@ model Procedure {
   /// Réponses (choix) qui renvoient vers cette procédure.
   choixVers   ChoixEtape[]       @relation("ProcedureCible")
   diagnostics DiagnosticEnvoye[]
+  suivis      SuiviParcours[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 }
@@ -520,7 +522,9 @@ model EtapeProcedure {
   sautsVers     ChoixEtape[] @relation("Saut")
 
   /// Photos de l'étape, dans l'ordre (la première est la principale).
-  photos PhotoEtape[]
+  photos       PhotoEtape[]
+  /// « Pas clair ? » envoyés par les clients.
+  signalements SignalementEtape[]
 
   @@index([procedureId, ordre])
 }
@@ -674,4 +678,39 @@ model PhotoEtape {
   createdAt DateTime       @default(now())
 
   @@index([etapeId, ordre])
+}
+
+/// « Pas clair ? » : un client signale une étape difficile à comprendre (l'admin est prévenu).
+model SignalementEtape {
+  id        String         @id @default(cuid())
+  etapeId   String
+  etape     EtapeProcedure @relation(fields: [etapeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String?
+  traite    Boolean        @default(false)
+  createdAt DateTime       @default(now())
+
+  @@index([etapeId, traite])
+}
+
+/// Suivi anonyme d'une tentative de procédure (statistiques : réponses, fins, où l'on s'arrête). Sans lien avec le compte.
+model SuiviParcours {
+  id          String    @id @default(cuid())
+  /// Identifiant tiré au hasard par le téléphone pour une tentative (nouveau après « Recommencer »).
+  session     String    @unique
+  procedureId String
+  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  /// Réponses aux questions (id question → id réponse).
+  reponses    Json      @default("{}")
+  faites      Int       @default(0)
+  total       Int       @default(0)
+  /// Dernière étape atteinte sur le chemin.
+  derniere    String?
+  /// termine | resolu | contact (null : pas fini)
+  fin         String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([procedureId])
 }

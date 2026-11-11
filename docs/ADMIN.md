@@ -48,6 +48,8 @@ Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procé
 - **Contrôle Oui / Non simple** : cocher « Contrôle Oui / Non simple » sur une étape. Le client répond **Oui** (l'étape est cochée) ou **Non** : on lui affiche alors l'astuce choisie (ou « Corrigez le problème avant de continuer »).
 - Dans le **parcours guidé**, le client peut faire lire les étapes à voix haute (🔊) ; l'écran reste allumé pendant le parcours.
 - **Photos** : jusqu'à **8 par étape** (« 📷 Ajouter des photos », plusieurs à la fois). Flèches ← → pour l'ordre (la première est la principale), ✕ pour en retirer une. Le client les fait défiler au doigt, et les ouvre en plein écran.
+- **❓ Pas clair ?** : sous chaque étape (liste et parcours guidé), le client peut signaler une étape difficile, avec un message facultatif. Vous recevez une **notification** ; la liste des procédures montre « ❓ n », le schéma signale l'étape en haut, et le panneau de l'étape liste les messages (« ✓ Traité » quand c'est corrigé). Webhook `etape.signalee`.
+- **📊 Statistiques** (au-dessus du schéma) : tentatives, terminées (résolues, à contacter, jusqu'au bout), résultats envoyés ; sur chaque réponse, le nombre et la part des choix ; « ⏸ n » sur une étape = tentatives arrêtées là. Anonymes (sans lien avec le compte du client) et sans les admins.
 - **⧉ Dupliquer** (en bas de l'écran de modification) : copie complète en brouillon (étapes, questions, détours, photos), pour partir d'une procédure proche.
 - **Ordre** : flèches ↑ ↓. **Publier** : case en haut (brouillon = visible seulement par l'admin).
 - **Parties** : écrire une étape « **Montage — Vérifier la courroie** » la range sous le titre « Montage » (utile pour les longues check-lists).

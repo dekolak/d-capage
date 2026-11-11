@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { GuidesModule } from '../guides/guides.module';
 import { DiagnosticsService } from './diagnostics.service';
+import { SuiviService } from './suivi.service';
 import { AdminDiagnosticsController, AdminProceduresController, IaController, ProceduresController } from './procedures.controller';
 import { ProceduresService } from './procedures.service';
 
-@Module({ imports: [GuidesModule], controllers: [ProceduresController, AdminProceduresController, AdminDiagnosticsController, IaController], providers: [ProceduresService, DiagnosticsService] })
+@Module({ imports: [GuidesModule], controllers: [ProceduresController, AdminProceduresController, AdminDiagnosticsController, IaController], providers: [ProceduresService, DiagnosticsService, SuiviService] })
 export class ProceduresModule {}

@@ -80,3 +80,12 @@ main:has(.ed) { max-width: 1440px; }
 .ed-photo span { display: flex; gap: 4px; justify-content: center; }
 .ed-photo .btn { padding: 2px 8px; min-height: 0; }
 .ed-ajout-photo { justify-self: start; }
+
+/* suivi : statistiques et « pas clair » */
+.ed-stats { margin: 0 0 10px; padding: 8px 10px; border-radius: var(--r-sm); background: var(--fond); }
+.ed-stat { margin-left: 6px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, currentColor 14%, transparent); font-size: 11px; font-weight: 700; }
+.ed-badge-pc { margin-left: 4px; padding: 0 6px; border-radius: 999px; background: #fdecea; color: #8a1c1c; font-size: 12px; font-weight: 700; }
+.ed-badge-arret { padding: 0 6px; border-radius: 999px; background: var(--fond); color: var(--g); font-size: 12px; font-weight: 700; }
+.ed-signalements { display: grid; gap: 6px; padding: 10px; border-radius: var(--r-sm); background: #fdecea; }
+.ed-signalement { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.ed-signalement.traite { opacity: 0.55; }

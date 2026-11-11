@@ -7,6 +7,7 @@ import { AutoriseCleApi, Moi, ModuleRequis, Principal, Roles } from '../auth/dec
 import { MIME_IMAGE } from '../stockage/stockage.service';
 import { SUITES } from './chemin';
 import { DiagnosticsService } from './diagnostics.service';
+import { SuiviService } from './suivi.service';
 import { ProceduresService } from './procedures.service';
 
 class ProcedureDto {
@@ -57,6 +58,20 @@ class EnvoiDiagnosticDto {
   @IsObject() reponses!: Record<string, string>;
   @IsOptional() @IsString() @MaxLength(2000) message?: string;
 }
+class SignalerDto {
+  @IsOptional() @IsString() @MaxLength(1000) message?: string;
+}
+class SuiviDto {
+  @IsString() @MinLength(8) @MaxLength(64) session!: string;
+  @IsObject() reponses!: Record<string, string>;
+  @IsInt() @Min(0) faites!: number;
+  @IsInt() @Min(0) total!: number;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) derniere?: string | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsIn(['termine', 'resolu', 'contact']) fin?: string | null;
+}
+class TraiteDto {
+  @IsBoolean() traite!: boolean;
+}
 class PromptDto {
   @IsString() @MaxLength(10000) texte!: string;
 }
@@ -76,7 +91,20 @@ const estAdmin = (m: Principal) => m.role === Role.ADMIN;
 @ModuleRequis('procedures-kiavik')
 @Controller('procedures')
 export class ProceduresController {
-  constructor(private procedures: ProceduresService, private diagnostics: DiagnosticsService) {}
+  constructor(private procedures: ProceduresService, private diagnostics: DiagnosticsService, private suivi: SuiviService) {}
+
+  /** « Pas clair ? » sur une étape : les admins sont prévenus. */
+  @Post('etapes/:id/signaler')
+  signaler(@Param('id') id: string, @Body() d: SignalerDto, @Moi() moi: Principal) {
+    return this.suivi.signaler(id, { id: moi.id, admin: estAdmin(moi) }, d.message);
+  }
+
+  /** Avancement anonyme d'une tentative (statistiques). */
+  @Put(':id/suivi')
+  suivre(@Param('id') id: string, @Body() d: SuiviDto, @Moi() moi: Principal) {
+    const reponses = Object.fromEntries(Object.entries(d.reponses).filter(([, v]) => typeof v === 'string').slice(0, 300));
+    return this.suivi.suivre(id, estAdmin(moi), { ...d, reponses });
+  }
 
   /** Le client envoie le résultat d'un diagnostic (ses réponses) : admins prévenus, webhook `diagnostic.envoye`. */
   @Post(':id/diagnostic')
@@ -124,7 +152,28 @@ export class ProceduresController {
 @Roles(Role.ADMIN)
 @Controller('admin/procedures')
 export class AdminProceduresController {
-  constructor(private procedures: ProceduresService) {}
+  constructor(private procedures: ProceduresService, private suivi: SuiviService) {}
+
+  /** Signalements « pas clair » ouverts, par procédure. */
+  @Get('signalements/ouverts')
+  signalementsOuverts() {
+    return this.suivi.ouvertsParProcedure();
+  }
+
+  @Patch('signalements/:id')
+  traiter(@Param('id') id: string, @Body() d: TraiteDto) {
+    return this.suivi.traiter(id, d.traite);
+  }
+
+  @Get(':id/signalements')
+  signalements(@Param('id') id: string) {
+    return this.suivi.signalements(id);
+  }
+
+  @Get(':id/stats')
+  stats(@Param('id') id: string) {
+    return this.suivi.stats(id);
+  }
 
   @Post()
   creer(@Body() d: ProcedureDto) {

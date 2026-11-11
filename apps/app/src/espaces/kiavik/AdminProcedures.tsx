@@ -14,10 +14,12 @@ export function AdminProcedures() {
   const [erreur, setErreur] = useState<unknown>();
   const [titre, setTitre] = useState('');
   const [nonLus, setNonLus] = useState(0);
+  const [pasClair, setPasClair] = useState<Record<string, number>>({});
   useEffect(() => {
     viderProcedures();
     chargerProcedures().then(setListe).catch(setErreur);
     api<{ nonLus: number }>('/admin/diagnostics?nonLus=1').then((r) => setNonLus(r.nonLus)).catch(() => {});
+    api<Record<string, number>>('/admin/procedures/signalements/ouverts').then(setPasClair).catch(() => {});
   }, []);
   const creer = async () => {
     try {
@@ -54,6 +56,7 @@ export function AdminProcedures() {
               {p.diagnostic && p.categorie !== 'Diagnostic' && <span className="dg-badge">Diagnostic</span>}
               {p.categorie} · {p.nbEtapes} étape{p.nbEtapes > 1 ? 's' : ''}
               {p.publiee ? <span className="gx-publiee">publiée</span> : <span className="gx-brouillon">brouillon</span>}
+              {!!pasClair[p.id] && <span className="ed-badge-pc" title="Étapes signalées « pas claires » à traiter">❓ {pasClair[p.id]}</span>}
               {!p.description && <span className="ed-manque" title="Utile pour que l'IA choisisse la bonne procédure">sans description</span>}
             </span>
           </Link>
