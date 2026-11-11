@@ -193,3 +193,10 @@
 .sx-bloc p { margin: 0; font-size: 16px; }
 .gx-partie { list-style: none; margin: 10px 0 -2px; }
 .gx-partie h4 { margin: 0; color: var(--od); }
+.gx-inserer { list-style: none; text-align: center; margin: -4px 0; }
+.gx-inserer-form { list-style: none; }
+.gx-inserer-actions { display: flex; gap: 8px; }
+.gx-etape-edit .gx-controle-edit, .gx-controle-edit { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; flex-wrap: wrap; }
+.gx-controle-edit select { flex: 1 1 100%; }
+.gx-controle-edit input[type=checkbox] { width: 20px; height: 20px; flex: none; margin-top: 1px; }
+.gx-controle-edit > span { flex: 1; min-width: 0; font-weight: 400; }

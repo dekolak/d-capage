@@ -24,9 +24,13 @@ class LienEtapeDto {
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) ecran?: string | null;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(20) pastille?: string | null;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(500) avertissement?: string | null;
+  @IsOptional() @IsBoolean() controle?: boolean;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) solutionId?: string | null;
 }
 class EtapeDto extends LienEtapeDto {
   @IsString() @MinLength(2) @MaxLength(2000) texte!: string;
+  /** Place de la nouvelle étape (0 = en premier) ; à la fin si absent. */
+  @IsOptional() @IsInt() @Min(0) position?: number;
 }
 class ModifierEtapeDto extends LienEtapeDto {
   @IsOptional() @IsString() @MinLength(2) @MaxLength(2000) texte?: string;

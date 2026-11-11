@@ -23,7 +23,7 @@
 
 /* Parcours guidé : une étape à la fois, plein écran */
 .pg { position: fixed; inset: 0; z-index: 75; background: var(--fond); display: flex; flex-direction: column; }
-.pg-tete { display: grid; grid-template-columns: 42px 1fr; gap: 10px; align-items: center; padding: calc(10px + env(safe-area-inset-top)) 14px 8px; background: var(--carte); box-shadow: var(--ombre); }
+.pg-tete { display: grid; grid-template-columns: 42px 1fr auto; gap: 10px; align-items: center; padding: calc(10px + env(safe-area-inset-top)) 14px 8px; background: var(--carte); box-shadow: var(--ombre); }
 .pg-tete .gx-ic { width: 42px; height: 42px; }
 .pg-num { display: grid; gap: 4px; }
 .pg-num b { font-size: 15px; }
@@ -38,3 +38,17 @@
 .pg-fin b { font-size: 26px; }
 .pg-fin span { font-size: 54px; }
 .pg-lancer { width: 100%; margin: 6px 0 14px; }
+
+/* étape de contrôle Oui / Non */
+.ct-oui-non { display: flex; gap: 8px; }
+.ct-oui-non .btn { min-width: 76px; }
+.ct-oui.choisi { background: var(--ok); border-color: var(--ok); color: #fff; }
+.ct-non.choisi { background: var(--ko); border-color: var(--ko); color: #fff; }
+.ct-oui-non.grand { display: grid; grid-template-columns: auto 1fr 1fr; gap: 10px; }
+.ct-oui-non.grand .btn { min-height: 56px; font-size: 17px; font-weight: 700; }
+.ct-aide { display: grid; gap: 6px; padding: 12px; border-radius: 12px; background: color-mix(in srgb, var(--o) 7%, var(--carte)); border: 1px solid color-mix(in srgb, var(--o) 30%, transparent); justify-items: start; width: 100%; box-sizing: border-box; }
+.ct-astuce { font-weight: 700; }
+.gx-etape-carte.non .gx-coche { border-color: var(--ko); color: var(--ko); }
+.gx-question { font-weight: 700; }
+.pg-tete .pg-voix { margin-left: auto; }
+.pg-tete .pg-voix[aria-pressed='true'] { background: var(--o); color: #fff; border-color: var(--o); }

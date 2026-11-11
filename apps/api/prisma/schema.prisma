@@ -496,6 +496,10 @@ model EtapeProcedure {
   guide         String?
   ecran         String?
   pastille      String?
+  /// Étape de contrôle : le client répond Oui / Non ; si Non, l'astuce `solutionId` lui est proposée.
+  controle      Boolean   @default(false)
+  solutionId    String?
+  solution      Solution? @relation(fields: [solutionId], references: [id], onDelete: SetNull)
 
   @@index([procedureId, ordre])
 }
@@ -539,6 +543,7 @@ model Solution {
   ordre         Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  etapesControle EtapeProcedure[]
 }
 
 /// Journal d'activité d'un client (connexions, pages consultées, recherches), visible par l'admin, effacé après 12 mois.

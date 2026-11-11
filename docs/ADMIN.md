@@ -44,6 +44,9 @@ Administration → **💬 Messages**.
 Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procédures → « Gérer les procédures »).
 - **Créer** : un titre, puis ajouter les étapes une par une (texte, avertissement facultatif, photo prise avec le téléphone).
 - **Lier un bouton** : sur une étape, choisir le logiciel, l'écran puis le bouton. Le client voit « 👆 Voir le bouton » dans l'étape (la capture s'ouvre par-dessus la liste, bouton entouré), le bouton est aussi montré dans le **parcours guidé** (une étape à la fois, plein écran), et « 📋 Voir la procédure » quand il touche ce bouton dans le guide.
+- **Insérer une étape** : « + Insérer une étape ici » entre deux étapes (sinon « + Ajouter l'étape » en bas l'ajoute à la fin).
+- **Étape de contrôle** : cocher « Étape de contrôle » et écrire une question (ex. « Les buses sont propres ? »). Le client répond **Oui** (l'étape est cochée) ou **Non** : on lui affiche alors l'astuce choisie dans « Si Non, proposer l'astuce » (ou « Corrigez le problème avant de continuer »).
+- Dans le **parcours guidé**, le client peut faire lire les étapes à voix haute (🔊) ; l'écran reste allumé pendant le parcours.
 - **Ordre** : flèches ↑ ↓. **Publier** : case en haut (brouillon = visible seulement par l'admin).
 - **Parties** : écrire une étape « **Montage — Vérifier la courroie** » la range sous le titre « Montage » (utile pour les longues check-lists).
 - Les clients doivent avoir le module **Procédures** (case à cocher sur leur compte).
