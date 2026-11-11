@@ -41,8 +41,11 @@ export interface Guide {
   /** Textes de la fenêtre « Quel blanc choisir ? » (par mode). */
   fenetreBlanc?: Record<string, { titre: string; usage: string; resultat: string }>;
 }
-export interface ResumeAnimation { id: string; titre: string; resume?: string; image?: string }
-export interface ResumeGuide { slug: string; nom: string; description?: string; module: string; ecrans: number; animations: ResumeAnimation[] }
+export interface ResumeAnimation { id: string; titre: string; resume?: string; image?: string; nbScenes?: number }
+export interface ResumeGuide {
+  slug: string; nom: string; nomCourt: string; role: string | null; miniature: string | null;
+  description?: string; module: string; ecrans: number; animations: ResumeAnimation[];
+}
 
 /** Étape d'une animation sur les écrans (format du prototype, voir kit-guides/animations.json). */
 export interface EtapeAnim {
