@@ -3,10 +3,10 @@ import { Link, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { api } from '../lib/api';
 
-interface Activite { id: string; type: 'connexion' | 'page' | 'recherche' | 'motdepasse'; espace: string | null; chemin: string | null; detail: string | null; resultats: number | null; createdAt: string }
+interface Activite { id: string; type: 'connexion' | 'page' | 'recherche' | 'motdepasse' | 'diagnostic'; espace: string | null; chemin: string | null; detail: string | null; resultats: number | null; createdAt: string }
 interface Journal { user: { id: string; identifiant: string; nom: string | null; numeroOdoo: string | null }; jours: number; activites: Activite[] }
 
-const ICONE = { connexion: '🔑', page: '📄', recherche: '🔍', motdepasse: '🔐' } as const;
+const ICONE = { connexion: '🔑', page: '📄', recherche: '🔍', motdepasse: '🔐', diagnostic: '🩺' } as const;
 const heure = (d: string) => new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 const jour = (d: string) => new Date(d).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -62,7 +62,7 @@ export default function AdminActivite() {
                     <span className="ac-i">{ICONE[a.type]}</span>
                     <span className="ac-t">
                       {a.type === 'connexion' && <>Connexion{a.espace ? ` (${a.espace})` : ''}</>}
-                      {a.type === 'motdepasse' && a.detail}
+                      {(a.type === 'motdepasse' || a.type === 'diagnostic') && a.detail}
                       {a.type === 'page' && (a.chemin ? <Link to={a.chemin}>{a.detail || a.chemin}</Link> : a.detail)}
                       {a.type === 'recherche' && (
                         <>

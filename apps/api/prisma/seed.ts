@@ -119,8 +119,30 @@ async function tags() {
   console.log(`Tags : ${TAGS.reduce((n, g) => n + g.tags.length, 0)}`);
 }
 
-interface EtapeSeed { texte: string; avertissement?: string; lien?: [string, string, string] }
-interface ProcedureSeed { cle: string; titre: string; categorie: string; resume?: string; publiee?: boolean; ordre?: number; etapes: EtapeSeed[] }
+interface EtapeSeed { texte: string; avertissement?: string; note?: string; lien?: [string, string, string]; choix?: ChoixSeed[] }
+/** Réponse d'une question : détour (`etapes`), puis suite (retour par défaut, resolu, contact). */
+interface ChoixSeed { libelle: string; signification?: string; suite?: 'retour' | 'resolu' | 'contact'; conclusion?: string; etapes?: EtapeSeed[] }
+interface ProcedureSeed {
+  cle: string; titre: string; categorie: string; resume?: string; description?: string; prompt?: string; publiee?: boolean; ordre?: number; etapes: EtapeSeed[];
+}
+
+/** Crée une ligne d'étapes (route principale ou détour d'une réponse), avec les questions et leurs détours. */
+async function creerEtapes(procedureId: string, etapes: EtapeSeed[], brancheId: string | null = null) {
+  for (const [n, e] of etapes.entries()) {
+    const etape = await prisma.etapeProcedure.create({
+      data: {
+        procedureId, brancheId, ordre: n, texte: e.texte, avertissement: e.avertissement, note: e.note,
+        guide: e.lien?.[0], ecran: e.lien?.[1], pastille: e.lien?.[2],
+      },
+    });
+    for (const [k, c] of (e.choix ?? []).entries()) {
+      const choix = await prisma.choixEtape.create({
+        data: { etapeId: etape.id, ordre: k, libelle: c.libelle, signification: c.signification, suite: c.suite ?? 'retour', conclusion: c.conclusion },
+      });
+      await creerEtapes(procedureId, c.etapes ?? [], choix.id);
+    }
+  }
+}
 
 async function procedures() {
   const fichier = join(RACINE_KIT, 'procedures.json');
@@ -129,17 +151,13 @@ async function procedures() {
   let crees = 0;
   for (const [i, p] of liste.entries()) {
     if (await prisma.procedure.findUnique({ where: { cle: p.cle } })) continue;
-    await prisma.procedure.create({
+    const cree = await prisma.procedure.create({
       data: {
-        cle: p.cle, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee ?? false, ordre: p.ordre ?? i,
-        etapes: {
-          create: p.etapes.map((e, n) => ({
-            ordre: n, texte: e.texte, avertissement: e.avertissement,
-            guide: e.lien?.[0], ecran: e.lien?.[1], pastille: e.lien?.[2],
-          })),
-        },
+        cle: p.cle, titre: p.titre, categorie: p.categorie, resume: p.resume, description: p.description, prompt: p.prompt,
+        publiee: p.publiee ?? false, ordre: p.ordre ?? i,
       },
     });
+    await creerEtapes(cree.id, p.etapes);
     crees++;
   }
   console.log(`Procédures : ${crees} créée(s), ${liste.length - crees} déjà présente(s)`);

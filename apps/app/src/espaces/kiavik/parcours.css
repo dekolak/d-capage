@@ -52,3 +52,28 @@
 .gx-question { font-weight: 700; }
 .pg-tete .pg-voix { margin-left: auto; }
 .pg-tete .pg-voix[aria-pressed='true'] { background: var(--o); color: #fff; border-color: var(--o); }
+
+/* diagnostic : questions, détours, fin */
+.gx-etape-carte.dg-detour { border-left: 4px solid color-mix(in srgb, var(--o) 45%, transparent); }
+.dg-etiquette { color: var(--od); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+.dg-coche { display: flex; align-items: center; justify-content: center; }
+.dg-choix { display: flex; flex-wrap: wrap; gap: 8px; }
+.dg-choix .btn { min-width: 76px; }
+.dg-choix .btn.choisi { background: var(--o); border-color: var(--o); color: #fff; }
+.dg-attente { text-align: center; }
+.dg-pied { grid-template-columns: auto 1fr; }
+.dg-reponses { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+.dg-reponses.n1 { grid-template-columns: 1fr; }
+.dg-reponses.n3 { grid-template-columns: 1fr 1fr 1fr; }
+.dg-reponses .btn { min-height: 56px; font-size: 17px; font-weight: 700; }
+.dg-fin { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 18px 14px; border-radius: var(--r); background: var(--carte); box-shadow: var(--ombre); margin: 12px 0; }
+.dg-fin-icone { font-size: 44px; line-height: 1; }
+.dg-fin > b { font-size: 20px; }
+.dg-fin.dg-contact { border: 2px solid color-mix(in srgb, var(--ko) 50%, transparent); }
+.dg-fin.dg-resolu { border: 2px solid color-mix(in srgb, var(--ok) 50%, transparent); }
+.dg-resume { display: grid; gap: 8px; width: 100%; text-align: left; padding-top: 10px; border-top: 1px solid var(--bord); }
+.dg-resume small { color: var(--g); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
+.dg-resume ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.dg-resume li b { color: var(--od); margin-left: 4px; }
+.dg-envoi { display: grid; gap: 8px; }
+.pg .dg-fin { box-shadow: none; background: none; }

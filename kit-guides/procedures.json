@@ -423,6 +423,99 @@
           ]
         }
       ]
+    },
+    {
+      "cle": "dx-diag-pompe",
+      "titre": "Diagnostic : la pompe à encre",
+      "categorie": "Diagnostic",
+      "resume": "L'encre n'arrive pas ? Quelques questions pour vérifier la pompe et l'arrivée d'encre.",
+      "description": "À utiliser quand l'encre n'arrive pas aux têtes, quand l'impression est vide ou pâle, ou quand on ne sait pas si la pompe à encre fonctionne (DXonJet). On vérifie d'abord que la pompe reçoit la commande, puis que l'encre circule jusqu'à la bouteille.",
+      "prompt": "Tu aides un client Kiavik à diagnostiquer la pompe à encre d'une machine DXonJet. Réponds simplement, en étapes courtes. Ne propose jamais de démonter la pompe ni l'électronique : si la pompe ne tourne pas après vérification du bouton, ou si l'encre ne circule pas, oriente vers le support Kiavik.",
+      "publiee": false,
+      "etapes": [
+        {
+          "texte": "Préparation — Allumer la machine et ouvrir le logiciel DXonJet."
+        },
+        {
+          "texte": "Préparation — Appuyer sur le bouton Pompe à encre.",
+          "lien": [
+            "dxonjet",
+            "dc",
+            "P.9"
+          ]
+        },
+        {
+          "texte": "Pompe — Tu entends la pompe fonctionner ?",
+          "note": "On vérifie d'abord que la pompe reçoit la commande et démarre.",
+          "choix": [
+            {
+              "libelle": "Oui",
+              "signification": "La pompe démarre : on vérifie que l'encre circule.",
+              "etapes": [
+                {
+                  "texte": "Vérifie que l'encre coule dans la bouteille."
+                },
+                {
+                  "texte": "L'encre coule dans la bouteille ?",
+                  "note": "La pompe tourne : on cherche un problème de circulation.",
+                  "choix": [
+                    {
+                      "libelle": "Oui",
+                      "signification": "Circulation d'encre correcte."
+                    },
+                    {
+                      "libelle": "Non",
+                      "signification": "La pompe tourne mais l'encre ne circule pas.",
+                      "suite": "contact",
+                      "conclusion": "La pompe tourne mais l'encre ne circule pas : tuyau pincé ou bouché, filtre encrassé ou bouteille vide. Contacter le support Kiavik si le niveau d'encre est bon."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "libelle": "Non",
+              "signification": "La pompe ne démarre pas : on vérifie la commande.",
+              "etapes": [
+                {
+                  "texte": "Vérifie que le bouton Pompe à encre est bien activé dans le logiciel.",
+                  "lien": [
+                    "dxonjet",
+                    "dc",
+                    "P.9"
+                  ]
+                },
+                {
+                  "texte": "La pompe tourne maintenant ?",
+                  "choix": [
+                    {
+                      "libelle": "Oui",
+                      "signification": "Le bouton n'était pas activé."
+                    },
+                    {
+                      "libelle": "Non",
+                      "signification": "La pompe ne démarre pas malgré la commande.",
+                      "suite": "contact",
+                      "conclusion": "La pompe ne démarre pas malgré la commande : problème d'alimentation ou de pompe. Intervention du support Kiavik nécessaire."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "texte": "Fin — Laisser l'encre arriver jusqu'aux têtes, puis arrêter la pompe."
+        },
+        {
+          "texte": "Fin — Faire un test des buses pour vérifier l'impression.",
+          "lien": [
+            "dxonjet",
+            "dc",
+            "P.5"
+          ]
+        }
+      ]
     }
   ]
 }

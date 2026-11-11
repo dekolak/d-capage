@@ -71,9 +71,15 @@ Les conseils `niveau: "a_completer"` (notes internes) ne sont envoyés qu'à l'a
 |---|---|---|
 | GET | `/procedures` (publiées ; admin : toutes) → titre, catégorie, `nbEtapes`, `liens` vers les guides | module |
 | GET | `/procedures/:id` (étapes), `/procedures/etapes/:id/photo` | module |
-| POST · PATCH · DELETE | `/admin/procedures[/:id]` `{titre, categorie?, resume?, publiee?, ordre?}` | admin |
-| POST | `/admin/procedures/:id/etapes` `{texte, avertissement?, guide?, ecran?, pastille?, controle?, solutionId?, position?}` (position : place de la nouvelle étape, 0 = en premier) | admin |
-| PATCH · DELETE | `/admin/procedures/etapes/:id` (mêmes champs, `controle` + `solutionId` = étape Oui / Non) ; POST `…/deplacer {sens: -1\|1}` ; POST · DELETE `…/photo` (multipart `photo`) | admin |
+| POST | `/procedures/:id/diagnostic` `{reponses: {idQuestion: idReponse}, message?}` → le serveur recalcule le chemin, garde le résultat, notifie les admins, webhook `diagnostic.envoye` | module |
+| POST · PATCH · DELETE | `/admin/procedures[/:id]` `{titre, categorie?, resume?, description?, prompt?, publiee?, ordre?}` | admin |
+| POST | `/admin/procedures/:id/etapes` `{texte, avertissement?, note?, guide?, ecran?, pastille?, controle?, solutionId?, position?, brancheId?}` (position : place dans la ligne, 0 = en premier ; `brancheId` : réponse dont l'étape fait partie = détour) | admin |
+| PATCH · DELETE | `/admin/procedures/etapes/:id` (mêmes champs, `controle` + `solutionId` = étape Oui / Non ; supprimer une question supprime ses réponses et détours) ; POST `…/deplacer {sens: -1\|1}` (dans sa ligne) ; POST · DELETE `…/photo` (multipart `photo`) | admin |
+| POST | `/admin/procedures/etapes/:id/choix` `{libelle}` : ajoute une réponse (l'étape devient une question) | admin |
+| PATCH · DELETE | `/admin/procedures/choix/:id` `{libelle?, signification?, suite?: retour\|etape\|resolu\|contact, etapeCibleId?, conclusion?, solutionId?, procedureCibleId?}` ; POST `…/deplacer {sens}` | admin |
+| GET · PATCH | `/admin/diagnostics[?nonLus=1]` (résultats reçus) ; `/admin/diagnostics/:id {lu}` | admin ou clé API |
+| GET | `/ia/catalogue` (procédures publiées : description, `diagnostic`, lien + prompt général) ; `/ia/procedures/:id` (arbre : route, questions, réponses, détours, notes, significations, conclusions, prompts) | admin ou clé API |
+| GET · PUT | `/ia/prompt` `{texte}` : prompt général de l'espace | admin ou clé API |
 
 ### Mot de passe oublié et notifications
 | Méthode | Route | Accès |
@@ -150,7 +156,7 @@ Retrouver un compte par n° client : `GET /api/users?numeroOdoo=C00123`.
 
 ## Webhooks (envoi vers un service externe, ex. modération IA)
 - Configurés dans Administration → *Envoi vers une API* : une ou plusieurs adresses, événements choisis.
-- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`, `aide.demandee`, `motdepasse.demande` (`{demande: {id, email?, message, espace, creeLe}, user: {id, identifiant, nom, numeroOdoo} | null}` — `user` vide pour une demande faite avec un email ; jamais le code ; recette n8n dans [ADMIN.md](ADMIN.md)).
+- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`, `aide.demandee`, `diagnostic.envoye` (`{diagnostic: {id, procedure, chemin: [{question, reponse, signification?}], fin: {type, texte, conclusion?}, texte, message}, user, ia: {promptGeneral, prompt, description, paquet}}`), `motdepasse.demande` (`{demande: {id, email?, message, espace, creeLe}, user: {id, identifiant, nom, numeroOdoo} | null}` — `user` vide pour une demande faite avec un email ; jamais le code ; recette n8n dans [ADMIN.md](ADMIN.md)).
 - `POST` JSON signé : `X-Decapage-Signature: sha256=<HMAC-SHA256(secret, corps)>`, plus `X-Decapage-Evenement` et `X-Decapage-Livraison`.
 - File d'envoi en base : rien n'est perdu au redémarrage, 6 tentatives espacées (jusqu'à 2 h), journal dans l'admin.
 - Le corps contient le texte à modérer et l'adresse pour agir (`moderation.url`). Le service répond avec une clé API :

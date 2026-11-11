@@ -513,6 +513,69 @@ describe('Parcours complet', () => {
     expect((await http.get(`/api/procedures/${p.id}`).set(P)).status).toBe(404);
   });
 
+  it('diagnostic : questions, détours, retour sur la route, envoi du résultat, catalogue et export pour l\'IA', async () => {
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'diagnostic' })).body.cle;
+    await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `dia-${id}`, motDePasse: 'motdepasse1', modules: ['procedures-kiavik'] }).expect(201);
+    const tc = (await http.post('/api/auth/connexion').send({ identifiant: `dia-${id}`, motDePasse: 'motdepasse1' })).body.jeton;
+    const C = { ...auth(tc), 'X-Espace': 'kiavik' };
+    const { version } = (await http.get('/api/conditions?espace=kiavik').set(C)).body;
+    await http.post('/api/moi/conditions').set(C).send({ version }).expect(201);
+    const A = auth(admin);
+
+    // route : 1, ❓ pompe (Non → détour « bouton » puis fin contact ; Oui → retour), 2
+    const p = (await http.post('/api/admin/procedures').set(A).send({ titre: `Diag ${id}`, categorie: 'Diagnostic', description: 'Pompe à encre' })).body;
+    await http.post(`/api/admin/procedures/${p.id}/etapes`).set(A).send({ texte: 'Allumer' }).expect(201);
+    await http.post(`/api/admin/procedures/${p.id}/etapes`).set(A).send({ texte: 'Tester les buses' }).expect(201);
+    let d = (await http.post(`/api/admin/procedures/${p.id}/etapes`).set(A).send({ texte: 'Pompe — Tu entends la pompe ?', position: 1, note: 'commande ?' })).body;
+    const q = d.etapes.find((e: any) => e.texte.startsWith('Pompe'));
+    expect(d.etapes.filter((e: any) => !e.brancheId).map((e: any) => e.texte)).toEqual(['Allumer', 'Pompe — Tu entends la pompe ?', 'Tester les buses']);
+    await http.post(`/api/admin/procedures/etapes/${q.id}/choix`).set(A).send({ libelle: 'Oui' }).expect(201);
+    d = (await http.post(`/api/admin/procedures/etapes/${q.id}/choix`).set(A).send({ libelle: 'Non' })).body;
+    const [oui, non] = d.etapes.find((e: any) => e.id === q.id).choix;
+    d = (await http.post(`/api/admin/procedures/${p.id}/etapes`).set(A).send({ texte: 'Vérifier le bouton Pompe', brancheId: non.id })).body;
+    expect(d.etapes.find((e: any) => e.brancheId === non.id).ordre).toBe(0);
+    expect((await http.patch(`/api/admin/procedures/choix/${non.id}`).set(A).send({ suite: 'nimporte' })).status).toBe(400);
+    expect((await http.patch(`/api/admin/procedures/choix/${non.id}`).set(A).send({ suite: 'etape', etapeCibleId: d.etapes.find((e: any) => e.brancheId).id })).status).toBe(400);
+    await http.patch(`/api/admin/procedures/choix/${non.id}`).set(A).send({ suite: 'contact', conclusion: 'Panne de pompe', signification: 'pas de commande' }).expect(200);
+    await http.patch(`/api/admin/procedures/${p.id}`).set(A).send({ publiee: true, prompt: 'Sois bref' }).expect(200);
+
+    // le client voit les questions, sans les notes ni les significations
+    const lu = (await http.get(`/api/procedures/${p.id}`).set(C)).body;
+    const qc = lu.etapes.find((e: any) => e.id === q.id);
+    expect(qc.choix.map((c: any) => c.libelle)).toEqual(['Oui', 'Non']);
+    expect(qc.note).toBeUndefined();
+    expect(qc.choix[1].signification).toBeUndefined();
+    expect(lu.prompt).toBeUndefined();
+
+    // envoi : chemin recalculé par le serveur
+    expect((await http.post(`/api/procedures/${p.id}/diagnostic`).set(C).send({ reponses: {} })).status).toBe(400);
+    const env = (await http.post(`/api/procedures/${p.id}/diagnostic`).set(C).send({ reponses: { [q.id]: non.id }, message: 'aide' })).body;
+    expect(env.texte).toBe('Tu entends la pompe ? : Non\n→ À contacter (problème non résolu) : Panne de pompe');
+    const recus = (await http.get('/api/admin/diagnostics?nonLus=1').set('X-Api-Key', cle)).body;
+    const r = recus.diagnostics.find((x: any) => x.id === env.id);
+    expect(r).toMatchObject({ message: 'aide', resultat: { fin: { type: 'contact' }, chemin: [{ question: 'Tu entends la pompe ?', reponse: 'Non', signification: 'pas de commande' }] } });
+    await http.patch(`/api/admin/diagnostics/${env.id}`).set(A).send({ lu: true }).expect(200);
+    expect((await http.get('/api/admin/diagnostics').set(C)).status).toBe(403);
+    const oui1 = (await http.post(`/api/procedures/${p.id}/diagnostic`).set(C).send({ reponses: { [q.id]: oui.id } })).body;
+    expect(oui1.texte).toBe('Tu entends la pompe ? : Oui\n→ Parcours terminé');
+
+    // IA : prompt général, catalogue, export de l'arbre (clé API)
+    await http.put('/api/ia/prompt').set(A).send({ texte: 'Tu es l\'assistant Kiavik.' }).expect(200);
+    const cat = (await http.get('/api/ia/catalogue').set('X-Api-Key', cle)).body;
+    expect(cat.promptGeneral).toBe('Tu es l\'assistant Kiavik.');
+    expect(cat.procedures.find((x: any) => x.id === p.id)).toMatchObject({ description: 'Pompe à encre', diagnostic: true });
+    const ex = (await http.get(`/api/ia/procedures/${p.id}`).set('X-Api-Key', cle)).body;
+    expect(ex.prompt).toBe('Sois bref');
+    expect(ex.route[1]).toMatchObject({ question: true, note: 'commande ?', reponses: [{ libelle: 'Oui', suite: 'retour' }, { libelle: 'Non', suite: 'contact', detour: [{ texte: 'Vérifier le bouton Pompe' }] }] });
+    expect((await http.get('/api/ia/catalogue').set(C)).status).toBe(403);
+    await http.put('/api/ia/prompt').set(A).send({ texte: '' }).expect(200);
+
+    // supprimer la question supprime ses réponses et leurs détours
+    d = (await http.delete(`/api/admin/procedures/etapes/${q.id}`).set(A)).body;
+    expect(d.etapes.map((e: any) => e.texte)).toEqual(['Allumer', 'Tester les buses']);
+    await http.delete(`/api/admin/procedures/${p.id}`).set(A).expect(200);
+  });
+
   it('langue du compte : choisie par le client, par l\'admin ou à la création (clé API)', async () => {
     const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'langue' })).body.cle;
     const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `lea-${id}`, motDePasse: 'motdepasse1', langue: 'en' })).body;

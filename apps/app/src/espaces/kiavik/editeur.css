@@ -1,0 +1,75 @@
+/* Éditeur de procédure (admin) : schéma à gauche, élément choisi à droite sur PC */
+main:has(.ed) { max-width: 1440px; }
+.ed-haut { display: grid; gap: 12px; margin-bottom: 12px; }
+.ed-col { display: grid; gap: 12px; align-content: start; }
+.ed-plan { display: grid; gap: 12px; align-items: start; }
+@media (min-width: 980px) {
+  .ed-haut { grid-template-columns: minmax(0, 1.3fr) minmax(340px, 1fr); }
+  .ed-plan { grid-template-columns: minmax(0, 1.3fr) minmax(340px, 1fr); }
+  .ed-panneau { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+}
+.ed-badge { margin-left: 10px; vertical-align: middle; }
+.ed-manque { margin-left: 6px; color: var(--g2); font-style: italic; }
+.ed-ia { display: grid; gap: 10px; }
+.ed-ia code { font-size: 12px; }
+.ed-resume-ia { padding: 10px; border-radius: var(--r-sm); background: var(--fond); color: var(--g); font-size: 14px; white-space: pre-wrap; }
+.ed-champ { display: grid; gap: 6px; font-weight: 600; font-size: 14px; }
+
+/* schéma */
+.ed-schema { overflow-x: auto; }
+.ed-schema h4 { margin-top: 0; }
+.ed-alertes { list-style: none; margin: 0 0 10px; padding: 8px 10px; border-radius: var(--r-sm); background: #fdecea; display: grid; gap: 4px; }
+.ed-alertes .btn-lien { color: #8a1c1c; font-weight: 500; text-decoration: none; text-align: left; }
+.ed-ligne { list-style: none; margin: 0; padding: 0 0 0 14px; position: relative; display: grid; gap: 2px; }
+.ed-ligne::before { content: ''; position: absolute; left: 27px; top: 0; bottom: 0; width: 3px; border-radius: 2px; background: var(--o); opacity: 0.35; }
+.ed-ligne.detour { padding-left: 6px; }
+.ed-ligne.detour::before { left: 19px; background: currentColor; opacity: 0.3; }
+.ed-li { position: relative; display: grid; gap: 4px; }
+.ed-partie { margin: 8px 0 2px 40px; color: var(--od); font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+.ed-noeud { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px 6px 0; background: none; border: 0; border-radius: 10px; cursor: pointer; text-align: left; color: var(--t); font: inherit; }
+.ed-noeud:hover { background: color-mix(in srgb, var(--o) 6%, transparent); }
+.ed-noeud.sel { background: color-mix(in srgb, var(--o) 14%, transparent); outline: 2px solid var(--o); }
+.ed-pastille { flex: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--carte); border: 2px solid var(--o); color: var(--od); font-weight: 800; font-size: 13px; z-index: 1; }
+.ed-noeud.q .ed-pastille { border-radius: 6px; transform: rotate(45deg); width: 24px; height: 24px; margin: 3px; background: var(--o); color: #fff; }
+.ed-noeud.q .ed-pastille { font-size: 0; }
+.ed-noeud.q .ed-pastille::after { content: '?'; font-size: 14px; transform: rotate(-45deg); }
+.ed-noeud.q .ed-texte { font-weight: 700; }
+.ed-texte { flex: 1; min-width: 0; font-size: 14px; }
+.ed-icones { flex: none; display: flex; gap: 3px; font-size: 13px; opacity: 0.8; }
+.ed-branches { display: grid; gap: 8px; margin: 2px 0 8px 40px; }
+.ed-branche { border-left: 3px solid currentColor; border-radius: 0 10px 10px 0; padding: 4px 0 6px 8px; background: color-mix(in srgb, currentColor 5%, transparent); }
+.ed-branche.c0 { color: #1f8a44; } .ed-branche.c1 { color: #d62828; } .ed-branche.c2 { color: #7b4bd1; } .ed-branche.c3 { color: #c77700; }
+.ed-branche .ed-noeud, .ed-branche .ed-partie { color: var(--t); }
+.ed-reponse { background: none; border: 0; padding: 2px 6px; border-radius: 8px; font: inherit; font-weight: 800; color: inherit; cursor: pointer; }
+.ed-reponse.sel, .ed-reponse:hover { background: color-mix(in srgb, currentColor 14%, transparent); }
+.ed-suite { display: inline-block; margin: 4px 0 0 6px; padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; background: var(--carte); font: inherit; font-size: 12px; font-weight: 700; color: inherit; cursor: pointer; }
+.ed-suite.s-resolu { color: var(--ok); } .ed-suite.s-contact { color: var(--ko); }
+.ed-ajout-choix { margin-left: 4px; }
+.ed-ajout-form { display: flex; gap: 6px; flex-wrap: wrap; }
+.ed-ajout-form input { flex: 1; min-width: 160px; }
+.ed-plus { list-style: none; height: 14px; position: relative; }
+.ed-plus-rond { position: absolute; left: 7px; top: -4px; width: 22px; height: 22px; border-radius: 50%; border: 1px dashed var(--bord-fort); background: var(--carte); color: var(--g); font-weight: 800; line-height: 1; cursor: pointer; opacity: 0; transition: opacity 0.15s; z-index: 2; }
+.ed-ligne.detour > .ed-plus .ed-plus-rond { left: -1px; }
+.ed-li:hover + .ed-plus .ed-plus-rond, .ed-plus:hover .ed-plus-rond, .ed-plus-rond:focus-visible { opacity: 1; }
+.ed-plus:last-child { height: auto; }
+.ed-plus:last-child .ed-plus-rond { position: static; opacity: 1; margin-left: 7px; }
+.ed-plus .btn-lien { position: static; margin-left: 4px; }
+@media (hover: none) { .ed-plus-rond { opacity: 0.7; } }
+.ed-inserer { list-style: none; margin: 4px 0 4px 36px; }
+.ed-terminus { margin: 6px 0 0 18px; font-weight: 800; color: var(--g); font-size: 13px; }
+
+/* panneau */
+.ed-fiche { display: grid; gap: 10px; }
+.ed-liste-choix { display: grid; gap: 6px; padding-top: 8px; border-top: 1px solid var(--bord); }
+.ed-choix-ligne { display: flex; justify-content: space-between; gap: 8px; padding: 10px 12px; border-radius: var(--r-sm); border: 1px solid var(--bord); background: var(--carte); cursor: pointer; font: inherit; text-align: left; }
+.ed-choix-ligne:hover { border-color: var(--o); }
+.ed-aide ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.ed-liens { margin-top: 14px; }
+
+/* diagnostics reçus */
+.dg-recu { display: grid; gap: 8px; justify-items: start; border-left: 4px solid var(--o); }
+.dg-recu.lu { border-left-color: var(--bord); opacity: 0.8; }
+.dg-recu .gx-etape-tete { width: 100%; }
+.dg-texte { margin: 0; white-space: pre-wrap; font: inherit; font-size: 14px; background: var(--fond); padding: 10px; border-radius: var(--r-sm); width: 100%; box-sizing: border-box; }
+.dg-message { margin: 0; font-style: italic; }
+.ed-ligne:not(:has(> .ed-li))::before { display: none; }

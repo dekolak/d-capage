@@ -44,13 +44,30 @@ Administration → **💬 Messages**.
 Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procédures → « Gérer les procédures »).
 - **Créer** : un titre, puis ajouter les étapes une par une (texte, avertissement facultatif, photo prise avec le téléphone).
 - **Lier un bouton** : sur une étape, choisir le logiciel, l'écran puis le bouton. Le client voit « 👆 Voir le bouton » dans l'étape (la capture s'ouvre par-dessus la liste, bouton entouré), le bouton est aussi montré dans le **parcours guidé** (une étape à la fois, plein écran), et « 📋 Voir la procédure » quand il touche ce bouton dans le guide.
-- **Insérer une étape** : « + Insérer une étape ici » entre deux étapes (sinon « + Ajouter l'étape » en bas l'ajoute à la fin).
-- **Étape de contrôle** : cocher « Étape de contrôle » et écrire une question (ex. « Les buses sont propres ? »). Le client répond **Oui** (l'étape est cochée) ou **Non** : on lui affiche alors l'astuce choisie dans « Si Non, proposer l'astuce » (ou « Corrigez le problème avant de continuer »).
+- **L'écran de modification** (pensé pour le PC, utilisable sur téléphone) : à gauche le **schéma**, à droite l'élément choisi. Cliquez sur une étape, une question ou une réponse pour la modifier. « **+** » (au survol, entre deux étapes) insère une étape à cet endroit.
+- **Contrôle Oui / Non simple** : cocher « Contrôle Oui / Non simple » sur une étape. Le client répond **Oui** (l'étape est cochée) ou **Non** : on lui affiche alors l'astuce choisie (ou « Corrigez le problème avant de continuer »).
 - Dans le **parcours guidé**, le client peut faire lire les étapes à voix haute (🔊) ; l'écran reste allumé pendant le parcours.
 - **Ordre** : flèches ↑ ↓. **Publier** : case en haut (brouillon = visible seulement par l'admin).
 - **Parties** : écrire une étape « **Montage — Vérifier la courroie** » la range sous le titre « Montage » (utile pour les longues check-lists).
 - Les clients doivent avoir le module **Procédures** (case à cocher sur leur compte).
-- Au départ : la check-list **Mise en route et nettoyage de la machine** (v1 de Teddy, 26 étapes en 8 parties), 2 procédures FlexiPRINT publiées (reprises du prototype) et 4 brouillons DXonJet à compléter.
+- Au départ : le brouillon **Diagnostic : la pompe à encre** (exemple de diagnostic, voir ci-dessous), la check-list **Mise en route et nettoyage de la machine** (v1 de Teddy, 26 étapes en 8 parties), 2 procédures FlexiPRINT publiées (reprises du prototype) et 4 brouillons DXonJet à compléter.
+
+## Kiavik : diagnostics (questions et détours)
+Un diagnostic est une procédure avec des **questions** : la suite dépend de la réponse du client.
+- **Route principale** : les étapes numérotées. Une **question** (étape → « ❓ Transformer en question ») a 2 à 4 **réponses** (Oui / Non par défaut, à renommer ; « + réponse » pour en ajouter).
+- Chaque réponse ouvre un **détour** : ses propres étapes (« + étape dans ce détour » dans le schéma), qui peuvent contenir une autre question.
+- **Ensuite** (sur la réponse) : **↩ revenir sur la route** après la question (par défaut), **↪ aller à une étape** de la route principale, **✅ fin : problème résolu** ou **📞 fin : contacter Kiavik**, avec une **conclusion** montrée au client (cause probable, que faire). Une réponse peut aussi proposer une astuce ou une autre procédure.
+- Le schéma signale les oublis (réponse unique, saut sans étape, fin sans conclusion, retour en arrière qui peut faire une boucle).
+- Le client suit le bon chemin dans la liste et dans le parcours guidé ; « Vérification » indique qu'il est dans un détour. À la fin, il voit ses réponses et peut **📤 envoyer le résultat à Kiavik** (avec un message) : vous recevez une **notification**, le résultat est dans Administration → Procédures → **🩺 Diagnostics reçus**, et il part vers n8n (webhook **`diagnostic.envoye`**).
+
+### Préparer l'IA
+Rien n'est envoyé à une IA par l'app : tout passe par n8n, où vous choisissez l'IA.
+- **Description** de chaque procédure : à quoi elle sert, quand l'utiliser, symptômes. Le **catalogue** des descriptions (`GET /api/ia/catalogue`, clé API) permet à une IA de proposer la bonne procédure.
+- **Notes** (sur les étapes et questions), **significations** (sur les réponses), **conclusions** (sur les fins) : jamais montrées au client, elles expliquent l'arbre à l'IA.
+- **Prompt général** (Administration → Procédures, en bas) et **prompt de la procédure** (bloc 🤖 IA) : les consignes données à l'IA ; celui de la procédure complète le général.
+- **Résumé automatique** : prévu pour plus tard (généré par l'IA, signalé « à refaire » après une modification).
+- **⬇ Exporter l'arbre** : le JSON que lit l'IA (`GET /api/ia/procedures/:id`).
+- Le webhook `diagnostic.envoye` contient le résultat (`question : réponse`) et un **paquet** tout prêt pour l'IA (prompts + description + résultat + message). À mentionner dans les conditions d'utilisation avant d'envoyer des réponses de clients à une IA.
 
 ## Kiavik : astuces & solutions
 Administration → **💡 Astuces & solutions** (espace Kiavik), ou depuis la page Procédures.
