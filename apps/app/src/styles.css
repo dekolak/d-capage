@@ -472,5 +472,5 @@ input[type='datetime-local'], input[type='number'] { width: 100%; min-height: 48
 .mdp-demande.traitee { opacity: 0.6; }
 .mdp-message { margin: 0; font-style: italic; }
 .mdp-code-admin { display: grid; justify-items: center; gap: 4px; padding: 12px; border-radius: 12px; background: var(--o-doux); }
-.mdp-code-admin b { font-size: 34px; letter-spacing: 0.12em; font-variant-numeric: tabular-nums; }
+.mdp-code-admin > b { font-size: 34px; letter-spacing: 0.12em; font-variant-numeric: tabular-nums; }
 .badge-rouge { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--ko); color: #fff; font-size: 12px; font-weight: 700; text-align: center; margin-left: 6px; }

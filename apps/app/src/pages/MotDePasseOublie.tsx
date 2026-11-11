@@ -30,6 +30,10 @@ export default function MotDePasseOublie({ identifiantInitial, onRetour }: { ide
       setEnvoi(false);
     }
   };
+  const versCode = () => {
+    if (identifiant.includes('@')) setIdentifiant('');
+    setEtape('code');
+  };
   const valider = async (e: FormEvent) => {
     e.preventDefault();
     setEnvoi(true);
@@ -52,7 +56,7 @@ export default function MotDePasseOublie({ identifiantInitial, onRetour }: { ide
         <form onSubmit={demander} className="form">
           <p className="muted petit">{t('mdp.explication', { societe: espace.nom })}</p>
           <label>
-            {t('connexion.identifiant')}
+            {t('mdp.identifiantOuEmail')}
             <input autoComplete="username" autoCapitalize="none" value={identifiant} onChange={(e) => setIdentifiant(e.target.value)} required />
           </label>
           <label>
@@ -61,19 +65,19 @@ export default function MotDePasseOublie({ identifiantInitial, onRetour }: { ide
           </label>
           {erreur && <div className="alerte">{erreur}</div>}
           <button className="btn prim large" disabled={envoi || !identifiant.trim()}>{envoi ? t('commun.envoi') : t('mdp.demander')}</button>
-          <button type="button" className="btn-lien" onClick={() => setEtape('code')}>{t('mdp.dejaCode')}</button>
+          <button type="button" className="btn-lien" onClick={versCode}>{t('mdp.dejaCode')}</button>
         </form>
       )}
       {etape === 'envoyee' && (
         <div className="form">
           <div className="succes">{t('mdp.envoyee', { societe: espace.nom })}</div>
-          <button type="button" className="btn prim large" onClick={() => setEtape('code')}>{t('mdp.recuCode')}</button>
+          <button type="button" className="btn prim large" onClick={versCode}>{t('mdp.recuCode')}</button>
         </div>
       )}
       {etape === 'code' && (
         <form onSubmit={valider} className="form">
           <label>
-            {t('connexion.identifiant')}
+            {t('mdp.identifiantCode')}
             <input autoComplete="username" autoCapitalize="none" value={identifiant} onChange={(e) => setIdentifiant(e.target.value)} required />
           </label>
           <label>
