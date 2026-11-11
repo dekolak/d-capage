@@ -686,4 +686,30 @@ describe('Parcours complet', () => {
     expect(typeof (await http.get('/api/push/cle').set(auth(admin))).body.cle).toBe('string');
     expect((await http.get('/api/push/cle').set(auth(alice))).status).toBe(403);
   });
+
+  it('mot de passe oublié avec l\'email : n8n retrouve le compte et génère le code avec une clé API', async () => {
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'n8n' })).body.cle;
+    const ident = `noa-${id}`;
+    await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: ident, motDePasse: 'ancienmotdepasse', nom: 'Noa', numeroOdoo: `C-${id}` }).expect(201);
+    const email = `Noa.${id}@Exemple.fr`;
+    expect((await http.post('/api/auth/mot-de-passe-oublie').set('X-Espace', 'kiavik').send({ identifiant: email, message: 'oublié mon identifiant' })).body).toEqual({ ok: true });
+
+    // n8n (clé API) : liste des demandes → demande sans compte, avec l'email
+    const liste = (await http.get('/api/admin/mots-de-passe').set('X-Api-Key', cle)).body;
+    const d = liste.demandes.find((x: any) => x.email === email.toLowerCase());
+    expect(d).toMatchObject({ statut: 'EN_ATTENTE', user: null, message: 'oublié mon identifiant' });
+    // il faut indiquer le compte retrouvé dans Odoo
+    expect((await http.post(`/api/admin/mots-de-passe/${d.id}/code`).set('X-Api-Key', cle).send({})).status).toBe(400);
+    expect((await http.post(`/api/admin/mots-de-passe/${d.id}/code`).set('X-Api-Key', cle).send({ identifiant: `zz-${id}` })).status).toBe(404);
+    const trouve = (await http.get(`/api/users?numeroOdoo=C-${id}`).set('X-Api-Key', cle)).body[0];
+    const r = (await http.post(`/api/admin/mots-de-passe/${d.id}/code`).set('X-Api-Key', cle).send({ identifiant: trouve.identifiant })).body;
+    expect(r).toMatchObject({ identifiant: ident, nom: 'Noa' });
+    expect(r.code).toMatch(/^\d{6}$/);
+    // le client saisit son identifiant (indiqué dans l'email) et le code
+    expect((await http.post('/api/auth/reinitialiser').send({ identifiant: ident, code: r.code, nouveau: 'nouveaumotdepasse' })).body.jeton).toBeTruthy();
+    const apres = (await http.get('/api/admin/mots-de-passe').set(auth(admin))).body.demandes.find((x: any) => x.id === d.id);
+    expect(apres).toMatchObject({ statut: 'UTILISEE', user: { identifiant: ident } });
+    // la clé API ne peut toujours pas accéder aux autres routes d'administration
+    expect((await http.get('/api/admin/fiches').set('X-Api-Key', cle)).status).toBe(403);
+  });
 });

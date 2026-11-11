@@ -63,7 +63,7 @@ En étant connecté en admin :
 - Les corrections sont gardées à part : une mise à jour de l'app ne les efface pas. Déplacer une pastille ou créer une animation reste à faire dans les fichiers du projet.
 
 ## Mot de passe oublié (sans email)
-1. Le client touche **« Mot de passe oublié ? »** sur l'écran de connexion, tape son identifiant (et un message facultatif : nom, entreprise…).
+1. Le client touche **« Mot de passe oublié ? »** sur l'écran de connexion, tape son identifiant — **ou son email** s'il l'a oublié aussi — et un message facultatif.
 2. Vous êtes prévenu : **notification sur votre téléphone** et compteur rouge sur Administration → **🔐 Mots de passe oubliés**.
 3. Vérifiez que c'est bien votre client (appel, numéro connu), touchez **🔑 Générer le code** : un code à 6 chiffres, **valable 1 heure**, une seule fois, 5 essais au plus. **Envoyer (SMS, WhatsApp…)** prépare le message avec le code.
 4. Le client choisit « J'ai reçu mon code », saisit le code et son nouveau mot de passe : il est connecté directement. Vous ne connaissez jamais son mot de passe.
@@ -72,8 +72,17 @@ En étant connecté en admin :
 ### Notifications sur votre téléphone
 Administration → **🔔 Notifications sur ce téléphone → Activer** (une fois par téléphone ; une notification d'essai confirme). Sur **iPhone**, ajoutez d'abord l'app à l'écran d'accueil (Partager → Sur l'écran d'accueil, iOS 16.4 ou plus) et ouvrez-la depuis l'icône. Les notifications vont à tous les téléphones des admins qui les ont activées.
 
-### Plus tard avec n8n
-Chaque demande envoie aussi le webhook **`motdepasse.demande`** (identifiant, nom, n° Odoo, message ; **jamais le code**) : à abonner dans Administration → Envoi vers une API pour, par exemple, prévenir sur WhatsApp ou retrouver le client dans Odoo.
+- **Demande avec un email** : l'app ne connaît pas les emails (ils sont dans Odoo). La demande s'affiche « ✉️ email » : n8n s'en charge (ci-dessous), sinon retrouvez le compte et tapez son **identifiant** avant de générer le code ; le message à envoyer contient l'identifiant et le code.
+
+### Automatiser l'email avec n8n
+Chaque demande envoie le webhook **`motdepasse.demande`** (jamais le code). Dans n8n, avec une **clé API** de l'app (Administration → Clés API) et le serveur SMTP de n8n :
+1. **Webhook** reçu (abonné dans Administration → Envoi vers une API, événement `motdepasse.demande`).
+2. **Retrouver l'email du client dans Odoo** :
+   - demande avec identifiant (`user` rempli) : chercher le contact par `user.numeroOdoo` ;
+   - demande avec email (`user` vide, `demande.email`) : chercher le contact Odoo **par cet email** ; s'il n'existe pas, s'arrêter (la demande reste pour l'admin). Puis retrouver le compte de l'app : `GET /api/users?numeroOdoo=<n° du contact>` (clé API).
+3. **Générer le code** : `POST /api/admin/mots-de-passe/<demande.id>/code` (en-tête `X-Api-Key`), corps `{}` ou `{"identifiant": "<identifiant trouvé>"}` pour une demande par email → `{code, expire, identifiant, nom}`.
+4. **Envoyer l'email à l'adresse enregistrée dans Odoo** (jamais à une adresse tapée sans vérification) : identifiant, code, heure d'expiration, « Mot de passe oublié ? → J'ai déjà un code ».
+La demande passe alors en « Code donné » dans votre liste.
 
 ## Activité d'un client
 Administration → Comptes → toucher le client → **Voir son activité** (connexions, pages consultées, recherches).

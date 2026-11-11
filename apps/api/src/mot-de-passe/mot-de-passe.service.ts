@@ -12,9 +12,10 @@ const MAX_ESSAIS = 5;
 const ERREUR_CODE = 'Code incorrect ou expiré';
 
 /**
- * Mot de passe oublié, sans email : le client demande → notification aux admins (+ webhook pour n8n) →
- * l'admin génère un code (6 chiffres, 1 h, usage unique, 5 essais) et le donne au client → le client choisit son mot de passe.
- * Le code n'est stocké que haché et n'est jamais envoyé à un webhook.
+ * Mot de passe oublié, sans serveur email dans l'app : le client demande (identifiant, ou email s'il l'a oublié aussi)
+ * → notification aux admins + webhook `motdepasse.demande` (n8n) → un code est généré (6 chiffres, 1 h, usage unique, 5 essais)
+ * par l'admin, ou par n8n avec une clé API qui l'envoie par email → le client choisit son mot de passe.
+ * Le code n'est stocké que haché et n'est jamais envoyé dans un webhook.
  */
 @Injectable()
 export class MotDePasseService {
@@ -27,8 +28,9 @@ export class MotDePasseService {
   ) {}
 
   /** Demande d'un client. Même réponse dans tous les cas (ne révèle pas si l'identifiant existe). */
-  async demander(identifiant: string, message: string | undefined, espace: string) {
-    const user = await this.prisma.user.findUnique({ where: { identifiant: identifiant.trim().toLowerCase() } });
+  async demander(saisie: string, message: string | undefined, espace: string) {
+    if (saisie.includes('@')) return this.demanderParEmail(saisie.trim().toLowerCase(), message, espace);
+    const user = await this.prisma.user.findUnique({ where: { identifiant: saisie.trim().toLowerCase() } });
     if (!user?.actif) return;
     const recentes = await this.prisma.demandeMotDePasse.count({ where: { userId: user.id, createdAt: { gte: new Date(Date.now() - 3600_000) } } });
     if (recentes >= MAX_DEMANDES_HEURE) return;
@@ -44,9 +46,22 @@ export class MotDePasseService {
     });
   }
 
+  /**
+   * Demande faite avec un email : l'app ne connaît pas les emails des clients (ils sont dans Odoo).
+   * La demande est gardée sans compte ; n8n retrouve le client dans Odoo, ou l'admin indique l'identifiant.
+   */
+  private async demanderParEmail(email: string, message: string | undefined, espace: string) {
+    const recentes = await this.prisma.demandeMotDePasse.count({ where: { email, createdAt: { gte: new Date(Date.now() - 3600_000) } } });
+    if (recentes >= MAX_DEMANDES_HEURE) return;
+    await this.prisma.demandeMotDePasse.updateMany({ where: { email, statut: 'EN_ATTENTE' }, data: { statut: 'ANNULEE', traiteeLe: new Date() } });
+    const d = await this.prisma.demandeMotDePasse.create({ data: { email, message: message?.trim() || null, espace } });
+    void this.push.notifierAdmins({ titre: '🔐 Mot de passe oublié', texte: `Demande avec l'email ${email}${d.message ? ` : « ${d.message} »` : ''}`, url: '/admin/mots-de-passe' });
+    this.webhooks.emettre('motdepasse.demande', { demande: { id: d.id, email, message: d.message, espace, creeLe: d.createdAt }, user: null });
+  }
+
   /** Demandes à traiter (et les dernières traitées), pour l'admin. */
   async lister() {
-    const choix = { id: true, message: true, statut: true, codeExpire: true, essais: true, espace: true, createdAt: true, traiteeLe: true, user: { select: { id: true, identifiant: true, nom: true, numeroOdoo: true } } };
+    const choix = { id: true, email: true, message: true, statut: true, codeExpire: true, essais: true, espace: true, createdAt: true, traiteeLe: true, user: { select: { id: true, identifiant: true, nom: true, numeroOdoo: true } } };
     const [enCours, traitees] = await Promise.all([
       this.prisma.demandeMotDePasse.findMany({ where: { statut: { in: ['EN_ATTENTE', 'CODE_ENVOYE'] } }, orderBy: { createdAt: 'desc' }, select: choix }),
       this.prisma.demandeMotDePasse.findMany({ where: { statut: { in: ['UTILISEE', 'ANNULEE'] } }, orderBy: { createdAt: 'desc' }, take: 20, select: choix }),
@@ -58,15 +73,27 @@ export class MotDePasseService {
     };
   }
 
-  /** Génère le code (affiché une seule fois à l'admin). Un nouveau code remplace le précédent. */
-  async genererCode(id: string) {
+  /**
+   * Génère le code (renvoyé une seule fois, à l'admin ou à n8n). Un nouveau code remplace le précédent.
+   * Demande faite avec un email : indiquer l'identifiant du compte retrouvé (`identifiant`).
+   * Renvoie aussi l'identifiant et le nom, à mettre dans l'email au client.
+   */
+  async genererCode(id: string, identifiant?: string) {
     const d = await this.prisma.demandeMotDePasse.findUnique({ where: { id } });
     if (!d) throw new NotFoundException('Demande introuvable');
     if (d.statut === 'UTILISEE' || d.statut === 'ANNULEE') throw new BadRequestException('Demande déjà traitée');
+    let userId = d.userId;
+    if (!userId) {
+      if (!identifiant?.trim()) throw new BadRequestException('Indiquez l\'identifiant du compte de ce client');
+      const u = await this.prisma.user.findUnique({ where: { identifiant: identifiant.trim().toLowerCase() } });
+      if (!u?.actif) throw new NotFoundException('Compte introuvable ou désactivé');
+      userId = u.id;
+    }
+    const user = (await this.prisma.user.findUnique({ where: { id: userId }, select: { identifiant: true, nom: true } }))!;
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
     const codeExpire = new Date(Date.now() + VALIDITE_CODE_MIN * 60_000);
-    await this.prisma.demandeMotDePasse.update({ where: { id }, data: { statut: 'CODE_ENVOYE', codeHash: await AuthService.hasher(code), codeExpire, essais: 0 } });
-    return { code, expire: codeExpire };
+    await this.prisma.demandeMotDePasse.update({ where: { id }, data: { userId, statut: 'CODE_ENVOYE', codeHash: await AuthService.hasher(code), codeExpire, essais: 0 } });
+    return { code, expire: codeExpire, identifiant: user.identifiant, nom: user.nom };
   }
 
   async annuler(id: string) {

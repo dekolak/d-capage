@@ -75,7 +75,7 @@ docs/                       documentation
 - **Recherche** (`/recherche`, `recherche.ts`) : sur le téléphone, dans les guides du compte (titre, `mots_cles`, texte et conseil des pastilles, titre de l'écran). Sans accents, début de mot, une faute de frappe tolérée. Un résultat ouvre l'écran sur le repère (`?p=`). Plus tard : procédures et animations dans les résultats.
 
 ## Mot de passe oublié et notifications
-- Table `DemandeMotDePasse` (statut `EN_ATTENTE` → `CODE_ENVOYE` → `UTILISEE` / `ANNULEE`, code **haché** bcrypt, expiration 1 h, essais ≤ 5) ; `mot-de-passe/` (API). Demande → notification aux admins + webhook `motdepasse.demande` (n8n) ; le client saisit le code et est connecté.
+- Table `DemandeMotDePasse` (`userId` vide et `email` rempli pour une demande faite avec un email, compte retrouvé ensuite par n8n ou l'admin ; statut `EN_ATTENTE` → `CODE_ENVOYE` → `UTILISEE` / `ANNULEE`, code **haché** bcrypt, expiration 1 h, essais ≤ 5) ; `mot-de-passe/` (API). Demande → notification aux admins + webhook `motdepasse.demande` (n8n) ; le client saisit le code et est connecté.
 - Notifications : Web Push (`push/`, bibliothèque `web-push`), table `AbonnementPush` (téléphones des admins). Clés VAPID dans les variables `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`, sinon générées une fois et gardées en base (`Parametre` « vapid »). Le service worker (`public/sw.js`) affiche la notification et ouvre la bonne page.
 - App : `pages/MotDePasseOublie.tsx` (client), `pages/AdminMotsDePasse.tsx`, `lib/notifications.ts`.
 

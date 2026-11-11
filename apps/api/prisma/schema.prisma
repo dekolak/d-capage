@@ -562,8 +562,11 @@ model Activite {
 /// Mot de passe oublié : le client demande, l'admin génère un code (6 chiffres, 1 h, usage unique) et le lui donne.
 model DemandeMotDePasse {
   id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Compte concerné ; vide pour une demande faite avec un email (n8n ou l'admin retrouve le compte).
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Email tapé par le client à la place de son identifiant (vérifié par n8n dans Odoo).
+  email      String?
   message    String?
   /// EN_ATTENTE | CODE_ENVOYE | UTILISEE | ANNULEE
   statut     String    @default("EN_ATTENTE")
@@ -575,6 +578,7 @@ model DemandeMotDePasse {
   traiteeLe  DateTime?
 
   @@index([userId, createdAt])
+  @@index([email, createdAt])
   @@index([statut])
 }
 
