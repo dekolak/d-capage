@@ -112,6 +112,7 @@ Les connexions sont notées automatiquement par `POST /auth/connexion`.
 | POST · DELETE | `/admin/solutions/:id/photo` (multipart `photo`) | admin |
 
 ### Corrections des guides (admin)
+- PUT · DELETE `/admin/guides/:slug/animations/:anim/categorie` `{categorie}` : catégorie d'une animation sur l'accueil (DELETE = celle du fichier). `GET /guides` renvoie la catégorie (corrigée) de chaque animation.
 | Méthode | Route | Accès |
 |---|---|---|
 | PUT · DELETE | `/admin/guides/:slug/pastilles/:ecran/:pastille` `{titre, texte, conseil?, niveau?, mots_cles?}` | admin |

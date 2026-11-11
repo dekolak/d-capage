@@ -202,3 +202,6 @@
 .gx-controle-edit > span { flex: 1; min-width: 0; font-weight: 400; }
 .dg-badge { display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--o) 14%, var(--carte)); color: var(--od); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
 .hl-carte { display: grid; gap: 6px; justify-items: start; margin-top: 18px; }
+.cx-categorie { display: grid; gap: 6px; margin-bottom: 10px; padding: 10px; border-radius: var(--r-sm); background: var(--carte); box-shadow: var(--ombre); }
+.cx-categorie label { display: grid; gap: 4px; font-weight: 600; font-size: 14px; }
+.cx-categorie > span { display: flex; gap: 8px; }

@@ -53,6 +53,9 @@ export class CorrectionsService {
         if (!s) continue;
         const cible = s.etapes ? s.etapes[Number(etape)] : s;
         if (cible) Object.assign(cible, { cap: String(v.cap ?? '') }, marque);
+      } else if (c.type === 'animation') {
+        const a = g.animations?.find((x) => x.id === c.cle);
+        if (a && typeof v.categorie === 'string') Object.assign(a, { categorie: v.categorie }, admin ? { categorieCorrigee: true } : {});
       } else if (c.type === 'photo') {
         const [anim, cle] = morceaux;
         const ph = g.animations?.find((a) => a.id === anim)?.photos?.[cle];
@@ -109,8 +112,25 @@ export class CorrectionsService {
     return this.enregistrer(slug, 'photo', `${anim}/${cle}`, { photoCle });
   }
 
+  /** Catégorie d'une animation sur l'accueil. */
+  categorieAnimation(slug: string, anim: string, categorie: string) {
+    this.animation(slug, anim);
+    return this.enregistrer(slug, 'animation', anim, { valeur: { categorie: categorie.trim() } });
+  }
+
+  /** Catégories corrigées des animations, par guide puis animation (pour la liste des guides). */
+  async categoriesAnimations(): Promise<Record<string, Record<string, string>>> {
+    const l = await this.prisma.correctionGuide.findMany({ where: { type: 'animation' } });
+    const r: Record<string, Record<string, string>> = {};
+    for (const c of l) {
+      const v = c.valeur as { categorie?: string };
+      if (v.categorie) (r[c.guide] ??= {})[c.cle] = v.categorie;
+    }
+    return r;
+  }
+
   /** Revenir à l'original. */
-  async retirer(slug: string, type: 'pastille' | 'etape' | 'photo', cle: string) {
+  async retirer(slug: string, type: 'pastille' | 'etape' | 'photo' | 'animation', cle: string) {
     const c = await this.prisma.correctionGuide.findUnique({ where: { guide_type_cle: { guide: slug, type, cle } } });
     if (c) {
       if (c.photoCle) await this.stockage.supprimer(c.photoCle);

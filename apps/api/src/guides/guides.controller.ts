@@ -16,6 +16,9 @@ class PastilleDto {
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsIn(['astuce', 'avertissement', 'a_completer']) niveau?: 'astuce' | 'avertissement' | 'a_completer' | null;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) mots_cles?: string[];
 }
+class CategorieDto {
+  @IsString() @MinLength(2) @MaxLength(40) categorie!: string;
+}
 class SousTitreDto {
   @IsString() @MinLength(2) @MaxLength(500) cap!: string;
 }
@@ -28,9 +31,13 @@ export class GuidesController {
   /** Guides du compte (selon ses modules). */
   @Get()
   async lister(@Moi() moi: Principal) {
-    if (moi.role === Role.ADMIN) return this.guides.lister('tous');
-    const modules = await this.prisma.userModule.findMany({ where: { userId: moi.id }, select: { module: true } });
-    return this.guides.lister(modules.map((m) => m.module));
+    const modules = moi.role === Role.ADMIN ? 'tous' : (await this.prisma.userModule.findMany({ where: { userId: moi.id }, select: { module: true } })).map((m) => m.module);
+    // catégories des animations corrigées par l'admin
+    const cats = await this.corrections.categoriesAnimations();
+    return this.guides.lister(modules).map((g) => ({
+      ...g,
+      animations: g.animations.map((a) => ({ ...a, categorie: cats[g.slug]?.[a.id] ?? a.categorie })),
+    }));
   }
 
   /** Captures du kit (publiques : chargées par des balises <img>, sans jeton). */
@@ -94,6 +101,17 @@ export class AdminGuidesController {
   @UseInterceptors(FileInterceptor('photo', { limits: { fileSize: 8 * 1024 * 1024 } }))
   remplacerPhoto(@Param('slug') slug: string, @Param('anim') anim: string, @Param('photo') photo: string, @UploadedFile() f?: Express.Multer.File) {
     return this.corrections.remplacerPhoto(slug, anim, photo, f);
+  }
+
+  /** Catégorie d'une animation sur l'accueil. */
+  @Put('animations/:anim/categorie')
+  categorie(@Param('slug') slug: string, @Param('anim') anim: string, @Body() d: CategorieDto) {
+    return this.corrections.categorieAnimation(slug, anim, d.categorie);
+  }
+
+  @Delete('animations/:anim/categorie')
+  retirerCategorie(@Param('slug') slug: string, @Param('anim') anim: string) {
+    return this.corrections.retirer(slug, 'animation', anim);
   }
 
   @Delete('animations/:anim/photos/:photo')

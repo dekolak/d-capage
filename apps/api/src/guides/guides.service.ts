@@ -60,6 +60,8 @@ export interface Animation {
   id: string;
   guide: string;
   titre: string;
+  /** Catégorie sur l'accueil (Impression, Réglages…) ; modifiable par l'admin (correction). */
+  categorie?: string;
   resume?: string;
   image?: string;
   type: 'ecrans' | 'blanc';
@@ -146,7 +148,7 @@ export class GuidesService implements OnModuleInit {
       .map(({ slug, nom, nom_court, role, miniature, description, module, ecrans, animations }) => ({
         slug, nom, nomCourt: nom_court ?? nom, role: role ?? null, description, module, ecrans: ecrans.length,
         miniature: urlImage(miniature) ?? ecrans.find((e) => e.type === 'capture' && e.image)?.image ?? null,
-        animations: (animations ?? []).map(({ id, titre, resume, image, scenes }) => ({ id, titre, resume, image, nbScenes: scenes.length })),
+        animations: (animations ?? []).map(({ id, titre, categorie, resume, image, scenes }) => ({ id, titre, categorie, resume, image, nbScenes: scenes.length })),
       }));
   }
 

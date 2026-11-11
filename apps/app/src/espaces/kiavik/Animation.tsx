@@ -1,7 +1,7 @@
 import { CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
-import { EditeurScene } from './Corrections';
+import { CategorieAnimation, EditeurScene } from './Corrections';
 import { Fenetre } from './Fenetres';
 import { Animation as Anim, EtapeAnim, EtatAnim, TexteAnim, Guide, ModeBlanc, SceneBlanc, SceneEcrans, useGuide } from './guides';
 import { useVoix } from './voix';
@@ -140,6 +140,7 @@ function Lecteur({ guide, a }: { guide: Guide; a: Anim }) {
           <button type="button" className="btn petit" onClick={() => setEdition(!edition)}>{edition ? 'Fermer la modification' : '✏️ Modifier cette scène'}</button>
         </p>
       )}
+      {admin && edition && <CategorieAnimation key={a.categorie ?? ''} guide={guide} a={a} />}
       {admin && edition && <EditeurScene guide={guide} a={a} scene={tp.scene} />}
 
       <h4>{t('kiavik.anim.etapes')}</h4>
