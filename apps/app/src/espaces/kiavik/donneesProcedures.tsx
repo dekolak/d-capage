@@ -5,6 +5,8 @@ import { useAuth } from '../../lib/auth';
 export interface ResumeProcedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string;
   nbEtapes: number; textes: string[];
+  /** Procédure proposée à la fin. */
+  suivanteId: string | null;
   /** Contient des questions (diagnostic). */
   diagnostic?: boolean;
   /** Admin seulement. */
@@ -34,6 +36,8 @@ export interface Choix {
 }
 export interface Procedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string; etapes: Etape[];
+  /** Procédure proposée à la fin (« Continuer avec … ? »). */
+  suivanteId: string | null;
   /** Admin seulement (pour l'IA). */
   description?: string | null; prompt?: string | null; resumeIa?: string | null; resumeIaLe?: string | null;
 }

@@ -124,6 +124,8 @@ interface EtapeSeed { texte: string; avertissement?: string; note?: string; lien
 interface ChoixSeed { libelle: string; signification?: string; suite?: 'retour' | 'resolu' | 'contact'; conclusion?: string; etapes?: EtapeSeed[] }
 interface ProcedureSeed {
   cle: string; titre: string; categorie: string; resume?: string; description?: string; prompt?: string; publiee?: boolean; ordre?: number; etapes: EtapeSeed[];
+  /** Clé de la procédure proposée à la fin. */
+  suivante?: string;
 }
 
 /** Crée une ligne d'étapes (route principale ou détour d'une réponse), avec les questions et leurs détours. */
@@ -149,6 +151,7 @@ async function procedures() {
   if (!existsSync(fichier)) return;
   const liste: ProcedureSeed[] = JSON.parse(readFileSync(fichier, 'utf8')).procedures;
   let crees = 0;
+  const nouvelles: ProcedureSeed[] = [];
   for (const [i, p] of liste.entries()) {
     if (await prisma.procedure.findUnique({ where: { cle: p.cle } })) continue;
     const cree = await prisma.procedure.create({
@@ -159,6 +162,12 @@ async function procedures() {
     });
     await creerEtapes(cree.id, p.etapes);
     crees++;
+    nouvelles.push(p);
+  }
+  // procédure suivante : après création de toutes, seulement pour celles créées maintenant (ne touche jamais aux modifications faites dans l'app)
+  for (const p of nouvelles.filter((x) => x.suivante)) {
+    const suivante = await prisma.procedure.findUnique({ where: { cle: p.suivante! }, select: { id: true } });
+    if (suivante) await prisma.procedure.update({ where: { cle: p.cle }, data: { suivanteId: suivante.id } });
   }
   console.log(`Procédures : ${crees} créée(s), ${liste.length - crees} déjà présente(s)`);
 }

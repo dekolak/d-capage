@@ -160,7 +160,7 @@ export function ParcoursGuide({ p, av, onFermer }: { p: Procedure; av: Avancemen
         </>
       ) : (
         <div className="pg-corps">
-          <FinDiagnostic p={p} av={av}>
+          <FinDiagnostic p={p} av={av} guide>
             <button type="button" className="btn prim large" onClick={onFermer}>{t('kiavik.parcours.retourListe')}</button>
             <button type="button" className="btn" onClick={() => { av.recommencer(); setI(0); }}>{t('kiavik.procedures.recommencer')}</button>
             {n > 0 && <button type="button" className="btn-lien petit" onClick={precedent}>{t('kiavik.diagnostic.revenir')}</button>}

@@ -14,6 +14,7 @@ const ESPACE = 'kiavik';
 const clePrompt = (espace: string) => `ia.prompt:${espace}`;
 
 const arbre = {
+  suivante: { select: { id: true, titre: true } },
   etapes: {
     orderBy: { ordre: 'asc' },
     include: {
@@ -135,6 +136,7 @@ export class DiagnosticsService {
     };
     ecrire('', '');
     if (!principale.length) out.push('(aucune étape)');
+    if (p.suivante) out.push('', `Ensuite (proposé à la fin) : ➡ procédure « ${p.suivante.titre} »`);
     return out.join('\n');
   }
 

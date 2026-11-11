@@ -77,6 +77,8 @@
 .dg-resume li b { color: var(--od); margin-left: 4px; }
 .dg-envoi { display: grid; gap: 8px; }
 .pg .dg-fin { box-shadow: none; background: none; }
+.dg-suivante { display: grid; gap: 8px; justify-items: center; text-align: center; margin: 12px 0; }
+.dg-suivante .gx-question { margin: 0; }
 
 /* mes diagnostics */
 .md-carte { display: grid; gap: 6px; }
