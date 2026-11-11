@@ -14,6 +14,7 @@ const arbre = {
     orderBy: { ordre: 'asc' },
     include: {
       choix: { orderBy: { ordre: 'asc' }, include: { solution: { select: { id: true, titre: true } }, procedureCible: { select: { id: true, titre: true } } } },
+      _count: { select: { photos: true } },
     },
   },
 } satisfies Prisma.ProcedureInclude;
@@ -163,7 +164,7 @@ export class DiagnosticsService {
         ...(e.avertissement ? { avertissement: e.avertissement } : {}),
         ...(e.note ? { note: e.note } : {}),
         ...(e.guide && e.ecran ? { bouton: { guide: e.guide, ecran: e.ecran, pastille: e.pastille } } : {}),
-        ...(e.photoCle ? { photo: true } : {}),
+        ...(e._count.photos ? { photos: e._count.photos } : {}),
         ...(e.controle ? { controle: true } : {}),
         ...(e.choix.length
           ? {

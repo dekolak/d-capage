@@ -7,7 +7,8 @@ import { CaptureBouton } from './CaptureBouton';
 import { useAvancement } from './avancement';
 import { AideNon, OuiNon } from './Controle';
 import { FinDiagnostic } from './FinDiagnostic';
-import { estDiagnostic, Etape, ImageApi, lienGuide, Procedure, useSolutions } from './donneesProcedures';
+import { Galerie } from './Galerie';
+import { estDiagnostic, Etape, lienGuide, Procedure, useSolutions } from './donneesProcedures';
 import { ParcoursGuide } from './ParcoursGuide';
 import './guides.css';
 import { t } from '../../lib/i18n';
@@ -25,7 +26,6 @@ export default function ProcedureDetail() {
   const nav = useNavigate();
   const [p, setP] = useState<Procedure>();
   const [erreur, setErreur] = useState<unknown>();
-  const [grand, setGrand] = useState<string | null>(null);
   const [vue, setVue] = useState<Etape | null>(null); // « Voir le bouton » sans quitter la liste
   const [parcours, setParcours] = useState(false);
   const av = useAvancement(p, id);
@@ -106,7 +106,7 @@ export default function ProcedureDetail() {
                   </div>
                 )}
                 {astuceChoix && <LienAstuce id={astuceChoix} />}
-                {e.photo && <ImageApi chemin={e.photo} className="gx-etape-photo" onClick={() => setGrand(e.photo)} />}
+                <Galerie photos={e.photos} />
                 {lien && (
                   <button type="button" className="btn petit gx-voir" onClick={() => setVue(e)}>
                     {e.pastille ? t('kiavik.procedures.voirBoutonId', { id: e.pastille }) : t('kiavik.procedures.voirBouton')}
@@ -133,11 +133,6 @@ export default function ProcedureDetail() {
         </div>
       )}
       {parcours && <ParcoursGuide p={p} av={av} onFermer={() => setParcours(false)} />}
-      {grand && (
-        <div className="gx-plein" onClick={() => setGrand(null)}>
-          <ImageApi chemin={grand} />
-        </div>
-      )}
     </div>
   );
 }

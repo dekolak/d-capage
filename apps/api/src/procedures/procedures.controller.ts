@@ -101,11 +101,21 @@ export class ProceduresController {
     return this.procedures.lire(id, estAdmin(moi));
   }
 
-  @Get('etapes/:id/photo')
+  /** Une photo d'étape (adresse fixe : une photo n'est jamais modifiée). */
+  @Get('photos/:id')
   async photo(@Param('id') id: string, @Moi() moi: Principal, @Res() res: Response) {
-    const { flux, ext } = await this.procedures.lirePhoto(id, estAdmin(moi));
+    const { flux, ext } = await this.procedures.lirePhoto({ id }, estAdmin(moi));
     res.setHeader('Content-Type', MIME_IMAGE[ext as keyof typeof MIME_IMAGE] ?? 'application/octet-stream');
-    res.setHeader('Cache-Control', 'private, max-age=604800'); // l'adresse change à chaque nouvelle photo (?v=)
+    res.setHeader('Cache-Control', 'private, max-age=2592000');
+    flux.pipe(res);
+  }
+
+  /** Première photo d'une étape (anciennes adresses). */
+  @Get('etapes/:id/photo')
+  async premierePhoto(@Param('id') id: string, @Moi() moi: Principal, @Res() res: Response) {
+    const { flux, ext } = await this.procedures.lirePhoto({ etapeId: id }, estAdmin(moi));
+    res.setHeader('Content-Type', MIME_IMAGE[ext as keyof typeof MIME_IMAGE] ?? 'application/octet-stream');
+    res.setHeader('Cache-Control', 'private, max-age=300');
     flux.pipe(res);
   }
 }
@@ -157,16 +167,27 @@ export class AdminProceduresController {
     return this.procedures.supprimerEtape(id);
   }
 
-  /** Photo d'une étape (champ multipart « photo », compressée par le téléphone). */
+  /** Ajoute une photo à l'étape (champ multipart « photo », compressée par le téléphone ; 8 au plus). */
   @Post('etapes/:id/photo')
   @UseInterceptors(FileInterceptor('photo', { limits: { fileSize: 8 * 1024 * 1024 } }))
   photo(@Param('id') id: string, @UploadedFile() f?: Express.Multer.File) {
     return this.procedures.photo(id, f);
   }
 
+  /** Retire toutes les photos de l'étape. */
   @Delete('etapes/:id/photo')
+  retirerPhotos(@Param('id') id: string) {
+    return this.procedures.retirerPhotos(id);
+  }
+
+  @Delete('photos/:id')
   retirerPhoto(@Param('id') id: string) {
     return this.procedures.retirerPhoto(id);
+  }
+
+  @Post('photos/:id/deplacer')
+  deplacerPhoto(@Param('id') id: string, @Body() d: DeplacerDto) {
+    return this.procedures.deplacerPhoto(id, d.sens);
   }
 
   // réponses d'une question

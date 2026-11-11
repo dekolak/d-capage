@@ -17,6 +17,7 @@ import './editeur.css';
  * L'administration reste en français (pas de t()).
  */
 
+const MAX_PHOTOS = 8;
 const CATEGORIES = ['Mise en route', 'Diagnostic', 'Impression', 'Réglages', 'Entretien'];
 type Maj = (chemin: string, opts: RequestInit & { json?: unknown }) => Promise<Procedure | null>;
 type Sel = { type: 'etape' | 'choix'; id: string } | null;
@@ -119,7 +120,7 @@ function Ligne({ p, brancheId, profondeur, sel, choisir, maj }: { p: Procedure; 
                 <span className="ed-texte">{court(texte, 90)}</span>
                 <span className="ed-icones">
                   {e.controle && <span title="Contrôle Oui / Non">☑</span>}
-                  {e.photo && <span title="Photo">📷</span>}
+                  {e.photos.length > 0 && <span title={`${e.photos.length} photo${e.photos.length > 1 ? 's' : ''}`}>📷{e.photos.length > 1 ? e.photos.length : ''}</span>}
                   {e.guide && <span title="Bouton lié">👆</span>}
                   {e.avertissement && <span title="Avertissement">⚠️</span>}
                   {e.note && <span title="Note pour l'IA">📝</span>}
@@ -187,13 +188,20 @@ function EtapeEditeur({ p, e, guides, astuces, maj, choisir }: { p: Procedure; e
   const reponseParent = parent?.choix.find((c) => c.id === e.brancheId);
   const modifie = texte !== e.texte || avert !== (e.avertissement ?? '') || note !== (e.note ?? '') || lien.guide !== e.guide || lien.ecran !== e.ecran
     || lien.pastille !== e.pastille || controle !== e.controle || solutionId !== e.solutionId;
-  const photo = async (f?: File) => {
-    if (!f) return;
+  /** Ajoute les photos choisies (plusieurs possibles), une par une, dans la limite de 8. */
+  const ajouterPhotos = async (fichiers: File[]) => {
+    if (!fichiers.length) return;
     setEnvoi(true);
-    const { fichier } = await compresser(f);
-    const fd = new FormData();
-    fd.append('photo', fichier, 'photo.jpg');
-    await maj(`/admin/procedures/etapes/${e.id}/photo`, { method: 'POST', body: fd }).finally(() => setEnvoi(false));
+    try {
+      for (const f of fichiers.slice(0, Math.max(0, MAX_PHOTOS - e.photos.length))) {
+        const { fichier } = await compresser(f);
+        const fd = new FormData();
+        fd.append('photo', fichier, 'photo.jpg');
+        if (!(await maj(`/admin/procedures/etapes/${e.id}/photo`, { method: 'POST', body: fd }))) break;
+      }
+    } finally {
+      setEnvoi(false);
+    }
   };
   const enregistrer = () =>
     maj(`/admin/procedures/etapes/${e.id}`, {
@@ -246,13 +254,28 @@ function EtapeEditeur({ p, e, guides, astuces, maj, choisir }: { p: Procedure; e
           </select>
         </label>
       )}
-      <div className="gx-etape-photo-edit">
-        {e.photo && <ImageApi chemin={e.photo} className="gx-etape-photo" />}
-        <label className="btn petit">
-          {envoi ? 'Envoi…' : e.photo ? '📷 Changer la photo' : '📷 Ajouter une photo'}
-          <input type="file" accept="image/*" hidden onChange={(ev) => photo(ev.target.files?.[0])} />
-        </label>
-        {e.photo && <button type="button" className="btn petit danger" onClick={() => maj(`/admin/procedures/etapes/${e.id}/photo`, { method: 'DELETE' })}>Retirer la photo</button>}
+      <div className="ed-champ">
+        <span>Photos {e.photos.length > 0 && <small className="muted">({e.photos.length}/{MAX_PHOTOS}, la première est la principale)</small>}</span>
+        {e.photos.length > 0 && (
+          <div className="ed-photos">
+            {e.photos.map((ph, k) => (
+              <div key={ph.id} className="ed-photo">
+                <ImageApi chemin={ph.url} />
+                <span>
+                  <button type="button" className="btn petit" aria-label="Avancer la photo" disabled={k === 0} onClick={() => maj(`/admin/procedures/photos/${ph.id}/deplacer`, { method: 'POST', json: { sens: -1 } })}>←</button>
+                  <button type="button" className="btn petit" aria-label="Reculer la photo" disabled={k === e.photos.length - 1} onClick={() => maj(`/admin/procedures/photos/${ph.id}/deplacer`, { method: 'POST', json: { sens: 1 } })}>→</button>
+                  <button type="button" className="btn petit danger" aria-label="Retirer la photo" onClick={() => confirm('Retirer cette photo ?') && maj(`/admin/procedures/photos/${ph.id}`, { method: 'DELETE' })}>✕</button>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        {e.photos.length < MAX_PHOTOS && (
+          <label className="btn petit ed-ajout-photo">
+            {envoi ? 'Envoi…' : e.photos.length ? '📷 Ajouter des photos' : '📷 Ajouter une ou plusieurs photos'}
+            <input type="file" accept="image/*" multiple hidden onChange={(ev) => { ajouterPhotos([...(ev.target.files ?? [])]); ev.target.value = ''; }} />
+          </label>
+        )}
       </div>
       {modifie && (
         <button type="button" className="btn prim" disabled={texte.trim().length < 2 || (!!lien.guide && !lien.ecran)} onClick={enregistrer}>Enregistrer</button>

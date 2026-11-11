@@ -74,3 +74,9 @@ main:has(.ed) { max-width: 1440px; }
 .dg-message { margin: 0; font-style: italic; }
 .ed-ligne:not(:has(> .ed-li))::before { display: none; }
 .ed-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.ed-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.ed-photo { display: grid; gap: 4px; }
+.ed-photo img, .ed-photo .img-vide { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; background: #eee; }
+.ed-photo span { display: flex; gap: 4px; justify-content: center; }
+.ed-photo .btn { padding: 2px 8px; min-height: 0; }
+.ed-ajout-photo { justify-self: start; }

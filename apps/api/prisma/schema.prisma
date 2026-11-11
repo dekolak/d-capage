@@ -501,8 +501,6 @@ model EtapeProcedure {
   ordre         Int
   texte         String
   avertissement String?
-  photoCle      String?
-  photoMaj      DateTime?
   /// Lien vers une pastille : guide (slug), écran (id), pastille (id).
   guide         String?
   ecran         String?
@@ -520,6 +518,9 @@ model EtapeProcedure {
   choix         ChoixEtape[] @relation("Question")
   /// Réponses qui sautent vers cette étape.
   sautsVers     ChoixEtape[] @relation("Saut")
+
+  /// Photos de l'étape, dans l'ordre (la première est la principale).
+  photos PhotoEtape[]
 
   @@index([procedureId, ordre])
 }
@@ -661,4 +662,16 @@ model AbonnementPush {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
+}
+
+/// Photo d'une étape de procédure (plusieurs par étape, dans l'ordre).
+model PhotoEtape {
+  id        String         @id @default(cuid())
+  etapeId   String
+  etape     EtapeProcedure @relation(fields: [etapeId], references: [id], onDelete: Cascade)
+  ordre     Int
+  cle       String
+  createdAt DateTime       @default(now())
+
+  @@index([etapeId, ordre])
 }
