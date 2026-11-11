@@ -28,6 +28,7 @@ export class ProceduresService {
   private vue(p: ProcedureComplete, admin = true) {
     return {
       id: p.id, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee, ordre: p.ordre, updatedAt: p.updatedAt,
+      suivanteId: p.suivanteId,
       ...(admin ? { description: p.description, prompt: p.prompt, resumeIa: p.resumeIa, resumeIaLe: p.resumeIaLe } : {}),
       etapes: p.etapes.map(({ photos, procedureId: _p, note, choix, ...e }) => ({
         ...e,
@@ -89,7 +90,7 @@ export class ProceduresService {
     const copie = await this.prisma.procedure.create({
       data: {
         titre: `${p.titre} (copie)`.slice(0, 120), categorie: p.categorie, resume: p.resume, description: p.description, prompt: p.prompt,
-        publiee: false, ordre,
+        publiee: false, ordre, suivanteId: p.suivanteId,
       },
     });
     const idEtape = new Map<string, string>();
@@ -128,8 +129,12 @@ export class ProceduresService {
     return this.lire(copie.id, true);
   }
 
-  async modifier(id: string, d: Prisma.ProcedureUpdateInput) {
+  async modifier(id: string, d: Omit<Prisma.ProcedureUncheckedUpdateInput, 'suivanteId'> & { suivanteId?: string | null }) {
     await this.existe(id);
+    if (d.suivanteId) {
+      if (d.suivanteId === id) throw new BadRequestException('Une procédure ne peut pas se proposer elle-même');
+      await this.existe(d.suivanteId);
+    }
     await this.prisma.procedure.update({ where: { id }, data: d });
     return this.lire(id, true);
   }

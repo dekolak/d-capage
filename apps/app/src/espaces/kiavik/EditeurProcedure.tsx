@@ -569,6 +569,19 @@ export function AdminProcedure() {
               }} />
             <span><b>{p.publiee ? 'Publiée' : 'Brouillon'}</b><br /><span className="muted petit">{p.publiee ? 'Visible par les clients qui ont les procédures.' : 'Visible seulement par l\'admin.'}</span></span>
           </label>
+          <label className="carte form">
+            <span><b>➡ Procédure suivante</b><br /><span className="muted petit">Proposée à la fin : « Continuer avec … ? » (Oui / Non). Ex. réglage FlexiPRINT → réglage DXonJet → impression.</span></span>
+            <select value={p.suivanteId ?? ''}
+              onChange={(ev) => maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { suivanteId: ev.target.value || null } })}>
+              <option value="">Aucune</option>
+              {procedures.filter((x) => x.id !== p.id).map((x) => (
+                <option key={x.id} value={x.id}>{x.titre}{x.publiee ? '' : ' (brouillon)'}</option>
+              ))}
+            </select>
+            {p.suivanteId && !procedures.find((x) => x.id === p.suivanteId)?.publiee && procedures.length > 0 && (
+              <span className="muted petit">⚠️ La procédure suivante est en brouillon : les clients ne verront pas la question tant qu'elle n'est pas publiée.</span>
+            )}
+          </label>
           <div className="carte form">
             <label>Titre<input type="text" value={infos.titre} onChange={(e) => setInfos({ ...infos, titre: e.target.value })} /></label>
             <label>Catégorie

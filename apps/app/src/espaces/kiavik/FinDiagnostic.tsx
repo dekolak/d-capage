@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Erreur } from '../../components/Composants';
 import { envoyerOuPlusTard } from '../../lib/api';
 import { t } from '../../lib/i18n';
@@ -16,7 +16,7 @@ export function resumeReponses(av: Avancement) {
 }
 
 /** Fin d'un parcours : résultat (résolu, à contacter, terminé), conclusion, astuce ou procédure proposée, envoi du résultat. */
-export function FinDiagnostic({ p, av, children }: { p: Procedure; av: Avancement; children?: React.ReactNode }) {
+export function FinDiagnostic({ p, av, guide, children }: { p: Procedure; av: Avancement; guide?: boolean; children?: React.ReactNode }) {
   const fin = av.chemin.fin;
   const choix = fin && fin.type !== 'termine' ? fin.choix : null;
   const { liste: astuces } = useSolutions();
@@ -34,6 +34,7 @@ export function FinDiagnostic({ p, av, children }: { p: Procedure; av: Avancemen
       {type === 'termine' && !estDiagnostic(p) && <p className="muted">{t('kiavik.parcours.termineTexte', { fait: av.nbFaites, n: av.chemin.pas.length })}</p>}
       {astuce && <Link to={`/solutions/${astuce.id}`} className="btn petit">💡 {astuce.titre}</Link>}
       {autre && <Link to={`/procedures/${autre.id}`} className="btn petit">📋 {autre.titre}</Link>}
+      {type !== 'contact' && <ProcedureSuivante p={p} parcours={guide} />}
       {lignes.length > 0 && (
         <div className="dg-resume">
           <small>{t('kiavik.diagnostic.vosReponses')}</small>
@@ -46,6 +47,31 @@ export function FinDiagnostic({ p, av, children }: { p: Procedure; av: Avancemen
         </div>
       )}
       {children}
+    </div>
+  );
+}
+
+/**
+ * Fin d'une procédure qui en propose une autre (ex. réglage FlexiPRINT → réglage DXonJet → impression) :
+ * question « Continuer avec … ? ». Oui ouvre la suivante (en parcours guidé si on y était), Non ferme la question.
+ * Rien si la suivante n'est pas visible par ce compte (brouillon pour un client).
+ */
+export function ProcedureSuivante({ p, parcours }: { p: Procedure; parcours?: boolean }) {
+  const { liste: procedures } = useProcedures();
+  const nav = useNavigate();
+  const [non, setNon] = useState(false);
+  const suivante = p.suivanteId ? procedures?.find((x) => x.id === p.suivanteId) : undefined;
+  if (!suivante) return null;
+  if (non) return <p className="muted petit dg-suivante">{t('kiavik.suivante.plusTard', { titre: suivante.titre })} <Link to={`/procedures/${suivante.id}`}>{t('kiavik.suivante.ouvrir')}</Link></p>;
+  return (
+    <div className="dg-suivante carte">
+      <small>{t('kiavik.suivante.etape')}</small>
+      <p className="gx-question">{t('kiavik.suivante.question', { titre: suivante.titre })}</p>
+      {suivante.resume && <p className="muted petit">{suivante.resume}</p>}
+      <div className="dg-choix">
+        <button type="button" className="btn prim" onClick={() => nav(`/procedures/${suivante.id}`, { state: { parcours: !!parcours } })}>{t('kiavik.suivante.oui')}</button>
+        <button type="button" className="btn" onClick={() => setNon(true)}>{t('kiavik.suivante.non')}</button>
+      </div>
     </div>
   );
 }

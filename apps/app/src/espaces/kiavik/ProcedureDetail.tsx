@@ -1,12 +1,12 @@
 import { Fragment, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { CaptureBouton } from './CaptureBouton';
 import { useAvancement } from './avancement';
 import { AideNon, OuiNon } from './Controle';
-import { FinDiagnostic } from './FinDiagnostic';
+import { FinDiagnostic, ProcedureSuivante } from './FinDiagnostic';
 import { Galerie } from './Galerie';
 import { PasClair } from './PasClair';
 import { estDiagnostic, Etape, lienGuide, Procedure, useSolutions } from './donneesProcedures';
@@ -28,11 +28,18 @@ export default function ProcedureDetail() {
   const [p, setP] = useState<Procedure>();
   const [erreur, setErreur] = useState<unknown>();
   const [vue, setVue] = useState<Etape | null>(null); // « Voir le bouton » sans quitter la liste
-  const [parcours, setParcours] = useState(false);
+  const lieu = useLocation();
+  // arrivée depuis « Continuer avec … ? » à la fin d'un parcours guidé : on enchaîne directement en parcours guidé
+  const [parcours, setParcours] = useState(!!(lieu.state as { parcours?: boolean } | null)?.parcours);
   const av = useAvancement(p, id);
 
   useEffect(() => {
+    setP(undefined);
+    setErreur(undefined);
+    setVue(null);
+    setParcours(!!(lieu.state as { parcours?: boolean } | null)?.parcours);
     api<Procedure>(`/procedures/${id}`).then(setP).catch(setErreur);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (erreur) return <div className="page"><Erreur e={erreur} /><Link to="/procedures">{t('kiavik.procedures.retourListe')}</Link></div>;
@@ -122,6 +129,7 @@ export default function ProcedureDetail() {
       </ol>
       {diagnostic && !fin && <p className="muted petit dg-attente">{t('kiavik.diagnostic.repondre')}</p>}
       {diagnostic && fin && <FinDiagnostic p={p} av={av} />}
+      {!diagnostic && pas.length > 0 && fait >= pas.length && <ProcedureSuivante p={p} />}
       {commence && (
         <button type="button" className="btn petit" onClick={av.recommencer}>{t('kiavik.procedures.recommencer')}</button>
       )}

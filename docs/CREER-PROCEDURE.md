@@ -32,6 +32,7 @@ Questions (diagnostic) :
 
 Boutons du logiciel à montrer : (nom du bouton tel qu'on le voit, ex. « Pompe à encre », « Test des buses »)
 Attention / sécurité : (ce qu'il ne faut pas faire, machine éteinte…)
+Ensuite : (procédure à proposer à la fin, ex. « réglage DXonJet » puis « impression »)
 Pour l'IA (facultatif) : ce qu'elle doit savoir ou ne jamais conseiller
 ```
 
@@ -66,6 +67,7 @@ Claude ajoute la procédure à `kit-guides/procedures.json` **en brouillon** (`"
 - les **boutons liés** (`lien` : guide, écran, repère) retrouvés dans les guides ;
 - les **contrôles Oui / Non** simples (`controle`) ;
 - pour un diagnostic : les **questions**, leurs **réponses** avec la **signification**, les **détours**, la **suite** (`retour`, `resolu`, `contact`) et la **conclusion** des fins ;
+- la **procédure suivante** (`suivante` : clé d'une autre procédure), proposée à la fin par « Continuer avec … ? » ;
 - les **notes** pour l'IA et un **prompt** de procédure si vous en avez donné les consignes.
 
 Puis : pull request, tests, fusion. **Au prochain déploiement**, la procédure apparaît dans Administration → Procédures (badge « brouillon »), invisible pour les clients.
@@ -82,6 +84,7 @@ Puis : pull request, tests, fusion. **Au prochain déploiement**, la procédure 
   "description": "À quoi elle sert, quand l'utiliser, symptômes (pour l'admin et l'IA).",
   "prompt": "Consignes pour l'IA (facultatif).",
   "publiee": false,
+  "suivante": "dx-autre-procedure",
   "etapes": [
     { "texte": "Préparation — Allumer la machine." },
     { "texte": "Préparation — Appuyer sur Pompe à encre.", "lien": ["dxonjet", "dc", "P.9"], "avertissement": "…" },
@@ -99,6 +102,7 @@ Puis : pull request, tests, fusion. **Au prochain déploiement**, la procédure 
 }
 ```
 - `cle` : unique, courte (`dx-…` DXonJet, `fp-…` FlexiPRINT, `ma-…` machine).
+- `suivante` (facultatif) : clé de la procédure proposée à la fin ; réglée par le seed seulement à la création, ensuite dans l'app (« ➡ Procédure suivante »).
 - `suite` : `retour` (par défaut : on reprend après la question), `resolu`, `contact`. Les sauts vers une étape, les astuces et procédures proposées se règlent ensuite dans l'app.
 - Repères des boutons : `kit-guides/guides/*.json` (écrans `id`, `pastilles[].id`) ; dans l'app, l'admin peut afficher les codes (option « afficher les repères »).
 

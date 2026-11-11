@@ -487,6 +487,11 @@ model Procedure {
   resumeIa    String?
   resumeIaLe  DateTime?
   etapes      EtapeProcedure[]
+  /// Procédure proposée à la fin (« Continuer avec … ? ») : enchaîner des procédures (ex. réglage FlexiPRINT → DXonJet → impression).
+  suivanteId  String?
+  suivante    Procedure?         @relation("Suivante", fields: [suivanteId], references: [id], onDelete: SetNull)
+  /// Procédures qui proposent celle-ci à leur fin.
+  precedentes Procedure[]        @relation("Suivante")
   /// Réponses (choix) qui renvoient vers cette procédure.
   choixVers   ChoixEtape[]       @relation("ProcedureCible")
   diagnostics DiagnosticEnvoye[]

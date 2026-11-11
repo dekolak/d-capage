@@ -628,7 +628,20 @@ describe('Parcours complet', () => {
     expect((await http.get(`/api/procedures/etapes/${allumerCp.id}/photo`).set(A)).headers['content-type']).toBe('image/jpeg'); // ancienne adresse
     expect((await http.get(`/api${allumerCp.photo}`).set(A)).headers['content-type']).toBe('image/jpeg');
     expect((await http.post(`/api/admin/procedures/${p.id}/dupliquer`).set(C)).status).toBe(403);
+
+    // procédure suivante (« Continuer avec … ? » à la fin) : gardée à la copie, dans le résumé IA, retirée si la suivante est supprimée
+    expect((await http.patch(`/api/admin/procedures/${p.id}`).set(A).send({ suivanteId: p.id })).status).toBe(400);
+    expect((await http.patch(`/api/admin/procedures/${p.id}`).set(A).send({ suivanteId: 'inconnue' })).status).toBe(404);
+    expect((await http.patch(`/api/admin/procedures/${p.id}`).set(C).send({ suivanteId: cp.id })).status).toBe(403);
+    expect((await http.patch(`/api/admin/procedures/${p.id}`).set(A).send({ suivanteId: cp.id })).body.suivanteId).toBe(cp.id);
+    expect((await http.get(`/api/procedures/${p.id}`).set(C)).body.suivanteId).toBe(cp.id);
+    expect((await http.get(`/api/ia/procedures/${p.id}`).set('X-Api-Key', cle)).body.resumeTexte).toContain(`➡ procédure « Diag ${id} (copie) »`);
+    expect((await http.get('/api/procedures').set(A)).body.find((x: any) => x.id === p.id).suivanteId).toBe(cp.id);
+    expect((await http.post(`/api/admin/procedures/${p.id}/dupliquer`).set(A)).body.suivanteId).toBe(cp.id);
     await http.delete(`/api/admin/procedures/${cp.id}`).set(A).expect(200);
+    expect((await http.get(`/api/procedures/${p.id}`).set(A)).body.suivanteId).toBeNull();
+    for (const x of (await http.get('/api/procedures').set(A)).body.filter((x: any) => x.titre === `Diag ${id} (copie)`))
+      await http.delete(`/api/admin/procedures/${x.id}`).set(A).expect(200);
 
     // supprimer la question supprime ses réponses et leurs détours
     d = (await http.delete(`/api/admin/procedures/etapes/${q.id}`).set(A)).body;
