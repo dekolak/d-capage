@@ -10,7 +10,8 @@ Une seule app mobile (PWA), une seule base, un seul admin, **deux espaces** :
 ## Documentation
 | Document | Pour qui | Contenu |
 |---|---|---|
-| [docs/ADMIN.md](docs/ADMIN.md) | Admin | Utiliser l'administration : comptes, accès, messages, modération, conditions |
+| [docs/ADMIN.md](docs/ADMIN.md) | Admin | Utiliser l'administration : comptes, accès, messages, modération, conditions, accueil Kiavik, procédures, diagnostics, hors ligne |
+| [docs/CREER-PROCEDURE.md](docs/CREER-PROCEDURE.md) | Admin + Claude | Créer une procédure ou un diagnostic à deux : modèle de résumé, brouillon préparé par Claude, finitions dans l'app |
 | [docs/API.md](docs/API.md) | Intégrations (Odoo, IA) | Routes, clé API, webhooks, exemples |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Développement | Structure, données, espaces, machines |
 | [docs/BONNES-PRATIQUES.md](docs/BONNES-PRATIQUES.md) | Développement | Règles du projet : branches, migrations, tests, ajouter une machine / un module |
