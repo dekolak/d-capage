@@ -9,6 +9,8 @@ export interface Pastille {
   etat?: 'actif' | 'non_utilise' | 'preregle'; zone?: Zone; special?: string;
   /** Mots-clés pour la recherche (synonymes, mots du client : « bouché », « pause »…). */
   mots_cles?: string[];
+  /** Modifié dans l'app (visible par l'admin). */
+  corrige?: boolean;
 }
 export interface Ecran {
   id: string; code: string; titre: string; groupe: string; intro?: string;
@@ -44,6 +46,8 @@ export interface ResumeGuide { slug: string; nom: string; description?: string; 
 
 /** Étape d'une animation sur les écrans (format du prototype, voir kit-guides/animations.json). */
 export interface EtapeAnim {
+  /** Sous-titre modifié dans l'app (admin). */
+  corrige?: boolean;
   cur?: [number, number]; sel?: string; fx?: number; fy?: number; ring?: number; click?: number;
   go?: string; eff?: string; val?: string; hl?: number; cap?: string; d?: number;
   /** Effet « texte » : rectangle [x, y, largeur, hauteur] où la valeur `val` apparaît (valeur tapée dans une case). */
@@ -52,12 +56,12 @@ export interface EtapeAnim {
 export interface TexteAnim { zone: [number, number, number, number]; val: string }
 export interface EtatAnim { f?: string | null; j?: number; a?: number; wm?: string; t9?: number; textes?: TexteAnim[] }
 export interface SceneEcrans { titre: string; ecran: string; etat: EtatAnim; etapes: EtapeAnim[] }
-export interface SceneBlanc { titre: string; mode: string | null; cap: string }
+export interface SceneBlanc { titre: string; mode: string | null; cap: string; corrige?: boolean }
 export interface Animation extends ResumeAnimation {
   guide: string; type: 'ecrans' | 'blanc'; liens?: [string, string][];
   scenes: (SceneEcrans | SceneBlanc)[];
   /** Photos utilisables comme écran d'une scène : `ecran: "photo:<clé>"` (coordonnées en pixels de la photo). */
-  photos?: Record<string, { image: string; largeur: number; hauteur: number }>;
+  photos?: Record<string, { image: string; largeur: number; hauteur: number; corrige?: boolean }>;
 }
 
 interface Reference { largeur: number; hauteur: number }
@@ -89,6 +93,14 @@ export function chargerGuide(slug: string): Promise<Guide> {
   return p;
 }
 
+const abonnes = new Set<(g: Guide) => void>();
+
+/** Après une correction (admin) : le guide renvoyé par l'API remplace celui en mémoire, les écrans ouverts se mettent à jour. */
+export function mettreAJourGuide(g: Guide) {
+  cache.set(g.slug, Promise.resolve(g));
+  abonnes.forEach((f) => f(g));
+}
+
 export function useGuide(slug: string) {
   const [guide, setGuide] = useState<Guide>();
   const [erreur, setErreur] = useState<unknown>();
@@ -98,8 +110,11 @@ export function useGuide(slug: string) {
     chargerGuide(slug)
       .then((g) => actif && setGuide(g))
       .catch((e) => actif && setErreur(e));
+    const maj = (g: Guide) => g.slug === slug && setGuide(g);
+    abonnes.add(maj);
     return () => {
       actif = false;
+      abonnes.delete(maj);
     };
   }, [slug]);
   return { guide, erreur };

@@ -64,6 +64,8 @@
 5. L'admin coche le module sur les comptes concernés.
 
 ### Ajouter ou corriger un guide Kiavik
+Les petites corrections (textes, sous-titres, photos d'animation) se font **dans l'app** par l'admin (voir [ADMIN.md](ADMIN.md)). Une correction faite dans l'app reste prioritaire sur le fichier : si on modifie aussi le fichier, penser à « Revenir à l'original » dans l'app.
+
 1. Corriger / ajouter `kit-guides/guides/<slug>.json` (images dans `kit-guides/images/`). Pastilles en pixels de l'image. Pour la recherche, ajouter à une pastille `"mots_cles": ["bouché", "pause"]` (mots du client, synonymes).
 2. Nouveau guide : module `guide-<slug>` dans l'espace Kiavik (`espaces.ts`), sinon l'API refuse de démarrer.
 3. Redéployer (les fichiers sont lus au démarrage), vérifier sur téléphone.

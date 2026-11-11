@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { BoutonPartager } from '../../components/Partager';
+import { EditeurPastille } from './Corrections';
 import { useAuth } from '../../lib/auth';
 import { Fenetre } from './Fenetres';
 import { CANAUX_DEPART, CommandesInteractif, EtatCanaux, Interactif } from './Interactifs';
@@ -203,8 +204,21 @@ function FichePastille({ guide, e, p, onOuvrir }: { guide: Guide; e: Ecran; p: P
   const { liste } = useProcedures();
   const anims = (guide.animations ?? []).filter((a) => a.liens?.some(([ec, id]) => ec === e.id && id === p.id));
   const liees = (liste ?? []).filter((x) => x.liens.some((l) => l.guide === guide.slug && l.ecran === e.id && l.pastille === p.id));
+  const { moi } = useAuth();
+  const [edition, setEdition] = useState(false);
+  // fiche modifiée : on referme le formulaire si l'on change de bouton
+  useEffect(() => {
+    setEdition(false);
+  }, [p.id]);
+  if (edition) return <EditeurPastille guide={guide} e={e} p={p} onFermer={() => setEdition(false)} />;
   return (
     <>
+      {moi?.role === 'ADMIN' && (
+        <div className="cx-actions" style={{ marginBottom: 6 }}>
+          <button type="button" className="btn petit" onClick={() => setEdition(true)}>✏️ Modifier</button>
+          {p.corrige && <span className="cx-badge">modifié dans l'app</span>}
+        </div>
+      )}
       <span className={`gx-ref ${off ? 'off' : ''}`}>{e.code} · {p.id}{off}</span>
       <h3>{p.titre}</h3>
       <p>{p.texte}</p>

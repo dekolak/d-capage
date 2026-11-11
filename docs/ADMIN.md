@@ -48,6 +48,13 @@ Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procé
 - Les clients doivent avoir le module **Procédures** (case à cocher sur leur compte).
 - Au départ : 2 procédures FlexiPRINT publiées (reprises du prototype) et 4 brouillons DXonJet à compléter.
 
+## Kiavik : corriger les guides depuis le téléphone
+En étant connecté en admin :
+- **Fiche d'un bouton** : toucher le bouton dans le guide → **✏️ Modifier** → titre, texte, conseil (💡 astuce, ⚠️ avertissement ou « à compléter » visible seulement par l'admin), mots-clés pour la recherche → **Enregistrer**. Le badge « modifié dans l'app » le signale.
+- **Animation** : sous le lecteur, **✏️ Modifier cette scène** → corriger les sous-titres (ce sont aussi les phrases de la voix off) et **📷 Remplacer la photo** de la scène (prise avec le téléphone, compressée automatiquement ; garder à peu près le même cadrage, le curseur ne bouge pas).
+- Visible tout de suite par tous les clients, sans redéploiement. **↺ Revenir à l'original** annule la correction.
+- Les corrections sont gardées à part : une mise à jour de l'app ne les efface pas. Déplacer une pastille ou créer une animation reste à faire dans les fichiers du projet.
+
 ## Partager une page avec un client
 Bouton rond **Partager** (en bas à droite, visible seulement par l'admin), et bouton **Partager** dans la fiche d'un bouton des guides.
 - Sur téléphone : menu de partage habituel (SMS, WhatsApp, mail…). Sur ordinateur : WhatsApp, SMS ou **Copier le lien**.
