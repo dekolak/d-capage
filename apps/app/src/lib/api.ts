@@ -102,8 +102,10 @@ export interface Espace {
 export interface Variante { id: string; slug: string; nom: string; version: { id: string; numero: number }; imageUrl: string | null; imagePropre: boolean }
 export interface Fabricant { id: string; nom: string; modeles: { id: string; nom: string; technologie: string; imageUrl: string | null; variantes: Variante[] }[] }
 export interface MaMachine {
-  id: string; surnom: string | null; varianteId: string; modeleId: string; nom: string; varianteNom: string; imageUrl: string | null; technologie: string;
+  id: string; surnom: string | null; varianteId: string; modeleId: string; nom: string; varianteNom: string; imageUrl: string | null; technologie: string | null;
   version: { id: string; numero: number } | null;
+  /** Saisis par l'admin. */
+  numeroSerie: string | null; miseEnService: string | null; espaces: string[];
 }
 export interface Tag { id: string; slug: string; nom: string; groupe?: string }
 export interface GroupeTag { id: string; slug: string; nom: string; tags: Tag[] }

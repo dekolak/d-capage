@@ -24,24 +24,43 @@ export class MachinesService {
       nom: nomMachine(m.variante),
       varianteNom: m.variante.nom,
       imageUrl: imageMachine(m.variante),
-      technologie: m.variante.modele.technologie.slug,
+      technologie: m.variante.modele.technologie?.slug ?? null,
+      espaces: m.variante.modele.espaces,
+      numeroSerie: m.numeroSerie,
+      miseEnService: m.miseEnService,
       version,
     };
   }
 
-  async ajouter(userId: string, varianteId: string, surnom?: string) {
+  /** Ajout par l'admin : n° de série et date de mise en service (aujourd'hui par défaut). */
+  async ajouter(userId: string, varianteId: string, d: { surnom?: string; numeroSerie?: string; miseEnService?: Date } = {}) {
     const v = await this.prisma.variante.findUnique({ where: { id: varianteId } });
     if (!v || !v.actif) throw new NotFoundException('Machine inconnue dans le catalogue');
-    const s = surnom?.trim() || null;
-    const existe = await this.prisma.userMachine.findFirst({ where: { userId, varianteId, surnom: s } });
-    if (existe) throw new ConflictException('Cette machine est déjà dans la liste');
-    const m = await this.prisma.userMachine.create({ data: { userId, varianteId, surnom: s }, include: INCLUDE });
+    const s = d.surnom?.trim() || null;
+    const serie = d.numeroSerie?.trim() || null;
+    const existe = serie
+      ? await this.prisma.userMachine.findFirst({ where: { varianteId, numeroSerie: serie } })
+      : await this.prisma.userMachine.findFirst({ where: { userId, varianteId, surnom: s, numeroSerie: null } });
+    if (existe) throw new ConflictException(serie ? 'Ce n° de série est déjà attribué' : 'Cette machine est déjà dans la liste (ajoutez un n° de série ou un surnom)');
+    const m = await this.prisma.userMachine.create({
+      data: { userId, varianteId, surnom: s, numeroSerie: serie, miseEnService: d.miseEnService ?? new Date() },
+      include: INCLUDE,
+    });
     return this.vue(m);
   }
 
-  async modifier(userId: string, id: string, surnom?: string) {
+  /** Le client peut changer le surnom ; l'admin aussi le n° de série et la mise en service. */
+  async modifier(userId: string, id: string, d: { surnom?: string; numeroSerie?: string | null; miseEnService?: Date | null }) {
     await this.trouver(userId, id);
-    const m = await this.prisma.userMachine.update({ where: { id }, data: { surnom: surnom?.trim() || null }, include: INCLUDE });
+    const m = await this.prisma.userMachine.update({
+      where: { id },
+      data: {
+        ...(d.surnom !== undefined ? { surnom: d.surnom.trim() || null } : {}),
+        ...(d.numeroSerie !== undefined ? { numeroSerie: d.numeroSerie?.trim() || null } : {}),
+        ...(d.miseEnService !== undefined ? { miseEnService: d.miseEnService } : {}),
+      },
+      include: INCLUDE,
+    });
     return this.vue(m);
   }
 

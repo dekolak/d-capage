@@ -1,6 +1,7 @@
 import {
-  BadRequestException, Controller, Delete, Get, NotFoundException, Param, Post, Res, UploadedFile, UseInterceptors,
+  BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Res, UploadedFile, UseInterceptors,
 } from '@nestjs/common';
+import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
@@ -10,6 +11,73 @@ import { formatImage, MIME_IMAGE, StockageService } from '../stockage/stockage.s
 import { CatalogueService } from './catalogue.service';
 
 type Cible = 'modeles' | 'variantes';
+
+const ESPACES = ['lazzeko', 'kiavik'];
+class NomDto {
+  @IsString() @MinLength(1) @MaxLength(60) nom!: string;
+}
+class ModeleDto extends NomDto {
+  @IsString() fabricantId!: string;
+  @IsArray() @ArrayMaxSize(2) @IsIn(ESPACES, { each: true }) espaces!: string[];
+}
+class ModifierModeleDto {
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(60) nom?: string;
+  @IsOptional() @IsArray() @ArrayMaxSize(2) @IsIn(ESPACES, { each: true }) espaces?: string[];
+}
+class VarianteDto extends NomDto {
+  @IsString() modeleId!: string;
+}
+class ModifierVarianteDto {
+  @IsOptional() @IsString() @MinLength(1) @MaxLength(60) nom?: string;
+  @IsOptional() @IsBoolean() actif?: boolean;
+}
+
+/** Administration → Machines : tout le catalogue (Lazzeko et Kiavik), créable depuis l'app. */
+@Roles(Role.ADMIN)
+@Controller('admin/catalogue')
+export class AdminCatalogueController {
+  constructor(private catalogue: CatalogueService) {}
+
+  @Get()
+  lister() {
+    return this.catalogue.listerAdmin();
+  }
+
+  @Post('fabricants')
+  creerFabricant(@Body() d: NomDto) {
+    return this.catalogue.creerFabricant(d.nom);
+  }
+
+  @Post('modeles')
+  creerModele(@Body() d: ModeleDto) {
+    return this.catalogue.creerModele(d);
+  }
+
+  @Patch('modeles/:id')
+  modifierModele(@Param('id') id: string, @Body() d: ModifierModeleDto) {
+    return this.catalogue.modifierModele(id, d);
+  }
+
+  @Delete('modeles/:id')
+  supprimerModele(@Param('id') id: string) {
+    return this.catalogue.supprimerModele(id);
+  }
+
+  @Post('variantes')
+  creerVariante(@Body() d: VarianteDto) {
+    return this.catalogue.creerVariante(d.modeleId, d.nom);
+  }
+
+  @Patch('variantes/:id')
+  modifierVariante(@Param('id') id: string, @Body() d: ModifierVarianteDto) {
+    return this.catalogue.modifierVariante(id, d);
+  }
+
+  @Delete('variantes/:id')
+  supprimerVariante(@Param('id') id: string) {
+    return this.catalogue.supprimerVariante(id);
+  }
+}
 
 /** Module « Réglages décapage » (espace Lazzeko). */
 @ModuleRequis('reglages-decapage')
@@ -96,7 +164,7 @@ export class CatalogueController {
     await this.stockage.ecrire(cle, f.buffer);
     if (e.imageCle) await this.stockage.supprimer(e.imageCle);
     await this.table(cible).update({ where: { id }, data: { imageCle: cle, imageMaj: new Date() } });
-    return this.catalogue.lister();
+    return this.catalogue.listerAdmin();
   }
 
   private async retirer(cible: Cible, id: string) {
@@ -104,6 +172,6 @@ export class CatalogueController {
     if (!e) throw new NotFoundException();
     if (e.imageCle) await this.stockage.supprimer(e.imageCle);
     await this.table(cible).update({ where: { id }, data: { imageCle: null, imageMaj: null } });
-    return this.catalogue.lister();
+    return this.catalogue.listerAdmin();
   }
 }

@@ -122,6 +122,9 @@ const fr = {
   "onglets.procedures": "Pas-à-pas",
   "onglets.rechercher": "Rechercher",
   // ---------- Messages (bulles) ----------
+  "machines.numeroSerie": "N° de série : {n}",
+  "machines.renommer": "Renommer",
+  "machines.ajouteesPar": "Vos machines sont ajoutées par votre fournisseur. Une machine manque ou a changé ? Contactez-le.",
   "messages.dateQuestion": "À quelle date l’avez-vous fait la dernière fois ?",
   "messages.jeNeSaisPlus": "Je ne sais plus",
   "messages.changer": "changer",
@@ -285,7 +288,7 @@ const fr = {
   "lazzeko.machines.absente": "Votre machine n'est pas dans la liste ? Contactez-nous pour l'ajouter.",
   "lazzeko.machines.ajouter": "Ajouter",
   "lazzeko.machines.ajouterTitre": "Ajouter une machine",
-  "lazzeko.machines.aucune": "Aucune machine. Ajoutez la vôtre ci-dessous.",
+  "lazzeko.machines.aucune": "Aucune machine pour l’instant.",
   "lazzeko.machines.modele": "Modèle",
   "lazzeko.machines.retirer": "Retirer",
   "lazzeko.machines.retirerConfirm": "Retirer « {nom} » ? Les fiches sont conservées.",

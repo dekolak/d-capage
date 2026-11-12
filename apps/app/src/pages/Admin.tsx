@@ -1,11 +1,12 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Erreur } from '../components/Composants';
-import { api, Fabricant, MaMachine } from '../lib/api';
+import { api, MaMachine } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { LANGUES, NOMS_LANGUES } from '../lib/i18n';
 import { abonnementActuel, activerNotifications, desactiverNotifications } from '../lib/notifications';
 import { date } from '../lib/util';
+import type { FabricantAdmin } from './AdminCatalogue';
 
 interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; modules: string[]; espaces: string[]; conditions: Record<string, { version: number }>; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null; langue: string | null }
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
@@ -62,7 +63,7 @@ export default function Admin() {
     { zone: 'commun', to: '/admin/cles-api', titre: '🔑 Clés API', texte: 'créer des comptes depuis un autre système (Odoo, n8n)' },
     { zone: 'commun', to: '/admin/webhooks', titre: '📤 Envoi vers une API', texte: 'événements envoyés à n8n ou une IA' },
     { zone: 'lazzeko', to: '/admin/fiches', titre: '📝 Fiches de réglage', texte: 'voir qui les a faites, masquer' },
-    { zone: 'lazzeko', to: '/admin/catalogue', titre: '🔧 Machines', texte: 'miniatures (image PNG)' },
+    { zone: 'commun', to: '/admin/catalogue', titre: '🔧 Machines', texte: 'modèles Lazzeko et Kiavik, où ils sont visibles, images' },
     { zone: 'lazzeko', to: '/admin/avis', titre: '⭐ Avis', texte: 'masquer ceux qui ne conviennent pas' },
     { zone: 'lazzeko', to: '/admin/tags', titre: '🏷️ Tags proposés', texte: 'à valider', compte: compte.tags },
     { zone: 'lazzeko', to: '/admin/aide', titre: "🆘 Demandes d'aide", texte: 'bouton sur les fiches, demandes reçues', compte: compte.aide },
@@ -115,9 +116,10 @@ export default function Admin() {
 /** Administration → Utilisateurs : créer un compte, liste, accès, machines. */
 export function AdminUtilisateurs() {
   const [users, setUsers] = useState<U[]>([]);
-  const [catalogue, setCatalogue] = useState<Fabricant[]>([]);
+  const [catalogue, setCatalogue] = useState<FabricantAdmin[]>([]);
   const [selection, setSelection] = useState<U | null>(null);
-  const [machinesSel, setMachinesSel] = useState<MaMachine[]>([]);
+  // machines à ajouter dès la création du client
+  const [nouvellesMachines, setNouvellesMachines] = useState<NouvelleMachine[]>([]);
   const [err, setErr] = useState<unknown>();
   const { espace: espaceOuvert, espaces } = useEspace();
   const vide = () => ({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true, numeroOdoo: '', modules: espaceOuvert.modules.slice(0, 1).map((m) => m.slug) });
@@ -129,18 +131,17 @@ export function AdminUtilisateurs() {
   const charger = () => api<U[]>('/users').then(setUsers).catch(setErr);
   useEffect(() => {
     charger();
-    api<Fabricant[]>('/catalogue').then(setCatalogue).catch(setErr);
+    api<FabricantAdmin[]>('/admin/catalogue').then(setCatalogue).catch(setErr);
   }, []);
-  useEffect(() => {
-    if (selection) api<MaMachine[]>(`/users/${selection.id}/machines`).then(setMachinesSel).catch(setErr);
-  }, [selection]);
 
   const creerUser = async (e: FormEvent) => {
     e.preventDefault();
     setErr(undefined);
     try {
-      await api('/users', { method: 'POST', json: { ...f, nom: f.nom || undefined, numeroOdoo: f.numeroOdoo.trim() || undefined, modules: f.role === 'ADMIN' ? [] : f.modules } });
+      const u = await api<{ id: string }>('/users', { method: 'POST', json: { ...f, nom: f.nom || undefined, numeroOdoo: f.numeroOdoo.trim() || undefined, modules: f.role === 'ADMIN' ? [] : f.modules } });
+      for (const m of f.role === 'ADMIN' ? [] : nouvellesMachines) await api(`/users/${u.id}/machines`, { method: 'POST', json: corpsMachine(m) });
       setF(vide());
+      setNouvellesMachines([]);
       charger();
     } catch (x) { setErr(x); }
   };
@@ -150,11 +151,6 @@ export function AdminUtilisateurs() {
     charger();
   };
 
-  const attribuer = async (varianteId: string) => {
-    if (!selection || !varianteId) return;
-    await api(`/users/${selection.id}/machines`, { method: 'POST', json: { varianteId } }).catch(setErr);
-    setMachinesSel(await api<MaMachine[]>(`/users/${selection.id}/machines`));
-  };
 
   return (
     <div className="page">
@@ -184,6 +180,18 @@ export function AdminUtilisateurs() {
             <input type="checkbox" checked={f.clientLazzeko} onChange={(e) => setF({ ...f, clientLazzeko: e.target.checked })} />
             <span>Client Lazzeko <small className="muted">(décocher pour un utilisateur d'une autre marque)</small></span>
           </label>
+        )}
+        {f.role === 'USER' && (
+          <div>
+            <b className="petit">Machines du client</b>
+            {nouvellesMachines.map((m, i) => (
+              <div key={i} className="petit sous-bloc ligne-machine">
+                <span style={{ flex: 1 }}>{nomVariante(catalogue, m.varianteId)}{m.numeroSerie && ` · n° ${m.numeroSerie}`} · mise en service {m.miseEnService || "aujourd'hui"}</span>
+                <button type="button" className="btn petit" onClick={() => setNouvellesMachines((l) => l.filter((_, j) => j !== i))}>×</button>
+              </div>
+            ))}
+            <AjoutMachine catalogue={catalogue} onAjouter={(m) => setNouvellesMachines((l) => [...l, m])} />
+          </div>
         )}
         <button className="btn prim">Créer</button>
       </form>
@@ -255,18 +263,8 @@ export function AdminUtilisateurs() {
                 )}
                 {u.role !== 'ADMIN' && <p><Link to={`/admin/comptes/${u.id}/activite`} className="lien">Voir son activité (connexions, pages, recherches) ›</Link></p>}
                 {u.role !== 'ADMIN' && <Entretien userId={u.id} />}
-                {lazzeko(u.modules) && <>
-                <Link to={`/admin/fiches?userId=${u.id}`} className="lien">Voir ses fiches ({u._count?.fiches ?? 0}) ›</Link>
-                <br />
-                <b>Machines</b>
-                <ul>{machinesSel.map((m) => <li key={m.id}>{m.surnom ? `${m.surnom} · ` : ''}{m.nom}</li>)}</ul>
-                <select value="" onChange={(e) => attribuer(e.target.value)}>
-                  <option value="">+ Attribuer une machine…</option>
-                  {catalogue.flatMap((fa) => fa.modeles.flatMap((mo) => mo.variantes.map((v) => (
-                    <option key={v.id} value={v.id}>{`${fa.nom} ${mo.nom} ${v.nom}`}</option>
-                  ))))}
-                </select>
-                </>}
+                {lazzeko(u.modules) && <p><Link to={`/admin/fiches?userId=${u.id}`} className="lien">Voir ses fiches de réglage ({u._count?.fiches ?? 0}) ›</Link></p>}
+                {u.role !== 'ADMIN' && <MachinesClient userId={u.id} catalogue={catalogue} />}
               </div>
             )}
           </div>
@@ -367,6 +365,104 @@ export function AdminConditions() {
     <div className="page">
       <EnteteAdmin titre="Conditions d'utilisation" zone="commun" />
       <ConditionsAdmin />
+    </div>
+  );
+}
+
+interface NouvelleMachine { varianteId: string; numeroSerie: string; miseEnService: string; surnom: string }
+const corpsMachine = (m: NouvelleMachine) => ({
+  varianteId: m.varianteId, numeroSerie: m.numeroSerie.trim() || undefined, surnom: m.surnom.trim() || undefined,
+  ...(m.miseEnService ? { miseEnService: new Date(`${m.miseEnService}T12:00:00`).toISOString() } : {}),
+});
+const nomVariante = (cat: FabricantAdmin[], id: string) => {
+  for (const f of cat) for (const mo of f.modeles) for (const v of mo.variantes) if (v.id === id) return `${f.nom} ${mo.nom}${v.nom === 'Standard' ? '' : ` ${v.nom}`}`;
+  return '?';
+};
+
+/** Choisir une machine du catalogue, avec n° de série, mise en service (aujourd'hui par défaut) et surnom. */
+function AjoutMachine({ catalogue, onAjouter }: { catalogue: FabricantAdmin[]; onAjouter: (m: NouvelleMachine) => void }) {
+  const vide = { varianteId: '', numeroSerie: '', miseEnService: new Date().toISOString().slice(0, 10), surnom: '' };
+  const [m, setM] = useState<NouvelleMachine>(vide);
+  return (
+    <div className="ajout-machine">
+      <select value={m.varianteId} onChange={(e) => setM({ ...m, varianteId: e.target.value })}>
+        <option value="">+ Machine…</option>
+        {catalogue.map((fa) => (
+          <optgroup key={fa.id} label={fa.nom}>
+            {fa.modeles.flatMap((mo) => mo.variantes.filter((v) => v.actif).map((v) => (
+              <option key={v.id} value={v.id}>{`${fa.nom} ${mo.nom}${v.nom === 'Standard' ? '' : ` ${v.nom}`}`} ({mo.espaces.join(', ') || 'non visible'})</option>
+            )))}
+          </optgroup>
+        ))}
+      </select>
+      {m.varianteId && (
+        <>
+          <input value={m.numeroSerie} maxLength={60} placeholder="N° de série" onChange={(e) => setM({ ...m, numeroSerie: e.target.value })} />
+          <label className="petit">Mise en service<input type="date" value={m.miseEnService} onChange={(e) => setM({ ...m, miseEnService: e.target.value })} /></label>
+          <input value={m.surnom} maxLength={60} placeholder="Surnom (facultatif, ex. Atelier)" onChange={(e) => setM({ ...m, surnom: e.target.value })} />
+          <button type="button" className="btn petit prim" onClick={() => { onAjouter(m); setM(vide); }}>Ajouter la machine</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Machines d'un client : n° de série, mise en service, surnom ; ajout et retrait par l'admin. */
+function MachinesClient({ userId, catalogue }: { userId: string; catalogue: FabricantAdmin[] }) {
+  const [liste, setListe] = useState<MaMachine[]>();
+  const [err, setErr] = useState<unknown>();
+  const [edition, setEdition] = useState<string | null>(null);
+  const [v, setV] = useState({ numeroSerie: '', miseEnService: '', surnom: '' });
+  const charger = () => api<MaMachine[]>(`/users/${userId}/machines`).then(setListe).catch(setErr);
+  useEffect(() => {
+    charger();
+  }, [userId]);
+  const faire = async (chemin: string, opts: RequestInit & { json?: unknown }) => {
+    setErr(undefined);
+    try {
+      await api(chemin, opts);
+      setEdition(null);
+      charger();
+    } catch (e) {
+      setErr(e);
+    }
+  };
+  return (
+    <div className="machines-client">
+      <b>🔧 Machines ({liste?.length ?? '…'})</b>
+      <Erreur e={err} />
+      {liste?.map((m) => (
+        <div key={m.id} className="sous-bloc petit">
+          {edition === m.id ? (
+            <div className="ajout-machine">
+              <input value={v.numeroSerie} maxLength={60} placeholder="N° de série" onChange={(e) => setV({ ...v, numeroSerie: e.target.value })} />
+              <label className="petit">Mise en service<input type="date" value={v.miseEnService} onChange={(e) => setV({ ...v, miseEnService: e.target.value })} /></label>
+              <input value={v.surnom} maxLength={60} placeholder="Surnom" onChange={(e) => setV({ ...v, surnom: e.target.value })} />
+              <span className="actions-avis">
+                <button type="button" className="btn petit prim" onClick={() => faire(`/users/${userId}/machines/${m.id}`, {
+                  method: 'PATCH',
+                  json: { numeroSerie: v.numeroSerie.trim() || null, surnom: v.surnom, miseEnService: v.miseEnService ? new Date(`${v.miseEnService}T12:00:00`).toISOString() : null },
+                })}>Enregistrer</button>
+                <button type="button" className="btn petit" onClick={() => setEdition(null)}>Annuler</button>
+              </span>
+            </div>
+          ) : (
+            <div className="ligne-machine">
+              <span style={{ flex: 1 }}>
+                <b>{m.surnom ? `${m.surnom} · ` : ''}{m.nom}</b>
+                <br />
+                <span className="muted">
+                  {m.numeroSerie ? `n° ${m.numeroSerie}` : 'sans n° de série'} · mise en service {m.miseEnService ? date(m.miseEnService) : '?'}
+                  {' · '}{m.espaces.map((e) => e).join(', ') || 'non visible'}
+                </span>
+              </span>
+              <button type="button" className="btn petit" onClick={() => { setV({ numeroSerie: m.numeroSerie ?? '', miseEnService: m.miseEnService?.slice(0, 10) ?? '', surnom: m.surnom ?? '' }); setEdition(m.id); }}>✏️</button>
+              <button type="button" className="btn petit danger" onClick={() => confirm(`Retirer ${m.surnom || m.nom} de ce client ? (ses fiches de réglage sont gardées)`) && faire(`/users/${userId}/machines/${m.id}`, { method: 'DELETE' })}>🗑</button>
+            </div>
+          )}
+        </div>
+      ))}
+      <AjoutMachine catalogue={catalogue} onAjouter={(m) => faire(`/users/${userId}/machines`, { method: 'POST', json: corpsMachine(m) })} />
     </div>
   );
 }

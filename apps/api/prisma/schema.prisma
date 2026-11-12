@@ -138,8 +138,11 @@ model Modele {
   nom           String
   fabricantId   String
   fabricant     Fabricant   @relation(fields: [fabricantId], references: [id])
-  technologieId String
-  technologie   Technologie @relation(fields: [technologieId], references: [id])
+  /// Calcul des réglages (Lazzeko) ; vide pour une machine sans fiches de réglage (ex. imprimante Kiavik).
+  technologieId String?
+  technologie   Technologie? @relation(fields: [technologieId], references: [id])
+  /// Espaces où le modèle est visible par les clients (« lazzeko », « kiavik »).
+  espaces       String[]    @default(["lazzeko"])
   /// Miniature de la machine (clé de stockage) : envoyée par l'admin, PNG de préférence.
   imageCle      String?
   imageMaj      DateTime?
@@ -188,6 +191,9 @@ model UserMachine {
   varianteId String
   variante   Variante @relation(fields: [varianteId], references: [id])
   surnom     String?
+  /// Saisis par l'admin : n° de série, date de mise en service (départ des échéances d'entretien).
+  numeroSerie  String?
+  miseEnService DateTime?
   createdAt  DateTime @default(now())
   fiches     Fiche[]
 
