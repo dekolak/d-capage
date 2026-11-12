@@ -2,11 +2,23 @@
 
 Compte → **Administration** (en français ; les écrans clients peuvent être traduits, voir [TRADUCTION.md](TRADUCTION.md)). L'admin a accès à tout, dans les deux espaces (Compte → **Mes espaces** pour passer de Lazzeko à Kiavik).
 
+## Organisation de l'administration
+Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **Lazzeko** (orange), **Kiavik** (bleu). Le même badge est sur le titre de chaque page.
+- La section de l'espace ouvert vient en premier ; l'autre espace est replié (▸). Ouvrir une de ses entrées **bascule dans cet espace**.
+- **Commun** : 👥 Utilisateurs, 💬 Messages, 📜 Conditions d'utilisation, 🔑 Clés API, 📤 Envoi vers une API. En haut, toujours : 🔐 Mots de passe oubliés et 🔔 Notifications.
+- **Lazzeko** : 📝 Fiches de réglage, 🔧 Machines, ⭐ Avis, 🏷️ Tags proposés, 🆘 Demandes d'aide (avec le nombre en attente).
+- **Kiavik** : 🏠 Accueil et catégories, 📋 Pas-à-pas, 🩺 Dépannages reçus, 💡 Bon à savoir.
+
+**Noms des contenus Kiavik** : **Pas-à-pas** (anciennement procédures), **Dépannage guidé** (procédure avec des questions, anciennement diagnostic), **Bon à savoir** (anciennement astuces & solutions), **Démos animées** (animations). Côté clients, ces noms sont dans `apps/app/src/textes/fr.ts` (une ligne à changer pour renommer).
+
+**Publiée / Non publiée** (anciennement « brouillon ») : 🔒 *non publiée* = visible seulement par l'admin, pour préparer et tester ; ✅ *publiée* = visible par les clients qui ont l'accès « Pas-à-pas et Bon à savoir ». Case « Publiée » en haut de l'écran de modification.
+
 ## Comptes clients
+Administration → **👥 Utilisateurs** (« + Créer un utilisateur » en haut, puis la liste).
 - **Créer** : identifiant, mot de passe (8 caractères min.), nom, n° client Odoo (facultatif).
 - **Accès** : cases par espace.
   - Lazzeko : *Réglages décapage*.
-  - Kiavik : *Guide Flexiprint*, *Guide DXonJet*, *Procédures*.
+  - Kiavik : *Guide Flexiprint*, *Guide DXonJet*, *Pas-à-pas et Bon à savoir*.
   - Un client peut avoir des accès dans les deux espaces.
 - **Client Lazzeko** (si accès Lazzeko) : décocher pour un utilisateur d'une autre marque. Sert à cibler les messages.
 - Dans la liste : recherche (identifiant, nom, n° Odoo), filtre par espace, badges d'espace, conditions acceptées, accord photos.
@@ -48,8 +60,8 @@ Administration → **💬 Messages**.
   - **Liste** (à droite) : toutes les procédures, diagnostics, astuces et animations, avec **filtres** (catégorie, type, logiciel, publié / brouillon) et recherche par titre. Le menu de chaque ligne la **range** dans une autre catégorie ; cocher plusieurs lignes pour les ranger d'un coup. « ⚠️ catégorie inconnue » signale un élément rangé dans une catégorie qui n'existe plus.
 - La catégorie se choisit aussi dans le menu **Catégorie** d'une procédure, d'une astuce, ou d'une animation (ouvrir l'animation → « ✏️ Modifier cette scène » → **Catégorie sur l'accueil**, « Revenir à l'original » pour reprendre celle du fichier).
 
-## Kiavik : procédures
-Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procédures → « Gérer les procédures »).
+## Kiavik : pas-à-pas (procédures)
+Dans l'espace Kiavik : Administration → **📋 Pas-à-pas** (ou onglet Pas-à-pas → « Gérer les pas-à-pas »).
 - **Créer** : un titre, puis les étapes dans le schéma (texte, avertissement, photos, bouton lié). Pour gagner du temps : résumez les étapes à Claude, il prépare le brouillon, vous le finissez — voir **[CREER-PROCEDURE.md](CREER-PROCEDURE.md)**.
 - **Lier un bouton** : sur une étape, choisir le logiciel, l'écran puis le bouton. Le client voit « 👆 Voir le bouton » dans l'étape (la capture s'ouvre par-dessus la liste, bouton entouré), le bouton est aussi montré dans le **parcours guidé** (une étape à la fois, plein écran), et « 📋 Voir la procédure » quand il touche ce bouton dans le guide.
 - **L'écran de modification** (pensé pour le PC, utilisable sur téléphone) : à gauche le **schéma**, à droite l'élément choisi. Cliquez sur une étape, une question ou une réponse pour la modifier. « **+** » (au survol, entre deux étapes) insère une étape à cet endroit.
@@ -65,7 +77,7 @@ Dans l'espace Kiavik : Administration → **📋 Procédures** (ou onglet Procé
 - Les clients doivent avoir le module **Procédures** (case à cocher sur leur compte).
 - Au départ : le brouillon **Changer les filtres à encre** (entretien, 18 étapes en 7 parties), le brouillon **Diagnostic : la pompe à encre** (exemple de diagnostic, voir ci-dessous), la check-list **Mise en route et nettoyage de la machine** (v1 de Teddy, 26 étapes en 8 parties), 2 procédures FlexiPRINT publiées (reprises du prototype) et 4 brouillons DXonJet à compléter.
 
-## Kiavik : diagnostics (questions et détours)
+## Kiavik : dépannages guidés (questions et détours)
 Un diagnostic est une procédure avec des **questions** : la suite dépend de la réponse du client.
 - **Route principale** : les étapes numérotées. Une **question** (étape → « ❓ Transformer en question ») a 2 à 4 **réponses** (Oui / Non par défaut, à renommer ; « + réponse » pour en ajouter).
 - Chaque réponse ouvre un **détour** : ses propres étapes (« + étape dans ce détour » dans le schéma), qui peuvent contenir une autre question.
@@ -89,8 +101,8 @@ Rien n'est envoyé à une IA par l'app : tout passe par n8n, où vous choisissez
 - Sans réseau, le résultat d'un diagnostic, un « pas clair ? » et le suivi des statistiques sont **mis de côté** et partent tout seuls au retour de la connexion (le bandeau indique combien sont en attente).
 - L'administration n'est pas gardée hors ligne. Les pages gardées sont effacées à la déconnexion.
 
-## Kiavik : astuces & solutions
-Administration → **💡 Astuces & solutions** (espace Kiavik), ou depuis la page Procédures.
+## Kiavik : Bon à savoir (astuces & solutions)
+Administration → **💡 Bon à savoir** (espace Kiavik), ou depuis la page Pas-à-pas.
 - Une fiche = **le problème ou l'astuce** (titre), **pourquoi** (facultatif), **que faire**, une **précaution** facultative, une photo, des **mots-clés**, le **bouton du guide** et la **procédure** liés.
 - Brouillon tant que « Publiée » n'est pas cochée. Les clients (module Procédures) les voient sur l'accueil, en tête de la recherche et dans la fiche du bouton lié (« 💡 … »).
 - 4 fiches de départ reprises des précautions des guides (Offre, fichier RIPé introuvable, pompe à encre, impression trop longue).

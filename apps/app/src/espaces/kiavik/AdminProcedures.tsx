@@ -6,6 +6,7 @@ import { chargerGuide, Guide, pastillesNavigation, ResumeGuide } from './guides'
 import { chargerProcedures, Procedure, ResumeProcedure, viderProcedures } from './donneesProcedures';
 import './guides.css';
 import './editeur.css';
+import { BadgeZone } from '../../pages/Admin';
 
 /** Administration → Procédures : liste, création, consignes générales pour l'IA, diagnostics reçus. */
 export function AdminProcedures() {
@@ -34,28 +35,28 @@ export function AdminProcedures() {
   return (
     <div className="page gx">
       <Link to="/admin" className="btn-lien">← Administration</Link>
-      <h1>Procédures</h1>
+      <h1>Pas-à-pas <BadgeZone zone="kiavik" /></h1>
       <Erreur e={erreur} />
       <Link to="/admin/diagnostics" className="bandeau lien-bandeau">
-        <span><b>🩺 Diagnostics reçus</b>{nonLus > 0 ? ` : ${nonLus} non lu${nonLus > 1 ? 's' : ''}` : ' : résultats envoyés par les clients'}</span>
+        <span><b>🩺 Dépannages reçus</b>{nonLus > 0 ? ` : ${nonLus} non lu${nonLus > 1 ? 's' : ''}` : ' : résultats envoyés par les clients'}</span>
         <span>›</span>
       </Link>
       <div className="carte form">
         <label>
-          Nouvelle procédure ou diagnostic
+          Nouveau pas-à-pas ou dépannage guidé
           <input type="text" value={titre} placeholder="Titre, ex. Changer une cartouche" onChange={(e) => setTitre(e.target.value)} />
         </label>
         <button type="button" className="btn prim" disabled={titre.trim().length < 2} onClick={creer}>Créer</button>
       </div>
-      <h4>{liste.length} procédure{liste.length > 1 ? 's' : ''}</h4>
+      <h4>{liste.length} pas-à-pas</h4>
       <div className="gx-resultats">
         {liste.map((p) => (
           <Link key={p.id} to={`/admin/procedures/${p.id}`} className="carte gx-resultat">
             <b>{p.titre}</b>
             <span className="petit muted">
-              {p.diagnostic && p.categorie !== 'Diagnostic' && <span className="dg-badge">Diagnostic</span>}
+              {p.diagnostic && p.categorie !== 'Diagnostic' && <span className="dg-badge">Dépannage guidé</span>}
               {p.categorie} · {p.nbEtapes} étape{p.nbEtapes > 1 ? 's' : ''}
-              {p.publiee ? <span className="gx-publiee">publiée</span> : <span className="gx-brouillon">brouillon</span>}
+              {p.publiee ? <span className="gx-publiee">✅ publiée</span> : <span className="gx-brouillon">🔒 non publiée</span>}
               {!!pasClair[p.id] && <span className="ed-badge-pc" title="Étapes signalées « pas claires » à traiter">❓ {pasClair[p.id]}</span>}
               {!p.description && <span className="ed-manque" title="Utile pour que l'IA choisisse la bonne procédure">sans description</span>}
             </span>
@@ -80,7 +81,7 @@ function PromptGeneral() {
     <div className="carte form ed-ia">
       <b>🤖 IA : consignes générales Kiavik</b>
       <label>
-        Prompt système commun à toutes les procédures (ton, sécurité, quand renvoyer vers vous)
+        Prompt système commun à tous les pas-à-pas (ton, sécurité, quand renvoyer vers vous)
         <textarea rows={5} value={texte} placeholder="Ex. Tu es l'assistant technique Kiavik. Réponds simplement, en étapes courtes. Ne conseille jamais de démonter l'électronique…" onChange={(e) => setTexte(e.target.value)} />
       </label>
       <Erreur e={erreur} />

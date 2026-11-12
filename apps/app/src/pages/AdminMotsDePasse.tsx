@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
+import { BadgeZone } from './Admin';
 
 interface Demande {
   id: string; message: string | null; statut: 'EN_ATTENTE' | 'CODE_ENVOYE' | 'UTILISEE' | 'ANNULEE'; codeExpire: string | null; essais: number;
@@ -53,7 +54,7 @@ export default function AdminMotsDePasse() {
   return (
     <div className="page">
       <p className="petit"><Link to="/admin">‹ Administration</Link></p>
-      <h1>Mots de passe oubliés</h1>
+      <h1>Mots de passe oubliés <BadgeZone zone="commun" /></h1>
       <p className="muted petit">Vérifiez que c'est bien votre client (appel, numéro connu), générez le code et donnez-le-lui. Valable 1 heure, une seule fois, 5 essais.</p>
       <Erreur e={err} />
       {!liste.demandes.length && <p className="muted">Aucune demande.</p>}

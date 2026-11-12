@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Erreur } from '../components/Composants';
 import { api, Fabricant, MaMachine } from '../lib/api';
 import { useEspace } from '../lib/espace';
@@ -11,12 +11,102 @@ interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN'
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
 interface TagAValider { id: string; nom: string; groupe: { nom: string } }
 
+type Zone = 'commun' | string;
+interface Entree { to: string; titre: string; texte: string; zone: Zone; compte?: number; module?: string }
+
+/** Badge de l'espace (couleur de l'espace) ou « Commun ». */
+export function BadgeZone({ zone }: { zone: Zone }) {
+  const { espaces } = useEspace();
+  const e = espaces.find((x) => x.slug === zone);
+  return <span className={`badge-espace ${e ? '' : 'commun'}`} style={e ? { ['--c' as string]: e.couleur } : undefined}>{e?.nom ?? 'Commun'}</span>;
+}
+
+/** En-tête des pages d'administration : retour, titre, badge de l'espace. */
+export function EnteteAdmin({ titre, zone, children }: { titre: string; zone: Zone; children?: React.ReactNode }) {
+  return (
+    <>
+      <p className="petit"><Link to="/admin">‹ Administration</Link></p>
+      <h1>{titre} <BadgeZone zone={zone} /></h1>
+      {children}
+    </>
+  );
+}
+
+/**
+ * Administration : un menu court, rangé en sections Commun / Lazzeko / Kiavik (badge de couleur sur chaque entrée).
+ * La section de l'espace ouvert vient en premier ; ouvrir une entrée d'un autre espace bascule dans cet espace.
+ */
 export default function Admin() {
+  const { espace: ouvert, espaces, choisir } = useEspace();
+  const nav = useNavigate();
+  const [compte, setCompte] = useState<{ tags: number; aide: number; utilisateurs: number }>({ tags: 0, aide: 0, utilisateurs: 0 });
+  useEffect(() => {
+    Promise.all([
+      api<TagAValider[]>('/tags/a-valider').catch(() => []),
+      api<unknown[]>('/admin/aide?traitee=non').catch(() => []),
+      api<U[]>('/users').catch(() => []),
+    ]).then(([t, a, u]) => setCompte({ tags: t.length, aide: a.length, utilisateurs: u.length }));
+  }, []);
+  const entrees: Entree[] = [
+    { zone: 'commun', to: '/admin/utilisateurs', titre: '👥 Utilisateurs', texte: `créer un compte, accès, machines, activité (${compte.utilisateurs})` },
+    { zone: 'commun', to: '/admin/messages', titre: '💬 Messages', texte: "bulles d'info à l'ouverture de l'app" },
+    { zone: 'commun', to: '/admin/conditions', titre: "📜 Conditions d'utilisation", texte: 'texte et version, par espace' },
+    { zone: 'commun', to: '/admin/cles-api', titre: '🔑 Clés API', texte: 'créer des comptes depuis un autre système (Odoo, n8n)' },
+    { zone: 'commun', to: '/admin/webhooks', titre: '📤 Envoi vers une API', texte: 'événements envoyés à n8n ou une IA' },
+    { zone: 'lazzeko', to: '/admin/fiches', titre: '📝 Fiches de réglage', texte: 'voir qui les a faites, masquer' },
+    { zone: 'lazzeko', to: '/admin/catalogue', titre: '🔧 Machines', texte: 'miniatures (image PNG)' },
+    { zone: 'lazzeko', to: '/admin/avis', titre: '⭐ Avis', texte: 'masquer ceux qui ne conviennent pas' },
+    { zone: 'lazzeko', to: '/admin/tags', titre: '🏷️ Tags proposés', texte: 'à valider', compte: compte.tags },
+    { zone: 'lazzeko', to: '/admin/aide', titre: "🆘 Demandes d'aide", texte: 'bouton sur les fiches, demandes reçues', compte: compte.aide },
+    { zone: 'kiavik', to: '/admin/categories', titre: "🏠 Accueil et catégories", texte: 'renommer, ajouter, ordonner, ranger', module: 'procedures-kiavik' },
+    { zone: 'kiavik', to: '/admin/procedures', titre: '📋 Pas-à-pas', texte: 'créer, modifier, publier', module: 'procedures-kiavik' },
+    { zone: 'kiavik', to: '/admin/diagnostics', titre: '🩺 Dépannages reçus', texte: 'résultats envoyés par les clients', module: 'procedures-kiavik' },
+    { zone: 'kiavik', to: '/admin/solutions', titre: '💡 Bon à savoir', texte: 'problèmes déjà résolus, astuces', module: 'procedures-kiavik' },
+  ].filter((e) => !e.module || espaces.some((x) => x.slug === e.zone && x.modules.some((m) => m.slug === e.module)));
+  // l'espace ouvert d'abord, puis Commun, puis les autres espaces
+  const zones = [ouvert.slug, 'commun', ...espaces.map((e) => e.slug).filter((s) => s !== ouvert.slug)].filter((z) => entrees.some((e) => e.zone === z));
+  const nomZone = (z: Zone) => espaces.find((e) => e.slug === z)?.nom ?? 'Commun';
+  const ouvrir = (e: Entree) => {
+    if (e.zone !== 'commun' && e.zone !== ouvert.slug) choisir(e.zone);
+    nav(e.to);
+  };
+
+  return (
+    <div className="page adm">
+      <h1>Administration</h1>
+      <MotsDePasseEtNotifications />
+      {zones.map((z) => {
+        const autre = z !== 'commun' && z !== ouvert.slug;
+        const corps = (
+          <div className="adm-liste">
+            {entrees.filter((e) => e.zone === z).map((e) => (
+              <button key={e.to} type="button" className="bandeau lien-bandeau adm-entree" onClick={() => ouvrir(e)}>
+                <span><b>{e.titre}</b>{!!e.compte && <span className="badge-rouge">{e.compte}</span>} : {e.texte}</span>
+                <span>›</span>
+              </button>
+            ))}
+          </div>
+        );
+        return autre ? (
+          <details key={z} className="adm-section">
+            <summary><h2>{nomZone(z)} <BadgeZone zone={z} /></h2><small className="muted">ouvrir une entrée bascule dans l'espace {nomZone(z)}</small></summary>
+            {corps}
+          </details>
+        ) : (
+          <section key={z} className="adm-section">
+            <h2>{nomZone(z)} <BadgeZone zone={z} /></h2>
+            {corps}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Administration → Utilisateurs : créer un compte, liste, accès, machines. */
+export function AdminUtilisateurs() {
   const [users, setUsers] = useState<U[]>([]);
-  const [cles, setCles] = useState<Cle[]>([]);
-  const [tags, setTags] = useState<TagAValider[]>([]);
   const [catalogue, setCatalogue] = useState<Fabricant[]>([]);
-  const [nouvelleCle, setNouvelleCle] = useState('');
   const [selection, setSelection] = useState<U | null>(null);
   const [machinesSel, setMachinesSel] = useState<MaMachine[]>([]);
   const [err, setErr] = useState<unknown>();
@@ -27,10 +117,7 @@ export default function Admin() {
   const [filtreEspace, setFiltreEspace] = useState('');
   const lazzeko = (modules: string[]) => modules.includes('reglages-decapage');
 
-  const charger = () =>
-    Promise.all([api<U[]>('/users'), api<Cle[]>('/admin/cles-api'), api<TagAValider[]>('/tags/a-valider')])
-      .then(([u, c, t]) => { setUsers(u); setCles(c); setTags(t); })
-      .catch(setErr);
+  const charger = () => api<U[]>('/users').then(setUsers).catch(setErr);
   useEffect(() => {
     charger();
     api<Fabricant[]>('/catalogue').then(setCatalogue).catch(setErr);
@@ -60,63 +147,12 @@ export default function Admin() {
     setMachinesSel(await api<MaMachine[]>(`/users/${selection.id}/machines`));
   };
 
-  const creerCle = async () => {
-    const nom = prompt('Nom de la clé (ex. site web)')?.trim();
-    if (!nom) return;
-    const r = await api<{ cle: string }>('/admin/cles-api', { method: 'POST', json: { nom } }).catch((x) => { setErr(x); return null; });
-    if (r) setNouvelleCle(r.cle);
-    charger();
-  };
-
   return (
     <div className="page">
-      <h1>Administration</h1>
+      <EnteteAdmin titre="Utilisateurs" zone="commun" />
       <Erreur e={err} />
-      <MotsDePasseEtNotifications />
-      <Link to="/admin/messages" className="bandeau lien-bandeau">
-        <span><b>💬 Messages</b> : bulles d'info à l'ouverture de l'app</span>
-        <span>›</span>
-      </Link>
-      <Link to="/admin/fiches" className="bandeau lien-bandeau">
-        <span><b>Toutes les fiches</b> : voir qui les a faites, masquer</span>
-        <span>›</span>
-      </Link>
-      <Link to="/admin/catalogue" className="bandeau lien-bandeau">
-        <span><b>Machines</b> : miniatures (image PNG)</span>
-        <span>›</span>
-      </Link>
-      <Link to="/admin/avis" className="bandeau lien-bandeau">
-        <span><b>Avis</b> : masquer ceux qui ne conviennent pas</span>
-        <span>›</span>
-      </Link>
-      {espaceOuvert.modules.some((m) => m.slug === 'procedures-kiavik') && (
-        <Link to="/admin/categories" className="bandeau lien-bandeau">
-          <span><b>🏠 Accueil et catégories</b> : renommer, ajouter, ordonner, ranger les procédures</span>
-          <span>›</span>
-        </Link>
-      )}
-      {espaceOuvert.modules.some((m) => m.slug === 'procedures-kiavik') && (
-        <Link to="/admin/procedures" className="bandeau lien-bandeau">
-          <span><b>📋 Procédures</b> : créer, modifier, publier, diagnostics reçus</span>
-          <span>›</span>
-        </Link>
-      )}
-      {espaceOuvert.modules.some((m) => m.slug === 'procedures-kiavik') && (
-        <Link to="/admin/solutions" className="bandeau lien-bandeau">
-          <span><b>💡 Astuces & solutions</b> : problèmes déjà résolus, astuces</span>
-          <span>›</span>
-        </Link>
-      )}
-      <Link to="/admin/webhooks" className="bandeau lien-bandeau">
-        <span><b>Envoi vers une API</b> : fiches et avis (modération IA)</span>
-        <span>›</span>
-      </Link>
-
-      <AideSupport />
-
-      <ConditionsAdmin />
-
-      <h2>Créer un utilisateur</h2>
+      <details className="carte adm-creer">
+        <summary><b>+ Créer un utilisateur</b></summary>
       <form className="form" onSubmit={creerUser}>
         <label>Identifiant<input value={f.identifiant} autoCapitalize="none" onChange={(e) => setF({ ...f, identifiant: e.target.value })} required /></label>
         <label>Mot de passe (8 min.)<input value={f.motDePasse} minLength={8} onChange={(e) => setF({ ...f, motDePasse: e.target.value })} required /></label>
@@ -142,6 +178,7 @@ export default function Admin() {
         )}
         <button className="btn prim">Créer</button>
       </form>
+      </details>
 
       <h2>Utilisateurs ({users.length})</h2>
       <input className="recherche" placeholder="Rechercher (identifiant, nom, n° Odoo)…" value={recherche} onChange={(e) => setRecherche(e.target.value)} />
@@ -226,7 +263,30 @@ export default function Admin() {
         ))}
       </div>
 
-      <h2>Clés API</h2>
+    </div>
+  );
+}
+
+/** Administration → Clés API. */
+export function AdminClesApi() {
+  const [cles, setCles] = useState<Cle[]>([]);
+  const [nouvelleCle, setNouvelleCle] = useState('');
+  const [err, setErr] = useState<unknown>();
+  const charger = () => api<Cle[]>('/admin/cles-api').then(setCles).catch(setErr);
+  useEffect(() => {
+    charger();
+  }, []);
+  const creerCle = async () => {
+    const nom = prompt('Nom de la clé (ex. site web)')?.trim();
+    if (!nom) return;
+    const r = await api<{ cle: string }>('/admin/cles-api', { method: 'POST', json: { nom } }).catch((x) => { setErr(x); return null; });
+    if (r) setNouvelleCle(r.cle);
+    charger();
+  };
+  return (
+    <div className="page">
+      <EnteteAdmin titre="Clés API" zone="commun" />
+      <Erreur e={err} />
       <p className="muted petit">Pour créer des comptes depuis un autre système : <code>POST /api/users</code> avec l'en-tête <code>X-Api-Key</code>.</p>
       {nouvelleCle && (
         <div className="succes">
@@ -250,7 +310,23 @@ export default function Admin() {
         ))}
       </div>
 
-      <h2>Tags proposés ({tags.length})</h2>
+    </div>
+  );
+}
+
+/** Administration → Tags proposés par les clients (Lazzeko). */
+export function AdminTags() {
+  const [tags, setTags] = useState<TagAValider[]>([]);
+  const [err, setErr] = useState<unknown>();
+  const charger = () => api<TagAValider[]>('/tags/a-valider').then(setTags).catch(setErr);
+  useEffect(() => {
+    charger();
+  }, []);
+  return (
+    <div className="page">
+      <EnteteAdmin titre="Tags proposés" zone="lazzeko" />
+      <Erreur e={err} />
+      {!tags.length && <p className="muted">Aucun tag à valider.</p>}
       <div className="liste">
         {tags.map((t) => (
           <div key={t.id} className="carte ligne-machine">
@@ -261,6 +337,26 @@ export default function Admin() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Administration → Demandes d'aide (Lazzeko). */
+export function AdminAide() {
+  return (
+    <div className="page">
+      <EnteteAdmin titre="Demandes d'aide" zone="lazzeko" />
+      <AideSupport />
+    </div>
+  );
+}
+
+/** Administration → Conditions d'utilisation (par espace). */
+export function AdminConditions() {
+  return (
+    <div className="page">
+      <EnteteAdmin titre="Conditions d'utilisation" zone="commun" />
+      <ConditionsAdmin />
     </div>
   );
 }
@@ -278,7 +374,6 @@ function AideSupport() {
   useEffect(charger, []);
   return (
     <>
-      <h2>Demandes d'aide</h2>
       <div className="carte">
         <label className="interrupteur">
           <input
@@ -327,7 +422,6 @@ function ConditionsAdmin() {
   if (!c) return null;
   return (
     <>
-      <h2>Conditions d'utilisation</h2>
       <div className="seg" style={{ marginBottom: 8 }}>
         {espaces.map((e) => (
           <button key={e.slug} type="button" className={e.slug === esp ? 'on' : ''} onClick={() => setEsp(e.slug)}>{e.nom}</button>

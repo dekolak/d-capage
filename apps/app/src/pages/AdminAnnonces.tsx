@@ -5,6 +5,7 @@ import { Erreur } from '../components/Composants';
 import { useEspace } from '../lib/espace';
 import { api, Fabricant } from '../lib/api';
 import { date } from '../lib/util';
+import { BadgeZone } from './Admin';
 
 type Niveau = 'CONSEIL' | 'INFO' | 'IMPORTANT';
 type Rec = 'AUCUNE' | 'JOURS' | 'SEMAINES' | 'MOIS';
@@ -98,7 +99,7 @@ export default function AdminAnnonces() {
   return (
     <div className="page">
       <p className="petit"><Link to="/admin">‹ Administration</Link></p>
-      <h1>Messages</h1>
+      <h1>Messages <BadgeZone zone="commun" /></h1>
       <p className="muted petit">Une bulle affichée à l'ouverture de l'app, à la place d'un mail. Les utilisateurs ne peuvent pas répondre.</p>
       <Erreur e={err} />
 

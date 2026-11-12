@@ -273,10 +273,10 @@ function EtapeEditeur({ p, e, guides, astuces, maj, choisir }: { p: Procedure; e
       )}
       {!question && controle && (
         <label className="gx-controle-edit">
-          <span>Si Non, proposer l'astuce :</span>
+          <span>Si Non, proposer le « Bon à savoir » :</span>
           <select value={solutionId ?? ''} onChange={(ev) => setSolutionId(ev.target.value || null)}>
             <option value="">(aucune)</option>
-            {astuces.map((s) => <option key={s.id} value={s.id}>{s.titre}{s.publiee ? '' : ' (brouillon)'}</option>)}
+            {astuces.map((s) => <option key={s.id} value={s.id}>{s.titre}{s.publiee ? '' : ' (non publiée)'}</option>)}
           </select>
         </label>
       )}
@@ -413,16 +413,16 @@ function ChoixEditeur({ p, c, astuces, procedures, maj, choisir }: { p: Procedur
           <textarea rows={3} value={v.conclusion} onChange={(ev) => setV({ ...v, conclusion: ev.target.value })} />
         </label>
       )}
-      <label>Proposer une astuce (facultatif)
+      <label>Proposer un « Bon à savoir » (facultatif)
         <select value={v.solutionId} onChange={(ev) => setV({ ...v, solutionId: ev.target.value })}>
           <option value="">(aucune)</option>
-          {astuces.map((s) => <option key={s.id} value={s.id}>{s.titre}{s.publiee ? '' : ' (brouillon)'}</option>)}
+          {astuces.map((s) => <option key={s.id} value={s.id}>{s.titre}{s.publiee ? '' : ' (non publiée)'}</option>)}
         </select>
       </label>
       <label>Proposer une autre procédure (facultatif)
         <select value={v.procedureCibleId} onChange={(ev) => setV({ ...v, procedureCibleId: ev.target.value })}>
           <option value="">(aucune)</option>
-          {procedures.filter((x) => x.id !== p.id).map((x) => <option key={x.id} value={x.id}>{x.titre}{x.publiee ? '' : ' (brouillon)'}</option>)}
+          {procedures.filter((x) => x.id !== p.id).map((x) => <option key={x.id} value={x.id}>{x.titre}{x.publiee ? '' : ' (non publiée)'}</option>)}
         </select>
       </label>
       {modifie && (
@@ -553,8 +553,8 @@ export function AdminProcedure() {
 
   return (
     <div className="page gx ed">
-      <Link to="/admin/procedures" className="btn-lien">← Procédures</Link>
-      <h1 className="gx-proc-titre">{p.titre}{estDiagnostic(p) && <span className="dg-badge ed-badge">Diagnostic</span>}</h1>
+      <Link to="/admin/procedures" className="btn-lien">← Pas-à-pas</Link>
+      <h1 className="gx-proc-titre">{p.titre}{estDiagnostic(p) && <span className="dg-badge ed-badge">Dépannage guidé</span>}</h1>
       <Erreur e={erreur} />
 
       <div className="ed-haut">
@@ -566,7 +566,7 @@ export function AdminProcedure() {
                 setP({ ...p, publiee });
                 maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { publiee } }).then((ok) => !ok && setP(p));
               }} />
-            <span><b>{p.publiee ? 'Publiée' : 'Brouillon'}</b><br /><span className="muted petit">{p.publiee ? 'Visible par les clients qui ont les procédures.' : 'Visible seulement par l\'admin.'}</span></span>
+            <span><b>{p.publiee ? '✅ Publiée' : '🔒 Non publiée'}</b><br /><span className="muted petit">{p.publiee ? 'Visible par les clients (accès « Pas-à-pas et Bon à savoir »).' : 'Visible seulement par vous. Cochez pour la montrer aux clients.'}</span></span>
           </label>
           <label className="carte form">
             <span><b>➡ Procédure suivante</b><br /><span className="muted petit">Proposée à la fin : « Continuer avec … ? » (Oui / Non). Ex. réglage FlexiPRINT → réglage DXonJet → impression.</span></span>
@@ -574,11 +574,11 @@ export function AdminProcedure() {
               onChange={(ev) => maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { suivanteId: ev.target.value || null } })}>
               <option value="">Aucune</option>
               {procedures.filter((x) => x.id !== p.id).map((x) => (
-                <option key={x.id} value={x.id}>{x.titre}{x.publiee ? '' : ' (brouillon)'}</option>
+                <option key={x.id} value={x.id}>{x.titre}{x.publiee ? '' : ' (non publiée)'}</option>
               ))}
             </select>
             {p.suivanteId && !procedures.find((x) => x.id === p.suivanteId)?.publiee && procedures.length > 0 && (
-              <span className="muted petit">⚠️ La procédure suivante est en brouillon : les clients ne verront pas la question tant qu'elle n'est pas publiée.</span>
+              <span className="muted petit">⚠️ Le pas-à-pas suivant n'est pas publié : les clients ne verront pas la question tant qu'elle n'est pas publiée.</span>
             )}
           </label>
           <div className="carte form">
@@ -642,7 +642,7 @@ export function AdminProcedure() {
       <div className="ed-actions">
         <button type="button" className="btn"
           onClick={async () => {
-            if (!confirm('Créer une copie de cette procédure (en brouillon), avec ses étapes, questions et photos ?')) return;
+            if (!confirm('Créer une copie de ce pas-à-pas (non publiée), avec ses étapes, questions et photos ?')) return;
             try {
               const copie = await api<Procedure>(`/admin/procedures/${p.id}/dupliquer`, { method: 'POST' });
               viderProcedures();

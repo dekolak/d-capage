@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Erreur } from '../components/Composants';
 import { api } from '../lib/api';
 import { date } from '../lib/util';
+import { BadgeZone } from './Admin';
 
 interface Webhook { id: string; nom: string; url: string; evenements: string[]; actif: boolean; createdAt: string }
 interface Livraison { id: string; evenement: string; statut: string; tentatives: number; dernierCode: number | null; derniereErreur: string | null; createdAt: string }
@@ -53,7 +54,7 @@ export default function AdminWebhooks() {
   return (
     <div className="page">
       <p className="petit"><Link to="/admin">‹ Administration</Link></p>
-      <h1>Envoi vers une API</h1>
+      <h1>Envoi vers une API <BadgeZone zone="commun" /></h1>
       <p className="muted petit">
         Chaque nouvelle fiche ou nouvel avis peut être envoyé automatiquement à un service externe (par exemple une IA de modération).
         Ce service peut ensuite masquer un contenu avec une clé API : <code>PATCH /api/admin/avis/:id</code> ou <code>PATCH /api/admin/fiches/:id</code>.

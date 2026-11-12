@@ -6,6 +6,7 @@ import { copier } from '../../lib/copier';
 import './guides.css';
 import './editeur.css';
 import './parcours.css';
+import { BadgeZone } from '../../pages/Admin';
 
 interface Diagnostic {
   id: string; texte: string; message: string | null; lu: boolean; createdAt: string;
@@ -33,9 +34,9 @@ export function AdminDiagnostics() {
   };
   return (
     <div className="page gx">
-      <Link to="/admin/procedures" className="btn-lien">← Procédures</Link>
-      <h1>Diagnostics reçus</h1>
-      <p className="muted petit">Résultats envoyés par les clients à la fin d'un diagnostic. Ils partent aussi vers n8n (événement <code>diagnostic.envoye</code>, avec le paquet prêt pour l'IA).</p>
+      <Link to="/admin/procedures" className="btn-lien">← Pas-à-pas</Link>
+      <h1>Dépannages reçus <BadgeZone zone="kiavik" /></h1>
+      <p className="muted petit">Résultats envoyés par les clients à la fin d'un dépannage guidé. Ils partent aussi vers n8n (événement <code>diagnostic.envoye</code>, avec le paquet prêt pour l'IA).</p>
       <label className="gx-controle-edit"><input type="checkbox" checked={nonLus} onChange={(e) => setNonLus(e.target.checked)} /><span>Non lus seulement</span></label>
       <Erreur e={erreur} />
       {paquet !== undefined && (
@@ -49,7 +50,7 @@ export function AdminDiagnostics() {
           </div>
         </div>
       )}
-      {!liste ? <Chargement /> : liste.length === 0 ? <p className="muted">Aucun diagnostic reçu.</p> : (
+      {!liste ? <Chargement /> : liste.length === 0 ? <p className="muted">Aucun dépannage reçu.</p> : (
         <div className="gx-resultats">
           {liste.map((d) => (
             <div key={d.id} className={`carte dg-recu ${d.lu ? 'lu' : ''}`}>
