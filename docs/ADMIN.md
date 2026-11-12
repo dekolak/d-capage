@@ -4,7 +4,7 @@ Compte → **Administration** (en français ; les écrans clients peuvent être 
 
 ## Organisation de l'administration
 Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **Lazzeko** (orange), **Kiavik** (bleu). Le même badge est sur le titre de chaque page.
-- La section de l'espace ouvert vient en premier ; l'autre espace est replié (▸). Ouvrir une de ses entrées **bascule dans cet espace**.
+- Toujours dans le même ordre : **Commun**, puis **Lazzeko**, puis **Kiavik**. Chaque section se replie (▸ / ▾) ; le téléphone s'en souvient. Au départ, seule la section de l'espace ouvert est dépliée ; un compteur rouge sur le titre signale ce qui attend (tags, demandes d'aide). Ouvrir une entrée d'un autre espace **bascule dans cet espace**.
 - **Commun** : 👥 Utilisateurs, 💬 Messages, 📜 Conditions d'utilisation, 🔑 Clés API, 📤 Envoi vers une API. En haut, toujours : 🔐 Mots de passe oubliés et 🔔 Notifications.
 - **Lazzeko** : 📝 Fiches de réglage, 🔧 Machines, ⭐ Avis, 🏷️ Tags proposés, 🆘 Demandes d'aide (avec le nombre en attente).
 - **Kiavik** : 🏠 Accueil et catégories, 📋 Pas-à-pas, 🩺 Dépannages reçus, 💡 Bon à savoir.
