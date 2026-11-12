@@ -30,11 +30,17 @@ export class CategoriesService {
       this.prisma.solution.findMany({ orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }], select: { id: true, titre: true, categorie: true, publiee: true, guide: true } }),
       this.corrections.categoriesAnimations(),
     ]);
-    const animations = this.guides.lister('tous').flatMap((g) =>
-      g.animations.map((a) => ({
-        type: 'animation' as const, id: a.id, guide: g.slug, titre: a.titre, categorie: cats[g.slug]?.[a.id] ?? a.categorie ?? '', publiee: true, logiciels: [g.slug],
-      })),
-    );
+    const ordres = await this.corrections.ordresAnimations();
+    const animations = this.guides
+      .lister('tous')
+      .flatMap((g, gi) =>
+        g.animations.map((a, i) => ({
+          type: 'animation' as const, id: a.id, guide: g.slug, titre: a.titre, categorie: cats[g.slug]?.[a.id] ?? a.categorie ?? '', publiee: true, logiciels: [g.slug],
+          ordre: ordres[g.slug]?.[a.id] ?? 1000 + gi * 100 + i,
+        })),
+      )
+      .sort((a, b) => a.ordre - b.ordre)
+      .map(({ ordre: _o, ...a }) => a);
     return [
       ...procedures.map((p) => ({
         type: 'procedure' as const, id: p.id, titre: p.titre, categorie: p.categorie, publiee: p.publiee,
@@ -104,6 +110,32 @@ export class CategoriesService {
       if (!e.guide) throw new BadRequestException('Guide manquant pour une animation');
       await this.corrections.categorieAnimation(e.guide, e.id, nom);
     }
+    return { ok: true };
+  }
+
+  /**
+   * Ordre d'affichage dans une catégorie de l'accueil, pour un type : la liste complète, dans le nouvel ordre.
+   * Pas-à-pas et Bon à savoir : on redistribue leurs propres numéros d'ordre (les autres catégories ne bougent pas).
+   */
+  async ordonner(type: TypeElement, elements: RefElement[]) {
+    if (type === 'animation') {
+      if (elements.some((e) => !e.guide)) throw new BadRequestException('Guide manquant pour une animation');
+      await this.corrections.ordonnerAnimations(elements.map((e) => ({ guide: e.guide!, id: e.id })));
+      return { ok: true };
+    }
+    const ids = elements.map((e) => e.id);
+    const table = type === 'procedure' ? this.prisma.procedure : this.prisma.solution;
+    const actuels = await (table as typeof this.prisma.procedure).findMany({ where: { id: { in: ids } }, select: { id: true, ordre: true } });
+    if (actuels.length !== ids.length) throw new NotFoundException('Élément introuvable');
+    let ordres = actuels.map((x) => x.ordre).sort((a, b) => a - b);
+    if (new Set(ordres).size < ordres.length) ordres = ordres.map((_, i) => ordres[0] + i);
+    await this.prisma.$transaction(
+      ids.map((id, n) =>
+        type === 'procedure'
+          ? this.prisma.procedure.update({ where: { id }, data: { ordre: ordres[n] } })
+          : this.prisma.solution.update({ where: { id }, data: { ordre: ordres[n] } }),
+      ),
+    );
     return { ok: true };
   }
 

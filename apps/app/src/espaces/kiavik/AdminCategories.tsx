@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
@@ -19,6 +19,8 @@ const TYPES: Record<string, string> = { procedure: '📋 Pas-à-pas', diagnostic
 const typeDe = (e: Element) => (e.type === 'procedure' && e.diagnostic ? 'diagnostic' : e.type);
 const lienDe = (e: Element) =>
   e.type === 'procedure' ? `/admin/procedures/${e.id}` : e.type === 'astuce' ? `/admin/solutions/${e.id}` : `/guides/${e.guide}/animation/${e.id}`;
+const GROUPES: Type[] = ['animation', 'procedure', 'astuce'];
+const TITRES_GROUPES: Record<Type, string> = { animation: '▶ Démos animées', procedure: '📋 Pas-à-pas et dépannages guidés', astuce: '💡 Bon à savoir' };
 const ICONES = ['📁', '🚀', '🩺', '🖨️', '🎛️', '🧽', '⚪', '🎨', '🔧', '⚙️', '💧', '🧪', '📐', '🛠️', '⚠️', '📦', '🧰', '💡'];
 
 export function AdminCategories() {
@@ -73,6 +75,23 @@ export function AdminCategories() {
   }, [elements, cats, fCat, fType, fLog, fEtat, q]);
 
   if (!cats || !elements) return erreur ? <Erreur e={erreur} /> : <Chargement />;
+  // ordre d'affichage : une vraie catégorie choisie, sans autre filtre ; par groupe, comme sur l'accueil
+  const modeOrdre = !!fCat && fCat !== '∅' && !fType && !fLog && !fEtat && !q.trim();
+  const groupe = (e: Element): Type => e.type;
+  const deplacer = (e: Element, sens: -1 | 1) => {
+    const l = visibles.filter((x) => groupe(x) === groupe(e));
+    const i = l.findIndex((x) => cleDe(x) === cleDe(e));
+    const j = i + sens;
+    if (j < 0 || j >= l.length) return;
+    [l[i], l[j]] = [l[j], l[i]];
+    // affichage immédiat, puis enregistrement
+    setElements((tous) => {
+      const reste = (tous ?? []).filter((x) => !l.some((y) => cleDe(y) === cleDe(x)));
+      return [...reste, ...l];
+    });
+    faire('/admin/categories/ordonner', { method: 'POST', json: { type: e.type, elements: l.map((x) => ({ type: x.type, id: x.id, guide: x.guide })) } });
+  };
+
   const compte = (nom: string) => elements.filter((e) => e.categorie === nom).length;
   const sansCategorie = elements.filter((e) => !cats.some((c) => c.nom === e.categorie));
   const ranger = (l: Element[], categorie: string) =>
@@ -155,9 +174,18 @@ export function AdminCategories() {
             )}
           </div>
 
+          {modeOrdre && <p className="muted petit ca-aide">↑ ↓ : ordre d'affichage sur l'accueil, dans chaque groupe (démos animées, puis pas-à-pas, puis « Bon à savoir »).</p>}
           <ul className="ca-liste">
-            {visibles.map((e) => (
-              <li key={cleDe(e)} className={coches.includes(cleDe(e)) ? 'coche' : ''}>
+            {(modeOrdre ? GROUPES.flatMap((gr) => visibles.filter((x) => groupe(x) === gr)) : visibles).map((e, k, l) => (
+              <Fragment key={cleDe(e)}>
+              {modeOrdre && (k === 0 || groupe(l[k - 1]) !== groupe(e)) && <li className="ca-groupe">{TITRES_GROUPES[groupe(e)]}</li>}
+              <li className={coches.includes(cleDe(e)) ? 'coche' : ''}>
+                {modeOrdre && (
+                  <span className="ca-fleches">
+                    <button type="button" className="btn petit" aria-label="Monter" disabled={k === 0 || groupe(l[k - 1]) !== groupe(e)} onClick={() => deplacer(e, -1)}>↑</button>
+                    <button type="button" className="btn petit" aria-label="Descendre" disabled={k === l.length - 1 || groupe(l[k + 1]) !== groupe(e)} onClick={() => deplacer(e, 1)}>↓</button>
+                  </span>
+                )}
                 <input type="checkbox" aria-label="Cocher" checked={coches.includes(cleDe(e))}
                   onChange={() => setCoches((l) => (l.includes(cleDe(e)) ? l.filter((x) => x !== cleDe(e)) : [...l, cleDe(e)]))} />
                 <span className="ca-titre">
@@ -173,6 +201,7 @@ export function AdminCategories() {
                   {cats.map((c) => <option key={c.id} value={c.nom}>{c.icone} {c.nom}</option>)}
                 </select>
               </li>
+              </Fragment>
             ))}
             {!visibles.length && <li className="muted">Rien avec ces filtres.</li>}
           </ul>

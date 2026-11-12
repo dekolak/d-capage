@@ -132,6 +132,31 @@ export class CorrectionsService {
     return r;
   }
 
+  /** Ordre des démos animées dans leur catégorie de l'accueil, par guide puis animation. */
+  async ordresAnimations(): Promise<Record<string, Record<string, number>>> {
+    const l = await this.prisma.correctionGuide.findMany({ where: { type: 'animation-ordre' } });
+    const r: Record<string, Record<string, number>> = {};
+    for (const c of l) {
+      const v = c.valeur as { ordre?: number };
+      if (typeof v.ordre === 'number') (r[c.guide] ??= {})[c.cle] = v.ordre;
+    }
+    return r;
+  }
+
+  /** Range des démos animées dans cet ordre (0, 1, 2…). */
+  async ordonnerAnimations(l: { guide: string; id: string }[]) {
+    for (const a of l) this.animation(a.guide, a.id);
+    await this.prisma.$transaction(
+      l.map((a, n) =>
+        this.prisma.correctionGuide.upsert({
+          where: { guide_type_cle: { guide: a.guide, type: 'animation-ordre', cle: a.id } },
+          create: { guide: a.guide, type: 'animation-ordre', cle: a.id, valeur: { ordre: n } },
+          update: { valeur: { ordre: n } },
+        }),
+      ),
+    );
+  }
+
   /** Revenir à l'original. */
   async retirer(slug: string, type: 'pastille' | 'etape' | 'photo' | 'animation', cle: string) {
     const c = await this.prisma.correctionGuide.findUnique({ where: { guide_type_cle: { guide: slug, type, cle } } });

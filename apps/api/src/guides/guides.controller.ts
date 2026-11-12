@@ -33,10 +33,13 @@ export class GuidesController {
   async lister(@Moi() moi: Principal) {
     const modules = moi.role === Role.ADMIN ? 'tous' : (await this.prisma.userModule.findMany({ where: { userId: moi.id }, select: { module: true } })).map((m) => m.module);
     // catégories des animations corrigées par l'admin
-    const cats = await this.corrections.categoriesAnimations();
-    return this.guides.lister(modules).map((g) => ({
+    const [cats, ordres] = await Promise.all([this.corrections.categoriesAnimations(), this.corrections.ordresAnimations()]);
+    // ordre dans la catégorie de l'accueil : celui choisi par l'admin, sinon l'ordre du fichier (après)
+    return this.guides.lister(modules).map((g, gi) => ({
       ...g,
-      animations: g.animations.map((a) => ({ ...a, categorie: cats[g.slug]?.[a.id] ?? a.categorie })),
+      animations: g.animations
+        .map((a, i) => ({ ...a, categorie: cats[g.slug]?.[a.id] ?? a.categorie, ordre: ordres[g.slug]?.[a.id] ?? 1000 + gi * 100 + i }))
+        .sort((a, b) => a.ordre - b.ordre),
     }));
   }
 
