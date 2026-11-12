@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Erreur } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
 import { api, Fabricant } from '../lib/api';
+import { BadgeZone } from './Admin';
 
 /**
  * Admin : miniature de chaque machine. Une image par modèle (PNG conseillé : fond transparent ou clair,
@@ -49,7 +50,7 @@ export default function AdminCatalogue() {
   return (
     <div className="page">
       <p className="petit"><Link to="/admin">‹ Administration</Link></p>
-      <h1>Machines</h1>
+      <h1>Machines <BadgeZone zone="lazzeko" /></h1>
       <p className="muted petit">PNG conseillé : machine entière sur fond transparent ou clair, environ 800 × 800 px, 5 Mo maximum.</p>
       <Erreur e={err} />
       <div className="liste">

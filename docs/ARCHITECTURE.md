@@ -82,11 +82,12 @@ docs/                       documentation
 ## Journal d'activité
 - Table `Activite` (`userId`, `espace`, `type` = `connexion` | `page` | `recherche`, `chemin`, `detail`, `resultats`) ; clients seulement (pas les admins), effacée après 12 mois (`activite.service.ts`, nettoyage quotidien).
 - Connexion notée par l'API à l'identification ; pages (titre lu à l'écran) et recherches (Kiavik, mes réglages, communauté) envoyées par l'app (`lib/activite.ts`, `POST /api/activite`), en arrière-plan, sans jamais bloquer.
+- Administration : `pages/Admin.tsx` = menu en sections Commun / Lazzeko / Kiavik (`Entree.zone`, `BadgeZone` aux couleurs de l'espace, `EnteteAdmin` pour les titres de pages ; une entrée d'un autre espace fait `choisir(espace)` puis ouvre la page) ; pages `AdminUtilisateurs` (`/admin/utilisateurs`), `AdminClesApi`, `AdminTags`, `AdminAide`, `AdminConditions` dans le même fichier.
 - Admin : `pages/AdminActivite.tsx` (`/admin/comptes/:id/activite`). Base des futures statistiques (recherches sans résultat).
 
 ## Astuces & solutions (Kiavik)
 - Table `CategorieAccueil` (`nom` unique, `icone`, `ordre`, `masquee`) : sections de l'accueil Kiavik. Les procédures, astuces et animations y sont rangées par leur texte `categorie` (= `nom`, pas de clé étrangère) ; une catégorie utilisée est créée si elle manque (`categories/assurer.ts`, seed). Module `categories/` : `GET /categories` (accueil, tout compte connecté), `admin/categories` (éléments, ajouter, renommer — le contenu suit, animations par `CorrectionGuide` —, ordre, masquer, supprimer avec `?vers=`, `ranger` en lot). App : `AdminCategories.tsx`, `useCategories` / `ChoixCategorie` (`donneesProcedures.tsx`).
-- Table `Solution` (titre = symptôme, `cause`, `texte` = que faire, `avertissement`, `motsCles`, lien `guide`/`ecran`/`pastille`, `procedureId`, photo, `publiee`, `cle` pour celles du seed). Module `procedures-kiavik` (nom affiché « Procédures et astuces »).
+- Table `Solution` (titre = symptôme, `cause`, `texte` = que faire, `avertissement`, `motsCles`, lien `guide`/`ecran`/`pastille`, `procedureId`, photo, `publiee`, `cle` pour celles du seed). Module `procedures-kiavik` (nom affiché « Pas-à-pas et Bon à savoir »).
 - Fiches de départ : `kit-guides/solutions.json` (créées seulement si leur clé n'existe pas). API `apps/api/src/solutions/` ; app `Solutions.tsx` (liste, fiche), `AdminSolutions.tsx`.
 - Affichées sur l'accueil, en tête de la recherche et dans la fiche du bouton lié ; base de connaissances du futur assistant IA.
 

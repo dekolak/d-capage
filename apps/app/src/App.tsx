@@ -9,7 +9,7 @@ import { useAuth } from './lib/auth';
 import { useEspace } from './lib/espace';
 import Accueil from './pages/Accueil';
 import { noterPage, titrePage } from './lib/activite';
-import Admin from './pages/Admin';
+import Admin, { AdminAide, AdminClesApi, AdminConditions, AdminTags, AdminUtilisateurs } from './pages/Admin';
 import AdminActivite from './pages/AdminActivite';
 import AdminMotsDePasse from './pages/AdminMotsDePasse';
 import AdminAnnonces from './pages/AdminAnnonces';
@@ -62,6 +62,11 @@ export default function App() {
           <Route path="/compte" element={<Compte />} />
           <Route path="/conditions" element={<Conditions />} />
           {admin && <Route path="/admin" element={<Admin />} />}
+          {admin && <Route path="/admin/utilisateurs" element={<AdminUtilisateurs />} />}
+          {admin && <Route path="/admin/cles-api" element={<AdminClesApi />} />}
+          {admin && <Route path="/admin/tags" element={<AdminTags />} />}
+          {admin && <Route path="/admin/aide" element={<AdminAide />} />}
+          {admin && <Route path="/admin/conditions" element={<AdminConditions />} />}
           {admin && <Route path="/admin/comptes/:id/activite" element={<AdminActivite />} />}
           {admin && <Route path="/admin/mots-de-passe" element={<AdminMotsDePasse />} />}
           {admin && <Route path="/admin/fiches" element={<AdminFiches />} />}

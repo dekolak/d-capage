@@ -6,6 +6,7 @@ import { compresser } from '../../lib/image';
 import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
 import { chargerProcedures, chargerSolutions, ChoixCategorie, ImageApi, ResumeProcedure, Solution, viderSolutions } from './donneesProcedures';
 import './guides.css';
+import { BadgeZone } from '../../pages/Admin';
 
 /* Administration → Astuces & solutions (admin, en français). */
 
@@ -32,7 +33,7 @@ export function AdminSolutions() {
   return (
     <div className="page gx">
       <Link to="/admin" className="btn-lien">← Administration</Link>
-      <h1>Astuces & solutions</h1>
+      <h1>Bon à savoir <BadgeZone zone="kiavik" /></h1>
       <p className="muted petit">Un problème déjà résolu, ou une astuce : le symptôme, pourquoi, que faire. Les clients les retrouvent dans l'accueil, la recherche et la fiche du bouton lié.</p>
       <Erreur e={erreur} />
       <div className="carte form">
@@ -49,7 +50,7 @@ export function AdminSolutions() {
             <b>{s.titre}</b>
             <span className="petit muted">
               {s.categorie}
-              {s.publiee ? <span className="gx-publiee">publiée</span> : <span className="gx-brouillon">brouillon</span>}
+              {s.publiee ? <span className="gx-publiee">✅ publiée</span> : <span className="gx-brouillon">🔒 non publiée</span>}
             </span>
           </Link>
         ))}
@@ -120,7 +121,7 @@ export function AdminSolution() {
             maj(`/admin/solutions/${s.id}`, { method: 'PATCH', json: { publiee } }).then((r) => !r && setS(s)); // retour arrière si erreur
           }}
         />
-        <span><b>{s.publiee ? 'Publiée' : 'Brouillon'}</b><br /><span className="muted petit">{s.publiee ? 'Visible par les clients qui ont les procédures.' : 'Visible seulement par l\'admin.'}</span></span>
+        <span><b>{s.publiee ? '✅ Publiée' : '🔒 Non publiée'}</b><br /><span className="muted petit">{s.publiee ? 'Visible par les clients (accès « Pas-à-pas et Bon à savoir »).' : 'Visible seulement par vous. Cochez pour la montrer aux clients.'}</span></span>
       </label>
 
       <div className="carte form">

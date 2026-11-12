@@ -6,6 +6,7 @@ import { Categorie, viderCategories, viderProcedures, viderSolutions } from './d
 import { normaliser } from './recherche';
 import './guides.css';
 import './categories.css';
+import { BadgeZone } from '../../pages/Admin';
 
 /* Administration → Accueil et catégories (admin, en français) : tout le classement de l'accueil au même endroit. */
 
@@ -14,7 +15,7 @@ interface Element {
   type: Type; id: string; guide?: string; titre: string; categorie: string; publiee: boolean; diagnostic?: boolean; logiciels: string[];
 }
 const cleDe = (e: Element) => `${e.type}:${e.guide ?? ''}:${e.id}`;
-const TYPES: Record<string, string> = { procedure: '📋 Procédure', diagnostic: '🩺 Diagnostic', astuce: '💡 Astuce', animation: '▶ Animation' };
+const TYPES: Record<string, string> = { procedure: '📋 Pas-à-pas', diagnostic: '🩺 Dépannage guidé', astuce: '💡 Bon à savoir', animation: '▶ Démo animée' };
 const typeDe = (e: Element) => (e.type === 'procedure' && e.diagnostic ? 'diagnostic' : e.type);
 const lienDe = (e: Element) =>
   e.type === 'procedure' ? `/admin/procedures/${e.id}` : e.type === 'astuce' ? `/admin/solutions/${e.id}` : `/guides/${e.guide}/animation/${e.id}`;
@@ -82,9 +83,9 @@ export function AdminCategories() {
   return (
     <div className="page gx ca">
       <Link to="/admin" className="btn-lien">← Administration</Link>
-      <h1>🏠 Accueil et catégories</h1>
+      <h1>🏠 Accueil et catégories <BadgeZone zone="kiavik" /></h1>
       <p className="muted petit">
-        Les sections de l'accueil Kiavik : nom, icône, ordre, masquées. Rangez ici les procédures, diagnostics, astuces et animations.
+        Les sections de l'accueil Kiavik : nom, icône, ordre, masquées. Rangez ici les pas-à-pas, dépannages guidés, « Bon à savoir » et démos animées.
         Renommer une catégorie déplace tout son contenu.
       </p>
       <Erreur e={erreur} />
@@ -134,9 +135,9 @@ export function AdminCategories() {
               </select>
             )}
             <select value={fEtat} aria-label="État" onChange={(e) => setFEtat(e.target.value)}>
-              <option value="">Publiés et brouillons</option>
+              <option value="">Publiés et non publiés</option>
               <option value="publiee">Publiés</option>
-              <option value="brouillon">Brouillons</option>
+              <option value="brouillon">Non publiés</option>
             </select>
           </div>
 
@@ -164,7 +165,7 @@ export function AdminCategories() {
                   <small className="muted">
                     {TYPES[typeDe(e)]}
                     {e.logiciels.length > 0 && ` · ${e.logiciels.join(', ')}`}
-                    {e.publiee ? '' : <span className="gx-brouillon">brouillon</span>}
+                    {e.publiee ? '' : <span className="gx-brouillon">🔒 non publiée</span>}
                   </small>
                 </span>
                 <select value={e.categorie} aria-label="Catégorie" onChange={(ev) => ranger([e], ev.target.value)}>

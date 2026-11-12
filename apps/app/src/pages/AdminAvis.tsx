@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Chargement, Erreur, Etoiles } from '../components/Composants';
 import { api, StatutAvis } from '../lib/api';
 import { date } from '../lib/util';
+import { BadgeZone } from './Admin';
 
 interface LigneAvis {
   id: string; note: number; avis: string | null; statut: StatutAvis; moderationRaison: string | null; moderePar: string | null;
@@ -41,7 +42,7 @@ export default function AdminAvis() {
   return (
     <div className="page">
       <p className="petit"><Link to="/admin">‹ Administration</Link></p>
-      <h1>Avis</h1>
+      <h1>Avis <BadgeZone zone="lazzeko" /></h1>
       <div className="filtres">
         <input className="recherche" placeholder="Rechercher dans les avis…" value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="seg">

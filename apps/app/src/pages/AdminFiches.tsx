@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur, FiltreTags, ImageProtegee, NoteResume } from '../components/Composants';
 import { api, Fiche, GroupeTag, PageFiches } from '../lib/api';
 import { date } from '../lib/util';
+import { BadgeZone } from './Admin';
 
 interface U { id: string; identifiant: string; nom: string | null }
 
@@ -53,7 +54,7 @@ export default function AdminFiches() {
   return (
     <div className="page">
       <p className="petit"><Link to="/admin">‹ Administration</Link></p>
-      <h1>Toutes les fiches</h1>
+      <h1>Fiches de réglage <BadgeZone zone="lazzeko" /></h1>
       <div className="filtres">
         <input className="recherche" placeholder="Rechercher (titre, commentaire)…" value={q} onChange={(e) => setQ(e.target.value)} />
         <label className="champ-tag">
