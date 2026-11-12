@@ -27,6 +27,11 @@ class RangerDto {
   @IsString() @MinLength(2) @MaxLength(40) categorie!: string;
 }
 
+class OrdonnerDto {
+  @IsIn(['procedure', 'astuce', 'animation']) type!: TypeElement;
+  @IsArray() @ArrayMaxSize(500) @ValidateNested({ each: true }) @Type(() => RefElementDto) elements!: RefElementDto[];
+}
+
 /** Catégories de l'accueil Kiavik (ordre, icône, masquées) : lues par l'accueil. */
 @Controller('categories')
 export class CategoriesController {
@@ -59,6 +64,12 @@ export class AdminCategoriesController {
   @Post('ranger')
   ranger(@Body() d: RangerDto) {
     return this.categories.ranger(d.elements, d.categorie);
+  }
+
+  /** Ordre d'affichage dans une catégorie (un type à la fois : la liste complète, dans le nouvel ordre). */
+  @Post('ordonner')
+  ordonner(@Body() d: OrdonnerDto) {
+    return this.categories.ordonner(d.type, d.elements);
   }
 
   @Patch(':id')

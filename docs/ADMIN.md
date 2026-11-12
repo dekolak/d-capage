@@ -58,6 +58,7 @@ Administration → **💬 Messages**.
 - **Administration → 🏠 Accueil et catégories** : tout le classement au même endroit.
   - **Catégories** (à gauche, dans l'ordre de l'accueil) : ↑ ↓ pour l'ordre, ✏️ pour **renommer** et changer l'**icône** (tout son contenu suit, animations comprises), 👁 / 🙈 pour **masquer** la section de l'accueil (le contenu reste dans les listes et la recherche), 🗑 pour **supprimer** (si elle n'est pas vide : choisir la catégorie qui reçoit son contenu), **+ Ajouter** une catégorie (même vide). Cliquer sur une catégorie filtre la liste.
   - **Liste** (à droite) : toutes les procédures, diagnostics, astuces et animations, avec **filtres** (catégorie, type, logiciel, publié / brouillon) et recherche par titre. Le menu de chaque ligne la **range** dans une autre catégorie ; cocher plusieurs lignes pour les ranger d'un coup. « ⚠️ catégorie inconnue » signale un élément rangé dans une catégorie qui n'existe plus.
+  - **Ordre dans une catégorie** : cliquer sur une catégorie (sans autre filtre) affiche son contenu par groupe, comme sur l'accueil (▶ démos animées, 📋 pas-à-pas et dépannages guidés, 💡 Bon à savoir), avec ↑ ↓ pour changer l'ordre d'affichage dans chaque groupe.
 - La catégorie se choisit aussi dans le menu **Catégorie** d'une procédure, d'une astuce, ou d'une animation (ouvrir l'animation → « ✏️ Modifier cette scène » → **Catégorie sur l'accueil**, « Revenir à l'original » pour reprendre celle du fichier).
 
 ## Kiavik : pas-à-pas (procédures)

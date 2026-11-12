@@ -706,6 +706,26 @@ describe('Parcours complet', () => {
     expect(await cat(`Blanc bis ${id}`)).toBeUndefined();
     expect((await http.get(`/api/procedures/${p.id}`).set(A)).body.categorie).toBe('Impression');
 
+    // ordre dans une catégorie : pas-à-pas entre eux (les autres catégories ne bougent pas), démos animées
+    const pa = (await http.post('/api/admin/procedures').set(A).send({ titre: `Ord A ${id}`, categorie: `Ord ${id}` })).body;
+    const pb = (await http.post('/api/admin/procedures').set(A).send({ titre: `Ord B ${id}`, categorie: `Ord ${id}` })).body;
+    const rang = async () => (await http.get('/api/procedures').set(A)).body.map((x: any) => x.id);
+    let r = await rang();
+    expect(r.indexOf(pa.id)).toBeLessThan(r.indexOf(pb.id));
+    expect((await http.post('/api/admin/categories/ordonner').set(C).send({ type: 'procedure', elements: [] })).status).toBe(403);
+    await http.post('/api/admin/categories/ordonner').set(A).send({ type: 'procedure', elements: [{ type: 'procedure', id: pb.id }, { type: 'procedure', id: pa.id }] }).expect(201);
+    r = await rang();
+    expect(r.indexOf(pb.id)).toBeLessThan(r.indexOf(pa.id));
+    const anims = (await http.get('/api/guides').set(A)).body.flatMap((x: any) => x.animations.map((a: any) => ({ type: 'animation', id: a.id, guide: x.slug })));
+    if (anims.length > 1) {
+      await http.post('/api/admin/categories/ordonner').set(A).send({ type: 'animation', elements: [anims[1], anims[0]] }).expect(201);
+      const apres = (await http.get('/api/guides').set(A)).body.flatMap((x: any) => x.animations.map((a: any) => ({ id: a.id, ordre: a.ordre })));
+      expect(apres.find((a: any) => a.id === anims[1].id).ordre).toBeLessThan(apres.find((a: any) => a.id === anims[0].id).ordre);
+      await http.post('/api/admin/categories/ordonner').set(A).send({ type: 'animation', elements: anims }).expect(201);
+    }
+    for (const x of [pa, pb]) await http.delete(`/api/admin/procedures/${x.id}`).set(A).expect(200);
+    await http.delete(`/api/admin/categories/${(await cat(`Ord ${id}`)).id}`).set(A).expect(200);
+
     // ménage
     await http.delete(`/api/admin/guides/${g.slug}/animations/${anim.id}/categorie`).set(A).expect(200);
     await http.delete(`/api/admin/procedures/${p.id}`).set(A).expect(200);

@@ -38,7 +38,8 @@ export default function Guides() {
   if (erreur) return <div className="page"><Erreur e={erreur} /></div>;
   if (!guides) return <Chargement />;
   const prenom = moi?.nom?.split(' ')[0];
-  const guidees = guides.flatMap((g) => g.animations.map((a) => ({ ...a, guide: g.slug })));
+  // démos animées de tous les logiciels, dans l'ordre choisi par l'admin
+  const guidees = guides.flatMap((g) => g.animations.map((a) => ({ ...a, guide: g.slug }))).sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));
   // sections par catégorie : procédures guidées (animations), procédures et diagnostics, astuces
   // ordre, icônes et sections masquées : Administration → Accueil et catégories
   const masquees = (cats ?? []).filter((c) => c.masquee).map((c) => c.nom);

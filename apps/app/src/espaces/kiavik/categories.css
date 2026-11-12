@@ -28,3 +28,9 @@
 .ca input[type='text'], .ca input[type='search'] { min-height: 40px; padding: 6px 10px; font-size: 15px; }
 .ca-filtres input[type='search'] { border: 1px solid var(--bord-fort); border-radius: var(--r-sm); }
 .ca-liste input[type='checkbox'], .ca-lot input[type='checkbox'] { width: 18px; height: 18px; }
+.ca-groupe { font-weight: 700; font-size: 14px; padding: 10px 6px 2px !important; color: var(--od); }
+.ca-fleches { display: flex; flex-direction: column; gap: 2px; }
+.ca-fleches .btn { min-height: 26px; padding: 0 8px; }
+.ca-aide { margin: 0 0 6px; }
+main:has(.ca) { max-width: 1200px; }
+.ca-liste select { max-width: 190px; }
