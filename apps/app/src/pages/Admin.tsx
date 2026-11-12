@@ -12,6 +12,7 @@ interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: s
 interface TagAValider { id: string; nom: string; groupe: { nom: string } }
 
 type Zone = 'commun' | string;
+const CLE_SECTIONS = 'admin.sections';
 interface Entree { to: string; titre: string; texte: string; zone: Zone; compte?: number; module?: string }
 
 /** Badge de l'espace (couleur de l'espace) ou « Commun ». */
@@ -34,11 +35,18 @@ export function EnteteAdmin({ titre, zone, children }: { titre: string; zone: Zo
 
 /**
  * Administration : un menu court, rangé en sections Commun / Lazzeko / Kiavik (badge de couleur sur chaque entrée).
- * La section de l'espace ouvert vient en premier ; ouvrir une entrée d'un autre espace bascule dans cet espace.
+ * Ordre fixe Commun, Lazzeko, Kiavik, toutes repliables ; ouvrir une entrée d'un autre espace bascule dans cet espace.
  */
 export default function Admin() {
   const { espace: ouvert, espaces, choisir } = useEspace();
   const nav = useNavigate();
+  const [ouvertes, setOuvertes] = useState<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CLE_SECTIONS) ?? '{}');
+    } catch {
+      return {};
+    }
+  });
   const [compte, setCompte] = useState<{ tags: number; aide: number; utilisateurs: number }>({ tags: 0, aide: 0, utilisateurs: 0 });
   useEffect(() => {
     Promise.all([
@@ -63,12 +71,18 @@ export default function Admin() {
     { zone: 'kiavik', to: '/admin/diagnostics', titre: '🩺 Dépannages reçus', texte: 'résultats envoyés par les clients', module: 'procedures-kiavik' },
     { zone: 'kiavik', to: '/admin/solutions', titre: '💡 Bon à savoir', texte: 'problèmes déjà résolus, astuces', module: 'procedures-kiavik' },
   ].filter((e) => !e.module || espaces.some((x) => x.slug === e.zone && x.modules.some((m) => m.slug === e.module)));
-  // l'espace ouvert d'abord, puis Commun, puis les autres espaces
-  const zones = [ouvert.slug, 'commun', ...espaces.map((e) => e.slug).filter((s) => s !== ouvert.slug)].filter((z) => entrees.some((e) => e.zone === z));
+  // ordre fixe : Commun, puis les espaces (Lazzeko, Kiavik) ; toutes repliables, ouvertes/fermées gardées sur ce téléphone
+  const zones = ['commun', ...espaces.map((e) => e.slug)].filter((z) => entrees.some((e) => e.zone === z));
   const nomZone = (z: Zone) => espaces.find((e) => e.slug === z)?.nom ?? 'Commun';
   const ouvrir = (e: Entree) => {
     if (e.zone !== 'commun' && e.zone !== ouvert.slug) choisir(e.zone);
     nav(e.to);
+  };
+  const estOuverte = (z: Zone) => ouvertes[z] ?? z === ouvert.slug; // par défaut : la section de l'espace ouvert
+  const basculer = (z: Zone, v: boolean) => {
+    const n = { ...ouvertes, [z]: v };
+    setOuvertes(n);
+    localStorage.setItem(CLE_SECTIONS, JSON.stringify(n));
   };
 
   return (
@@ -76,29 +90,24 @@ export default function Admin() {
       <h1>Administration</h1>
       <MotsDePasseEtNotifications />
       {zones.map((z) => {
-        const autre = z !== 'commun' && z !== ouvert.slug;
-        const corps = (
-          <div className="adm-liste">
-            {entrees.filter((e) => e.zone === z).map((e) => (
-              <button key={e.to} type="button" className="bandeau lien-bandeau adm-entree" onClick={() => ouvrir(e)}>
-                <span><b>{e.titre}</b>{!!e.compte && <span className="badge-rouge">{e.compte}</span>} : {e.texte}</span>
-                <span>›</span>
-              </button>
-            ))}
-          </div>
-        );
-        return autre ? (
-          <details key={z} className="adm-section">
-            <summary><h2>{nomZone(z)} <BadgeZone zone={z} /></h2><small className="muted">ouvrir une entrée bascule dans l'espace {nomZone(z)}</small></summary>
-            {corps}
+        const n = entrees.filter((e) => e.zone === z).reduce((t, e) => t + (e.compte ?? 0), 0);
+        return (
+          <details key={z} className="adm-section" open={estOuverte(z)} onToggle={(ev) => basculer(z, (ev.target as HTMLDetailsElement).open)}>
+            <summary>
+              <h2>{nomZone(z)} <BadgeZone zone={z} />{n > 0 && <span className="badge-rouge">{n}</span>}</h2>
+            </summary>
+            <div className="adm-liste">
+              {entrees.filter((e) => e.zone === z).map((e) => (
+                <button key={e.to} type="button" className="bandeau lien-bandeau adm-entree" onClick={() => ouvrir(e)}>
+                  <span><b>{e.titre}</b>{!!e.compte && <span className="badge-rouge">{e.compte}</span>} : {e.texte}</span>
+                  <span>›</span>
+                </button>
+              ))}
+            </div>
           </details>
-        ) : (
-          <section key={z} className="adm-section">
-            <h2>{nomZone(z)} <BadgeZone zone={z} /></h2>
-            {corps}
-          </section>
         );
       })}
+      <p className="muted petit">Une entrée d'un autre espace vous fait passer dans cet espace.</p>
     </div>
   );
 }
