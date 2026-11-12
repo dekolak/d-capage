@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Bulle, TypeQuestion } from '../components/Annonces';
 import { Erreur } from '../components/Composants';
 import { useEspace } from '../lib/espace';
@@ -10,17 +10,20 @@ import { BadgeZone } from './Admin';
 type Niveau = 'CONSEIL' | 'INFO' | 'IMPORTANT';
 type Rec = 'AUCUNE' | 'JOURS' | 'SEMAINES' | 'MOIS';
 type Cible = 'TOUS' | 'LAZZEKO' | 'AUTRES';
+type DateSi = 'non' | 'oui' | 'toujours';
 interface Annonce {
   id: string; titre: string; texte: string; niveau: Niveau; lienUrl: string | null; lienTexte: string | null;
   debut: string; fin: string | null; actif: boolean; recurrence: Rec; intervalle: number; cibleClient: Cible;
   espaces: string[]; fabricantIds: string[]; modeleIds: string[]; varianteIds: string[]; numerosOdoo: string[];
   questionType: TypeQuestion; question: string | null; options: string[]; autreOption: boolean; reponseObligatoire: boolean;
+  dateSi: DateSi | null; dateQuestion: string | null; procedureId: string | null;
   etat: 'EN_COURS' | 'PROGRAMME' | 'TERMINE' | 'PAUSE'; cible: number; stats: { occurrence: number; vues: number; comprises: number; reponses: number }; prochaine: string | null;
 }
 const VIDE = {
   titre: '', texte: '', niveau: 'CONSEIL' as Niveau, lienUrl: '', lienTexte: '', debut: '', fin: '',
   recurrence: 'AUCUNE' as Rec, intervalle: 1, espace: '', cibleClient: 'TOUS' as Cible, machines: [] as string[], numeros: '',
   questionType: 'AUCUNE' as TypeQuestion, question: '', options: ['', ''], autreOption: false, reponseObligatoire: false,
+  dateSi: '' as DateSi | '', dateQuestion: '', procedureId: '',
 };
 type Form = typeof VIDE;
 const ETAT = { EN_COURS: 'En cours', PROGRAMME: 'Programmé', TERMINE: 'Terminé', PAUSE: 'En pause' };
@@ -51,12 +54,29 @@ export default function AdminAnnonces() {
   const [nb, setNb] = useState<number | null>(null);
   const [err, setErr] = useState<unknown>();
   const [res, setRes] = useState<string | null>(null);
+  const [pasAPas, setPasAPas] = useState<{ id: string; titre: string; publiee: boolean }[]>([]);
+  const [params, setParams] = useSearchParams();
 
   const charger = () => api<Annonce[]>('/admin/annonces').then(setListe).catch(setErr);
   useEffect(() => {
     charger();
     api<Fabricant[]>('/catalogue').then(setCat).catch(setErr);
+    api<{ id: string; titre: string; publiee: boolean }[]>('/procedures').then(setPasAPas).catch(() => {});
   }, []);
+  // « 🔁 Rappel d'entretien » depuis un pas-à-pas : message pré-rempli
+  useEffect(() => {
+    const id = params.get('procedure');
+    const p = pasAPas.find((x) => x.id === id);
+    if (!p) return;
+    setF({
+      ...VIDE, espace: espaces.some((e) => e.slug === 'kiavik') ? 'kiavik' : espaceOuvert.slug, titre: `Entretien : ${p.titre}`.slice(0, 120),
+      texte: `Pensez à faire « ${p.titre} » régulièrement : votre machine dure plus longtemps.`,
+      questionType: 'OUI_NON', question: 'L’avez-vous fait ces 6 derniers mois ?', dateSi: 'non', dateQuestion: 'À quelle date l’avez-vous fait la dernière fois ?',
+      procedureId: p.id, recurrence: 'MOIS', intervalle: 6,
+    });
+    setEdition(null); setOuvert(true);
+    setParams({}, { replace: true });
+  }, [params, pasAPas]);
   // nombre d'utilisateurs touchés, recalculé à chaque changement de ciblage
   useEffect(() => {
     if (!ouvert) return;
@@ -73,6 +93,7 @@ export default function AdminAnnonces() {
       numeros: a.numerosOdoo.join('\n'),
       questionType: a.questionType, question: a.question ?? '', options: a.options.length ? a.options : ['', ''],
       autreOption: a.autreOption, reponseObligatoire: a.reponseObligatoire,
+      dateSi: a.dateSi ?? '', dateQuestion: a.dateQuestion ?? '', procedureId: a.procedureId ?? '',
     });
     setEdition(a.id); setOuvert(true); window.scrollTo(0, 0);
   };
@@ -87,6 +108,9 @@ export default function AdminAnnonces() {
       questionType: f.questionType, question: f.questionType === 'AUCUNE' ? null : f.question,
       options: f.questionType === 'CHOIX' ? f.options.filter((o) => o.trim()) : [],
       autreOption: f.questionType === 'CHOIX' && f.autreOption, reponseObligatoire: f.questionType !== 'AUCUNE' && f.reponseObligatoire,
+      dateSi: f.questionType === 'OUI_NON' && f.dateSi ? f.dateSi : null,
+      dateQuestion: f.questionType === 'OUI_NON' && f.dateSi ? f.dateQuestion.trim() || null : null,
+      procedureId: f.procedureId || null,
     };
     try {
       await api(edition ? `/admin/annonces/${edition}` : '/admin/annonces', { method: edition ? 'PATCH' : 'POST', json: corps });
@@ -144,8 +168,36 @@ export default function AdminAnnonces() {
                   <label className="interrupteur petit"><input type="checkbox" checked={f.autreOption} onChange={(e) => setF({ ...f, autreOption: e.target.checked })} /> Ajouter « Autre… » avec un champ libre</label>
                 </div>
               )}
+              {f.questionType === 'OUI_NON' && (
+                <div className="deux">
+                  <label>Demander ensuite une date
+                    <select value={f.dateSi} onChange={(e) => setF({ ...f, dateSi: e.target.value as DateSi | '' })}>
+                      <option value="">Non</option>
+                      <option value="non">Après « Non »</option>
+                      <option value="oui">Après « Oui »</option>
+                      <option value="toujours">Après les deux réponses</option>
+                    </select>
+                  </label>
+                  {f.dateSi && <label>Question de la date<input value={f.dateQuestion} maxLength={200} onChange={(e) => setF({ ...f, dateQuestion: e.target.value })} placeholder="À quelle date l'avez-vous fait la dernière fois ?" /></label>}
+                </div>
+              )}
               <label className="interrupteur petit"><input type="checkbox" checked={f.reponseObligatoire} onChange={(e) => setF({ ...f, reponseObligatoire: e.target.checked })} /> Réponse obligatoire (pas de bouton « Passer »)</label>
             </>
+          )}
+          {pasAPas.length > 0 && (
+            <label>🔧 Pas-à-pas à faire (rappel d'entretien, facultatif)
+              <select value={f.procedureId} onChange={(e) => setF({ ...f, procedureId: e.target.value })}>
+                <option value="">Aucun</option>
+                {pasAPas.map((p) => <option key={p.id} value={p.id}>{p.titre}{p.publiee ? '' : ' (non publié)'}</option>)}
+              </select>
+              {f.procedureId && (
+                <small className="muted">
+                  {f.questionType === 'OUI_NON' ? 'Si le client répond « Non », il peut faire le pas-à-pas tout de suite.' : 'Bouton « Faire le pas-à-pas maintenant » dans la bulle.'}
+                  {' '}Quand il le termine, c'est noté dans son historique d'entretien (Utilisateurs) et dans les résultats.
+                  {!pasAPas.find((p) => p.id === f.procedureId)?.publiee && ' ⚠️ Pas-à-pas non publié : le bouton ne s\'affichera pas.'}
+                </small>
+              )}
+            </label>
           )}
 
           <b className="petit">Quand</b>
@@ -210,7 +262,11 @@ export default function AdminAnnonces() {
           <div className="succes" style={{ margin: 0 }}>Ce message touchera <b>{nb ?? '…'}</b> utilisateur{nb === 1 ? '' : 's'}.</div>
 
           <b className="petit">Aperçu</b>
-          <Bulle a={{ ...f, question: { type: f.questionType, texte: f.question, options: f.options.filter((o) => o.trim()), autre: f.autreOption, obligatoire: f.reponseObligatoire } }} apercu />
+          <Bulle a={{
+            ...f,
+            question: { type: f.questionType, texte: f.question, options: f.options.filter((o) => o.trim()), autre: f.autreOption, obligatoire: f.reponseObligatoire, dateSi: f.dateSi || null, dateQuestion: f.dateQuestion },
+            procedure: pasAPas.find((p) => p.id === f.procedureId),
+          }} apercu />
 
           <div className="actions-avis">
             <button type="button" className="btn" onClick={() => { setOuvert(false); setEdition(null); }}>Annuler</button>
@@ -234,6 +290,7 @@ export default function AdminAnnonces() {
               {' · '}{a.cibleClient === 'TOUS' ? 'tous' : a.cibleClient === 'LAZZEKO' ? 'clients Lazzeko' : 'autres marques'}
               {a.modeleIds.length + a.varianteIds.length + a.fabricantIds.length ? ' · machines ciblées' : ''}
               {a.numerosOdoo.length ? ` · ${a.numerosOdoo.length} n° Odoo` : ''}
+              {a.procedureId ? ` · 🔧 ${pasAPas.find((p) => p.id === a.procedureId)?.titre ?? 'pas-à-pas'}` : ''}
             </div>
             <div className="petit" style={{ margin: '6px 0' }}>
               👥 {a.cible} visé{a.cible > 1 ? 's' : ''} · 👁 {a.stats.vues} vu{a.stats.vues > 1 ? 's' : ''} · ✓ {a.stats.comprises} « compris »
@@ -261,7 +318,7 @@ export default function AdminAnnonces() {
 interface Res {
   type: TypeQuestion; question: string; occurrence: number; occurrenceEnCours: number; total: number; moyenne: number | null;
   periodes: { occurrence: number; nombre: number; debut: string }[]; resume: { valeur: string; nombre: number }[];
-  reponses: { valeur: string; autre: string | null; date: string; user: { identifiant: string; nom: string | null; clientLazzeko: boolean } }[];
+  reponses: { valeur: string; autre: string | null; date: string; dateFaite: string | null; termine: string | null; user: { identifiant: string; nom: string | null; clientLazzeko: boolean } }[];
 }
 
 /** Résultats d'une question : barres en %, moyenne pour une note, détail par personne, export CSV. */
@@ -308,7 +365,11 @@ function Resultats({ id, periodique }: { id: string; periodique: boolean }) {
         {r.reponses.map((x, i) => (
           <div key={i} className="petit" style={{ padding: '4px 0', borderTop: '1px solid var(--bord)' }}>
             <b>{x.user.nom || x.user.identifiant}</b> <span className="muted">({x.user.identifiant}{x.user.clientLazzeko ? '' : ', autre marque'}) · {date(x.date)}</span>
-            <div>{lib(x.valeur)}{x.autre ? ` : ${x.autre}` : ''}</div>
+            <div>
+              {lib(x.valeur)}{x.autre ? ` : ${x.autre}` : ''}
+              {x.dateFaite && <> · 📅 fait le {date(x.dateFaite)}</>}
+              {x.termine && <> · ✅ pas-à-pas terminé le {date(x.termine)}</>}
+            </div>
           </div>
         ))}
       </details>

@@ -71,6 +71,9 @@ class SuiviDto {
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) derniere?: string | null;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsIn(['termine', 'resolu', 'contact']) fin?: string | null;
 }
+class TermineDto {
+  @IsString() @MaxLength(40) annonceId!: string;
+}
 class TraiteDto {
   @IsBoolean() traite!: boolean;
 }
@@ -99,6 +102,12 @@ export class ProceduresController {
   @Post('etapes/:id/signaler')
   signaler(@Param('id') id: string, @Body() d: SignalerDto, @Moi() moi: Principal) {
     return this.suivi.signaler(id, { id: moi.id, admin: estAdmin(moi) }, d.message);
+  }
+
+  /** Pas-à-pas terminé, ouvert depuis un rappel d'entretien (message) : gardé pour l'historique du client. */
+  @Post(':id/termine')
+  termine(@Param('id') id: string, @Body() d: TermineDto, @Moi() moi: Principal) {
+    return this.suivi.termineDepuisRappel(id, moi.id, d.annonceId);
   }
 
   /** Avancement anonyme d'une tentative (statistiques). */

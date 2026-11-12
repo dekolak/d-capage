@@ -32,12 +32,19 @@ class AnnonceDto extends CiblageDto {
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(300) question?: string | null;
   @IsOptional() @IsArray() @ArrayMaxSize(5) @IsString({ each: true }) @MaxLength(80, { each: true }) options?: string[];
   @IsOptional() @IsBoolean() autreOption?: boolean;
+  /** Question Oui / Non : demander une date après « non », « oui » ou « toujours » (null : jamais). */
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsIn(['non', 'oui', 'toujours']) dateSi?: string | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(200) dateQuestion?: string | null;
+  /** Rappel d'entretien : pas-à-pas à faire. */
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) procedureId?: string | null;
   @IsOptional() @IsBoolean() reponseObligatoire?: boolean;
 }
 
 class ReponseDto {
   @IsString() @MinLength(1) @MaxLength(1000) valeur!: string;
   @IsOptional() @IsString() @MaxLength(300) autre?: string;
+  /** Date indiquée (AAAA-MM-JJ), si le message la demande. */
+  @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) dateFaite?: string;
 }
 
 class ModifierAnnonceDto extends AnnonceDto {
@@ -72,7 +79,7 @@ export class AnnoncesController {
   /** Réponse à la question du message (masque aussi le message pour la période). */
   @Post('annonces/:id/reponse')
   repondre(@Moi() moi: Principal, @Param('id') id: string, @Body() dto: ReponseDto) {
-    return this.annonces.repondre(id, moi.id, dto.valeur, dto.autre);
+    return this.annonces.repondre(id, moi.id, dto.valeur, dto.autre, dto.dateFaite);
   }
 
   // --- administration (admin, ou clé API pour programmer des messages depuis Odoo) ---
@@ -90,6 +97,14 @@ export class AnnoncesController {
   @Header('Content-Disposition', 'attachment; filename="reponses.csv"')
   csv(@Param('id') id: string) {
     return this.annonces.csv(id);
+  }
+
+  /** Historique d'entretien d'un client : réponses aux rappels (avec la date indiquée) et pas-à-pas terminés. */
+  @Get('admin/annonces/entretien/:userId')
+  @Roles(Role.ADMIN)
+  @AutoriseCleApi()
+  entretien(@Param('userId') userId: string) {
+    return this.annonces.entretien(userId);
   }
 
   @Get('admin/annonces')

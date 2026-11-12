@@ -568,6 +568,10 @@ export function AdminProcedure() {
               }} />
             <span><b>{p.publiee ? '✅ Publiée' : '🔒 Non publiée'}</b><br /><span className="muted petit">{p.publiee ? 'Visible par les clients (accès « Pas-à-pas et Bon à savoir »).' : 'Visible seulement par vous. Cochez pour la montrer aux clients.'}</span></span>
           </label>
+          <Link to={`/admin/messages?procedure=${p.id}`} className="bandeau lien-bandeau">
+            <span><b>🔁 Rappel d'entretien</b> : message périodique « L'avez-vous fait ? » (Oui / Non, date), avec ce pas-à-pas à faire</span>
+            <span>›</span>
+          </Link>
           <label className="carte form">
             <span><b>➡ Procédure suivante</b><br /><span className="muted petit">Proposée à la fin : « Continuer avec … ? » (Oui / Non). Ex. réglage FlexiPRINT → réglage DXonJet → impression.</span></span>
             <select value={p.suivanteId ?? ''}

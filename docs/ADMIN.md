@@ -36,6 +36,11 @@ Administration → **💬 Messages**.
 - **Ciblage** : clients Lazzeko ou autres marques, machines, n° clients Odoo. Le nombre de personnes touchées s'affiche avant publication.
 - **Question** facultative (une par message) : Oui / Non, choix (2 à 5 + « Autre… »), note 1 à 5 ★, texte court. Obligatoire ou non.
 - **Résultats** : vus, « compris », réponses en %, détail par personne et par période, export CSV.
+- **Date après Oui / Non** (« Demander ensuite une date ») : après « Non », « Oui » ou les deux, le client indique une date (« À quelle date l'avez-vous fait la dernière fois ? ») ou « Je ne sais plus ». Visible dans les résultats (📅) et l'export CSV.
+- **🔧 Pas-à-pas à faire (rappel d'entretien)** : avec une question Oui / Non, le client qui répond « Non » voit « ▶ Faire le pas-à-pas maintenant » ; sans question, le bouton est dans la bulle. Quand il le **termine**, c'est noté (✅ dans les résultats et dans son historique). Le pas-à-pas doit être publié.
+- **Le plus simple** : dans l'écran d'un pas-à-pas, **🔁 Rappel d'entretien** ouvre un message déjà rempli (question Oui / Non, date après « Non », tous les 6 mois, espace Kiavik) ; il reste à choisir à qui (n° Odoo) et publier.
+- **Historique d'entretien** d'un client : Utilisateurs → toucher le compte → **🔧 Entretien** (réponses aux rappels avec la date, pas-à-pas terminés).
+- ⚠️ Ces réponses et pas-à-pas terminés sont **nominatifs** : à mentionner dans les conditions d'utilisation Kiavik (partie « Vos données »).
 - Ce n'est pas une messagerie : les clients ne peuvent pas écrire librement.
 
 ## Conditions d'utilisation

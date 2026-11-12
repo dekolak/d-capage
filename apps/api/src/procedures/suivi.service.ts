@@ -120,4 +120,15 @@ export class SuiviService {
       depuis: suivis.reduce<Date | null>((m, s) => (!m || s.createdAt < m ? s.createdAt : m), null),
     };
   }
+
+  /** Pas-à-pas terminé depuis un rappel : le message doit renvoyer vers ce pas-à-pas ; une fois par jour au plus. */
+  async termineDepuisRappel(procedureId: string, userId: string, annonceId: string) {
+    const a = await this.prisma.annonce.findUnique({ where: { id: annonceId }, select: { procedureId: true } });
+    if (!a || a.procedureId !== procedureId) throw new BadRequestException('Ce message ne renvoie pas vers ce pas-à-pas');
+    const recent = await this.prisma.parcoursTermine.findFirst({
+      where: { userId, procedureId, annonceId, createdAt: { gte: new Date(Date.now() - 24 * 3600 * 1000) } },
+    });
+    if (!recent) await this.prisma.parcoursTermine.create({ data: { userId, procedureId, annonceId } });
+    return { ok: true };
+  }
 }

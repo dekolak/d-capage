@@ -41,13 +41,19 @@ export function debutPeriode(a: Pick<Annonce, 'recurrence' | 'intervalle' | 'deb
   return new Date(a.debut.getTime() + k * (a.recurrence === Recurrence.SEMAINES ? 7 : 1) * n * JOUR);
 }
 
-function verifierQuestion(d: Prisma.AnnonceCreateInput) {
+function verifierQuestion(d: Prisma.AnnonceUncheckedCreateInput) {
   const t = d.questionType ?? TypeQuestion.AUCUNE;
   if (t === TypeQuestion.AUCUNE) return;
   if (!d.question || !String(d.question).trim()) throw new BadRequestException('Écrivez la question');
   const opts = (Array.isArray(d.options) ? d.options : (d.options as { set?: string[] } | undefined)?.set) ?? [];
   if (t === TypeQuestion.CHOIX && (opts.length < 2 || opts.length > 5 || opts.some((o) => !o.trim())))
     throw new BadRequestException('Entre 2 et 5 réponses possibles');
+}
+
+/** La date ne se demande qu'après une question Oui / Non. */
+function nettoyerDate<T extends Prisma.AnnonceUncheckedCreateInput>(d: T): T {
+  if ((d.questionType ?? TypeQuestion.AUCUNE) !== TypeQuestion.OUI_NON) return { ...d, ...(d.dateSi !== undefined || d.questionType ? { dateSi: null, dateQuestion: null } : {}) };
+  return { ...d, ...(d.dateQuestion !== undefined ? { dateQuestion: d.dateQuestion?.trim() || null } : {}) };
 }
 
 /** Date de la prochaine réapparition d'un message périodique. */
@@ -97,6 +103,7 @@ export class AnnoncesService {
     if (!espacesDesModules(u.modules.map((m) => m.module)).some((e) => e.slug === espace)) return [];
     const actives = await this.prisma.annonce.findMany({
       where: { actif: true, debut: { lte: now }, OR: [{ fin: null }, { fin: { gt: now } }] },
+      include: { procedure: { select: { id: true, titre: true, publiee: true } } },
     });
     const vise = (a: Annonce) => {
       if (a.espaces.length && !a.espaces.includes(espace)) return false;
@@ -129,8 +136,14 @@ export class AnnoncesService {
       .sort((x, y) => POIDS[x.a.niveau] - POIDS[y.a.niveau] || y.a.debut.getTime() - x.a.debut.getTime())
       .map(({ a }) => ({
         id: a.id, titre: a.titre, texte: a.texte, niveau: a.niveau, lienUrl: a.lienUrl, lienTexte: a.lienTexte,
+        ...(a.procedure?.publiee ? { procedure: { id: a.procedure.id, titre: a.procedure.titre } } : {}),
         ...(a.questionType !== TypeQuestion.AUCUNE
-          ? { question: { type: a.questionType, texte: a.question, options: a.options, autre: a.autreOption, obligatoire: a.reponseObligatoire } }
+          ? {
+              question: {
+                type: a.questionType, texte: a.question, options: a.options, autre: a.autreOption, obligatoire: a.reponseObligatoire,
+                ...(a.dateSi ? { dateSi: a.dateSi, dateQuestion: a.dateQuestion } : {}),
+              },
+            }
           : {}),
       }));
   }
@@ -149,7 +162,7 @@ export class AnnoncesService {
   }
 
   /** Réponse à la question : une par personne et par période (modifiable tant que la période dure). */
-  async repondre(id: string, userId: string, valeur: string, autre?: string) {
+  async repondre(id: string, userId: string, valeur: string, autre?: string, dateFaite?: string) {
     const a = await this.prisma.annonce.findUnique({ where: { id } });
     if (!a || a.questionType === TypeQuestion.AUCUNE) throw new NotFoundException('Pas de question pour ce message');
     const v = valeur.trim();
@@ -161,11 +174,18 @@ export class AnnoncesService {
     if (!ok) throw new BadRequestException('Réponse invalide');
     const occ = occurrence(a);
     const precision = a.questionType === TypeQuestion.CHOIX && v === 'Autre' ? autre?.trim().slice(0, 300) || null : null;
+    // date indiquée : seulement si le message la demande pour cette réponse ; pas dans le futur
+    let date: Date | null = null;
+    if (dateFaite && a.questionType === TypeQuestion.OUI_NON && (a.dateSi === 'toujours' || a.dateSi === v)) {
+      const d = new Date(`${dateFaite}T12:00:00Z`);
+      if (Number.isNaN(d.getTime()) || d.getTime() > Date.now() + JOUR || d.getUTCFullYear() < 2000) throw new BadRequestException('Date invalide');
+      date = d;
+    }
     await this.prisma.$transaction([
       this.prisma.annonceReponse.upsert({
         where: { annonceId_userId_occurrence: { annonceId: id, userId, occurrence: occ } },
-        update: { valeur: v, autre: precision },
-        create: { annonceId: id, userId, occurrence: occ, valeur: v, autre: precision },
+        update: { valeur: v, autre: precision, dateFaite: date },
+        create: { annonceId: id, userId, occurrence: occ, valeur: v, autre: precision, dateFaite: date },
       }),
       this.prisma.annonceLecture.upsert({
         where: { annonceId_userId_occurrence: { annonceId: id, userId, occurrence: occ } },
@@ -200,7 +220,17 @@ export class AnnoncesService {
       total: reponses.length,
       resume: choix.map((v) => ({ valeur: v, nombre: compte(v) })),
       moyenne: notes.length ? +(notes.reduce((x, y) => x + y, 0) / notes.length).toFixed(2) : null,
-      reponses: reponses.map((r) => ({ valeur: r.valeur, autre: r.autre, date: r.updatedAt, user: r.user })),
+      reponses: await Promise.all(
+        reponses.map(async (r) => ({
+          valeur: r.valeur, autre: r.autre, date: r.updatedAt, dateFaite: r.dateFaite, user: r.user,
+          // pas-à-pas terminé depuis ce rappel, pendant cette période
+          termine: a.procedureId
+            ? (await this.prisma.parcoursTermine.findFirst({
+                where: { annonceId: id, userId: r.userId, createdAt: { gte: debutPeriode(a, o) } }, orderBy: { createdAt: 'desc' }, select: { createdAt: true },
+              }))?.createdAt ?? null
+            : null,
+        })),
+      ),
     };
   }
 
@@ -214,13 +244,34 @@ export class AnnoncesService {
     });
     const c = (x: unknown) => `"${String(x ?? '').replace(/"/g, '""')}"`;
     const lignes = [
-      ['Période', 'Début de période', 'Identifiant', 'Nom', 'Client Lazzeko', 'Réponse', 'Précision', 'Date'].map(c).join(';'),
+      ['Période', 'Début de période', 'Identifiant', 'Nom', 'Client Lazzeko', 'Réponse', 'Précision', 'Date indiquée', 'Date'].map(c).join(';'),
       ...rs.map((r) =>
-        [r.occurrence + 1, debutPeriode(a, r.occurrence).toISOString().slice(0, 10), r.user.identifiant, r.user.nom, r.user.clientLazzeko ? 'oui' : 'non', r.valeur, r.autre, r.updatedAt.toISOString()]
+        [r.occurrence + 1, debutPeriode(a, r.occurrence).toISOString().slice(0, 10), r.user.identifiant, r.user.nom, r.user.clientLazzeko ? 'oui' : 'non', r.valeur, r.autre, r.dateFaite?.toISOString().slice(0, 10), r.updatedAt.toISOString()]
           .map(c).join(';'),
       ),
     ];
     return '\uFEFF' + lignes.join('\r\n'); // BOM : accents corrects dans Excel
+  }
+
+  /** Historique d'entretien d'un client : réponses aux rappels (messages liés à un pas-à-pas ou demandant une date), pas-à-pas terminés. */
+  async entretien(userId: string) {
+    const [reponses, termines] = await Promise.all([
+      this.prisma.annonceReponse.findMany({
+        where: { userId, annonce: { OR: [{ procedureId: { not: null } }, { dateSi: { not: null } }] } },
+        orderBy: { updatedAt: 'desc' },
+        take: 200,
+        include: { annonce: { select: { id: true, titre: true, question: true, procedure: { select: { id: true, titre: true } } } } },
+      }),
+      this.prisma.parcoursTermine.findMany({
+        where: { userId }, orderBy: { createdAt: 'desc' }, take: 200, include: { procedure: { select: { id: true, titre: true } } },
+      }),
+    ]);
+    return {
+      reponses: reponses.map((r) => ({
+        message: r.annonce.titre, question: r.annonce.question, pasAPas: r.annonce.procedure, valeur: r.valeur, dateFaite: r.dateFaite, le: r.updatedAt,
+      })),
+      termines: termines.map((t) => ({ pasAPas: t.procedure, le: t.createdAt, depuisRappel: !!t.annonceId })),
+    };
   }
 
   // ---------- administration ----------
@@ -246,15 +297,21 @@ export class AnnoncesService {
     );
   }
 
-  creer(d: Prisma.AnnonceCreateInput) {
+  async creer(d: Prisma.AnnonceUncheckedCreateInput) {
     verifierQuestion(d);
-    return this.prisma.annonce.create({ data: d });
+    await this.verifierProcedure(d.procedureId);
+    return this.prisma.annonce.create({ data: nettoyerDate(d) });
   }
 
-  async modifier(id: string, d: Prisma.AnnonceUpdateInput) {
+  private async verifierProcedure(id: string | null | undefined) {
+    if (id && !(await this.prisma.procedure.findUnique({ where: { id }, select: { id: true } }))) throw new BadRequestException('Pas-à-pas introuvable');
+  }
+
+  async modifier(id: string, d: Prisma.AnnonceUncheckedUpdateInput) {
     const a = await this.trouver(id);
-    verifierQuestion({ questionType: a.questionType, question: a.question, options: a.options, ...d } as Prisma.AnnonceCreateInput);
-    return this.prisma.annonce.update({ where: { id }, data: d });
+    verifierQuestion({ questionType: a.questionType, question: a.question, options: a.options, ...d } as Prisma.AnnonceUncheckedCreateInput);
+    await this.verifierProcedure(d.procedureId as string | null | undefined);
+    return this.prisma.annonce.update({ where: { id }, data: nettoyerDate({ questionType: a.questionType, ...d } as Prisma.AnnonceUncheckedCreateInput) });
   }
 
   async supprimer(id: string) {

@@ -254,6 +254,7 @@ export function AdminUtilisateurs() {
                   </label>
                 )}
                 {u.role !== 'ADMIN' && <p><Link to={`/admin/comptes/${u.id}/activite`} className="lien">Voir son activité (connexions, pages, recherches) ›</Link></p>}
+                {u.role !== 'ADMIN' && <Entretien userId={u.id} />}
                 {lazzeko(u.modules) && <>
                 <Link to={`/admin/fiches?userId=${u.id}`} className="lien">Voir ses fiches ({u._count?.fiches ?? 0}) ›</Link>
                 <br />
@@ -367,6 +368,36 @@ export function AdminConditions() {
       <EnteteAdmin titre="Conditions d'utilisation" zone="commun" />
       <ConditionsAdmin />
     </div>
+  );
+}
+
+interface HistoriqueEntretien {
+  reponses: { message: string; question: string | null; pasAPas: { id: string; titre: string } | null; valeur: string; dateFaite: string | null; le: string }[];
+  termines: { pasAPas: { id: string; titre: string }; le: string; depuisRappel: boolean }[];
+}
+
+/** Historique d'entretien d'un client : réponses aux rappels (avec la date indiquée) et pas-à-pas terminés. */
+function Entretien({ userId }: { userId: string }) {
+  const [h, setH] = useState<HistoriqueEntretien>();
+  useEffect(() => {
+    api<HistoriqueEntretien>(`/admin/annonces/entretien/${userId}`).then(setH).catch(() => {});
+  }, [userId]);
+  if (!h || (!h.reponses.length && !h.termines.length)) return null;
+  // une seule liste, la plus récente en haut
+  const lignes = [
+    ...h.reponses.map((r) => ({
+      le: r.le,
+      texte: <>{r.question || r.message} <b>{r.valeur === 'oui' ? 'Oui' : r.valeur === 'non' ? 'Non' : r.valeur}</b>{r.dateFaite && <> · 📅 fait le {date(r.dateFaite)}</>}</>,
+    })),
+    ...h.termines.map((t) => ({ le: t.le, texte: <>✅ Pas-à-pas terminé : <b>{t.pasAPas.titre}</b></> })),
+  ].sort((a, b) => b.le.localeCompare(a.le));
+  return (
+    <details className="petit" open>
+      <summary><b>🔧 Entretien</b> ({lignes.length})</summary>
+      <ul className="historique-entretien">
+        {lignes.slice(0, 30).map((l, i) => <li key={i}><span className="muted">{date(l.le)}</span> · {l.texte}</li>)}
+      </ul>
+    </details>
   );
 }
 

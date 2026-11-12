@@ -122,6 +122,12 @@ const fr = {
   "onglets.procedures": "Pas-à-pas",
   "onglets.rechercher": "Rechercher",
   // ---------- Messages (bulles) ----------
+  "messages.dateQuestion": "À quelle date l’avez-vous fait la dernière fois ?",
+  "messages.jeNeSaisPlus": "Je ne sais plus",
+  "messages.changer": "changer",
+  "messages.faireMaintenant": "▶ Faire le pas-à-pas maintenant",
+  "messages.aFaire": "À faire : {titre}",
+  "messages.plusTard": "Plus tard",
   "messages.autre": "Autre…",
   "messages.compris": "J'ai compris",
   "messages.enSavoirPlus": "En savoir plus",

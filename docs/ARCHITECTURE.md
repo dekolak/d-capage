@@ -82,6 +82,7 @@ docs/                       documentation
 ## Journal d'activité
 - Table `Activite` (`userId`, `espace`, `type` = `connexion` | `page` | `recherche`, `chemin`, `detail`, `resultats`) ; clients seulement (pas les admins), effacée après 12 mois (`activite.service.ts`, nettoyage quotidien).
 - Connexion notée par l'API à l'identification ; pages (titre lu à l'écran) et recherches (Kiavik, mes réglages, communauté) envoyées par l'app (`lib/activite.ts`, `POST /api/activite`), en arrière-plan, sans jamais bloquer.
+- Rappel d'entretien : `Annonce.procedureId` (pas-à-pas à faire), `dateSi` / `dateQuestion` (date demandée après Oui / Non), `AnnonceReponse.dateFaite` ; table `ParcoursTermine` (nominative, seulement pour un pas-à-pas ouvert depuis un rappel : clé `kiavik.rappel.<id>` sur le téléphone, `POST /procedures/:id/termine` à la fin, une fois par jour) ; `GET /admin/annonces/entretien/:userId` (historique, bloc 🔧 Entretien des Utilisateurs).
 - Administration : `pages/Admin.tsx` = menu en sections Commun / Lazzeko / Kiavik (`Entree.zone`, `BadgeZone` aux couleurs de l'espace, `EnteteAdmin` pour les titres de pages ; une entrée d'un autre espace fait `choisir(espace)` puis ouvre la page) ; pages `AdminUtilisateurs` (`/admin/utilisateurs`), `AdminClesApi`, `AdminTags`, `AdminAide`, `AdminConditions` dans le même fichier.
 - Admin : `pages/AdminActivite.tsx` (`/admin/comptes/:id/activite`). Base des futures statistiques (recherches sans résultat).
 
