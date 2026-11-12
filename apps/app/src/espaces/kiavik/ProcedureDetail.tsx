@@ -13,6 +13,7 @@ import { estDiagnostic, Etape, lienGuide, Procedure, useSolutions } from './donn
 import { ParcoursGuide } from './ParcoursGuide';
 import './guides.css';
 import { t } from '../../lib/i18n';
+import { RetourCarnet } from '../../pages/Carnet';
 
 /** « Partie — texte » : l'étape se range sous le titre « Partie » (ex. « Montage — Vérifier la courroie »). */
 export function decouperEtape(texte: string): { partie: string | null; texte: string } {
@@ -129,6 +130,7 @@ export default function ProcedureDetail() {
       </ol>
       {diagnostic && !fin && <p className="muted petit dg-attente">{t('kiavik.diagnostic.repondre')}</p>}
       {diagnostic && fin && <FinDiagnostic p={p} av={av} />}
+      {!diagnostic && pas.length > 0 && fait >= pas.length && <RetourCarnet procedureId={p.id} />}
       {!diagnostic && pas.length > 0 && fait >= pas.length && <ProcedureSuivante p={p} />}
       {commence && (
         <button type="button" className="btn petit" onClick={av.recommencer}>{t('kiavik.procedures.recommencer')}</button>

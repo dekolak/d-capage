@@ -21,6 +21,8 @@ import Compte from './pages/Compte';
 import Conditions from './pages/Conditions';
 import Connexion from './pages/Connexion';
 import { t } from './lib/i18n';
+import Carnets, { CarnetRoute } from './pages/Carnet';
+import AdminEntretien, { AdminCarnet } from './pages/AdminEntretien';
 
 /**
  * Une seule app, plusieurs espaces (Lazzeko, Kiavik) : chaque espace a ses écrans et sa barre du bas (src/espaces/),
@@ -60,6 +62,8 @@ export default function App() {
         <Routes>
           {app.routes()}
           <Route path="/compte" element={<Compte />} />
+          <Route path="/carnet" element={<Carnets />} />
+          <Route path="/carnet/:id" element={<CarnetRoute />} />
           <Route path="/conditions" element={<Conditions />} />
           {admin && <Route path="/admin" element={<Admin />} />}
           {admin && <Route path="/admin/utilisateurs" element={<AdminUtilisateurs />} />}
@@ -73,6 +77,8 @@ export default function App() {
           {admin && <Route path="/admin/avis" element={<AdminAvis />} />}
           {admin && <Route path="/admin/messages" element={<AdminAnnonces />} />}
           {admin && <Route path="/admin/catalogue" element={<AdminCatalogue />} />}
+          {admin && <Route path="/admin/entretien" element={<AdminEntretien />} />}
+          {admin && <Route path="/admin/entretien/machines/:id" element={<AdminCarnet />} />}
           {admin && <Route path="/admin/webhooks" element={<AdminWebhooks />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

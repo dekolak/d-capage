@@ -46,6 +46,19 @@ export function useAvancement(p: Procedure | undefined, id: string) {
     const fin = estDiagnostic(p) ? chemin.fin?.type ?? null : chemin.pas.length > 0 && faitesIci.length >= chemin.pas.length ? 'termine' : null;
     const minuteur = setTimeout(() => {
       envoyerOuPlusTard(`/procedures/${p.id}/suivi`, 'PUT', { session, reponses, faites: faitesIci.length, total: chemin.pas.length, derniere, fin }, `suivi:${session}`).catch(() => {});
+      // ouvert depuis le carnet d'entretien : terminé → tâche notée (sauf photo demandée : le client la note dans le carnet)
+      const carnet = localStorage.getItem(`kiavik.carnet.${p.id}`);
+      if (fin && carnet) {
+        try {
+          const c = JSON.parse(carnet) as { machine: string; tache: string; photo: boolean };
+          if (!c.photo) {
+            localStorage.removeItem(`kiavik.carnet.${p.id}`);
+            envoyerOuPlusTard(`/moi/carnet/${c.machine}/faits`, 'POST', { tacheId: c.tache, source: 'pasapas' }, `carnet:${c.machine}:${c.tache}`).catch(() => {});
+          }
+        } catch {
+          localStorage.removeItem(`kiavik.carnet.${p.id}`);
+        }
+      }
       // ouvert depuis un rappel d'entretien : terminé → historique d'entretien du client
       const rappel = localStorage.getItem(`kiavik.rappel.${p.id}`);
       if (fin && rappel) {

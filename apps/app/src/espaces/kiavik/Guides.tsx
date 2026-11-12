@@ -10,6 +10,7 @@ import { ListeProcedures } from './Procedures';
 import { ListeSolutions } from './Solutions';
 import './guides.css';
 import './accueil.css';
+import type { CarnetMachine } from '../../pages/Carnet';
 
 const CLE_OUVERTES = 'kiavik.accueil.ouvertes';
 
@@ -32,8 +33,10 @@ export default function Guides() {
       return [];
     }
   });
+  const [carnets, setCarnets] = useState<CarnetMachine[]>([]);
   useEffect(() => {
     api<ResumeGuide[]>('/guides').then(setGuides).catch(setErreur);
+    api<CarnetMachine[]>('/moi/carnet').then(setCarnets).catch(() => {});
   }, []);
   if (erreur) return <div className="page"><Erreur e={erreur} /></div>;
   if (!guides) return <Chargement />;
@@ -64,6 +67,20 @@ export default function Guides() {
           <span>{t('kiavik.accueil.rechercher')}</span>
         </Link>
       </header>
+
+      {carnets.some((c) => c.taches.length) && (
+        <Link to="/carnet" className="bandeau lien-bandeau">
+          <span>
+            <b>{t('carnet.lien')}</b>
+            {(() => {
+              const r = carnets.flatMap((c) => c.taches).filter((x) => x.etat === 'retard').length;
+              const b = carnets.flatMap((c) => c.taches).filter((x) => x.etat === 'bientot').length;
+              return r ? <> · 🔴 {tn('carnet.nbRetard', r)}</> : b ? <> · 🟠 {tn('carnet.nbBientot', b)}</> : <> · ✅ {t('carnet.aJour')}</>;
+            })()}
+          </span>
+          <span>›</span>
+        </Link>
+      )}
 
       {guides.length > 0 && (
         <section>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
 import { api, MaMachine } from '../lib/api';
@@ -53,7 +54,10 @@ export default function Machines() {
                 )}
               </div>
               {edition !== m.id && (
-                <button type="button" className="btn petit" onClick={() => { setSurnom(m.surnom ?? ''); setEdition(m.id); }}>{t('machines.renommer')}</button>
+                <span className="actions-avis">
+                  <Link to={`/carnet/${m.id}`} className="btn petit">{t('carnet.lien')}</Link>
+                  <button type="button" className="btn petit" onClick={() => { setSurnom(m.surnom ?? ''); setEdition(m.id); }}>{t('machines.renommer')}</button>
+                </span>
               )}
             </div>
           ))}

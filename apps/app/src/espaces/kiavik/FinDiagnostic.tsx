@@ -6,6 +6,7 @@ import { t } from '../../lib/i18n';
 import { Avancement } from './avancement';
 import { decouperEtape } from './ProcedureDetail';
 import { estDiagnostic, Procedure, useProcedures, useSolutions } from './donneesProcedures';
+import { RetourCarnet } from '../../pages/Carnet';
 
 /** Questions répondues sur le chemin : « question : réponse ». */
 export function resumeReponses(av: Avancement) {
@@ -34,6 +35,7 @@ export function FinDiagnostic({ p, av, guide, children }: { p: Procedure; av: Av
       {type === 'termine' && !estDiagnostic(p) && <p className="muted">{t('kiavik.parcours.termineTexte', { fait: av.nbFaites, n: av.chemin.pas.length })}</p>}
       {astuce && <Link to={`/solutions/${astuce.id}`} className="btn petit">💡 {astuce.titre}</Link>}
       {autre && <Link to={`/procedures/${autre.id}`} className="btn petit">📋 {autre.titre}</Link>}
+      {type !== 'contact' && <RetourCarnet procedureId={p.id} />}
       {type !== 'contact' && <ProcedureSuivante p={p} parcours={guide} />}
       {lignes.length > 0 && (
         <div className="dg-resume">
