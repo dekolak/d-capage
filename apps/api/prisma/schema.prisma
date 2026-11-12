@@ -200,6 +200,7 @@ model UserMachine {
   createdAt  DateTime @default(now())
   fiches     Fiche[]
   entretiens EntretienFait[]
+  reports    ReportEntretien[]
 
   @@unique([userId, varianteId, surnom])
 }
@@ -805,6 +806,7 @@ model TacheEntretien {
   /// Réservée à un technicien (validée par l'admin seulement).
   technicien    Boolean         @default(false)
   faits         EntretienFait[]
+  reports       ReportEntretien[]
   createdAt     DateTime        @default(now())
 }
 
@@ -830,4 +832,18 @@ model EntretienFait {
   createdAt     DateTime        @default(now())
 
   @@index([userMachineId, date])
+}
+
+/// « Me le rappeler dans… » : le client repousse le rappel d'une tâche jusqu'à cette date (bulle dans l'app, rappels n8n).
+model ReportEntretien {
+  id            String         @id @default(cuid())
+  userMachineId String
+  machine       UserMachine    @relation(fields: [userMachineId], references: [id], onDelete: Cascade)
+  tacheId       String
+  tache         TacheEntretien @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+  jusquau       DateTime
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([userMachineId, tacheId])
 }

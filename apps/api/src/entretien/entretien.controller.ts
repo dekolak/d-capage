@@ -41,6 +41,10 @@ class FaitDto {
   @IsOptional() @IsString() @MaxLength(2000) note?: string;
   @IsOptional() @IsIn(['client', 'pasapas']) source?: string;
 }
+class ReporterDto {
+  @IsString() @MaxLength(40) tacheId!: string;
+  @IsIn([1, 2, 7, 14, 30]) jours!: number;
+}
 class SuiviQuery {
   @IsOptional() @IsString() etat?: string;
   @IsOptional() @IsString() modeleId?: string;
@@ -59,6 +63,18 @@ export class CarnetController {
   @Get('moi/carnet')
   mesCarnets(@Moi() moi: Principal, @EspaceCourant() espace: string) {
     return this.entretien.mesCarnets(moi.id, espace);
+  }
+
+  /** Bulles de rappel : tâches à faire aujourd'hui ou en retard (sauf repoussées). */
+  @Get('moi/carnet/rappels')
+  rappels(@Moi() moi: Principal, @EspaceCourant() espace: string) {
+    return this.entretien.mesRappels(moi.id, espace);
+  }
+
+  /** « Me le rappeler dans… » (1, 2, 7, 14 ou 30 jours). */
+  @Post('moi/carnet/:id/reporter')
+  reporter(@Moi() moi: Principal, @Param('id') id: string, @Body() d: ReporterDto) {
+    return this.entretien.reporter(id, moi.id, d.tacheId, d.jours);
   }
 
   @Get('moi/carnet/:id')
@@ -160,12 +176,12 @@ export class AdminEntretienController {
 
   /**
    * Pour n8n (clé API) : une ligne par tâche à rappeler, avec le client (n° Odoo), la machine et les liens.
-   * ?etat=retard,bientot (par défaut).
+   * ?etat=retard,bientot (par défaut) ; les tâches repoussées par le client (« Me le rappeler dans… ») sont exclues, sauf ?reportes=1.
    */
   @Get('echeances')
   @AutoriseCleApi()
-  echeances(@Query('etat') etat?: string) {
-    return this.entretien.echeances(etats(etat) ?? ['retard', 'bientot']);
+  echeances(@Query('etat') etat?: string, @Query('reportes') reportes?: string) {
+    return this.entretien.echeances(etats(etat) ?? ['retard', 'bientot'], reportes === '1');
   }
 }
 

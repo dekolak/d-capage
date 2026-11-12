@@ -43,6 +43,7 @@ const MACHINE = {
   user: { select: { id: true, identifiant: true, nom: true, numeroOdoo: true, actif: true } },
   variante: { include: { modele: { include: { fabricant: true, plans: { include: { taches: { orderBy: { ordre: 'asc' }, include: { procedure: { select: { id: true, titre: true, publiee: true } } } } } } } } } },
   entretiens: { orderBy: [{ date: 'desc' }, { createdAt: 'desc' }], include: { user: { select: { nom: true, identifiant: true } } } },
+  reports: true,
 } satisfies Prisma.UserMachineInclude;
 type Machine = Prisma.UserMachineGetPayload<{ include: typeof MACHINE }>;
 
@@ -145,6 +146,8 @@ export class EntretienService {
           id: t.id, plan: p.nom, titre: t.titre, description: t.description, frequence: t.frequence, unite: t.unite,
           photo: t.photo, photoConsigne: t.photoConsigne, technicien: t.technicien,
           procedure: t.procedure, derniere, ...echeance(t, derniere, depart, maintenant),
+          /** « Me le rappeler dans… » : rappel repoussé jusqu'à cette date. */
+          reporteJusquau: m.reports.find((r) => r.tacheId === t.id && r.jusquau > maintenant)?.jusquau ?? null,
         };
       }),
     );
@@ -209,6 +212,7 @@ export class EntretienService {
         titre: d.titre?.trim() || null, note: d.note?.trim() || null, photoCle,
       },
     });
+    if (tache) await this.prisma.reportEntretien.deleteMany({ where: { userMachineId: m.id, tacheId: tache.id } });
     const vue = await this.carnet(m.id);
     if (tache) {
       const t = vue.taches.find((x) => x.id === tache.id)!;
@@ -263,22 +267,60 @@ export class EntretienService {
    * Échéances à rappeler (pour n8n : email, SMS, WhatsApp) : une ligne par tâche en retard ou bientôt due,
    * avec le client (n° Odoo pour retrouver ses coordonnées), la machine et le lien direct vers le carnet / le pas-à-pas.
    */
-  async echeances(etats: string[] = ['retard', 'bientot']) {
+  async echeances(etats: string[] = ['retard', 'bientot'], inclureReportes = false) {
     const base = (process.env.PUBLIC_URL ?? '').replace(/\/$/, '');
     const machines = await this.suivi({ etat: etats });
     return machines.flatMap((m) =>
       m.taches
-        .filter((t) => etats.includes(t.etat) && !t.technicien)
+        .filter((t) => etats.includes(t.etat) && !t.technicien && (inclureReportes || !t.reporteJusquau))
         .map((t) => ({
           client: m.client,
           machine: { id: m.id, nom: m.nom, surnom: m.surnom, numeroSerie: m.numeroSerie, espaces: m.espaces },
-          tache: { id: t.id, titre: t.titre, etat: t.etat, prochaine: t.prochaine, jours: t.jours, derniere: t.derniere, frequence: `${t.frequence} ${t.unite.toLowerCase()}` },
+          tache: {
+            id: t.id, titre: t.titre, etat: t.etat, prochaine: t.prochaine, jours: t.jours, derniere: t.derniere,
+            frequence: `${t.frequence} ${t.unite.toLowerCase()}`, reporteJusquau: t.reporteJusquau,
+          },
           liens: {
             carnet: `${base}/carnet/${m.id}`,
             ...(t.procedure?.publiee ? { pasAPas: `${base}/procedures/${t.procedure.id}` } : {}),
           },
         })),
     );
+  }
+
+  // ---------- rappels dans l'app ----------
+  /**
+   * Bulles de rappel du client (espace ouvert) : tâches arrivées à échéance (le jour même ou en retard),
+   * sauf celles réservées à un technicien et celles repoussées (« Me le rappeler dans… »).
+   */
+  async mesRappels(userId: string, espace: string) {
+    const carnets = await this.mesCarnets(userId, espace);
+    return carnets.flatMap((m) =>
+      m.taches
+        .filter((t) => t.jours <= 0 && !t.technicien && !t.reporteJusquau)
+        .map((t) => ({
+          machine: { id: m.id, nom: m.nom, surnom: m.surnom },
+          tache: { id: t.id, titre: t.titre, jours: t.jours, photo: t.photo, photoConsigne: t.photoConsigne, procedure: t.procedure?.publiee ? t.procedure : null },
+        })),
+    );
+  }
+
+  /** « Me le rappeler dans N jours » : le rappel revient après cette date (bulle et n8n). */
+  async reporter(machineId: string, userId: string, tacheId: string, jours: number) {
+    const m = await this.machine(machineId);
+    if (m.userId !== userId) throw new NotFoundException('Machine introuvable');
+    if (!m.variante.modele.plans.some((p) => p.taches.some((t) => t.id === tacheId))) throw new BadRequestException('Cette tâche ne concerne pas cette machine');
+    const jusquau = new Date(Date.now() + jours * JOUR);
+    await this.prisma.reportEntretien.upsert({
+      where: { userMachineId_tacheId: { userMachineId: m.id, tacheId } },
+      create: { userMachineId: m.id, tacheId, jusquau },
+      update: { jusquau },
+    });
+    const tache = m.variante.modele.plans.flatMap((p) => p.taches).find((t) => t.id === tacheId)!;
+    this.webhooks.emettre('entretien.reporte', {
+      entretien: { tache: tache.titre, jusquau }, machine: { id: m.id, nom: nomMachine(m.variante), numeroSerie: m.numeroSerie }, client: m.user,
+    });
+    return { ok: true, jusquau };
   }
 
   private async plan(id: string) {

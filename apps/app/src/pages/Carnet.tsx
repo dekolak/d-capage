@@ -13,6 +13,7 @@ export interface TacheCarnet {
   id: string; plan: string; titre: string; description: string | null; frequence: number; unite: 'JOURS' | 'SEMAINES' | 'MOIS';
   photo: 'non' | 'facultative' | 'obligatoire'; photoConsigne: string | null; technicien: boolean;
   procedure: { id: string; titre: string; publiee: boolean } | null; derniere: string | null; prochaine: string; jours: number; etat: Etat;
+  reporteJusquau: string | null;
 }
 export interface LigneCarnet {
   id: string; tacheId: string | null; tache: string | null; titre: string | null; note: string | null; date: string; source: string;
@@ -91,7 +92,7 @@ function CarnetPage({ id }: { id: string }) {
 
   return (
     <div className="page cn">
-      <Link to="/carnet" className="btn-lien">{t('carnet.retour')}</Link>
+      <Link to="/carnet" className="btn-lien no-print">{t('carnet.retour')}</Link>
       <h1>{t('carnet.titre')}</h1>
       <p><b>{m.surnom || m.nom}</b>{m.surnom && <span className="muted"> · {m.nom}</span>}</p>
       <p className="muted petit">
@@ -99,6 +100,7 @@ function CarnetPage({ id }: { id: string }) {
         {m.miseEnService && t('carnet.miseEnService', { date: date(m.miseEnService) })}
       </p>
 
+      <button type="button" className="btn petit no-print" onClick={() => window.print()}>{t('carnet.imprimer')}</button>
       <h2>{t('carnet.entretiens')}</h2>
       {!m.taches.length && <p className="muted">{t('carnet.aucunePlan')}</p>}
       <div className="liste">
@@ -115,6 +117,7 @@ function CarnetPage({ id }: { id: string }) {
                 <small className={`cn-echeance cn-${x.etat}`}>
                   {x.etat === 'retard' ? tn('carnet.enRetard', -x.jours) : t('carnet.prochaine', { date: date(x.prochaine) })}
                 </small>
+                {x.reporteJusquau && <small className="muted">{t('carnet.reporte', { date: date(x.reporteJusquau) })}</small>}
               </span>
             </div>
             {x.description && <p className="petit">{x.description}</p>}

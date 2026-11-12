@@ -262,13 +262,14 @@ export function AdminCarnet() {
   const chemin = `/admin/entretien/machines/${m.id}/faits`;
   return (
     <div className="page cn">
-      <p className="petit"><Link to="/admin/entretien">‹ Entretien</Link></p>
+      <p className="petit no-print"><Link to="/admin/entretien">‹ Entretien</Link></p>
       <h1>{ICONE_ETAT[m.etat]} {m.surnom || m.nom}</h1>
       <p className="muted petit">
         {m.client.nom || m.client.identifiant}{m.client.numeroOdoo ? ` · Odoo ${m.client.numeroOdoo}` : ''} · {m.nom}
         {m.numeroSerie ? ` · n° ${m.numeroSerie}` : ''}{m.miseEnService ? ` · mise en service le ${date(m.miseEnService)}` : ''}
       </p>
       <Erreur e={err} />
+      <button type="button" className="btn petit no-print" onClick={() => window.print()}>🖨 Imprimer / PDF</button>
       <h2>Entretiens</h2>
       <div className="liste">
         {m.taches.map((x: TacheCarnet) => (
@@ -279,6 +280,7 @@ export function AdminCarnet() {
                 <b>{x.titre}{x.technicien ? ' 🧑‍🔧' : ''}</b>
                 <small className="muted">{x.frequence === 1 ? `chaque ${UNITES[x.unite].replace(/s$/, '').replace('moi', 'mois')}` : `tous les ${x.frequence} ${UNITES[x.unite]}`} · {x.derniere ? `fait le ${date(x.derniere)}` : 'jamais fait'}</small>
                 <small className={`cn-echeance cn-${x.etat}`}>{ETATS[x.etat]} · {x.etat === 'retard' ? `${-x.jours} j de retard` : `prochain le ${date(x.prochaine)}`}</small>
+                {x.reporteJusquau && <small className="muted">⏰ le client a repoussé le rappel au {date(x.reporteJusquau)}</small>}
               </span>
             </div>
             {ouverte === x.id ? (
