@@ -201,6 +201,7 @@ model UserMachine {
   fiches     Fiche[]
   entretiens EntretienFait[]
   reports    ReportEntretien[]
+  interventions Intervention[]
 
   @@unique([userId, varianteId, surnom])
 }
@@ -643,6 +644,8 @@ model DiagnosticEnvoye {
   message     String?
   lu          Boolean   @default(false)
   createdAt   DateTime  @default(now())
+  /// Interventions (rapports) faites suite à ce dépannage.
+  interventions Intervention[]
 
   @@index([createdAt])
 }
@@ -846,4 +849,43 @@ model ReportEntretien {
   updatedAt     DateTime       @updatedAt
 
   @@unique([userMachineId, tacheId])
+}
+
+/// Rapport d'intervention (réparation à distance, sur place ou en atelier) sur une machine de client : traçabilité, rien d'officiel.
+model Intervention {
+  id            String              @id @default(cuid())
+  /// N° lisible (INT-0012).
+  numero        Int                 @unique @default(autoincrement())
+  userMachineId String
+  machine       UserMachine         @relation(fields: [userMachineId], references: [id], onDelete: Cascade)
+  /// distance | sur_place | atelier
+  mode          String              @default("distance")
+  date          DateTime
+  dureeMinutes  Int?
+  /// Technicien (nom affiché, l'admin qui a créé le rapport par défaut).
+  technicien    String?
+  motif         String
+  travaux       String?
+  pieces        String?
+  /// repare | a_suivre
+  resultat      String              @default("repare")
+  /// Le client voit le rapport dans le carnet de sa machine.
+  visibleClient Boolean             @default(true)
+  /// Dépannage reçu à l'origine (facultatif).
+  diagnosticId  String?
+  diagnostic    DiagnosticEnvoye?   @relation(fields: [diagnosticId], references: [id], onDelete: SetNull)
+  photos        PhotoIntervention[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([userMachineId, date])
+}
+
+model PhotoIntervention {
+  id             String       @id @default(cuid())
+  interventionId String
+  intervention   Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  ordre          Int
+  cle            String
+  createdAt      DateTime     @default(now())
 }

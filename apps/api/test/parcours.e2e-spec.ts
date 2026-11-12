@@ -203,6 +203,33 @@ describe('Parcours complet', () => {
     const adm = carnet.historique.find((h: any) => h.tacheId === revision.id);
     expect((await http.delete(`/api/moi/carnet/faits/${adm.id}`).set(C)).status).toBe(404);
 
+    // rapport d'intervention : entretiens faits pendant l'intervention notés, visible ou non par le client, photos, recherche
+    expect((await http.post(`/api/admin/entretien/machines/${m.id}/interventions`).set(C).send({ motif: 'xx' })).status).toBe(403);
+    expect((await http.post(`/api/admin/entretien/machines/${m.id}/interventions`).set(A).send({ motif: 'xx', mode: 'fusee' })).status).toBe(400);
+    const iv = (await http.post(`/api/admin/entretien/machines/${m.id}/interventions`).set(A).send({
+      mode: 'distance', motif: `Buses bouchées ${id}`, travaux: 'Purge et nettoyage à distance', pieces: 'Filtre 5 µm x2', resultat: 'repare',
+      dureeMinutes: 45, tacheIds: [filtres.id],
+    })).body;
+    expect(iv).toMatchObject({ mode: 'distance', resultat: 'repare', dureeMinutes: 45, visibleClient: true, machine: { id: m.id } });
+    expect(iv.numero).toMatch(/^INT-\d{4,}$/);
+    expect(iv.technicien).toBeTruthy();
+    const avecPhoto = (await http.post(`/api/admin/entretien/interventions/${iv.id}/photos`).set(A).attach('photo', JPEG, 'p.jpg')).body;
+    expect(avecPhoto.photos).toHaveLength(1);
+    let vu = (await http.get(`/api/moi/carnet/${m.id}`).set(C)).body;
+    expect(vu.interventions[0]).toMatchObject({ id: iv.id, motif: `Buses bouchées ${id}` });
+    expect(vu.interventions[0].dureeMinutes).toBeUndefined();
+    expect(vu.historique.some((h: any) => h.tacheId === filtres.id && h.note === `Intervention ${iv.numero}`)).toBe(true);
+    expect((await http.get(`/api${avecPhoto.photos[0]}`).set(C)).headers['content-type']).toBe('image/jpeg');
+    await http.patch(`/api/admin/entretien/interventions/${iv.id}`).set(A).send({ visibleClient: false, resultat: 'a_suivre' }).expect(200);
+    vu = (await http.get(`/api/moi/carnet/${m.id}`).set(C)).body;
+    expect(vu.interventions).toEqual([]);
+    expect((await http.get(`/api/moi/interventions/${iv.id}`).set(C)).status).toBe(404);
+    expect((await http.get(`/api${avecPhoto.photos[0]}`).set(C)).status).toBe(404);
+    const trouve = (await http.get(`/api/admin/entretien/interventions?q=${iv.numero}`).set('X-Api-Key', cle)).body;
+    expect(trouve.map((x: any) => x.id)).toEqual([iv.id]);
+    expect((await http.get(`/api/admin/entretien/interventions?resultat=a_suivre&q=CAR-${id}`).set(A)).body.map((x: any) => x.id)).toEqual([iv.id]);
+    await http.delete(`/api/admin/entretien/interventions/${iv.id}`).set(A).expect(200);
+
     // ménage
     await http.delete(`/api/users/${u.id}/machines/${m.id}`).set(A).expect(200);
     await http.delete(`/api/admin/entretien/plans/${plan.id}`).set(A).expect(200);

@@ -22,7 +22,39 @@ export interface LigneCarnet {
 export interface CarnetMachine {
   id: string; nom: string; surnom: string | null; numeroSerie: string | null; miseEnService: string | null; espaces: string[];
   client: { id: string; identifiant: string; nom: string | null; numeroOdoo: string | null };
-  taches: TacheCarnet[]; etat: Etat; historique: LigneCarnet[];
+  taches: TacheCarnet[]; etat: Etat; historique: LigneCarnet[]; interventions: InterventionVue[];
+}
+/** Rapport d'intervention (réparation à distance, sur place ou en atelier). */
+export interface InterventionVue {
+  id: string; numero: string; mode: 'distance' | 'sur_place' | 'atelier'; date: string; technicien: string | null; motif: string;
+  travaux: string | null; pieces: string | null; resultat: 'repare' | 'a_suivre'; photos: string[]; photoIds: string[];
+  /** Admin seulement. */
+  dureeMinutes?: number | null; visibleClient?: boolean; diagnosticId?: string | null;
+}
+export const ICONE_MODE = { distance: '🖥', sur_place: '🚐', atelier: '🏭' } as const;
+
+/** Un rapport d'intervention, en lecture (client et admin). */
+export function CarteIntervention({ i, children }: { i: InterventionVue; children?: React.ReactNode }) {
+  return (
+    <div className="carte cn-intervention">
+      <div className="cn-tete">
+        <span className="cn-icone" aria-hidden="true">{ICONE_MODE[i.mode]}</span>
+        <span className="cn-titre">
+          <b>{t(`intervention.mode.${i.mode}`)} · {date(i.date)}</b>
+          <small className="muted">
+            {i.numero}{i.technicien ? ` · ${i.technicien}` : ''}{i.dureeMinutes ? ` · ${i.dureeMinutes} min` : ''}
+            {i.visibleClient === false ? ' · 🔒 non visible par le client' : ''}
+          </small>
+          <small className={i.resultat === 'repare' ? 'cn-repare' : 'cn-echeance cn-bientot'}>{t(`intervention.resultat.${i.resultat}`)}</small>
+        </span>
+      </div>
+      <p className="petit"><b>{t('intervention.motif')}</b> {i.motif}</p>
+      {i.travaux && <p className="petit"><b>{t('intervention.travaux')}</b> {i.travaux}</p>}
+      {i.pieces && <p className="petit"><b>{t('intervention.pieces')}</b> {i.pieces}</p>}
+      {i.photos.length > 0 && <div className="cn-photos">{i.photos.map((p) => <ImageApi key={p} chemin={p} className="cn-photo" />)}</div>}
+      {children}
+    </div>
+  );
 }
 export const ICONE_ETAT: Record<Etat, string> = { ok: '✅', bientot: '🟠', retard: '🔴' };
 
@@ -136,6 +168,13 @@ function CarnetPage({ id }: { id: string }) {
           </div>
         ))}
       </div>
+
+      {m.interventions.length > 0 && (
+        <>
+          <h2>{t('intervention.titre')}</h2>
+          <div className="liste">{m.interventions.map((i) => <CarteIntervention key={i.id} i={i} />)}</div>
+        </>
+      )}
 
       <h2>{t('carnet.historique')}</h2>
       {ouverte === 'note' ? (

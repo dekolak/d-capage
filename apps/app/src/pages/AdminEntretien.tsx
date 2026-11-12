@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { ImageApi } from '../espaces/kiavik/donneesProcedures';
 import { api } from '../lib/api';
 import { date } from '../lib/util';
 import { BadgeZone } from './Admin';
 import type { FabricantAdmin } from './AdminCatalogue';
-import { CarnetMachine, Etat, ICONE_ETAT, Noter, TacheCarnet } from './Carnet';
+import { CarnetMachine, CarteIntervention, Etat, ICONE_ETAT, ICONE_MODE, InterventionVue, Noter, TacheCarnet } from './Carnet';
+import { compresser } from '../lib/image';
 
 /* Administration → Entretien (admin, en français) : plans d'entretien attribués aux modèles, suivi des machines, carnets. */
 
@@ -21,7 +22,7 @@ const UNITES = { JOURS: 'jours', SEMAINES: 'semaines', MOIS: 'mois' };
 const ETATS: Record<Etat, string> = { retard: '🔴 En retard', bientot: '🟠 Bientôt', ok: '✅ À jour' };
 
 export default function AdminEntretien() {
-  const [onglet, setOnglet] = useState<'suivi' | 'plans'>('suivi');
+  const [onglet, setOnglet] = useState<'suivi' | 'interventions' | 'plans'>('suivi');
   return (
     <div className="page ae">
       <p className="petit"><Link to="/admin">‹ Administration</Link></p>
@@ -32,9 +33,10 @@ export default function AdminEntretien() {
       </p>
       <div className="seg" style={{ marginBottom: 12 }}>
         <button type="button" className={onglet === 'suivi' ? 'on' : ''} onClick={() => setOnglet('suivi')}>Suivi des machines</button>
+        <button type="button" className={onglet === 'interventions' ? 'on' : ''} onClick={() => setOnglet('interventions')}>Interventions</button>
         <button type="button" className={onglet === 'plans' ? 'on' : ''} onClick={() => setOnglet('plans')}>Plans d'entretien</button>
       </div>
-      {onglet === 'suivi' ? <SuiviMachines /> : <Plans />}
+      {onglet === 'suivi' ? <SuiviMachines /> : onglet === 'interventions' ? <Interventions /> : <Plans />}
     </div>
   );
 }
@@ -93,6 +95,137 @@ function SuiviMachines() {
         {l.length > 0 && !visibles.length && <p className="muted">Rien avec ces filtres.</p>}
       </div>
     </>
+  );
+}
+
+type InterventionListe = InterventionVue & { machine: { id: string; nom: string; surnom: string | null; numeroSerie: string | null }; client: CarnetMachine['client'] };
+const MODES = { distance: '🖥 À distance', sur_place: '🚐 Sur place', atelier: '🏭 En atelier' };
+
+/** Tous les rapports d'intervention, filtrables : mode, résultat, recherche (client, n° Odoo, n° de série, n° INT, texte). */
+function Interventions() {
+  const [l, setL] = useState<InterventionListe[]>();
+  const [err, setErr] = useState<unknown>();
+  const [f, setF] = useState({ mode: '', resultat: '', q: '' });
+  useEffect(() => {
+    const h = setTimeout(() => {
+      const p = new URLSearchParams(Object.entries(f).filter(([, v]) => v));
+      api<InterventionListe[]>(`/admin/entretien/interventions?${p}`).then(setL).catch(setErr);
+    }, 250);
+    return () => clearTimeout(h);
+  }, [f]);
+  return (
+    <>
+      <p className="muted petit">Pour créer un rapport : ouvrez le carnet de la machine (Suivi des machines, Utilisateurs → 🔧 Machines → 📒, ou depuis un dépannage reçu).</p>
+      <div className="ca-filtres">
+        <input type="search" className="recherche" value={f.q} placeholder="Client, n° Odoo, n° de série, INT-…, texte…" onChange={(e) => setF({ ...f, q: e.target.value })} />
+        <select value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value })} aria-label="Mode">
+          <option value="">Tous les modes</option>
+          {Object.entries(MODES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+        <select value={f.resultat} onChange={(e) => setF({ ...f, resultat: e.target.value })} aria-label="Résultat">
+          <option value="">Tous les résultats</option>
+          <option value="repare">✅ Réparé</option>
+          <option value="a_suivre">🟠 À suivre</option>
+        </select>
+      </div>
+      <Erreur e={err} />
+      {!l ? <Chargement /> : (
+        <div className="liste">
+          {l.map((i) => (
+            <Link key={i.id} to={`/admin/entretien/machines/${i.machine.id}`} className="carte lien-bloc cn-machine">
+              <b>{ICONE_MODE[i.mode]} {i.numero} · {i.client.nom || i.client.identifiant} · {i.machine.surnom || i.machine.nom}</b>
+              <span className="muted petit">{date(i.date)}{i.technicien ? ` · ${i.technicien}` : ''}{i.machine.numeroSerie ? ` · n° ${i.machine.numeroSerie}` : ''}{i.visibleClient ? '' : ' · 🔒'}</span>
+              <span className="petit">{i.resultat === 'repare' ? '✅' : '🟠'} {i.motif}</span>
+            </Link>
+          ))}
+          {!l.length && <p className="muted">Aucun rapport.</p>}
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Nouveau rapport (ou modification) : mode, date, durée, technicien, motif, travaux, pièces, résultat, visible client, entretiens faits, photos. */
+function FormIntervention({ m, i, diagnostic, onFini, onAnnuler }: {
+  m: CarnetMachine; i?: InterventionVue; diagnostic?: { id: string; motif: string }; onFini: () => void; onAnnuler: () => void;
+}) {
+  const [v, setV] = useState({
+    mode: i?.mode ?? 'distance', date: (i?.date ?? new Date().toISOString()).slice(0, 10), dureeMinutes: i?.dureeMinutes ? String(i.dureeMinutes) : '',
+    technicien: i?.technicien ?? '', motif: i?.motif ?? diagnostic?.motif ?? '', travaux: i?.travaux ?? '', pieces: i?.pieces ?? '',
+    resultat: i?.resultat ?? 'repare', visibleClient: i?.visibleClient ?? true, tacheIds: [] as string[],
+  });
+  const [photos, setPhotos] = useState<{ fichier: Blob; apercu: string }[]>([]);
+  const [envoi, setEnvoi] = useState(false);
+  const [err, setErr] = useState<unknown>();
+  const taches = m.taches.filter((t) => true);
+  const enregistrer = async () => {
+    setEnvoi(true);
+    setErr(undefined);
+    const corps = {
+      mode: v.mode, date: v.date, dureeMinutes: v.dureeMinutes ? Number(v.dureeMinutes) : null, technicien: v.technicien.trim() || null,
+      motif: v.motif.trim(), travaux: v.travaux.trim() || null, pieces: v.pieces.trim() || null, resultat: v.resultat, visibleClient: v.visibleClient,
+    };
+    try {
+      const r = i
+        ? await api<InterventionVue>(`/admin/entretien/interventions/${i.id}`, { method: 'PATCH', json: corps })
+        : await api<InterventionVue>(`/admin/entretien/machines/${m.id}/interventions`, {
+            method: 'POST', json: { ...corps, tacheIds: v.tacheIds, ...(diagnostic ? { diagnosticId: diagnostic.id } : {}) },
+          });
+      for (const p of photos) {
+        const fd = new FormData();
+        fd.append('photo', p.fichier, 'photo.jpg');
+        await api(`/admin/entretien/interventions/${r.id}/photos`, { method: 'POST', body: fd });
+      }
+      onFini();
+    } catch (e) {
+      setErr(e);
+      setEnvoi(false);
+    }
+  };
+  return (
+    <div className="carte form">
+      <b>{i ? `Modifier ${i.numero}` : '🛠 Nouveau rapport d\'intervention'}</b>
+      <div className="seg">
+        {Object.entries(MODES).map(([k, l]) => <button key={k} type="button" className={v.mode === k ? 'on' : ''} onClick={() => setV({ ...v, mode: k as InterventionVue['mode'] })}>{l}</button>)}
+      </div>
+      <div className="deux">
+        <label>Date<input type="date" value={v.date} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setV({ ...v, date: e.target.value })} /></label>
+        <label>Durée (minutes, facultatif)<input type="number" min={0} max={10000} value={v.dureeMinutes} onChange={(e) => setV({ ...v, dureeMinutes: e.target.value })} /></label>
+      </div>
+      <label>Technicien<input value={v.technicien} maxLength={80} placeholder="Vous, par défaut" onChange={(e) => setV({ ...v, technicien: e.target.value })} /></label>
+      <label>Motif (le problème)<textarea rows={2} maxLength={2000} value={v.motif} onChange={(e) => setV({ ...v, motif: e.target.value })} /></label>
+      <label>Travaux réalisés<textarea rows={3} maxLength={5000} value={v.travaux} onChange={(e) => setV({ ...v, travaux: e.target.value })} /></label>
+      <label>Pièces changées (facultatif)<input value={v.pieces} maxLength={2000} placeholder="ex. Filtre 5 µm x2, nappe tête 1" onChange={(e) => setV({ ...v, pieces: e.target.value })} /></label>
+      <div className="seg">
+        <button type="button" className={v.resultat === 'repare' ? 'on' : ''} onClick={() => setV({ ...v, resultat: 'repare' })}>✅ Réparé</button>
+        <button type="button" className={v.resultat === 'a_suivre' ? 'on' : ''} onClick={() => setV({ ...v, resultat: 'a_suivre' })}>🟠 À suivre</button>
+      </div>
+      {!i && taches.length > 0 && (
+        <div>
+          <b className="petit">Entretiens faits pendant l'intervention (notés dans le carnet)</b>
+          {taches.map((t) => (
+            <label key={t.id} className="interrupteur petit">
+              <input type="checkbox" checked={v.tacheIds.includes(t.id)} onChange={() => setV({ ...v, tacheIds: v.tacheIds.includes(t.id) ? v.tacheIds.filter((x) => x !== t.id) : [...v.tacheIds, t.id] })} />
+              {ICONE_ETAT[t.etat]} {t.titre}
+            </label>
+          ))}
+        </div>
+      )}
+      <label className="cn-photo-champ">📷 Photos (facultatif, 6 au plus)
+        <input type="file" accept="image/*" multiple onChange={async (e) => {
+          const l = [...(e.target.files ?? [])].slice(0, 6 - photos.length - (i?.photos.length ?? 0));
+          const c = await Promise.all(l.map((f) => compresser(f)));
+          setPhotos((p) => [...p, ...c.map((x) => ({ fichier: x.fichier, apercu: x.apercu }))]);
+        }} />
+      </label>
+      {photos.length > 0 && <div className="cn-photos">{photos.map((p, k) => <img key={k} src={p.apercu} alt="" className="cn-photo" />)}</div>}
+      <label className="interrupteur"><input type="checkbox" checked={v.visibleClient} onChange={(e) => setV({ ...v, visibleClient: e.target.checked })} /> Visible par le client (dans le carnet de sa machine)</label>
+      <Erreur e={err} />
+      <div className="actions-avis">
+        <button type="button" className="btn" onClick={onAnnuler}>Annuler</button>
+        <button type="button" className="btn prim" disabled={envoi || v.motif.trim().length < 2} onClick={enregistrer}>{envoi ? 'Envoi…' : 'Enregistrer'}</button>
+      </div>
+    </div>
   );
 }
 
@@ -255,8 +388,14 @@ export function AdminCarnet() {
   const [m, setM] = useState<CarnetMachine>();
   const [err, setErr] = useState<unknown>();
   const [ouverte, setOuverte] = useState<string | null>(null);
+  const [params, setParams] = useSearchParams();
+  // « 🛠 Rapport » depuis un dépannage reçu : formulaire pré-rempli
+  const [diagnostic] = useState(() => (params.get('diagnostic') ? { id: params.get('diagnostic')!, motif: params.get('motif') ?? '' } : undefined));
+  const [rapport, setRapport] = useState<string | null>(diagnostic ? 'nouveau' : null);
+  const charger = () => api<CarnetMachine>(`/admin/entretien/machines/${id}`).then(setM).catch(setErr);
   useEffect(() => {
-    api<CarnetMachine>(`/admin/entretien/machines/${id}`).then(setM).catch(setErr);
+    charger();
+    if (params.get('diagnostic')) setParams({}, { replace: true });
   }, [id]);
   if (!m) return err ? <div className="page"><Erreur e={err} /></div> : <Chargement />;
   const chemin = `/admin/entretien/machines/${m.id}/faits`;
@@ -270,6 +409,33 @@ export function AdminCarnet() {
       </p>
       <Erreur e={err} />
       <button type="button" className="btn petit no-print" onClick={() => window.print()}>🖨 Imprimer / PDF</button>
+
+      <h2>🛠 Interventions</h2>
+      {rapport === 'nouveau' ? (
+        <FormIntervention m={m} diagnostic={diagnostic} onFini={() => { setRapport(null); charger(); }} onAnnuler={() => setRapport(null)} />
+      ) : (
+        <button type="button" className="btn prim no-print" onClick={() => setRapport('nouveau')}>+ Rapport d'intervention</button>
+      )}
+      <div className="liste" style={{ marginTop: 8 }}>
+        {m.interventions.map((i) => rapport === i.id ? (
+          <FormIntervention key={i.id} m={m} i={i} onFini={() => { setRapport(null); charger(); }} onAnnuler={() => setRapport(null)} />
+        ) : (
+          <CarteIntervention key={i.id} i={i}>
+            <div className="actions-avis no-print">
+              <button type="button" className="btn petit" onClick={() => setRapport(i.id)}>✏️ Modifier</button>
+              <button type="button" className="btn petit" onClick={() => api(`/admin/entretien/interventions/${i.id}`, { method: 'PATCH', json: { visibleClient: !i.visibleClient } }).then(charger).catch(setErr)}>
+                {i.visibleClient ? '🔒 Masquer au client' : '👁 Montrer au client'}
+              </button>
+              {i.photoIds.map((pid, k) => (
+                <button key={pid} type="button" className="btn petit" onClick={() => confirm('Retirer cette photo ?') && api(`/admin/entretien/interventions/photos/${pid}`, { method: 'DELETE' }).then(charger).catch(setErr)}>🗑 photo {k + 1}</button>
+              ))}
+              <button type="button" className="btn petit danger" onClick={() => confirm(`Supprimer le rapport ${i.numero} ?`) && api(`/admin/entretien/interventions/${i.id}`, { method: 'DELETE' }).then(charger).catch(setErr)}>🗑 Supprimer</button>
+            </div>
+          </CarteIntervention>
+        ))}
+        {!m.interventions.length && rapport !== 'nouveau' && <p className="muted">Aucune intervention.</p>}
+      </div>
+
       <h2>Entretiens</h2>
       <div className="liste">
         {m.taches.map((x: TacheCarnet) => (
