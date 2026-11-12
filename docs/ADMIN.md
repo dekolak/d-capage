@@ -20,6 +20,19 @@ Administration → **🔧 Machines** (section Commun).
 - **Image** : PNG par modèle (machine entière, fond transparent ou clair, ~800 × 800 px) ; une variante peut avoir la sienne.
 - Les modèles Lazzeko avec écran de réglage viennent des fichiers `machines/` (fiches de réglage) ; ceux créés ici n'ont pas de fiches de réglage (carnet d'entretien à venir).
 
+## Carnet d'entretien (Lazzeko et Kiavik)
+Administration → **📒 Entretien** (section Commun).
+- **Plans d'entretien** : « + Créer » un plan (ex. *Entretien DXonJet*), cocher les **modèles concernés** (un plan sert à plusieurs modèles, ex. i3200 et F1080), puis ajouter les **tâches** :
+  - **fréquence** : tous les N jours / semaines / mois ; « **bientôt** » N jours avant (au plus un quart de la période) ;
+  - **pas-à-pas à suivre** (facultatif) : le client l'ouvre depuis son carnet ; quand il le termine, la tâche est notée toute seule ;
+  - **photo** quand c'est fait : non, facultative ou **obligatoire** (+ quoi photographier) ; compressée sur le téléphone avant l'envoi ;
+  - **réservée à un technicien** : le client la voit mais ne peut pas la valider (vous la notez).
+- **Suivi des machines** : toutes les machines qui ont un plan, filtres **à faire / en retard / bientôt / toutes**, **modèle**, recherche client / n° Odoo / n° de série ; compteur rouge dans le menu. Toucher une machine ouvre son **carnet** (aussi depuis Utilisateurs → 🔧 Machines → 📒) : « 🧑‍🔧 Noter une intervention » sur n'importe quelle tâche, notes, historique.
+- **Les échéances glissent** : prochaine = date où c'est vraiment fait + fréquence (fait au bout de 2 mois au lieu de 3 → le suivant 3 mois plus tard). Au départ : date de mise en service de la machine.
+- **Côté client** : « 📒 Carnet d'entretien » (accueil Kiavik, Compte, Mes machines) : ✅ à jour, 🟠 bientôt, 🔴 en retard ; **✓ C'est fait** (date, note, photo), **▶ Voir le pas-à-pas**, **+ Ajouter une note** (ses propres notes, avec photo, même hors du plan), historique.
+- **Rappels par email, SMS ou WhatsApp avec n8n** : `GET /api/admin/entretien/echeances` (clé API) donne une ligne par tâche en retard ou bientôt due (client avec n° Odoo, machine, tâche, liens vers le carnet et le pas-à-pas) ; webhook **`entretien.fait`** quand une tâche est notée. Voir [API.md](API.md).
+- ⚠️ Données nominatives : à mentionner dans les conditions d'utilisation.
+
 ## Comptes clients
 Administration → **👥 Utilisateurs** (« + Créer un utilisateur » en haut, puis la liste).
 - **Créer** : identifiant, mot de passe (8 caractères min.), nom, n° client Odoo (facultatif).

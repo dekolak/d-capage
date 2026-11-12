@@ -134,6 +134,14 @@ Chaque route renvoie le guide corrigé ; `DELETE` = revenir à l'original.
 | PATCH | `/admin/avis/:id` `{statut, raison?}` | admin **ou clé API** |
 | GET · POST · PATCH · DELETE | `/admin/webhooks` (+ `/:id/test`, `/:id/livraisons`) | admin |
 
+### Carnet d'entretien
+- Client : `GET /moi/carnet` (machines de l'espace ouvert, avec tâches et état), `GET /moi/carnet/:id`, `POST /moi/carnet/:id/faits` (multipart : `tacheId?`, `date` AAAA-MM-JJ, `titre?`, `note?`, `photo?`), `DELETE /moi/carnet/faits/:id`, `GET /carnet/photos/:id`.
+- Admin : `admin/entretien/plans` (CRUD, `PATCH plans/:id {modeleIds}`), `plans/:id/taches`, `taches/:id` (`frequence`, `unite` JOURS|SEMAINES|MOIS, `bientotJours`, `procedureId`, `photo` non|facultative|obligatoire, `photoConsigne`, `technicien`), `POST admin/entretien/machines/:id/faits` (intervention).
+- **Pour n8n (clé API)** :
+  - `GET /api/admin/entretien/echeances?etat=retard,bientot` → `[{ client: {id, identifiant, nom, numeroOdoo}, machine: {id, nom, surnom, numeroSerie}, tache: {id, titre, etat, prochaine, jours, derniere, frequence}, liens: {carnet, pasAPas?} }]` (pas les tâches « technicien »). Coordonnées (email, téléphone) : à retrouver dans Odoo avec `numeroOdoo`.
+  - `GET /api/admin/entretien/machines?etat=retard&modeleId=&q=` (machines suivies), `GET /api/admin/entretien/machines/:id` (carnet complet).
+  - Recette : un *Schedule* n8n chaque matin → `echeances` → pour chaque ligne, Odoo (contact du client) → email / SMS / WhatsApp avec le lien `liens.carnet`.
+
 ### Messages
 | Méthode | Route | Accès |
 |---|---|---|
@@ -164,7 +172,7 @@ Retrouver un compte par n° client : `GET /api/users?numeroOdoo=C00123`.
 
 ## Webhooks (envoi vers un service externe, ex. modération IA)
 - Configurés dans Administration → *Envoi vers une API* : une ou plusieurs adresses, événements choisis.
-- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`, `aide.demandee`, `etape.signalee` (`{signalement: {id, message, creeLe}, etape: {id, texte, procedure}, user}`), `diagnostic.envoye` (`{diagnostic: {id, procedure, chemin: [{question, reponse, signification?}], fin: {type, texte, conclusion?}, texte, message}, user, ia: {promptGeneral, prompt, description, paquet}}`), `motdepasse.demande` (`{demande: {id, email?, message, espace, creeLe}, user: {id, identifiant, nom, numeroOdoo} | null}` — `user` vide pour une demande faite avec un email ; jamais le code ; recette n8n dans [ADMIN.md](ADMIN.md)).
+- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`, `aide.demandee`, `etape.signalee` (`{signalement: {id, message, creeLe}, etape: {id, texte, procedure}, user}`), `diagnostic.envoye` (`{diagnostic: {id, procedure, chemin: [{question, reponse, signification?}], fin: {type, texte, conclusion?}, texte, message}, user, ia: {promptGeneral, prompt, description, paquet}}`), `entretien.fait` (`{entretien: {id, tache, date, source, note, photo, prochaine}, machine: {id, nom, numeroSerie}, client}`), `motdepasse.demande` (`{demande: {id, email?, message, espace, creeLe}, user: {id, identifiant, nom, numeroOdoo} | null}` — `user` vide pour une demande faite avec un email ; jamais le code ; recette n8n dans [ADMIN.md](ADMIN.md)).
 - `POST` JSON signé : `X-Decapage-Signature: sha256=<HMAC-SHA256(secret, corps)>`, plus `X-Decapage-Evenement` et `X-Decapage-Livraison`.
 - File d'envoi en base : rien n'est perdu au redémarrage, 6 tentatives espacées (jusqu'à 2 h), journal dans l'admin.
 - Le corps contient le texte à modérer et l'adresse pour agir (`moderation.url`). Le service répond avec une clé API :

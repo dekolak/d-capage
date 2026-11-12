@@ -113,6 +113,82 @@ describe('Parcours complet', () => {
     await http.delete(`/api/admin/catalogue/modeles/${mo.id}`).set(A).expect(200);
   });
 
+  it('carnet d\'entretien : plan attribué aux modèles, échéances qui glissent, photo, technicien, notes, échéances pour n8n', async () => {
+    const A = auth(admin);
+    // modèle Kiavik + plan « filtres tous les 3 mois » (photo obligatoire pour le test des buses, révision technicien)
+    let cat = (await http.post('/api/admin/catalogue/fabricants').set(A).send({ nom: `Carnet ${id}` })).body;
+    const fab = cat.find((f: any) => f.nom === `Carnet ${id}`);
+    cat = (await http.post('/api/admin/catalogue/modeles').set(A).send({ fabricantId: fab.id, nom: 'F1080', espaces: ['kiavik'] })).body;
+    const mo = cat.find((f: any) => f.id === fab.id).modeles[0];
+    let plans = (await http.post('/api/admin/entretien/plans').set(A).send({ nom: `Plan ${id}` })).body;
+    const plan = plans.find((p: any) => p.nom === `Plan ${id}`);
+    await http.patch(`/api/admin/entretien/plans/${plan.id}`).set(A).send({ modeleIds: [mo.id] }).expect(200);
+    await http.post(`/api/admin/entretien/plans/${plan.id}/taches`).set(A).send({ titre: 'Filtres', frequence: 3, unite: 'MOIS' }).expect(201);
+    await http.post(`/api/admin/entretien/plans/${plan.id}/taches`).set(A).send({ titre: 'Test des buses', frequence: 1, unite: 'SEMAINES', photo: 'obligatoire' }).expect(201);
+    plans = (await http.post(`/api/admin/entretien/plans/${plan.id}/taches`).set(A).send({ titre: 'Révision', frequence: 12, unite: 'MOIS', technicien: true })).body;
+    expect((await http.post(`/api/admin/entretien/plans/${plan.id}/taches`).set(A).send({ titre: 'x', unite: 'ANS' })).status).toBe(400);
+    const [filtres, buses, revision] = plans.find((p: any) => p.id === plan.id).taches;
+
+    // client avec une machine mise en service il y a 4 mois → filtres en retard
+    const cle = (await http.post('/api/admin/cles-api').set(A).send({ nom: 'carnet' })).body.cle;
+    const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `car-${id}`, motDePasse: 'motdepasse1', modules: ['procedures-kiavik'], numeroOdoo: `CAR-${id}` })).body;
+    const il4mois = new Date(); il4mois.setMonth(il4mois.getMonth() - 4);
+    const m = (await http.post(`/api/users/${u.id}/machines`).set(A).send({ varianteId: mo.variantes[0].id, numeroSerie: `F-${id}`, miseEnService: il4mois.toISOString() })).body;
+    const C = { ...auth((await http.post('/api/auth/connexion').send({ identifiant: `car-${id}`, motDePasse: 'motdepasse1' })).body.jeton), 'X-Espace': 'kiavik' };
+    const { version } = (await http.get('/api/conditions?espace=kiavik').set(C)).body;
+    await http.post('/api/moi/conditions').set(C).send({ version }).expect(201);
+
+    let carnet = (await http.get('/api/moi/carnet').set(C)).body;
+    expect(carnet).toHaveLength(1);
+    const t = (c: any, tid: string) => c.taches.find((x: any) => x.id === tid);
+    expect(t(carnet[0], filtres.id)).toMatchObject({ etat: 'retard', derniere: null });
+    expect(carnet[0].etat).toBe('retard');
+    expect((await http.get('/api/moi/carnet').set({ ...C, 'X-Espace': 'lazzeko' })).body).toEqual([]);
+
+    // n8n : échéances (clé API), une ligne par tâche à rappeler, pas les tâches technicien
+    const ech = (await http.get('/api/admin/entretien/echeances').set('X-Api-Key', cle)).body.filter((e: any) => e.machine.id === m.id);
+    expect(ech.map((e: any) => e.tache.titre).sort()).toEqual(['Filtres', 'Test des buses']);
+    expect(ech[0].client).toMatchObject({ numeroOdoo: `CAR-${id}` });
+    expect(ech[0].liens.carnet).toContain(`/carnet/${m.id}`);
+    expect((await http.get('/api/admin/entretien/echeances').set(C)).status).toBe(403);
+
+    // le client fait les filtres il y a 10 jours → à jour, prochaine = +3 mois depuis cette date (ça glisse)
+    const il10j = new Date(Date.now() - 10 * 86400000).toISOString().slice(0, 10);
+    carnet = (await http.post(`/api/moi/carnet/${m.id}/faits`).set(C).send({ tacheId: filtres.id, date: il10j })).body;
+    expect(t(carnet, filtres.id).etat).toBe('ok');
+    const attendu = new Date(`${il10j}T12:00:00Z`); attendu.setMonth(attendu.getMonth() + 3);
+    expect(t(carnet, filtres.id).prochaine.slice(0, 10)).toBe(attendu.toISOString().slice(0, 10));
+
+    // photo obligatoire, tâche technicien, futur, note libre
+    expect((await http.post(`/api/moi/carnet/${m.id}/faits`).set(C).send({ tacheId: buses.id })).status).toBe(400);
+    carnet = (await http.post(`/api/moi/carnet/${m.id}/faits`).set(C).field('tacheId', buses.id).attach('photo', JPEG, 'b.jpg')).body;
+    expect(t(carnet, buses.id).etat).toBe('ok');
+    const ligne = carnet.historique.find((h: any) => h.tacheId === buses.id);
+    expect((await http.get(`/api${ligne.photo}`).set(C)).headers['content-type']).toBe('image/jpeg');
+    expect((await http.post(`/api/moi/carnet/${m.id}/faits`).set(C).send({ tacheId: revision.id })).status).toBe(403);
+    expect((await http.post(`/api/moi/carnet/${m.id}/faits`).set(C).send({ tacheId: filtres.id, date: '2999-01-01' })).status).toBe(400);
+    expect((await http.post(`/api/moi/carnet/${m.id}/faits`).set(C).send({})).status).toBe(400);
+    carnet = (await http.post(`/api/moi/carnet/${m.id}/faits`).set(C).send({ titre: 'Vitre nettoyée', note: 'avec le chiffon' })).body;
+    expect(carnet.historique[0]).toMatchObject({ titre: 'Vitre nettoyée', tacheId: null });
+
+    // l'admin note la révision (technicien) ; un autre client ne voit pas ce carnet
+    carnet = (await http.post(`/api/admin/entretien/machines/${m.id}/faits`).set(A).send({ tacheId: revision.id })).body;
+    expect(carnet.historique.find((h: any) => h.tacheId === revision.id)).toMatchObject({ parAdmin: true, source: 'admin' });
+    expect((await http.get(`/api/moi/carnet/${m.id}`).set(auth(alice))).status).toBe(404);
+    expect((await http.get('/api/admin/entretien/machines?etat=retard').set(A)).body.some((x: any) => x.id === m.id)).toBe(false);
+
+    // le client retire sa note, pas la ligne de l'admin
+    const note = carnet.historique.find((h: any) => h.titre === 'Vitre nettoyée');
+    await http.delete(`/api/moi/carnet/faits/${note.id}`).set(C).expect(200);
+    const adm = carnet.historique.find((h: any) => h.tacheId === revision.id);
+    expect((await http.delete(`/api/moi/carnet/faits/${adm.id}`).set(C)).status).toBe(404);
+
+    // ménage
+    await http.delete(`/api/users/${u.id}/machines/${m.id}`).set(A).expect(200);
+    await http.delete(`/api/admin/entretien/plans/${plan.id}`).set(A).expect(200);
+    await http.delete(`/api/admin/catalogue/modeles/${mo.id}`).set(A).expect(200);
+  });
+
   it('crée une fiche et refuse des réglages invalides', async () => {
     const groupes = (await http.get('/api/tags').set(auth(alice))).body;
     tagAcier = groupes.find((g: any) => g.slug === 'materiau').tags.find((t: any) => t.slug === 'acier').id;

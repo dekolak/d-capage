@@ -65,6 +65,7 @@ model User {
   apiKeys            ApiKey[]
   lecturesAnnonces   AnnonceLecture[]
   reponsesAnnonces   AnnonceReponse[]
+  entretiensFaits    EntretienFait[]
   parcoursTermines   ParcoursTermine[]
   demandesAide       DemandeAide[]
   /// Modules accessibles (et donc espaces : Lazzeko, Kiavik…) — voir src/espaces/espaces.ts.
@@ -143,6 +144,8 @@ model Modele {
   technologie   Technologie? @relation(fields: [technologieId], references: [id])
   /// Espaces où le modèle est visible par les clients (« lazzeko », « kiavik »).
   espaces       String[]    @default(["lazzeko"])
+  /// Plans d'entretien qui s'appliquent à ce modèle (un plan peut servir à plusieurs modèles).
+  plans         PlanEntretien[]
   /// Miniature de la machine (clé de stockage) : envoyée par l'admin, PNG de préférence.
   imageCle      String?
   imageMaj      DateTime?
@@ -196,6 +199,7 @@ model UserMachine {
   miseEnService DateTime?
   createdAt  DateTime @default(now())
   fiches     Fiche[]
+  entretiens EntretienFait[]
 
   @@unique([userId, varianteId, surnom])
 }
@@ -514,6 +518,8 @@ model Procedure {
   suivis      SuiviParcours[]
   /// Messages de rappel d'entretien qui renvoient vers ce pas-à-pas.
   rappels     Annonce[]          @relation("RappelProcedure")
+  /// Tâches d'entretien qui se font avec ce pas-à-pas.
+  tachesEntretien TacheEntretien[]
   termines    ParcoursTermine[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
@@ -765,4 +771,63 @@ model ParcoursTermine {
   createdAt   DateTime  @default(now())
 
   @@index([userId, createdAt])
+}
+
+/// Plan d'entretien (ex. « Entretien DXonJet ») : des tâches périodiques, attaché à un ou plusieurs modèles de machines.
+model PlanEntretien {
+  id          String           @id @default(cuid())
+  nom         String
+  description String?
+  modeles     Modele[]
+  taches      TacheEntretien[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+/// Tâche d'un plan : tous les `frequence` `unite` (JOURS / SEMAINES / MOIS), à partir de la dernière fois faite
+/// (ou de la mise en service de la machine). « Bientôt » `bientotJours` avant l'échéance.
+model TacheEntretien {
+  id            String          @id @default(cuid())
+  planId        String
+  plan          PlanEntretien   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  ordre         Int             @default(0)
+  titre         String
+  description   String?
+  frequence     Int             @default(3)
+  unite         String          @default("MOIS")
+  bientotJours  Int             @default(15)
+  /// Pas-à-pas à suivre (facultatif).
+  procedureId   String?
+  procedure     Procedure?      @relation(fields: [procedureId], references: [id], onDelete: SetNull)
+  /// Photo demandée quand on valide : non | facultative | obligatoire.
+  photo         String          @default("non")
+  photoConsigne String?
+  /// Réservée à un technicien (validée par l'admin seulement).
+  technicien    Boolean         @default(false)
+  faits         EntretienFait[]
+  createdAt     DateTime        @default(now())
+}
+
+/// Ligne du carnet d'une machine : tâche faite (par le client ou l'admin), ou note libre du client (tacheId vide).
+model EntretienFait {
+  id            String          @id @default(cuid())
+  userMachineId String
+  machine       UserMachine     @relation(fields: [userMachineId], references: [id], onDelete: Cascade)
+  tacheId       String?
+  tache         TacheEntretien? @relation(fields: [tacheId], references: [id], onDelete: SetNull)
+  /// Auteur (client ou admin).
+  userId        String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parAdmin      Boolean         @default(false)
+  /// Date à laquelle c'est fait (choisie, aujourd'hui par défaut).
+  date          DateTime
+  /// client | pasapas | admin
+  source        String          @default("client")
+  /// Note libre : titre court (note sans tâche) et texte.
+  titre         String?
+  note          String?
+  photoCle      String?
+  createdAt     DateTime        @default(now())
+
+  @@index([userMachineId, date])
 }

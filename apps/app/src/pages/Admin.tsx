@@ -48,13 +48,14 @@ export default function Admin() {
       return {};
     }
   });
-  const [compte, setCompte] = useState<{ tags: number; aide: number; utilisateurs: number }>({ tags: 0, aide: 0, utilisateurs: 0 });
+  const [compte, setCompte] = useState<{ tags: number; aide: number; utilisateurs: number; retard: number }>({ tags: 0, aide: 0, utilisateurs: 0, retard: 0 });
   useEffect(() => {
     Promise.all([
       api<TagAValider[]>('/tags/a-valider').catch(() => []),
       api<unknown[]>('/admin/aide?traitee=non').catch(() => []),
       api<U[]>('/users').catch(() => []),
-    ]).then(([t, a, u]) => setCompte({ tags: t.length, aide: a.length, utilisateurs: u.length }));
+      api<unknown[]>('/admin/entretien/machines?etat=retard').catch(() => []),
+    ]).then(([t, a, u, r]) => setCompte({ tags: t.length, aide: a.length, utilisateurs: u.length, retard: r.length }));
   }, []);
   const entrees: Entree[] = [
     { zone: 'commun', to: '/admin/utilisateurs', titre: '👥 Utilisateurs', texte: `créer un compte, accès, machines, activité (${compte.utilisateurs})` },
@@ -64,6 +65,7 @@ export default function Admin() {
     { zone: 'commun', to: '/admin/webhooks', titre: '📤 Envoi vers une API', texte: 'événements envoyés à n8n ou une IA' },
     { zone: 'lazzeko', to: '/admin/fiches', titre: '📝 Fiches de réglage', texte: 'voir qui les a faites, masquer' },
     { zone: 'commun', to: '/admin/catalogue', titre: '🔧 Machines', texte: 'modèles Lazzeko et Kiavik, où ils sont visibles, images' },
+    { zone: 'commun', to: '/admin/entretien', titre: "📒 Entretien", texte: "plans d'entretien des machines, suivi des retards, carnets", compte: compte.retard },
     { zone: 'lazzeko', to: '/admin/avis', titre: '⭐ Avis', texte: 'masquer ceux qui ne conviennent pas' },
     { zone: 'lazzeko', to: '/admin/tags', titre: '🏷️ Tags proposés', texte: 'à valider', compte: compte.tags },
     { zone: 'lazzeko', to: '/admin/aide', titre: "🆘 Demandes d'aide", texte: 'bouton sur les fiches, demandes reçues', compte: compte.aide },
@@ -456,6 +458,7 @@ function MachinesClient({ userId, catalogue }: { userId: string; catalogue: Fabr
                   {' · '}{m.espaces.map((e) => e).join(', ') || 'non visible'}
                 </span>
               </span>
+              <Link to={`/admin/entretien/machines/${m.id}`} className="btn petit" title="Carnet d'entretien">📒</Link>
               <button type="button" className="btn petit" onClick={() => { setV({ numeroSerie: m.numeroSerie ?? '', miseEnService: m.miseEnService?.slice(0, 10) ?? '', surnom: m.surnom ?? '' }); setEdition(m.id); }}>✏️</button>
               <button type="button" className="btn petit danger" onClick={() => confirm(`Retirer ${m.surnom || m.nom} de ce client ? (ses fiches de réglage sont gardées)`) && faire(`/users/${userId}/machines/${m.id}`, { method: 'DELETE' })}>🗑</button>
             </div>

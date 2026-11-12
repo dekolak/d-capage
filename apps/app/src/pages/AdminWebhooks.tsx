@@ -10,6 +10,8 @@ interface Livraison { id: string; evenement: string; statut: string; tentatives:
 
 const NOMS: Record<string, string> = {
   'fiche.creee': 'Nouvelle fiche', 'fiche.modifiee': 'Fiche modifiée', 'avis.publie': 'Nouvel avis', 'avis.modifie': 'Avis modifié', 'aide.demandee': 'Demande d\'aide',
+  'motdepasse.demande': 'Mot de passe oublié', 'diagnostic.envoye': 'Dépannage reçu', 'etape.signalee': '« Pas clair ? » sur une étape',
+  'entretien.fait': 'Entretien noté (carnet)',
 };
 
 /**
