@@ -171,6 +171,26 @@ describe('Parcours complet', () => {
     carnet = (await http.post(`/api/moi/carnet/${m.id}/faits`).set(C).send({ titre: 'Vitre nettoyée', note: 'avec le chiffon' })).body;
     expect(carnet.historique[0]).toMatchObject({ titre: 'Vitre nettoyée', tacheId: null });
 
+    // rappels dans l'app : jour J ou en retard, pas « technicien » ; « Me le rappeler dans… » les retire (et de n8n)
+    const m2 = (await http.post(`/api/users/${u.id}/machines`).set(A).send({ varianteId: mo.variantes[0].id, numeroSerie: `F2-${id}`, miseEnService: il4mois.toISOString() })).body;
+    let rap = (await http.get('/api/moi/carnet/rappels').set(C)).body.filter((r: any) => r.machine.id === m2.id);
+    expect(rap.map((r: any) => r.tache.titre).sort()).toEqual(['Filtres', 'Test des buses']);
+    expect((await http.post(`/api/moi/carnet/${m2.id}/reporter`).set(C).send({ tacheId: filtres.id, jours: 3 })).status).toBe(400);
+    const rep = (await http.post(`/api/moi/carnet/${m2.id}/reporter`).set(C).send({ tacheId: filtres.id, jours: 7 })).body;
+    expect(new Date(rep.jusquau).getTime()).toBeGreaterThan(Date.now() + 6 * 86400000);
+    rap = (await http.get('/api/moi/carnet/rappels').set(C)).body.filter((r: any) => r.machine.id === m2.id);
+    expect(rap.map((r: any) => r.tache.titre)).toEqual(['Test des buses']);
+    expect(t((await http.get(`/api/moi/carnet/${m2.id}`).set(C)).body, filtres.id).reporteJusquau).toBeTruthy();
+    let ech2 = (await http.get('/api/admin/entretien/echeances').set('X-Api-Key', cle)).body.filter((e: any) => e.machine.id === m2.id);
+    expect(ech2.map((e: any) => e.tache.titre)).toEqual(['Test des buses']);
+    ech2 = (await http.get('/api/admin/entretien/echeances?reportes=1').set('X-Api-Key', cle)).body.filter((e: any) => e.machine.id === m2.id);
+    expect(ech2).toHaveLength(2);
+    expect((await http.post(`/api/moi/carnet/${m2.id}/reporter`).set(auth(alice)).send({ tacheId: filtres.id, jours: 7 })).status).toBe(404);
+    // fait : le report est effacé
+    await http.post(`/api/moi/carnet/${m2.id}/faits`).set(C).send({ tacheId: filtres.id }).expect(201);
+    expect(t((await http.get(`/api/moi/carnet/${m2.id}`).set(C)).body, filtres.id)).toMatchObject({ etat: 'ok', reporteJusquau: null });
+    await http.delete(`/api/users/${u.id}/machines/${m2.id}`).set(A).expect(200);
+
     // l'admin note la révision (technicien) ; un autre client ne voit pas ce carnet
     carnet = (await http.post(`/api/admin/entretien/machines/${m.id}/faits`).set(A).send({ tacheId: revision.id })).body;
     expect(carnet.historique.find((h: any) => h.tacheId === revision.id)).toMatchObject({ parAdmin: true, source: 'admin' });

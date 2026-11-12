@@ -23,6 +23,7 @@ import Connexion from './pages/Connexion';
 import { t } from './lib/i18n';
 import Carnets, { CarnetRoute } from './pages/Carnet';
 import AdminEntretien, { AdminCarnet } from './pages/AdminEntretien';
+import { RappelsEntretien } from './components/RappelsEntretien';
 
 /**
  * Une seule app, plusieurs espaces (Lazzeko, Kiavik) : chaque espace a ses écrans et sa barre du bas (src/espaces/),
@@ -58,6 +59,7 @@ export default function App() {
       <main>
         <BandeauHorsLigne />
         {!admin && <Annonces />}
+        {!admin && <RappelsEntretien />}
         {!admin && <JournalPages />}
         <Routes>
           {app.routes()}

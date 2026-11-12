@@ -521,3 +521,12 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .ae-plan { margin-bottom: 12px; display: grid; gap: 8px; }
 .ae-plan > summary { cursor: pointer; }
 .ae-plan[open] > summary { margin-bottom: 6px; }
+
+.rappel-plus-tard { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+/* Carnet : impression / enregistrement en PDF (sans les boutons ni la navigation) */
+@media print {
+  .onglets, .annonces, .no-print, .cn button, .cn .btn, .cn input, .cn textarea, .partage-flottant { display: none !important; }
+  main { max-width: none !important; padding: 0 !important; }
+  .cn .carte { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+  .cn-photo { max-height: 160px; }
+}
