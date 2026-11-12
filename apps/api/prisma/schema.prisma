@@ -65,6 +65,7 @@ model User {
   apiKeys            ApiKey[]
   lecturesAnnonces   AnnonceLecture[]
   reponsesAnnonces   AnnonceReponse[]
+  parcoursTermines   ParcoursTermine[]
   demandesAide       DemandeAide[]
   /// Modules accessibles (et donc espaces : Lazzeko, Kiavik…) — voir src/espaces/espaces.ts.
   modules            UserModule[]
@@ -431,6 +432,13 @@ model Annonce {
   options            String[]
   autreOption        Boolean          @default(false)
   reponseObligatoire Boolean          @default(false)
+  /// Question Oui / Non : demander ensuite une date (« À quelle date l'avez-vous fait ? ») après « non », « oui » ou « toujours » ; null = jamais.
+  dateSi             String?
+  dateQuestion       String?
+  /// Rappel d'entretien : pas-à-pas Kiavik à faire (bouton « Faire le pas-à-pas », proposé après « Non » s'il y a une question Oui / Non).
+  procedureId        String?
+  procedure          Procedure?       @relation("RappelProcedure", fields: [procedureId], references: [id], onDelete: SetNull)
+  termines           ParcoursTermine[]
   reponses           AnnonceReponse[]
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
@@ -461,6 +469,8 @@ model AnnonceReponse {
   valeur     String
   /// Précision quand l'utilisateur choisit « Autre ».
   autre      String?
+  /// Date indiquée par l'utilisateur (« À quelle date l'avez-vous fait ? »).
+  dateFaite  DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -496,6 +506,9 @@ model Procedure {
   choixVers   ChoixEtape[]       @relation("ProcedureCible")
   diagnostics DiagnosticEnvoye[]
   suivis      SuiviParcours[]
+  /// Messages de rappel d'entretien qui renvoient vers ce pas-à-pas.
+  rappels     Annonce[]          @relation("RappelProcedure")
+  termines    ParcoursTermine[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 }
@@ -731,4 +744,19 @@ model CategorieAccueil {
   masquee   Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Pas-à-pas terminé par un client, ouvert depuis un rappel d'entretien (message) : nominatif, pour l'historique d'entretien.
+/// (Les autres parcours ne sont comptés que de façon anonyme, dans SuiviParcours.)
+model ParcoursTermine {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  procedureId String
+  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  annonceId   String?
+  annonce     Annonce?  @relation(fields: [annonceId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, createdAt])
 }

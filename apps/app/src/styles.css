@@ -489,3 +489,10 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .adm-creer { margin-bottom: 16px; }
 .adm-creer > summary { cursor: pointer; }
 .adm-creer[open] > summary { margin-bottom: 12px; }
+
+.historique-entretien { margin: 6px 0; padding-left: 18px; display: grid; gap: 4px; }
+.ba-date { display: grid; gap: 8px; }
+.ba-date label { display: grid; gap: 4px; font-size: 14px; }
+.ba-date input[type='date'] { min-height: 42px; }
+.ba-choix button.prim { background: var(--o); color: #fff; border-color: var(--o); }
+.ba-choix button:disabled { opacity: .5; }

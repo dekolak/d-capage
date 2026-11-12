@@ -1,30 +1,55 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { t, tn } from '../lib/i18n';
 
 export type TypeQuestion = 'AUCUNE' | 'OUI_NON' | 'CHOIX' | 'NOTE' | 'TEXTE';
-export interface Question { type: TypeQuestion; texte: string | null; options: string[]; autre: boolean; obligatoire: boolean }
+export interface Question {
+  type: TypeQuestion; texte: string | null; options: string[]; autre: boolean; obligatoire: boolean;
+  /** Oui / Non : demander ensuite une date après « non », « oui » ou « toujours ». */
+  dateSi?: 'non' | 'oui' | 'toujours' | null; dateQuestion?: string | null;
+}
+/** Pas-à-pas lié (rappel d'entretien). */
+export interface PasAPas { id: string; titre: string }
 export interface Annonce {
   id: string; titre: string; texte: string; niveau: 'CONSEIL' | 'INFO' | 'IMPORTANT'; lienUrl: string | null; lienTexte: string | null;
   question?: Question;
+  procedure?: PasAPas;
 }
 export const ICONE = { CONSEIL: '💡', INFO: 'ℹ️', IMPORTANT: '⚠️' } as const;
 
 /** Réponse en un toucher (ou un champ court) : Oui / Non, choix, note, texte libre. */
-function Repondre({ q, onRepondre, apercu }: { q: Question; onRepondre?: (v: string, autre?: string) => void; apercu?: boolean }) {
+function Repondre({ q, onRepondre, apercu }: { q: Question; onRepondre?: (v: string, autre?: string, date?: string) => void; apercu?: boolean }) {
   const [autre, setAutre] = useState<string | null>(null);
   const [texte, setTexte] = useState('');
+  // Oui / Non suivi d'une date : la réponse choisie, en attendant la date
+  const [choisi, setChoisi] = useState<string | null>(null);
+  const [date, setDate] = useState('');
   const { espace } = useEspace();
-  const envoyer = (v: string, a?: string) => !apercu && onRepondre?.(v, a);
+  const envoyer = (v: string, a?: string, d?: string) => !apercu && onRepondre?.(v, a, d);
+  const ouiNon = (v: string) => (q.dateSi === 'toujours' || q.dateSi === v ? setChoisi(v) : envoyer(v));
+  const aujourdhui = new Date().toISOString().slice(0, 10);
   return (
     <div className="ba-question">
       <b>{q.texte || t('messages.votreQuestion')}</b>
-      {q.type === 'OUI_NON' && (
+      {q.type === 'OUI_NON' && choisi === null && (
         <div className="ba-choix deux-col">
-          <button type="button" onClick={() => envoyer('oui')}>{t('messages.oui')}</button>
-          <button type="button" onClick={() => envoyer('non')}>{t('messages.non')}</button>
+          <button type="button" onClick={() => ouiNon('oui')}>{t('messages.oui')}</button>
+          <button type="button" onClick={() => ouiNon('non')}>{t('messages.non')}</button>
+        </div>
+      )}
+      {q.type === 'OUI_NON' && choisi !== null && (
+        <div className="ba-date">
+          <span className="petit">{choisi === 'oui' ? t('messages.oui') : t('messages.non')} · <button type="button" className="btn-lien petit" onClick={() => setChoisi(null)}>{t('messages.changer')}</button></span>
+          <label>
+            {q.dateQuestion || t('messages.dateQuestion')}
+            <input type="date" value={date} max={aujourdhui} onChange={(e) => setDate(e.target.value)} />
+          </label>
+          <div className="ba-choix deux-col">
+            <button type="button" onClick={() => envoyer(choisi)}>{t('messages.jeNeSaisPlus')}</button>
+            <button type="button" className="prim" disabled={!date} onClick={() => envoyer(choisi, undefined, date)}>{t('messages.envoyer')}</button>
+          </div>
         </div>
       )}
       {q.type === 'CHOIX' && autre === null && (
@@ -60,9 +85,9 @@ function Repondre({ q, onRepondre, apercu }: { q: Question; onRepondre?: (v: str
 }
 
 /** Une bulle de message (aussi utilisée pour l'aperçu dans l'admin). */
-export function Bulle({ a, onCompris, onRepondre, apercu }: {
-  a: Pick<Annonce, 'titre' | 'texte' | 'niveau' | 'lienUrl' | 'lienTexte' | 'question'>;
-  onCompris?: () => void; onRepondre?: (v: string, autre?: string) => void; apercu?: boolean;
+export function Bulle({ a, onCompris, onRepondre, onPasAPas, apercu }: {
+  a: Pick<Annonce, 'titre' | 'texte' | 'niveau' | 'lienUrl' | 'lienTexte' | 'question' | 'procedure'>;
+  onCompris?: () => void; onRepondre?: (v: string, autre?: string, date?: string) => void; onPasAPas?: () => void; apercu?: boolean;
 }) {
   const q = a.question && a.question.type !== 'AUCUNE' ? a.question : null;
   return (
@@ -73,6 +98,10 @@ export function Bulle({ a, onCompris, onRepondre, apercu }: {
         <p>{a.texte || t('messages.texteExemple')}</p>
         {q && <Repondre q={q} onRepondre={onRepondre} apercu={apercu} />}
         <div className="ba-actions">
+          {/* pas-à-pas lié : bouton direct s'il n'y a pas de question (sinon proposé après « Non ») */}
+          {a.procedure && !q && (
+            <button type="button" className="btn petit prim" onClick={() => !apercu && onPasAPas?.()}>{t('messages.faireMaintenant')}</button>
+          )}
           {a.lienUrl && a.lienUrl.startsWith('/') && (
             <Link to={a.lienUrl} onClick={apercu ? (e) => e.preventDefault() : onCompris} className="btn petit">{a.lienTexte || t('messages.voir')}</Link>
           )}
@@ -98,6 +127,9 @@ export function Annonces() {
   const [liste, setListe] = useState<Annonce[]>([]);
   const [tout, setTout] = useState(false);
   const [merci, setMerci] = useState(false);
+  // rappel d'entretien répondu « Non » : on propose de faire le pas-à-pas tout de suite
+  const [aFaire, setAFaire] = useState<{ annonce: string; procedure: PasAPas } | null>(null);
+  const nav = useNavigate();
   const charger = useCallback(() => api<Annonce[]>('/annonces').then(setListe).catch(() => {}), []);
   useEffect(() => {
     charger();
@@ -112,11 +144,23 @@ export function Annonces() {
     retirer(id);
     api(`/annonces/${id}/compris`, { method: 'POST' }).catch(() => {});
   };
-  const repondre = (id: string, valeur: string, autre?: string) => {
+  const repondre = (id: string, valeur: string, autre?: string, dateFaite?: string) => {
+    const a = liste.find((x) => x.id === id);
     retirer(id);
-    setMerci(true);
-    setTimeout(() => setMerci(false), 2500);
-    api(`/annonces/${id}/reponse`, { method: 'POST', json: { valeur, autre } }).catch(() => {});
+    if (valeur === 'non' && a?.procedure) setAFaire({ annonce: id, procedure: a.procedure });
+    else {
+      setMerci(true);
+      setTimeout(() => setMerci(false), 2500);
+    }
+    api(`/annonces/${id}/reponse`, { method: 'POST', json: { valeur, autre, dateFaite } }).catch(() => {});
+  };
+  /** Ouvre le pas-à-pas ; à la fin, le téléphone dira qu'il est fait (historique d'entretien). */
+  const faire = (annonce: string, procedure: PasAPas) => {
+    // on repart de zéro : une ancienne progression ne doit pas compter comme faite
+    for (const k of ['etapes', 'controles', 'reponses', 'envoye', 'envoyePlusTard', 'session', 'parcours']) localStorage.removeItem(`kiavik.${k}.${procedure.id}`);
+    localStorage.setItem(`kiavik.rappel.${procedure.id}`, annonce);
+    setAFaire(null);
+    nav(`/procedures/${procedure.id}`);
   };
 
   const important = liste.find((a) => a.niveau === 'IMPORTANT');
@@ -124,10 +168,25 @@ export function Annonces() {
   return (
     <>
       {merci && <div className="merci">{t('messages.merci')}</div>}
+      {aFaire && (
+        <div className="annonces">
+          <div className="bulle-annonce conseil">
+            <span className="ba-ic">🔧</span>
+            <div className="ba-corps">
+              <b>{t('messages.aFaire', { titre: aFaire.procedure.titre })}</b>
+              <div className="ba-actions">
+                <button type="button" className="btn petit prim" onClick={() => faire(aFaire.annonce, aFaire.procedure)}>{t('messages.faireMaintenant')}</button>
+                <button type="button" className="btn petit" onClick={() => setAFaire(null)}>{t('messages.plusTard')}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {autres.length > 0 && (
         <div className="annonces">
           {(tout ? autres : autres.slice(0, 2)).map((a) => (
-            <Bulle key={a.id} a={a} onCompris={() => compris(a.id)} onRepondre={(v, x) => repondre(a.id, v, x)} />
+            <Bulle key={a.id} a={a} onCompris={() => compris(a.id)} onRepondre={(v, x, d) => repondre(a.id, v, x, d)}
+              onPasAPas={() => { compris(a.id); if (a.procedure) faire(a.id, a.procedure); }} />
           ))}
           {!tout && autres.length > 2 && (
             <button type="button" className="btn-lien petit" onClick={() => setTout(true)}>{tn('messages.voirAutres', autres.length - 2)}</button>
@@ -136,7 +195,8 @@ export function Annonces() {
       )}
       {important && (
         <div className="annonce-fond" role="dialog" aria-modal="true">
-          <Bulle a={important} onCompris={() => compris(important.id)} onRepondre={(v, x) => repondre(important.id, v, x)} />
+          <Bulle a={important} onCompris={() => compris(important.id)} onRepondre={(v, x, d) => repondre(important.id, v, x, d)}
+            onPasAPas={() => { compris(important.id); if (important.procedure) faire(important.id, important.procedure); }} />
         </div>
       )}
     </>

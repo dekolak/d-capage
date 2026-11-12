@@ -732,6 +732,62 @@ describe('Parcours complet', () => {
     await http.delete(`/api/admin/solutions/${s.id}`).set(A).expect(200);
   });
 
+  it('rappel d\'entretien : Oui / Non + date, pas-à-pas à faire, terminé noté, historique du client', async () => {
+    const A = auth(admin);
+    const cle = (await http.post('/api/admin/cles-api').set(A).send({ nom: 'rappel' })).body.cle;
+    await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `rap-${id}`, motDePasse: 'motdepasse1', modules: ['procedures-kiavik'], numeroOdoo: `R-${id}` }).expect(201);
+    const C = { ...auth((await http.post('/api/auth/connexion').send({ identifiant: `rap-${id}`, motDePasse: 'motdepasse1' })).body.jeton), 'X-Espace': 'kiavik' };
+    const { version } = (await http.get('/api/conditions?espace=kiavik').set(C)).body;
+    await http.post('/api/moi/conditions').set(C).send({ version }).expect(201);
+    const moi = (await http.get('/api/users').set(A)).body.find((u: any) => u.identifiant === `rap-${id}`);
+
+    const p = (await http.post('/api/admin/procedures').set(A).send({ titre: `Filtres ${id}`, categorie: 'Entretien' })).body;
+    await http.post(`/api/admin/procedures/${p.id}/etapes`).set(A).send({ texte: 'Changer le filtre' }).expect(201);
+    expect((await http.post('/api/admin/annonces').set(A).send({ titre: 'x', texte: 'xx', procedureId: 'inconnu' })).status).toBe(400);
+    const a = (await http.post('/api/admin/annonces').set(A).send({
+      titre: `Entretien ${id}`, texte: 'Pensez aux filtres', espaces: ['kiavik'], numerosOdoo: [`R-${id}`], recurrence: 'MOIS', intervalle: 6,
+      questionType: 'OUI_NON', question: 'Fait ces 6 derniers mois ?', dateSi: 'non', dateQuestion: 'Quand ?', procedureId: p.id,
+    })).body;
+    expect(a).toMatchObject({ dateSi: 'non', dateQuestion: 'Quand ?', procedureId: p.id });
+
+    // pas-à-pas non publié : pas de bouton côté client ; publié : bouton
+    let bulle = (await http.get('/api/annonces').set(C)).body.find((x: any) => x.id === a.id);
+    expect(bulle.question).toMatchObject({ type: 'OUI_NON', dateSi: 'non', dateQuestion: 'Quand ?' });
+    expect(bulle.procedure).toBeUndefined();
+    await http.patch(`/api/admin/procedures/${p.id}`).set(A).send({ publiee: true }).expect(200);
+    bulle = (await http.get('/api/annonces').set(C)).body.find((x: any) => x.id === a.id);
+    expect(bulle.procedure).toEqual({ id: p.id, titre: `Filtres ${id}` });
+
+    // réponse « Non » avec la date (pas dans le futur)
+    expect((await http.post(`/api/annonces/${a.id}/reponse`).set(C).send({ valeur: 'non', dateFaite: '2999-01-01' })).status).toBe(400);
+    await http.post(`/api/annonces/${a.id}/reponse`).set(C).send({ valeur: 'non', dateFaite: '2026-03-15' }).expect(201);
+
+    // pas-à-pas terminé depuis ce rappel (une fois par jour), refusé pour un autre message
+    const autre = (await http.post('/api/admin/annonces').set(A).send({ titre: `Autre ${id}`, texte: 'xx', espaces: ['kiavik'], numerosOdoo: [`R-${id}`] })).body;
+    expect((await http.post(`/api/procedures/${p.id}/termine`).set(C).send({ annonceId: autre.id })).status).toBe(400);
+    await http.post(`/api/procedures/${p.id}/termine`).set(C).send({ annonceId: a.id }).expect(201);
+    await http.post(`/api/procedures/${p.id}/termine`).set(C).send({ annonceId: a.id }).expect(201);
+
+    // résultats, CSV, historique du client
+    const r = (await http.get(`/api/admin/annonces/${a.id}/reponses`).set(A)).body;
+    expect(r.reponses[0]).toMatchObject({ valeur: 'non' });
+    expect(r.reponses[0].dateFaite.slice(0, 10)).toBe('2026-03-15');
+    expect(r.reponses[0].termine).toBeTruthy();
+    expect((await http.get(`/api/admin/annonces/${a.id}/reponses.csv`).set(A)).text).toContain('2026-03-15');
+    const h = (await http.get(`/api/admin/annonces/entretien/${moi.id}`).set(A)).body;
+    expect(h.reponses).toHaveLength(1);
+    expect(h.reponses[0]).toMatchObject({ valeur: 'non', pasAPas: { id: p.id } });
+    expect(h.termines).toHaveLength(1);
+    expect((await http.get(`/api/admin/annonces/entretien/${moi.id}`).set(C)).status).toBe(403);
+
+    // « Oui » : la date n'est pas gardée (demandée seulement après « Non »)
+    await http.post(`/api/annonces/${a.id}/reponse`).set(C).send({ valeur: 'oui', dateFaite: '2026-03-15' }).expect(201);
+    expect((await http.get(`/api/admin/annonces/${a.id}/reponses`).set(A)).body.reponses[0].dateFaite).toBeNull();
+
+    for (const x of [a, autre]) await http.delete(`/api/admin/annonces/${x.id}`).set(A).expect(200);
+    await http.delete(`/api/admin/procedures/${p.id}`).set(A).expect(200);
+  });
+
   it('langue du compte : choisie par le client, par l\'admin ou à la création (clé API)', async () => {
     const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'langue' })).body.cle;
     const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `lea-${id}`, motDePasse: 'motdepasse1', langue: 'en' })).body;

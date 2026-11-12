@@ -46,6 +46,12 @@ export function useAvancement(p: Procedure | undefined, id: string) {
     const fin = estDiagnostic(p) ? chemin.fin?.type ?? null : chemin.pas.length > 0 && faitesIci.length >= chemin.pas.length ? 'termine' : null;
     const minuteur = setTimeout(() => {
       envoyerOuPlusTard(`/procedures/${p.id}/suivi`, 'PUT', { session, reponses, faites: faitesIci.length, total: chemin.pas.length, derniere, fin }, `suivi:${session}`).catch(() => {});
+      // ouvert depuis un rappel d'entretien : terminé → historique d'entretien du client
+      const rappel = localStorage.getItem(`kiavik.rappel.${p.id}`);
+      if (fin && rappel) {
+        localStorage.removeItem(`kiavik.rappel.${p.id}`);
+        envoyerOuPlusTard(`/procedures/${p.id}/termine`, 'POST', { annonceId: rappel }, `termine:${p.id}:${rappel}`).catch(() => {});
+      }
     }, 1500);
     return () => clearTimeout(minuteur);
   }, [p, id, faites, non, reponses, session, chemin]);
