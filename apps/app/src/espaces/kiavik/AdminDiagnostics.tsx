@@ -15,6 +15,20 @@ interface Diagnostic {
   procedure: { id: string; titre: string };
 }
 
+/** « 🛠 Rapport » : choisir la machine du client, puis rapport d'intervention pré-rempli avec ce dépannage. */
+function RapportDepuis({ d }: { d: Diagnostic }) {
+  const [machines, setMachines] = useState<{ id: string; nom: string; surnom: string | null; numeroSerie: string | null }[] | null>(null);
+  const lien = (id: string) => `/admin/entretien/machines/${id}?diagnostic=${d.id}&motif=${encodeURIComponent(`${d.procedure.titre} : ${d.texte}${d.message ? `\n${d.message}` : ''}`.slice(0, 1900))}`;
+  if (!machines)
+    return <button type="button" className="btn petit" onClick={() => api<typeof machines & object>(`/users/${d.user.id}/machines`).then(setMachines).catch(() => setMachines([]))}>🛠 Rapport d'intervention</button>;
+  if (!machines.length) return <span className="muted petit">Aucune machine pour ce client (Utilisateurs → 🔧 Machines).</span>;
+  return (
+    <>
+      {machines.map((m) => <Link key={m.id} to={lien(m.id)} className="btn petit prim">🛠 {m.surnom || m.nom}{m.numeroSerie ? ` (${m.numeroSerie})` : ''}</Link>)}
+    </>
+  );
+}
+
 const ICONE = { termine: '🎉', resolu: '✅', contact: '📞', en_cours: '⏳' } as const;
 
 /** Administration → Diagnostics reçus : résultats envoyés par les clients (« question : réponse »). */
@@ -68,6 +82,7 @@ export function AdminDiagnostics() {
                 <button type="button" className="btn petit" onClick={() => { setCopie(false); api<{ texte: string }>(`/admin/diagnostics/${d.id}/paquet`).then((r) => setPaquet(r.texte)).catch(setErreur); }}>
                   📋 Copier pour l'IA
                 </button>
+                <RapportDepuis d={d} />
               </span>
             </div>
           ))}

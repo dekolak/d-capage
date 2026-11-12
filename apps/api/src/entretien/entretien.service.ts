@@ -14,6 +14,39 @@ export interface TacheDto {
   titre?: string; description?: string | null; frequence?: number; unite?: string; bientotJours?: number;
   procedureId?: string | null; photo?: string; photoConsigne?: string | null; technicien?: boolean;
 }
+export interface InterventionDto {
+  mode?: string; date?: string; dureeMinutes?: number | null; technicien?: string | null; motif?: string; travaux?: string | null;
+  pieces?: string | null; resultat?: string; visibleClient?: boolean; diagnosticId?: string | null; tacheIds?: string[];
+}
+export const MODES = ['distance', 'sur_place', 'atelier'] as const;
+export const RESULTATS = ['repare', 'a_suivre'] as const;
+const numero = (n: number) => `INT-${String(n).padStart(4, '0')}`;
+
+/** Date « AAAA-MM-JJ » (aujourd'hui par défaut), pas dans le futur. */
+function jourValide(j?: string) {
+  const d = j ? new Date(`${j}T12:00:00Z`) : new Date();
+  if (Number.isNaN(d.getTime()) || d.getTime() > Date.now() + JOUR || d.getUTCFullYear() < 2000) throw new BadRequestException('Date invalide');
+  return d;
+}
+
+function champsIntervention(d: InterventionDto) {
+  const v = (x: string | null | undefined) => (x === undefined ? undefined : x?.trim() || null);
+  return {
+    mode: d.mode, dureeMinutes: d.dureeMinutes, travaux: v(d.travaux), pieces: v(d.pieces), resultat: d.resultat, visibleClient: d.visibleClient,
+    ...(d.diagnosticId !== undefined ? { diagnosticId: d.diagnosticId || null } : {}),
+  };
+}
+
+type AvecPhotos = Prisma.InterventionGetPayload<{ include: { photos: true } }>;
+/** Vue d'un rapport ; pour le client, sans la durée ni le lien vers le dépannage. */
+function vueIntervention(i: AvecPhotos, pourClient: boolean) {
+  return {
+    id: i.id, numero: numero(i.numero), mode: i.mode, date: i.date, technicien: i.technicien, motif: i.motif, travaux: i.travaux, pieces: i.pieces,
+    resultat: i.resultat, photos: i.photos.map((p) => `/interventions/photos/${p.id}`), photoIds: i.photos.map((p) => p.id),
+    ...(pourClient ? {} : { dureeMinutes: i.dureeMinutes, visibleClient: i.visibleClient, diagnosticId: i.diagnosticId, createdAt: i.createdAt }),
+  };
+}
+
 export interface FaitDto { tacheId?: string | null; date?: string; titre?: string | null; note?: string | null; source?: string }
 
 /** Date + fréquence (les mois en calendrier : 15 janvier + 3 mois = 15 avril). */
@@ -44,6 +77,7 @@ const MACHINE = {
   variante: { include: { modele: { include: { fabricant: true, plans: { include: { taches: { orderBy: { ordre: 'asc' }, include: { procedure: { select: { id: true, titre: true, publiee: true } } } } } } } } } },
   entretiens: { orderBy: [{ date: 'desc' }, { createdAt: 'desc' }], include: { user: { select: { nom: true, identifiant: true } } } },
   reports: true,
+  interventions: { orderBy: [{ date: 'desc' }, { createdAt: 'desc' }], include: { photos: { orderBy: { ordre: 'asc' } } } },
 } satisfies Prisma.UserMachineInclude;
 type Machine = Prisma.UserMachineGetPayload<{ include: typeof MACHINE }>;
 
@@ -136,7 +170,7 @@ export class EntretienService {
   }
 
   // ---------- carnet d'une machine ----------
-  private vue(m: Machine, maintenant = new Date()) {
+  private vue(m: Machine, pourClient = false, maintenant = new Date()) {
     const depart = m.miseEnService ?? m.createdAt;
     const taches = m.variante.modele.plans.flatMap((p) =>
       p.taches.map((t) => {
@@ -163,6 +197,8 @@ export class EntretienService {
         date: e.date, source: e.source, parAdmin: e.parAdmin, auteur: e.user.nom || e.user.identifiant,
         photo: e.photoCle ? `/carnet/photos/${e.id}` : null,
       })),
+      /** Rapports d'intervention (le client ne voit que ceux marqués visibles). */
+      interventions: m.interventions.filter((i) => !pourClient || i.visibleClient).map((i) => vueIntervention(i, pourClient)),
     };
   }
 
@@ -175,13 +211,13 @@ export class EntretienService {
   /** Carnets du client (machines visibles dans l'espace ouvert). */
   async mesCarnets(userId: string, espace: string) {
     const l = await this.prisma.userMachine.findMany({ where: { userId, variante: { modele: { espaces: { has: espace } } } }, include: MACHINE, orderBy: { createdAt: 'asc' } });
-    return l.map((m) => this.vue(m));
+    return l.map((m) => this.vue(m, true));
   }
 
   async carnet(id: string, userId?: string) {
     const m = await this.machine(id);
     if (userId && m.userId !== userId) throw new NotFoundException('Machine introuvable');
-    return this.vue(m);
+    return this.vue(m, !!userId);
   }
 
   /**
@@ -213,7 +249,7 @@ export class EntretienService {
       },
     });
     if (tache) await this.prisma.reportEntretien.deleteMany({ where: { userMachineId: m.id, tacheId: tache.id } });
-    const vue = await this.carnet(m.id);
+    const vue = await this.carnet(m.id, auteur.admin ? undefined : auteur.id);
     if (tache) {
       const t = vue.taches.find((x) => x.id === tache.id)!;
       this.webhooks.emettre('entretien.fait', {
@@ -230,7 +266,7 @@ export class EntretienService {
     if (!f || (!auteur.admin && (f.machine.userId !== auteur.id || f.userId !== auteur.id))) throw new NotFoundException('Ligne introuvable');
     await this.prisma.entretienFait.delete({ where: { id: faitId } });
     if (f.photoCle) await this.stockage.supprimer(f.photoCle);
-    return this.carnet(f.userMachineId);
+    return this.carnet(f.userMachineId, auteur.admin ? undefined : auteur.id);
   }
 
   async lirePhoto(faitId: string, moi: { id: string; admin: boolean }) {
@@ -286,6 +322,135 @@ export class EntretienService {
           },
         })),
     );
+  }
+
+  // ---------- rapports d'intervention (traçabilité) ----------
+  /**
+   * Nouveau rapport sur une machine. Les tâches d'entretien faites pendant l'intervention (`tacheIds`) sont notées
+   * dans le carnet (leur échéance repart de la date de l'intervention).
+   */
+  async creerIntervention(machineId: string, auteurId: string, d: InterventionDto & { motif: string; date?: string }) {
+    const m = await this.machine(machineId);
+    const u = await this.prisma.user.findUnique({ where: { id: auteurId }, select: { nom: true, identifiant: true } });
+    const auteur = { id: auteurId, nom: u?.nom || u?.identifiant || 'Admin' };
+    const taches = m.variante.modele.plans.flatMap((p) => p.taches);
+    if (d.tacheIds?.some((t) => !taches.some((x) => x.id === t))) throw new BadRequestException('Tâche d\'entretien introuvable pour cette machine');
+    if (d.diagnosticId && !(await this.prisma.diagnosticEnvoye.findUnique({ where: { id: d.diagnosticId }, select: { id: true } }))) throw new BadRequestException('Dépannage introuvable');
+    const date = jourValide(d.date);
+    const i = await this.prisma.intervention.create({
+      data: { userMachineId: m.id, date, technicien: d.technicien?.trim() || auteur.nom, ...champsIntervention(d), motif: d.motif.trim() },
+    });
+    for (const t of d.tacheIds ?? []) {
+      await this.prisma.entretienFait.create({ data: { userMachineId: m.id, tacheId: t, userId: auteur.id, parAdmin: true, date, source: 'admin', note: `Intervention ${numero(i.numero)}` } });
+      await this.prisma.reportEntretien.deleteMany({ where: { userMachineId: m.id, tacheId: t } });
+    }
+    this.webhooks.emettre('intervention.creee', {
+      intervention: { ...vueIntervention({ ...i, photos: [] }, false), entretiens: (d.tacheIds ?? []).map((t) => taches.find((x) => x.id === t)!.titre) },
+      machine: { id: m.id, nom: nomMachine(m.variante), numeroSerie: m.numeroSerie }, client: m.user,
+    });
+    return this.lireIntervention(i.id);
+  }
+
+  async modifierIntervention(id: string, d: InterventionDto) {
+    await this.intervention(id);
+    await this.prisma.intervention.update({
+      where: { id },
+      data: { ...champsIntervention(d), ...(d.date ? { date: jourValide(d.date) } : {}), ...(d.motif ? { motif: d.motif.trim() } : {}), ...(d.technicien !== undefined ? { technicien: d.technicien?.trim() || null } : {}) },
+    });
+    return this.lireIntervention(id);
+  }
+
+  async supprimerIntervention(id: string) {
+    const i = await this.prisma.intervention.findUnique({ where: { id }, include: { photos: true } });
+    if (!i) throw new NotFoundException('Rapport introuvable');
+    await this.prisma.intervention.delete({ where: { id } });
+    for (const p of i.photos) await this.stockage.supprimer(p.cle);
+    return { ok: true };
+  }
+
+  /** Photo (compressée sur le téléphone), 6 au plus. */
+  async photoIntervention(id: string, f?: Express.Multer.File) {
+    await this.intervention(id);
+    if (!f) throw new BadRequestException('Photo manquante');
+    const fmt = formatImage(f.buffer);
+    if (!fmt) throw new BadRequestException('Image PNG, JPEG ou WebP attendue');
+    const n = await this.prisma.photoIntervention.count({ where: { interventionId: id } });
+    if (n >= 6) throw new BadRequestException('6 photos au plus');
+    const cle = `interventions/${id}/${Date.now()}.${fmt}`;
+    await this.stockage.ecrire(cle, f.buffer);
+    await this.prisma.photoIntervention.create({ data: { interventionId: id, ordre: n, cle } });
+    return this.lireIntervention(id);
+  }
+
+  async retirerPhotoIntervention(photoId: string) {
+    const p = await this.prisma.photoIntervention.findUnique({ where: { id: photoId } });
+    if (!p) throw new NotFoundException('Photo introuvable');
+    await this.prisma.photoIntervention.delete({ where: { id: photoId } });
+    await this.stockage.supprimer(p.cle);
+    return this.lireIntervention(p.interventionId);
+  }
+
+  /** Un rapport (admin ; client : seulement sur sa machine et s'il est visible). */
+  async lireIntervention(id: string, client?: string) {
+    const i = await this.prisma.intervention.findUnique({
+      where: { id },
+      include: {
+        photos: { orderBy: { ordre: 'asc' } },
+        diagnostic: { select: { id: true, texte: true, message: true, createdAt: true, procedure: { select: { titre: true } } } },
+        machine: { include: { user: { select: { id: true, identifiant: true, nom: true, numeroOdoo: true } }, variante: { include: { modele: { include: { fabricant: true } } } } } },
+      },
+    });
+    if (!i || (client && (i.machine.userId !== client || !i.visibleClient))) throw new NotFoundException('Rapport introuvable');
+    return {
+      ...vueIntervention(i, !!client),
+      machine: { id: i.machine.id, nom: nomMachine(i.machine.variante), surnom: i.machine.surnom, numeroSerie: i.machine.numeroSerie },
+      ...(client ? {} : { client: i.machine.user, diagnostic: i.diagnostic }),
+    };
+  }
+
+  /** Tous les rapports, filtrables : mode, résultat, machine, recherche (client, n° Odoo, n° de série, texte). */
+  async listerInterventions(f: { mode?: string; resultat?: string; machineId?: string; q?: string }) {
+    const q = f.q?.trim();
+    const l = await this.prisma.intervention.findMany({
+      where: {
+        ...(f.mode ? { mode: f.mode } : {}), ...(f.resultat ? { resultat: f.resultat } : {}), ...(f.machineId ? { userMachineId: f.machineId } : {}),
+        ...(q
+          ? {
+              OR: [
+                { motif: { contains: q, mode: 'insensitive' } }, { travaux: { contains: q, mode: 'insensitive' } }, { pieces: { contains: q, mode: 'insensitive' } },
+                { machine: { numeroSerie: { contains: q, mode: 'insensitive' } } },
+                { machine: { user: { OR: [{ nom: { contains: q, mode: 'insensitive' } }, { identifiant: { contains: q, mode: 'insensitive' } }, { numeroOdoo: { contains: q, mode: 'insensitive' } }] } } },
+                ...(/^(int-?)?\d+$/i.test(q) ? [{ numero: Number(q.replace(/\D/g, '')) }] : []),
+              ],
+            }
+          : {}),
+      },
+      orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+      take: 300,
+      include: {
+        photos: { orderBy: { ordre: 'asc' } },
+        machine: { include: { user: { select: { id: true, identifiant: true, nom: true, numeroOdoo: true } }, variante: { include: { modele: { include: { fabricant: true } } } } } },
+      },
+    });
+    return l.map((i) => ({
+      ...vueIntervention(i, false),
+      machine: { id: i.machine.id, nom: nomMachine(i.machine.variante), surnom: i.machine.surnom, numeroSerie: i.machine.numeroSerie },
+      client: i.machine.user,
+    }));
+  }
+
+  async lirePhotoIntervention(photoId: string, moi: { id: string; admin: boolean }) {
+    const p = await this.prisma.photoIntervention.findUnique({ where: { id: photoId }, include: { intervention: { select: { visibleClient: true, machine: { select: { userId: true } } } } } });
+    if (!p || (!moi.admin && (p.intervention.machine.userId !== moi.id || !p.intervention.visibleClient))) throw new NotFoundException();
+    const flux = this.stockage.lire(p.cle);
+    if (!flux) throw new NotFoundException();
+    return { flux, ext: p.cle.split('.').pop()! };
+  }
+
+  private async intervention(id: string) {
+    const i = await this.prisma.intervention.findUnique({ where: { id } });
+    if (!i) throw new NotFoundException('Rapport introuvable');
+    return i;
   }
 
   // ---------- rappels dans l'app ----------

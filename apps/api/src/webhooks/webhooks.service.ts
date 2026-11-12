@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { createHmac, randomBytes } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 
-export const EVENEMENTS = ['fiche.creee', 'fiche.modifiee', 'avis.publie', 'avis.modifie', 'aide.demandee', 'motdepasse.demande', 'diagnostic.envoye', 'etape.signalee', 'entretien.fait', 'entretien.reporte'] as const;
+export const EVENEMENTS = ['fiche.creee', 'fiche.modifiee', 'avis.publie', 'avis.modifie', 'aide.demandee', 'motdepasse.demande', 'diagnostic.envoye', 'etape.signalee', 'entretien.fait', 'entretien.reporte', 'intervention.creee'] as const;
 export type Evenement = (typeof EVENEMENTS)[number];
 
 const MAX_TENTATIVES = 6;

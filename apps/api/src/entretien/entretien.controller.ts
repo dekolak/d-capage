@@ -5,7 +5,7 @@ import type { Response } from 'express';
 import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
 import { AutoriseCleApi, EspaceCourant, Moi, Principal, Roles } from '../auth/decorators';
 import { MIME_IMAGE } from '../stockage/stockage.service';
-import { EntretienService, PHOTOS, UNITES } from './entretien.service';
+import { EntretienService, MODES, PHOTOS, RESULTATS, UNITES } from './entretien.service';
 
 class PlanDto {
   @IsString() @MinLength(2) @MaxLength(80) nom!: string;
@@ -44,6 +44,28 @@ class FaitDto {
 class ReporterDto {
   @IsString() @MaxLength(40) tacheId!: string;
   @IsIn([1, 2, 7, 14, 30]) jours!: number;
+}
+class ModifierInterventionDto {
+  @IsOptional() @IsIn(MODES as unknown as string[]) mode?: string;
+  @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) date?: string;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsInt() @Min(0) @Max(10000) dureeMinutes?: number | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(80) technicien?: string | null;
+  @IsOptional() @IsString() @MinLength(2) @MaxLength(2000) motif?: string;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) travaux?: string | null;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(2000) pieces?: string | null;
+  @IsOptional() @IsIn(RESULTATS as unknown as string[]) resultat?: string;
+  @IsOptional() @IsBoolean() visibleClient?: boolean;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) diagnosticId?: string | null;
+}
+class InterventionDto extends ModifierInterventionDto {
+  @IsString() @MinLength(2) @MaxLength(2000) declare motif: string;
+  @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) tacheIds?: string[];
+}
+class InterventionsQuery {
+  @IsOptional() @IsIn(MODES as unknown as string[]) mode?: string;
+  @IsOptional() @IsIn(RESULTATS as unknown as string[]) resultat?: string;
+  @IsOptional() @IsString() machineId?: string;
+  @IsOptional() @IsString() @MaxLength(80) q?: string;
 }
 class SuiviQuery {
   @IsOptional() @IsString() etat?: string;
@@ -91,6 +113,20 @@ export class CarnetController {
   @Delete('moi/carnet/faits/:id')
   retirer(@Moi() moi: Principal, @Param('id') id: string) {
     return this.entretien.retirer(id, { id: moi.id, admin: estAdmin(moi) });
+  }
+
+  /** Rapport d'intervention visible par le client. */
+  @Get('moi/interventions/:id')
+  intervention(@Moi() moi: Principal, @Param('id') id: string) {
+    return this.entretien.lireIntervention(id, estAdmin(moi) ? undefined : moi.id);
+  }
+
+  @Get('interventions/photos/:id')
+  async photoIntervention(@Moi() moi: Principal, @Param('id') id: string, @Res() res: Response) {
+    const { flux, ext } = await this.entretien.lirePhotoIntervention(id, { id: moi.id, admin: estAdmin(moi) });
+    res.setHeader('Content-Type', MIME_IMAGE[ext as keyof typeof MIME_IMAGE] ?? 'application/octet-stream');
+    res.setHeader('Cache-Control', 'private, max-age=86400');
+    flux.pipe(res);
   }
 
   @Get('carnet/photos/:id')
@@ -167,6 +203,46 @@ export class AdminEntretienController {
   @UseInterceptors(PHOTO)
   noter(@Moi() moi: Principal, @Param('id') id: string, @Body() d: FaitDto, @UploadedFile() photo?: Express.Multer.File) {
     return this.entretien.noter(id, { id: moi.id, admin: true }, d, photo);
+  }
+
+  // --- rapports d'intervention (traçabilité) ---
+  @Post('machines/:id/interventions')
+  creerIntervention(@Moi() moi: Principal, @Param('id') id: string, @Body() d: InterventionDto) {
+    return this.entretien.creerIntervention(id, moi.id, d);
+  }
+
+  /** ?mode=distance|sur_place|atelier&resultat=repare|a_suivre&machineId=…&q=… */
+  @Get('interventions')
+  @AutoriseCleApi()
+  interventions(@Query() f: InterventionsQuery) {
+    return this.entretien.listerInterventions(f);
+  }
+
+  @Get('interventions/:id')
+  @AutoriseCleApi()
+  lireIntervention(@Param('id') id: string) {
+    return this.entretien.lireIntervention(id);
+  }
+
+  @Patch('interventions/:id')
+  modifierIntervention(@Param('id') id: string, @Body() d: ModifierInterventionDto) {
+    return this.entretien.modifierIntervention(id, d);
+  }
+
+  @Delete('interventions/:id')
+  supprimerIntervention(@Param('id') id: string) {
+    return this.entretien.supprimerIntervention(id);
+  }
+
+  @Post('interventions/:id/photos')
+  @UseInterceptors(PHOTO)
+  photoIntervention(@Param('id') id: string, @UploadedFile() photo?: Express.Multer.File) {
+    return this.entretien.photoIntervention(id, photo);
+  }
+
+  @Delete('interventions/photos/:id')
+  retirerPhotoIntervention(@Param('id') id: string) {
+    return this.entretien.retirerPhotoIntervention(id);
   }
 
   @Delete('faits/:id')
