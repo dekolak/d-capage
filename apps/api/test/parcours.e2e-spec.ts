@@ -61,13 +61,56 @@ describe('Parcours complet', () => {
     const v = (await http.get(`/api/catalogue/versions/${cat[0].modeles[0].variantes[0].version.id}`).set(auth(alice))).body;
     expect(v.config.constantes.pmax).toBe(300);
 
-    // l'utilisateur ajoute sa machine, l'admin attribue celle de Bob
-    machineAlice = (await http.post('/api/moi/machines').set(auth(alice)).send({ varianteId })).body.id;
-    expect((await http.post('/api/moi/machines').set(auth(alice)).send({ varianteId })).status).toBe(409);
+    // c'est l'admin qui ajoute les machines (n° de série, mise en service) ; le client ne peut pas
+    expect((await http.post('/api/moi/machines').set(auth(alice)).send({ varianteId })).status).toBe(404);
+    const aliceId = (await http.get('/api/moi').set(auth(alice))).body.id;
+    const ma = (await http.post(`/api/users/${aliceId}/machines`).set(auth(admin)).send({ varianteId, numeroSerie: `SN-${id}`, miseEnService: '2026-01-15T12:00:00.000Z' })).body;
+    machineAlice = ma.id;
+    expect(ma).toMatchObject({ numeroSerie: `SN-${id}`, espaces: ['lazzeko'] });
+    expect(ma.miseEnService.slice(0, 10)).toBe('2026-01-15');
+    expect((await http.post(`/api/users/${aliceId}/machines`).set(auth(admin)).send({ varianteId, numeroSerie: `SN-${id}` })).status).toBe(409);
+    await http.patch(`/api/moi/machines/${machineAlice}`).set(auth(alice)).send({ surnom: 'Camion' }).expect(200);
+    expect((await http.patch(`/api/moi/machines/${machineAlice}`).set(auth(alice)).send({ numeroSerie: 'pirate' })).status).toBe(400);
     const bobId = (await http.get('/api/moi').set(auth(bob))).body.id;
     machineBob = (await http.post(`/api/users/${bobId}/machines`).set(auth(admin)).send({ varianteId, surnom: 'Atelier' })).body.id;
     const mes = (await http.get('/api/moi/machines').set(auth(bob))).body;
     expect(mes[0]).toMatchObject({ surnom: 'Atelier', nom: 'Lazzeko Nettoyeur laser pulsé 300 W' });
+  });
+
+  it('machines créées dans l\'administration (Kiavik), visibles selon l\'espace', async () => {
+    const A = auth(admin);
+    expect((await http.post('/api/admin/catalogue/fabricants').set(auth(alice)).send({ nom: 'x' })).status).toBe(403);
+    let cat = (await http.post('/api/admin/catalogue/fabricants').set(A).send({ nom: `DXonJet ${id}` })).body;
+    const fab = cat.find((f: any) => f.nom === `DXonJet ${id}`);
+    expect((await http.post('/api/admin/catalogue/fabricants').set(A).send({ nom: `DXonJet ${id}` })).status).toBe(409);
+    cat = (await http.post('/api/admin/catalogue/modeles').set(A).send({ fabricantId: fab.id, nom: 'i3200', espaces: ['kiavik'] })).body;
+    const mo = cat.find((f: any) => f.id === fab.id).modeles[0];
+    expect(mo).toMatchObject({ nom: 'i3200', espaces: ['kiavik'], technologie: null, variantes: [{ nom: 'Standard', reglages: false, machines: 0 }] });
+    cat = (await http.post('/api/admin/catalogue/variantes').set(A).send({ modeleId: mo.id, nom: '4 têtes' })).body;
+    const v4 = cat.find((f: any) => f.id === fab.id).modeles[0].variantes.find((v: any) => v.nom === '4 têtes');
+
+    // pas dans le catalogue des fiches de réglage (Lazzeko)
+    expect((await http.get('/api/catalogue').set(auth(alice))).body.some((f: any) => f.id === fab.id)).toBe(false);
+
+    // machine d'un client Kiavik : visible dans Kiavik, pas dans Lazzeko
+    const cle = (await http.post('/api/admin/cles-api').set(A).send({ nom: 'machines' })).body.cle;
+    const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `kim-${id}`, motDePasse: 'motdepasse1', modules: ['guide-dxonjet'] })).body;
+    const m = (await http.post(`/api/users/${u.id}/machines`).set(A).send({ varianteId: v4.id, numeroSerie: `K-${id}` })).body;
+    expect(m.miseEnService).toBeTruthy();
+    const tk = (await http.post('/api/auth/connexion').send({ identifiant: `kim-${id}`, motDePasse: 'motdepasse1' })).body.jeton;
+    const { version } = (await http.get('/api/conditions?espace=kiavik').set({ ...auth(tk), 'X-Espace': 'kiavik' })).body;
+    await http.post('/api/moi/conditions').set({ ...auth(tk), 'X-Espace': 'kiavik' }).send({ version }).expect(201);
+    expect((await http.get('/api/moi/machines').set({ ...auth(tk), 'X-Espace': 'kiavik' })).body.map((x: any) => x.numeroSerie)).toEqual([`K-${id}`]);
+    expect((await http.get('/api/moi/machines').set({ ...auth(tk), 'X-Espace': 'lazzeko' })).body).toEqual([]);
+    await http.patch(`/api/users/${u.id}/machines/${m.id}`).set(A).send({ numeroSerie: `K2-${id}`, miseEnService: null }).expect(200);
+    expect((await http.get(`/api/users/${u.id}/machines`).set(A)).body[0]).toMatchObject({ numeroSerie: `K2-${id}`, miseEnService: null });
+
+    // suppression refusée tant qu'une machine de client l'utilise ; visible dans les deux espaces
+    expect((await http.delete(`/api/admin/catalogue/modeles/${mo.id}`).set(A)).status).toBe(400);
+    cat = (await http.patch(`/api/admin/catalogue/modeles/${mo.id}`).set(A).send({ espaces: ['kiavik', 'lazzeko'] })).body;
+    expect(cat.find((f: any) => f.id === fab.id).modeles[0].espaces).toEqual(['kiavik', 'lazzeko']);
+    await http.delete(`/api/users/${u.id}/machines/${m.id}`).set(A).expect(200);
+    await http.delete(`/api/admin/catalogue/modeles/${mo.id}`).set(A).expect(200);
   });
 
   it('crée une fiche et refuse des réglages invalides', async () => {

@@ -13,6 +13,13 @@ Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **L
 
 **Publiée / Non publiée** (anciennement « brouillon ») : 🔒 *non publiée* = visible seulement par l'admin, pour préparer et tester ; ✅ *publiée* = visible par les clients qui ont l'accès « Pas-à-pas et Bon à savoir ». Case « Publiée » en haut de l'écran de modification.
 
+## Machines (Lazzeko et Kiavik)
+Administration → **🔧 Machines** (section Commun).
+- **+ Nouveau modèle** : fabricant (existant ou nouveau, ex. DXonJet), modèle (ex. i3200), **visible dans** Lazzeko et/ou Kiavik. Une variante « Standard » est créée avec ; ajoutez-en d'autres (largeur, nombre de têtes…).
+- Par modèle : cases « Visible dans… », ✏️ renommer, 🗑 (seulement si aucune machine de client ni fiche de réglage ne l'utilise ; sinon **Désactiver** la variante).
+- **Image** : PNG par modèle (machine entière, fond transparent ou clair, ~800 × 800 px) ; une variante peut avoir la sienne.
+- Les modèles Lazzeko avec écran de réglage viennent des fichiers `machines/` (fiches de réglage) ; ceux créés ici n'ont pas de fiches de réglage (carnet d'entretien à venir).
+
 ## Comptes clients
 Administration → **👥 Utilisateurs** (« + Créer un utilisateur » en haut, puis la liste).
 - **Créer** : identifiant, mot de passe (8 caractères min.), nom, n° client Odoo (facultatif).
@@ -23,7 +30,8 @@ Administration → **👥 Utilisateurs** (« + Créer un utilisateur » en haut,
 - **Client Lazzeko** (si accès Lazzeko) : décocher pour un utilisateur d'une autre marque. Sert à cibler les messages.
 - Dans la liste : recherche (identifiant, nom, n° Odoo), filtre par espace, badges d'espace, conditions acceptées, accord photos.
 - **Langue** : par défaut celle du téléphone du client. Dès qu'une deuxième langue existe (anglais prévu), elle se choisit sur le compte (ou par le client dans Compte, ou depuis Odoo avec `langue`).
-- Toucher un compte : modifier ses accès, son n° Odoo, voir ses fiches, lui attribuer une machine. **Désactiver** bloque la connexion sans rien supprimer.
+- **Machines du client** : c'est **vous** qui les ajoutez, dès la création (bloc « Machines du client ») ou ensuite en touchant le compte (🔧 Machines) : modèle, **n° de série**, **date de mise en service** (aujourd'hui par défaut), surnom. ✏️ pour corriger, 🗑 pour retirer (ses fiches de réglage restent). Le client voit ses machines (dans l'espace où le modèle est visible) et peut seulement changer le surnom.
+- Toucher un compte : modifier ses accès, son n° Odoo, voir ses fiches, ses machines. **Désactiver** bloque la connexion sans rien supprimer.
 - Comptes créés par Odoo : voir [API.md](API.md).
 
 Astuce captures d'écran : un compte « démo » avec tous les accès, ouvert en navigation privée, montre exactement ce que voit un client.
@@ -54,7 +62,6 @@ Administration → **💬 Messages**.
 - **Avis** : masquer ceux qui ne conviennent pas (l'auteur voit la raison ; un avis masqué ne compte plus dans la moyenne).
 - **Tags proposés** par les clients : à valider.
 - **Demandes d'aide** : bouton masqué par défaut, activable ; liste des demandes reçues.
-- **Machines** : miniature PNG par modèle (machine entière, fond transparent ou clair, ~800 × 800 px). Une variante peut avoir la sienne.
 - **Envoi vers une API** : webhooks pour une modération automatique (voir [API.md](API.md)).
 
 ## Kiavik : accueil
