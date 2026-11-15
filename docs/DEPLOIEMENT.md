@@ -1,4 +1,4 @@
-# Déploiement : Coolify + Traefik n8n + domaines OVH
+# Déploiement : Coolify (proxy Coolify) + domaines OVH
 
 Une seule app sert `app.lazzeko.com` (Lazzeko) et `app.kiavikcopilot.ovh` (Kiavik).
 
