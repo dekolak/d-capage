@@ -163,7 +163,7 @@ export default function MaMachine() {
 
       {actif === 'reglages' && (
         <div className="liste">
-          <Link to="/" className="bandeau lien-bandeau"><span><b>{t('maMachine.mesFiches')}</b></span><span>›</span></Link>
+          <Link to={`/?machine=${m.id}`} className="bandeau lien-bandeau"><span><b>{t('maMachine.mesFiches')}</b></span><span>›</span></Link>
           <Link to="/fiches/nouvelle" className="btn prim">{t('maMachine.nouvelleFiche')}</Link>
           <Link to="/aide" className="bandeau lien-bandeau"><span><b>{t('maMachine.aideReglages')}</b></span><span>›</span></Link>
         </div>

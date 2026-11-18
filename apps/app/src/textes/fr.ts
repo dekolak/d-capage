@@ -376,7 +376,7 @@ const fr = {
   "lazzeko.filtres.masquer": "Masquer les filtres",
   "lazzeko.filtres.titre": "Filtres",
   "lazzeko.filtres.titreN": "Filtres ({n})",
-  "lazzeko.filtres.toutes": "Toutes",
+  "lazzeko.filtres.toutes": "Toutes mes machines",
   "lazzeko.machines.absente": "Votre machine n'est pas dans la liste ? Contactez-nous pour l'ajouter.",
   "lazzeko.machines.ajouter": "Ajouter",
   "lazzeko.machines.ajouterTitre": "Ajouter une machine",
