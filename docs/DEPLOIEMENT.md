@@ -36,6 +36,9 @@ La base PostgreSQL est incluse dans ce compose (service `db`) : pas besoin de re
 | `ADMIN_IDENTIFIANT` | facultatif, `admin` par défaut |
 | `PUBLIC_URL` | facultatif, `https://app.lazzeko.com` par défaut (liens envoyés aux webhooks) |
 | `MODERATION_PREALABLE_AVIS` | facultatif, `true` = avis avec texte en attente jusqu'à validation |
+| `TRUST_PROXY` | facultatif, nombre de proxys devant l'app (défaut `1` : celui de Coolify), pour lire la vraie IP du client |
+| `CORS_ORIGINS` | facultatif, autres sites autorisés à appeler l'API (`https://a.fr,https://b.fr`) ; vide = aucun (normal) |
+| `LIMITE_CONNEXION_IP`, `LIMITE_ECHECS_IDENTIFIANT`, `LIMITE_DEMANDES_IP`, `LIMITE_CODE_IP` | facultatifs, limites d'essais (défauts 30, 10, 5, 20 ; voir BONNES-PRATIQUES) |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | facultatif : clés des notifications ; sinon générées au premier usage et gardées en base (ne pas les changer ensuite, sinon réactiver les notifications sur chaque téléphone) |
 
 Le compte admin n'est créé qu'au premier démarrage.

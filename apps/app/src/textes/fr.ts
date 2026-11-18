@@ -106,6 +106,7 @@ const fr = {
   "erreur.404": "Introuvable",
   "erreur.409": "Conflit : déjà existant ou modifié entre-temps",
   "erreur.413": "Fichier trop lourd",
+  "erreur.429": "Trop d’essais, réessayez dans quelques minutes",
   "erreur.500": "Erreur du serveur, réessayez plus tard",
   "erreur.CONDITIONS_A_ACCEPTER": "Conditions d'utilisation à accepter",
   "erreur.MODULE_NON_AUTORISE": "Cette fonction n'est pas activée sur votre compte",

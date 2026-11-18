@@ -1276,4 +1276,28 @@ describe('Parcours complet', () => {
     // la clé API ne peut toujours pas accéder aux autres routes d'administration
     expect((await http.get('/api/admin/fiches').set('X-Api-Key', cle)).status).toBe(403);
   });
+
+  it('sécurité : changer le mot de passe déconnecte les autres téléphones ; trop d\'échecs bloque le compte un moment', async () => {
+    const ident = `sec-${id}`;
+    const u = (await http.post('/api/users').set(auth(admin)).send({ identifiant: ident, motDePasse: 'motdepasse1', nom: 'Sécu' })).body;
+    const connexion = async (mdp: string) => http.post('/api/auth/connexion').send({ identifiant: ident, motDePasse: mdp });
+    const telA = (await connexion('motdepasse1')).body.jeton;
+    const telB = (await connexion('motdepasse1')).body.jeton;
+    await http.get('/api/moi').set(auth(telB)).expect(200);
+    const r = (await http.post('/api/moi/mot-de-passe').set(auth(telA)).send({ ancien: 'motdepasse1', nouveau: 'motdepasse2' })).body;
+    expect(r.jeton).toBeTruthy();
+    await http.get('/api/moi').set(auth(telB)).expect(401); // autre téléphone déconnecté
+    await http.get('/api/moi').set(auth(telA)).expect(401);
+    await http.get('/api/moi').set(auth(r.jeton)).expect(200); // celui qui a changé reste connecté
+    // nouveau mot de passe donné par l'admin : déconnecté aussi
+    await http.patch(`/api/users/${u.id}`).set(auth(admin)).send({ motDePasse: 'motdepasse3' }).expect(200);
+    await http.get('/api/moi').set(auth(r.jeton)).expect(401);
+
+    // 10 échecs → bloqué, même avec le bon mot de passe ; les autres comptes ne sont pas touchés
+    for (let i = 0; i < 10; i++) expect((await connexion('mauvais')).status).toBe(401);
+    const bloque = await connexion('motdepasse3');
+    expect(bloque.status).toBe(429);
+    expect(bloque.body.code).toBe('TROP_D_ESSAIS');
+    expect((await http.post('/api/auth/connexion').send({ identifiant: process.env.ADMIN_IDENTIFIANT, motDePasse: process.env.ADMIN_PASSWORD })).status).toBe(200);
+  });
 });

@@ -29,7 +29,7 @@ export function formater<T extends UserBrut>(u: T) {
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private auth: AuthService) {}
 
   async creer(dto: CreerUserDto) {
     // n° client court (621, 622…) pour les clients ; on réessaie si deux créations tombent sur le même
@@ -126,7 +126,8 @@ export class UsersService {
       data: {
         ...reste,
         ...(numeroOdoo !== undefined ? { numeroOdoo: numeroOdoo?.trim() || null } : {}),
-        ...(motDePasse ? { passwordHash: await AuthService.hasher(motDePasse) } : {}),
+        // nouveau mot de passe donné par l'admin : les téléphones déjà connectés sont déconnectés
+        ...(motDePasse ? { passwordHash: await AuthService.hasher(motDePasse), versionJeton: { increment: 1 } } : {}),
       },
       select: USER_PUBLIC,
     }).then(formater);
@@ -161,7 +162,8 @@ export class UsersService {
   async changerMotDePasse(id: string, ancien: string, nouveau: string) {
     const u = await this.prisma.user.findUnique({ where: { id } });
     if (!u || !(await bcrypt.compare(ancien, u.passwordHash))) throw new UnauthorizedException('Ancien mot de passe incorrect');
-    await this.prisma.user.update({ where: { id }, data: { passwordHash: await AuthService.hasher(nouveau) } });
-    return { ok: true };
+    // les autres téléphones sont déconnectés ; celui-ci reçoit un nouveau jeton
+    const m = await this.prisma.user.update({ where: { id }, data: { passwordHash: await AuthService.hasher(nouveau), versionJeton: { increment: 1 } } });
+    return { ok: true, jeton: await this.auth.signer(m) };
   }
 }
