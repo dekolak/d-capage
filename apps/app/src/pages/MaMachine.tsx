@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
-import { pourModele, ResumeProcedure, Solution, useAccesProcedures, useProcedures, useSolutions } from '../espaces/kiavik/donneesProcedures';
+import { pourModele, trierCategories, useAccesProcedures, useCategories, useProcedures, useSolutions } from '../espaces/kiavik/donneesProcedures';
+import { SectionCategorie, useSectionOuverte } from '../espaces/kiavik/SectionCategorie';
 import { EnvoiRecu, ListeRecus } from '../components/EnvoisRecus';
 import { ListeProcedures } from '../espaces/kiavik/Procedures';
 import { ListeSolutions } from '../espaces/kiavik/Solutions';
@@ -13,18 +14,15 @@ import { t, tn } from '../lib/i18n';
 import { date } from '../lib/util';
 import { CarnetMachine, ICONE_ETAT } from './Carnet';
 
-type Onglet = 'utilisation' | 'aide' | 'recus' | 'entretien' | 'reglages';
-const norm = (e: string) => e.trim().toLowerCase();
-/** Rubrique d'une ressource pour cette machine : « pour votre machine », sa catégorie, une ancienne étiquette, sinon « Général ». */
-const rubrique = (c: { etiquettes: string[]; cibleCategories: string[]; cibleModeles: string[] }, m: { modeleId: string; categorie: string | null; etiquettes: string[] }) =>
-  c.cibleModeles.includes(m.modeleId) ? '★'
-  : m.categorie && c.cibleCategories.some((x) => norm(x) === norm(m.categorie!)) ? m.categorie
-  : c.etiquettes.find((e) => m.etiquettes.some((x) => norm(x) === norm(e))) ?? '';
+type Onglet = 'guides' | 'recus' | 'entretien' | 'reglages';
+/** Ce qui vise cette machine précisément passe avant ce qui vise sa catégorie, puis le reste. */
+const precision = (c: { cibleModeles: string[]; cibleCategories: string[] }, modeleId: string) =>
+  c.cibleModeles.includes(modeleId) ? 0 : c.cibleCategories.length ? 1 : 2;
 
 /**
- * Ma machine : tout ce qui concerne UNE machine du client, filtré par les étiquettes de son modèle.
- * Onglets : Utilisation (pas-à-pas, par usage), Aide (Bon à savoir, dépannages guidés), Entretien (carnet),
- * Réglages (Lazzeko : fiches de réglage).
+ * Ma machine : tout ce qui concerne UNE machine du client (filtre « Pour qui ? » : modèle, catégorie, étiquettes).
+ * Onglets : Guides (pas-à-pas, dépannages, Bon à savoir, rangés par catégorie de l'accueil comme l'accueil Kiavik),
+ * Reçus, Entretien (carnet), Réglages (Lazzeko : fiches de réglage).
  */
 export default function MaMachine() {
   const { id } = useParams();
@@ -34,10 +32,12 @@ export default function MaMachine() {
   const acces = useAccesProcedures();
   const [machines, setMachines] = useState<CarnetMachine[]>();
   const [err, setErr] = useState<unknown>();
-  const [onglet, setOnglet] = useState<Onglet>('utilisation');
+  const [onglet, setOnglet] = useState<Onglet>('guides');
   const { liste: procedures } = useProcedures();
   const { liste: solutions } = useSolutions();
   const [recus, setRecus] = useState<EnvoiRecu[]>([]);
+  const cats = useCategories();
+  const { ouverte, basculer } = useSectionOuverte('maMachine.ouvertes');
   useEffect(() => {
     api<CarnetMachine[]>('/moi/carnet').then(setMachines).catch(setErr);
   }, []);
@@ -58,20 +58,20 @@ export default function MaMachine() {
   const reglages = espace.slug === 'lazzeko' && !!moi?.modules.includes('reglages-decapage');
   const recusIci = recus;
   const onglets: { o: Onglet; l: string }[] = [
-    ...(acces ? [{ o: 'utilisation' as const, l: t('maMachine.utilisation') }, { o: 'aide' as const, l: t('maMachine.aide') }] : []),
+    ...(acces ? [{ o: 'guides' as const, l: t('maMachine.guides') }] : []),
     ...(recusIci.length ? [{ o: 'recus' as const, l: t('maMachine.recus') }] : []),
     { o: 'entretien', l: t('maMachine.entretien') },
     ...(reglages ? [{ o: 'reglages' as const, l: t('maMachine.reglages') }] : []),
   ];
   const actif = onglets.some((x) => x.o === onglet) ? onglet : onglets[0].o;
 
-  const pas = (procedures ?? []).filter((p) => pourModele(p, m));
-  const utilisation = pas.filter((p) => !p.diagnostic);
-  const depannages = pas.filter((p) => p.diagnostic);
-  const astuces = (solutions ?? []).filter((s: Solution) => pourModele(s, m));
-  // utilisation rangée par usage (étiquette de la machine), le général à la fin
-  const rang = (r: string) => (r === '★' ? 0 : r ? 1 : 2);
-  const rubriques = [...new Set(utilisation.map((p) => rubrique(p, m)))].sort((a, b) => rang(a) - rang(b) || a.localeCompare(b, 'fr'));
+  const parPrecision = <T extends { cibleModeles: string[]; cibleCategories: string[] }>(l: T[]) =>
+    l.map((x, i) => ({ x, i })).sort((a, b) => precision(a.x, m.modeleId) - precision(b.x, m.modeleId) || a.i - b.i).map((y) => y.x);
+  const pas = parPrecision((procedures ?? []).filter((p) => pourModele(p, m)));
+  const astuces = parPrecision((solutions ?? []).filter((s) => pourModele(s, m)));
+  // sections comme l'accueil : ordre, icônes et sections masquées dans Administration → Accueil et catégories
+  const masquees = (cats ?? []).filter((c) => c.masquee).map((c) => c.nom);
+  const categories = trierCategories([...pas.map((p) => p.categorie), ...astuces.map((x) => x.categorie)], cats).filter((c) => !masquees.includes(c));
   const retard = m.taches.filter((x) => x.etat === 'retard').length;
 
   return (
@@ -109,33 +109,31 @@ export default function MaMachine() {
         ))}
       </div>
 
-      {actif === 'utilisation' && (
-        !procedures ? <Chargement /> : !utilisation.length ? <p className="muted">{t('maMachine.rienUtilisation')}</p> : (
-          rubriques.map((r) => (
-            <section key={r || 'general'} className="mm-rubrique">
-              <h2>{r === '★' ? t('maMachine.pourVotreMachine') : r ? `🎯 ${r}` : t('maMachine.general')}</h2>
-              <ListeProcedures liste={utilisation.filter((p: ResumeProcedure) => rubrique(p, m) === r)} />
-            </section>
-          ))
+      {actif === 'guides' && (
+        !procedures || !solutions ? <Chargement /> : !categories.length ? <p className="muted">{t('maMachine.rienGuides')}</p> : (
+          <div className="liste">
+            {categories.map((cat) => {
+              const procs = pas.filter((p) => p.categorie === cat);
+              const bons = astuces.filter((x) => x.categorie === cat);
+              return (
+                <SectionCategorie
+                  key={cat}
+                  icone={cats?.find((c) => c.nom === cat)?.icone ?? '📁'}
+                  nom={cat || t('kiavik.accueil.autres')}
+                  resume={[
+                    procs.length && tn('kiavik.accueil.nbProcedures', procs.length),
+                    bons.length && tn('kiavik.accueil.nbAstuces', bons.length),
+                  ].filter(Boolean).join(' · ')}
+                  ouverte={ouverte === cat}
+                  onBasculer={() => basculer(cat)}
+                >
+                  {procs.length > 0 && <ListeProcedures liste={procs} />}
+                  {bons.length > 0 && <ListeSolutions liste={bons} />}
+                </SectionCategorie>
+              );
+            })}
+          </div>
         )
-      )}
-
-      {actif === 'aide' && (
-        <>
-          {depannages.length > 0 && (
-            <section className="mm-rubrique">
-              <h2>{t('maMachine.depannages')}</h2>
-              <ListeProcedures liste={depannages} />
-            </section>
-          )}
-          {astuces.length > 0 && (
-            <section className="mm-rubrique">
-              <h2>{t('kiavik.solutions.titre')}</h2>
-              <ListeSolutions liste={astuces} />
-            </section>
-          )}
-          {!depannages.length && !astuces.length && <p className="muted">{t('maMachine.rienAide')}</p>}
-        </>
       )}
 
       {actif === 'recus' && <ListeRecus liste={recusIci} />}
