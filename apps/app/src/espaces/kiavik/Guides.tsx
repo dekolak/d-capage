@@ -11,6 +11,7 @@ import { ListeSolutions } from './Solutions';
 import './guides.css';
 import './accueil.css';
 import { LienMaMachine } from '../../pages/MaMachine';
+import { SectionCategorie, useSectionOuverte } from './SectionCategorie';
 
 const CLE_OUVERTES = 'kiavik.accueil.ouvertes';
 
@@ -26,13 +27,7 @@ export default function Guides() {
   const cats = useCategories();
   const [guides, setGuides] = useState<ResumeGuide[]>();
   const [erreur, setErreur] = useState<unknown>();
-  const [ouvertes, setOuvertes] = useState<string[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(CLE_OUVERTES) ?? '[]');
-    } catch {
-      return [];
-    }
-  });
+  const { ouverte, basculer } = useSectionOuverte(CLE_OUVERTES);
   useEffect(() => {
     api<ResumeGuide[]>('/guides').then(setGuides).catch(setErreur);
   }, []);
@@ -48,13 +43,6 @@ export default function Guides() {
     ...guidees.map((a) => a.categorie ?? ''),
     ...(accesProcedures ? [...(procedures ?? []).map((p) => p.categorie), ...(solutions ?? []).map((x) => x.categorie)] : []),
   ], cats).filter((c) => !masquees.includes(c));
-  const basculer = (cat: string) => {
-    // une seule section ouverte à la fois : en ouvrir une ferme les autres
-    const l = ouvertes.includes(cat) ? [] : [cat];
-    setOuvertes(l);
-    localStorage.setItem(CLE_OUVERTES, JSON.stringify(l));
-  };
-
   return (
     <div className="page kh">
       <header className="kh-tete">
@@ -92,44 +80,36 @@ export default function Guides() {
         const anims = guidees.filter((a) => (a.categorie ?? '') === cat);
         const procs = (procedures ?? []).filter((p) => p.categorie === cat);
         const astuces = (solutions ?? []).filter((s) => s.categorie === cat);
-        const ouverte = ouvertes.includes(cat);
         return (
-          <section key={cat} className={`kh-cat ${ouverte ? 'ouverte' : ''}`}>
-            <button type="button" className="kh-cat-tete" aria-expanded={ouverte} onClick={() => basculer(cat)}>
-              <span className="kh-cat-icone" aria-hidden="true">{cats?.find((c) => c.nom === cat)?.icone ?? '📁'}</span>
-              <span className="kh-cat-nom">
-                <b>{cat || t('kiavik.accueil.autres')}</b>
-                <small>
-                  {[
-                    anims.length && tn('kiavik.accueil.nbAnimations', anims.length),
-                    procs.length && tn('kiavik.accueil.nbProcedures', procs.length),
-                    astuces.length && tn('kiavik.accueil.nbAstuces', astuces.length),
-                  ].filter(Boolean).join(' · ')}
-                </small>
-              </span>
-              <span className="kh-cat-chevron" aria-hidden="true">›</span>
-            </button>
-            {ouverte && (
-              <div className="kh-cat-corps">
-                {anims.length > 0 && (
-                  <div className="kh-defile">
-                    {anims.map((a) => (
-                      <Link key={`${a.guide}/${a.id}`} to={`/guides/${a.guide}/animation/${a.id}`} className="kh-guidee">
-                        <span className="kh-image">
-                          {a.image && <img src={a.image} alt="" loading="lazy" />}
-                          <span className="kh-play">▶</span>
-                        </span>
-                        <b>{a.titre}</b>
-                        {a.nbScenes ? <small className="muted">{tn('kiavik.accueil.scenes', a.nbScenes)}</small> : null}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-                {procs.length > 0 && <ListeProcedures liste={procs} />}
-                {astuces.length > 0 && <ListeSolutions liste={astuces} />}
+          <SectionCategorie
+            key={cat}
+            icone={cats?.find((c) => c.nom === cat)?.icone ?? '📁'}
+            nom={cat || t('kiavik.accueil.autres')}
+            resume={[
+              anims.length && tn('kiavik.accueil.nbAnimations', anims.length),
+              procs.length && tn('kiavik.accueil.nbProcedures', procs.length),
+              astuces.length && tn('kiavik.accueil.nbAstuces', astuces.length),
+            ].filter(Boolean).join(' · ')}
+            ouverte={ouverte === cat}
+            onBasculer={() => basculer(cat)}
+          >
+            {anims.length > 0 && (
+              <div className="kh-defile">
+                {anims.map((a) => (
+                  <Link key={`${a.guide}/${a.id}`} to={`/guides/${a.guide}/animation/${a.id}`} className="kh-guidee">
+                    <span className="kh-image">
+                      {a.image && <img src={a.image} alt="" loading="lazy" />}
+                      <span className="kh-play">▶</span>
+                    </span>
+                    <b>{a.titre}</b>
+                    {a.nbScenes ? <small className="muted">{tn('kiavik.accueil.scenes', a.nbScenes)}</small> : null}
+                  </Link>
+                ))}
               </div>
             )}
-          </section>
+            {procs.length > 0 && <ListeProcedures liste={procs} />}
+            {astuces.length > 0 && <ListeSolutions liste={astuces} />}
+          </SectionCategorie>
         );
       })}
 
