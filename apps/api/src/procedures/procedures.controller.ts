@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
@@ -243,6 +243,32 @@ export class AdminProceduresController {
   @Delete('photos/:id')
   retirerPhoto(@Param('id') id: string) {
     return this.procedures.retirerPhoto(id);
+  }
+
+  /** Calque d'annotation : multipart « image » (image annotée) + « annotations » (JSON des formes). */
+  @Post('photos/:id/annotation')
+  @UseInterceptors(FileInterceptor('image', { limits: { fileSize: 12 * 1024 * 1024 } }))
+  annoter(@Param('id') id: string, @Body('annotations') annotations: string, @UploadedFile() f?: Express.Multer.File) {
+    let formes: unknown;
+    try {
+      formes = JSON.parse(annotations ?? '');
+    } catch {
+      throw new BadRequestException('Calque invalide');
+    }
+    return this.procedures.annoter(id, formes, f);
+  }
+
+  @Delete('photos/:id/annotation')
+  retirerAnnotation(@Param('id') id: string) {
+    return this.procedures.retirerAnnotation(id);
+  }
+
+  @Get('photos/:id/originale')
+  async originale(@Param('id') id: string, @Res() res: Response) {
+    const { flux, ext } = await this.procedures.lireOriginale(id);
+    res.setHeader('Content-Type', MIME_IMAGE[ext as keyof typeof MIME_IMAGE] ?? 'application/octet-stream');
+    res.setHeader('Cache-Control', 'no-store');
+    flux.pipe(res);
   }
 
   @Post('photos/:id/deplacer')

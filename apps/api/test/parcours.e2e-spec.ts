@@ -781,6 +781,24 @@ describe('Parcours complet', () => {
     const allumer = (await http.get(`/api/procedures/${p.id}`).set(A)).body.etapes.find((e: any) => e.texte === 'Allumer');
     await http.patch(`/api/admin/procedures/choix/${oui.id}`).set(A).send({ suite: 'etape', etapeCibleId: allumer.id }).expect(200);
     await http.post(`/api/admin/procedures/etapes/${allumer.id}/photo`).set(A).attach('photo', JPEG, 'a.jpg').expect(201);
+
+    // annotation : image annotée affichée (adresse ?v=), original et calque gardés, retour à l'original
+    const ph0 = (await http.get(`/api/procedures/${p.id}`).set(A)).body.etapes.find((e: any) => e.id === allumer.id).photos[0];
+    expect(ph0).toMatchObject({ annotee: false, annotations: null });
+    const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    expect((await http.post(`/api/admin/procedures/photos/${ph0.id}/annotation`).set(A).field('annotations', 'pas du json').attach('image', PNG, 'a.png')).status).toBe(400);
+    expect((await http.post(`/api/admin/procedures/photos/${ph0.id}/annotation`).set(C).field('annotations', '[]').attach('image', PNG, 'a.png')).status).toBe(403);
+    const formes = [{ t: 'fleche', x1: 0.1, y1: 0.1, x2: 0.5, y2: 0.5, c: '#e11d48', e: 0.008 }, { t: 'picto', x1: 0.3, y1: 0.3, x2: 0.3, y2: 0.3, c: '#facc15', e: 0.008, s: '⚠️' }];
+    let an = (await http.post(`/api/admin/procedures/photos/${ph0.id}/annotation`).set(A).field('annotations', JSON.stringify(formes)).attach('image', PNG, 'a.png')).body;
+    let ph1 = an.etapes.find((e: any) => e.id === allumer.id).photos[0];
+    expect(ph1).toMatchObject({ id: ph0.id, annotee: true, annotations: formes });
+    expect(ph1.url).toMatch(new RegExp(`^/procedures/photos/${ph0.id}\\?v=\\d+$`));
+    expect((await http.get(`/api${ph1.url}`).set(A)).headers['content-type']).toBe('image/png');
+    expect((await http.get(`/api/admin/procedures/photos/${ph0.id}/originale`).set(A)).headers['content-type']).toBe('image/jpeg');
+    an = (await http.delete(`/api/admin/procedures/photos/${ph0.id}/annotation`).set(A)).body;
+    ph1 = an.etapes.find((e: any) => e.id === allumer.id).photos[0];
+    expect(ph1).toMatchObject({ annotee: false, annotations: null });
+    expect((await http.get(`/api${ph1.url}`).set(A)).headers['content-type']).toBe('image/jpeg');
     const cp = (await http.post(`/api/admin/procedures/${p.id}/dupliquer`).set(A)).body;
     expect(cp).toMatchObject({ titre: `Diag ${id} (copie)`, publiee: false, description: 'Pompe à encre', prompt: 'Sois bref' });
     expect(cp.etapes).toHaveLength(4);

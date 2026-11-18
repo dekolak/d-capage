@@ -16,6 +16,8 @@ export interface ChoixDto {
 const avecEtapes = {
   etapes: { orderBy: { ordre: 'asc' }, include: { choix: { orderBy: { ordre: 'asc' } }, photos: { orderBy: { ordre: 'asc' } } } },
 } satisfies Prisma.ProcedureInclude;
+/** Adresse d'une photo d'étape ; ?v= change quand la photo est annotée (les téléphones ne gardent pas l'ancienne). */
+const urlPhoto = (ph: { id: string; majLe: Date | null }) => `/procedures/photos/${ph.id}${ph.majLe ? `?v=${ph.majLe.getTime()}` : ''}`;
 /** Photos par étape, au plus. */
 export const MAX_PHOTOS = 8;
 type ProcedureComplete = Prisma.ProcedureGetPayload<{ include: typeof avecEtapes }>;
@@ -35,8 +37,11 @@ export class ProceduresService {
         ...e,
         ...(admin ? { note } : {}),
         // adresse fixe par photo (une photo n'est jamais modifiée, seulement ajoutée ou supprimée)
-        photos: photos.map((ph) => ({ id: ph.id, url: `/procedures/photos/${ph.id}` })),
-        photo: photos[0] ? `/procedures/photos/${photos[0].id}` : null,
+        photos: photos.map((ph) => ({
+          id: ph.id, url: urlPhoto(ph),
+          ...(admin ? { annotee: !!ph.cleOriginale, annotations: ph.annotations ?? null } : {}),
+        })),
+        photo: photos[0] ? urlPhoto(photos[0]) : null,
         choix: choix.map(({ etapeId: _e, signification, ...c }) => ({ ...c, ...(admin ? { signification } : {}) })),
       })),
     };
@@ -145,7 +150,7 @@ export class ProceduresService {
   async supprimer(id: string) {
     const p = await this.prisma.procedure.findUnique({ where: { id }, include: { etapes: { include: { photos: true } } } });
     if (!p) throw new NotFoundException();
-    for (const e of p.etapes) for (const ph of e.photos) await this.stockage.supprimer(ph.cle);
+    for (const e of p.etapes) for (const ph of e.photos) for (const c of [ph.cle, ph.cleOriginale]) if (c) await this.stockage.supprimer(c);
     await this.prisma.procedure.delete({ where: { id } });
     return { ok: true };
   }
@@ -229,10 +234,10 @@ export class ProceduresService {
     if (!etapeIds.length) return [];
     const etapes = await this.prisma.etapeProcedure.findMany({
       where: { id: { in: etapeIds } },
-      select: { photos: { select: { cle: true } }, choix: { select: { detour: { select: { id: true } } } } },
+      select: { photos: { select: { cle: true, cleOriginale: true } }, choix: { select: { detour: { select: { id: true } } } } },
     });
     const enfants = etapes.flatMap((e) => e.choix.flatMap((c) => c.detour.map((x) => x.id)));
-    return [...etapes.flatMap((e) => e.photos.map((ph) => ph.cle)), ...(await this.photosSous(enfants))];
+    return [...etapes.flatMap((e) => e.photos.flatMap((ph) => [ph.cle, ...(ph.cleOriginale ? [ph.cleOriginale] : [])])), ...(await this.photosSous(enfants))];
   }
 
   async supprimerEtape(etapeId: string) {
@@ -263,15 +268,55 @@ export class ProceduresService {
     const e = await this.etape(etapeId);
     const photos = await this.prisma.photoEtape.findMany({ where: { etapeId } });
     await this.prisma.photoEtape.deleteMany({ where: { etapeId } });
-    for (const ph of photos) await this.stockage.supprimer(ph.cle);
+    for (const ph of photos) for (const c of [ph.cle, ph.cleOriginale]) if (c) await this.stockage.supprimer(c);
     return this.modifiee(e.procedureId);
   }
 
   async retirerPhoto(photoId: string) {
     const ph = await this.photoParId(photoId);
     await this.prisma.photoEtape.delete({ where: { id: photoId } });
-    await this.stockage.supprimer(ph.cle);
+    for (const c of [ph.cle, ph.cleOriginale]) if (c) await this.stockage.supprimer(c);
     return this.modifiee(ph.etape.procedureId);
+  }
+
+  /**
+   * Annoter une photo : l'image annotée (fabriquée par l'app) devient l'image affichée partout ;
+   * la photo d'origine et le calque (formes) sont gardés pour modifier ou revenir en arrière.
+   */
+  async annoter(photoId: string, annotations: unknown, f?: Express.Multer.File) {
+    const ph = await this.photoParId(photoId);
+    if (!f) throw new BadRequestException('Image annotée manquante');
+    const fmt = formatImage(f.buffer);
+    if (!fmt) throw new BadRequestException('Image PNG, JPEG ou WebP attendue');
+    if (!Array.isArray(annotations) || annotations.length > 300) throw new BadRequestException('Calque invalide');
+    const cle = `procedures/${ph.etape.procedureId}/${ph.etapeId}-${Date.now()}-annotee.${fmt}`;
+    await this.stockage.ecrire(cle, f.buffer);
+    // la première fois, l'image actuelle devient l'original ; ensuite on remplace seulement l'image annotée
+    if (ph.cleOriginale) await this.stockage.supprimer(ph.cle);
+    await this.prisma.photoEtape.update({
+      where: { id: photoId },
+      data: { cle, cleOriginale: ph.cleOriginale ?? ph.cle, annotations: annotations as Prisma.InputJsonValue, majLe: new Date() },
+    });
+    return this.modifiee(ph.etape.procedureId);
+  }
+
+  /** Supprimer le calque : la photo d'origine revient. */
+  async retirerAnnotation(photoId: string) {
+    const ph = await this.photoParId(photoId);
+    if (ph.cleOriginale) {
+      await this.stockage.supprimer(ph.cle);
+      await this.prisma.photoEtape.update({ where: { id: photoId }, data: { cle: ph.cleOriginale, cleOriginale: null, annotations: Prisma.DbNull, majLe: new Date() } });
+    }
+    return this.modifiee(ph.etape.procedureId);
+  }
+
+  /** Photo d'origine (sans calque), pour dessiner dessus (admin). */
+  async lireOriginale(photoId: string) {
+    const ph = await this.photoParId(photoId);
+    const cle = ph.cleOriginale ?? ph.cle;
+    const flux = this.stockage.lire(cle);
+    if (!flux) throw new NotFoundException();
+    return { flux, ext: cle.split('.').pop()! };
   }
 
   /** Avancer (-1) ou reculer (+1) une photo dans l'ordre de l'étape. */

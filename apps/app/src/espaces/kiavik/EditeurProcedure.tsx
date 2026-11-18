@@ -11,6 +11,7 @@ import { decouperEtape } from './ProcedureDetail';
 import { useSolutions } from './donneesProcedures';
 import './guides.css';
 import './editeur.css';
+import { Annotateur } from './Annotateur';
 
 /*
  * Administration → une procédure (écran pensé pour le PC, utilisable sur téléphone) :
@@ -207,6 +208,7 @@ function EtapeEditeur({ p, e, guides, astuces, maj, choisir }: { p: Procedure; e
   const [controle, setControle] = useState(e.controle);
   const [solutionId, setSolutionId] = useState(e.solutionId);
   const [envoi, setEnvoi] = useState(false);
+  const [annoter, setAnnoter] = useState<Etape['photos'][number] | null>(null);
   const question = e.choix.length > 0;
   const ligne = lignePour(p, e.brancheId);
   const n = ligne.findIndex((x) => x.id === e.id);
@@ -280,6 +282,7 @@ function EtapeEditeur({ p, e, guides, astuces, maj, choisir }: { p: Procedure; e
           </select>
         </label>
       )}
+      {annoter && <Annotateur photo={annoter} maj={maj} onFermer={() => setAnnoter(null)} />}
       <div className="ed-champ">
         <span>Photos {e.photos.length > 0 && <small className="muted">({e.photos.length}/{MAX_PHOTOS}, la première est la principale)</small>}</span>
         {e.photos.length > 0 && (
@@ -290,6 +293,7 @@ function EtapeEditeur({ p, e, guides, astuces, maj, choisir }: { p: Procedure; e
                 <span>
                   <button type="button" className="btn petit" aria-label="Avancer la photo" disabled={k === 0} onClick={() => maj(`/admin/procedures/photos/${ph.id}/deplacer`, { method: 'POST', json: { sens: -1 } })}>←</button>
                   <button type="button" className="btn petit" aria-label="Reculer la photo" disabled={k === e.photos.length - 1} onClick={() => maj(`/admin/procedures/photos/${ph.id}/deplacer`, { method: 'POST', json: { sens: 1 } })}>→</button>
+                  <button type="button" className="btn petit" title="Annoter : flèche, rond, rectangle, zone grisée, picto" onClick={() => setAnnoter(ph)}>✏️{ph.annotee ? '✓' : ''}</button>
                   <button type="button" className="btn petit danger" aria-label="Retirer la photo" onClick={() => confirm('Retirer cette photo ?') && maj(`/admin/procedures/photos/${ph.id}`, { method: 'DELETE' })}>✕</button>
                 </span>
               </div>
