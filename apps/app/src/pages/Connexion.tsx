@@ -7,7 +7,8 @@ import MotDePasseOublie from './MotDePasseOublie';
 export default function Connexion() {
   const { connexion } = useAuth();
   const { espace } = useEspace();
-  const [identifiant, setId] = useState('');
+  // lien envoyé au client (?identifiant=…) : identifiant déjà rempli
+  const [identifiant, setId] = useState(() => new URLSearchParams(location.search).get('identifiant') ?? '');
   const [motDePasse, setMdp] = useState('');
   const [erreur, setErreur] = useState('');
   const [envoi, setEnvoi] = useState(false);

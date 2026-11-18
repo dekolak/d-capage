@@ -3,7 +3,7 @@ import { Role } from '@prisma/client';
 import { AutoriseCleApi, EspaceCourant, Moi, Principal, Roles, SansConditions } from '../auth/decorators';
 import { espace as espaceDef, ESPACES } from '../espaces/espaces';
 import { ParametresService } from '../parametres/parametres.service';
-import { AccepterConditionsDto, ChangerMotDePasseDto, CreerUserDto, ModifierUserDto, PreferencesDto } from './users.dto';
+import { AccepterConditionsDto, ChangerMotDePasseDto, ChoisirMotDePasseDto, CreerUserDto, ModifierUserDto, PreferencesDto } from './users.dto';
 import { UsersService } from './users.service';
 
 @Controller()
@@ -81,6 +81,13 @@ export class UsersController {
   async preferences(@Moi() moi: Principal, @Body() dto: PreferencesDto, @EspaceCourant() courant: string) {
     await this.users.preferences(moi.id, dto);
     return this.moi(moi, courant);
+  }
+
+  /** Mot de passe provisoire (import, création par l'admin) : le client choisit le sien, sans l'ancien. */
+  @Post('moi/premier-mot-de-passe')
+  @SansConditions()
+  choisirMotDePasse(@Moi() moi: Principal, @Body() dto: ChoisirMotDePasseDto) {
+    return this.users.choisirMotDePasse(moi.id, dto.nouveau);
   }
 
   @Post('moi/mot-de-passe')

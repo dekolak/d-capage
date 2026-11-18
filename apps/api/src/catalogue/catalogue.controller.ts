@@ -5,7 +5,7 @@ import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsOptional, IsString, MaxLength
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
-import { ModuleRequis, Public, Roles } from '../auth/decorators';
+import { AutoriseCleApi, ModuleRequis, Public, Roles } from '../auth/decorators';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, MIME_IMAGE, StockageService } from '../stockage/stockage.service';
 import { CatalogueService } from './catalogue.service';
@@ -41,7 +41,9 @@ class ModifierVarianteDto {
 export class AdminCatalogueController {
   constructor(private catalogue: CatalogueService) {}
 
+  /** Catalogue complet (lecture aussi avec une clé API : import de clients, n8n). */
   @Get()
+  @AutoriseCleApi()
   lister() {
     return this.catalogue.listerAdmin();
   }

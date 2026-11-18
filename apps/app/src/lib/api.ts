@@ -84,6 +84,8 @@ export interface Moi {
   /** N° client court (621…), affiché en haut à droite de l'app du client. */
   numero?: number | null;
   id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER';
+  /** Code provisoire : le client doit choisir son mot de passe. */
+  motDePasseProvisoire?: boolean;
   /** Conditions de l'espace ouvert acceptées (version en vigueur). */
   conditionsAJour: boolean;
   /** Conditions acceptées, par espace. */

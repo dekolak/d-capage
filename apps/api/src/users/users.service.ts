@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from '../auth/auth.service';
@@ -8,7 +8,7 @@ import { CreerUserDto, ModifierUserDto } from './users.dto';
 
 export const USER_PUBLIC = {
   id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true, clientLazzeko: true, numeroOdoo: true, numero: true,
-  accordPhotosMarketing: true, accordPhotosMarketingLe: true, langue: true,
+  accordPhotosMarketing: true, accordPhotosMarketingLe: true, langue: true, motDePasseProvisoire: true,
   modules: { select: { module: true }, orderBy: { module: 'asc' } },
   acceptations: { select: { espace: true, version: true, accepteeLe: true } },
 } satisfies Prisma.UserSelect;
@@ -51,6 +51,8 @@ export class UsersService {
           numero,
           identifiant: dto.identifiant.trim().toLowerCase(),
           passwordHash: await AuthService.hasher(dto.motDePasse),
+          // mot de passe donné par l'admin, Odoo ou un import : le client choisit le sien à la connexion
+          motDePasseProvisoire: dto.motDePasseProvisoire ?? dto.role !== 'ADMIN',
           nom: dto.nom,
           role: dto.role ?? 'USER',
           clientLazzeko: dto.clientLazzeko ?? true,
@@ -113,7 +115,7 @@ export class UsersService {
 
   async modifier(id: string, dto: ModifierUserDto) {
     await this.trouver(id);
-    const { motDePasse, numeroOdoo, modules, ...reste } = dto;
+    const { motDePasse, motDePasseProvisoire, numeroOdoo, modules, ...reste } = dto;
     if (modules) {
       // Remplace la liste des modules (accès aux espaces).
       await this.prisma.$transaction([
@@ -127,7 +129,7 @@ export class UsersService {
         ...reste,
         ...(numeroOdoo !== undefined ? { numeroOdoo: numeroOdoo?.trim() || null } : {}),
         // nouveau mot de passe donné par l'admin : les téléphones déjà connectés sont déconnectés
-        ...(motDePasse ? { passwordHash: await AuthService.hasher(motDePasse), versionJeton: { increment: 1 } } : {}),
+        ...(motDePasse ? { passwordHash: await AuthService.hasher(motDePasse), versionJeton: { increment: 1 }, motDePasseProvisoire: motDePasseProvisoire ?? true } : {}),
       },
       select: USER_PUBLIC,
     }).then(formater);
@@ -163,7 +165,16 @@ export class UsersService {
     const u = await this.prisma.user.findUnique({ where: { id } });
     if (!u || !(await bcrypt.compare(ancien, u.passwordHash))) throw new UnauthorizedException('Ancien mot de passe incorrect');
     // les autres téléphones sont déconnectés ; celui-ci reçoit un nouveau jeton
-    const m = await this.prisma.user.update({ where: { id }, data: { passwordHash: await AuthService.hasher(nouveau), versionJeton: { increment: 1 } } });
+    const m = await this.prisma.user.update({ where: { id }, data: { passwordHash: await AuthService.hasher(nouveau), versionJeton: { increment: 1 }, motDePasseProvisoire: false } });
+    return { ok: true, jeton: await this.auth.signer(m) };
+  }
+
+  /** Premier mot de passe du client (compte au mot de passe provisoire : il vient de se connecter avec). */
+  async choisirMotDePasse(id: string, nouveau: string) {
+    const u = await this.prisma.user.findUnique({ where: { id } });
+    if (!u?.motDePasseProvisoire) throw new ForbiddenException('Utilisez « Changer mon mot de passe »');
+    if (await bcrypt.compare(nouveau, u.passwordHash)) throw new BadRequestException('Choisissez un mot de passe différent du code provisoire');
+    const m = await this.prisma.user.update({ where: { id }, data: { passwordHash: await AuthService.hasher(nouveau), versionJeton: { increment: 1 }, motDePasseProvisoire: false } });
     return { ok: true, jeton: await this.auth.signer(m) };
   }
 }

@@ -21,6 +21,7 @@ import AdminWebhooks from './pages/AdminWebhooks';
 import Compte from './pages/Compte';
 import Conditions from './pages/Conditions';
 import Connexion from './pages/Connexion';
+import PremierMotDePasse from './pages/PremierMotDePasse';
 import { t } from './lib/i18n';
 import Carnets, { CarnetRoute } from './pages/Carnet';
 import AdminEntretien, { AdminCarnet } from './pages/AdminEntretien';
@@ -46,6 +47,8 @@ export default function App() {
 
   if (!pret) return <Chargement />;
   if (!moi) return <Connexion />;
+  // code provisoire (import, compte créé par l'admin) : choisir son mot de passe avant tout
+  if (moi.motDePasseProvisoire && moi.role !== 'ADMIN') return <PremierMotDePasse />;
   if (!acces)
     return autre ? <Chargement /> : (
       <div className="accueil">
