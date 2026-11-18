@@ -2,21 +2,27 @@ import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post,
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
-import { IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
-import { AutoriseCleApi, Moi, ModuleRequis, Principal, Roles } from '../auth/decorators';
+import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
+import { AutoriseCleApi, Moi, ModuleRequis, Principal, Roles, EspaceCourant } from '../auth/decorators';
 import { MIME_IMAGE } from '../stockage/stockage.service';
 import { SUITES } from './chemin';
 import { DiagnosticsService } from './diagnostics.service';
 import { SuiviService } from './suivi.service';
 import { ProceduresService } from './procedures.service';
+import { lecteur, moduleContenu } from './visibilite';
+import { PrismaService } from '../prisma/prisma.service';
 
 class ProcedureDto {
   @IsString() @MinLength(2) @MaxLength(120) titre!: string;
+  @IsOptional() @IsIn(['lazzeko', 'kiavik']) espace?: string;
+  @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
   @IsOptional() @IsString() @MinLength(2) @MaxLength(40) categorie?: string;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(400) resume?: string | null;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) description?: string | null;
 }
 class ModifierProcedureDto {
+  @IsOptional() @IsIn(['lazzeko', 'kiavik']) espace?: string;
+  @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) description?: string | null;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) prompt?: string | null;
   @IsOptional() @IsString() @MinLength(2) @MaxLength(120) titre?: string;
@@ -92,11 +98,11 @@ class DeplacerDto {
 
 const estAdmin = (m: Principal) => m.role === Role.ADMIN;
 
-/** Procédures Kiavik (module procedures-kiavik) : lecture. */
-@ModuleRequis('procedures-kiavik')
+/** Pas-à-pas (module procedures-kiavik ou procedures-lazzeko selon l'espace) : lecture, filtrée par les machines du client. */
+@ModuleRequis(moduleContenu)
 @Controller('procedures')
 export class ProceduresController {
-  constructor(private procedures: ProceduresService, private diagnostics: DiagnosticsService, private suivi: SuiviService) {}
+  constructor(private procedures: ProceduresService, private diagnostics: DiagnosticsService, private suivi: SuiviService, private prisma: PrismaService) {}
 
   /** « Pas clair ? » sur une étape : les admins sont prévenus. */
   @Post('etapes/:id/signaler')
@@ -125,8 +131,8 @@ export class ProceduresController {
   }
 
   @Get()
-  lister(@Moi() moi: Principal) {
-    return this.procedures.lister(estAdmin(moi));
+  async lister(@Moi() moi: Principal, @EspaceCourant() espace: string) {
+    return this.procedures.lister(estAdmin(moi), await lecteur(this.prisma, { id: moi.id, admin: estAdmin(moi) }, espace));
   }
 
   /** Diagnostics envoyés par le client connecté. */
@@ -136,8 +142,8 @@ export class ProceduresController {
   }
 
   @Get(':id')
-  lire(@Param('id') id: string, @Moi() moi: Principal) {
-    return this.procedures.lire(id, estAdmin(moi));
+  async lire(@Param('id') id: string, @Moi() moi: Principal, @EspaceCourant() espace: string) {
+    return this.procedures.lire(id, estAdmin(moi), await lecteur(this.prisma, { id: moi.id, admin: estAdmin(moi) }, espace));
   }
 
   /** Une photo d'étape (adresse fixe : une photo n'est jamais modifiée). */

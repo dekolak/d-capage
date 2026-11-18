@@ -86,6 +86,8 @@ Puis : pull request, tests, fusion. **Au prochain déploiement**, la procédure 
   "description": "À quoi elle sert, quand l'utiliser, symptômes (pour l'admin et l'IA).",
   "prompt": "Consignes pour l'IA (facultatif).",
   "publiee": false,
+  "espace": "kiavik",
+  "etiquettes": ["DXonJet"],
   "suivante": "dx-autre-procedure",
   "etapes": [
     { "texte": "Préparation — Allumer la machine." },
@@ -104,6 +106,7 @@ Puis : pull request, tests, fusion. **Au prochain déploiement**, la procédure 
 }
 ```
 - `cle` : unique, courte (`dx-…` DXonJet, `fp-…` FlexiPRINT, `ma-…` machine).
+- `espace` : `lazzeko` ou `kiavik` (kiavik par défaut) ; `etiquettes` : machines concernées (vide = toutes les machines de l'espace).
 - `suivante` (facultatif) : clé de la procédure proposée à la fin ; réglée par le seed seulement à la création, ensuite dans l'app (« ➡ Procédure suivante »).
 - `suite` : `retour` (par défaut : on reprend après la question), `resolu`, `contact`. Les sauts vers une étape, les astuces et procédures proposées se règlent ensuite dans l'app.
 - Repères des boutons : `kit-guides/guides/*.json` (écrans `id`, `pastilles[].id`) ; dans l'app, l'admin peut afficher les codes (option « afficher les repères »).

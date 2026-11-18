@@ -41,7 +41,10 @@ export const ESPACES: EspaceDef[] = [
     couleurDouce: '#fff1ea',
     icones: '/',
     communaute: true,
-    modules: [{ slug: 'reglages-decapage', nom: 'Réglages décapage' }],
+    modules: [
+      { slug: 'reglages-decapage', nom: 'Réglages décapage' },
+      { slug: 'procedures-lazzeko', nom: 'Pas-à-pas et Bon à savoir' },
+    ],
   },
   {
     slug: 'kiavik',

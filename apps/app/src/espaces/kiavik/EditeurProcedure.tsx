@@ -12,6 +12,8 @@ import { useSolutions } from './donneesProcedures';
 import './guides.css';
 import './editeur.css';
 import { Annotateur } from './Annotateur';
+import { BlocEtiquettes, EspaceContenu, viderEtiquettes } from './Etiquettes';
+import { BadgeZone } from '../../pages/Admin';
 
 /*
  * Administration → une procédure (écran pensé pour le PC, utilisable sur téléphone) :
@@ -516,14 +518,14 @@ export function AdminProcedure() {
   const [procedures, setProcedures] = useState<ResumeProcedure[]>([]);
   const [p, setP] = useState<Procedure>();
   const [erreur, setErreur] = useState<unknown>();
-  const [infos, setInfos] = useState({ titre: '', categorie: '', resume: '', description: '' });
+  const [infos, setInfos] = useState({ titre: '', categorie: '', resume: '', description: '', espace: 'kiavik' as EspaceContenu, etiquettes: [] as string[] });
   const [sel, setSel] = useState<Sel>(null);
   const [stats, setStats] = useState<Stats>();
   const [signalements, setSignalements] = useState<Signalement[]>([]);
 
   const appliquer = (x: Procedure) => {
     setP(x);
-    setInfos({ titre: x.titre, categorie: x.categorie, resume: x.resume ?? '', description: x.description ?? '' });
+    setInfos({ titre: x.titre, categorie: x.categorie, resume: x.resume ?? '', description: x.description ?? '', espace: x.espace, etiquettes: x.etiquettes });
     viderProcedures();
   };
   useEffect(() => {
@@ -550,7 +552,8 @@ export function AdminProcedure() {
   };
 
   if (!p) return erreur ? <Erreur e={erreur} /> : <Chargement />;
-  const infosModifiees = infos.titre !== p.titre || infos.categorie !== p.categorie || infos.resume !== (p.resume ?? '') || infos.description !== (p.description ?? '');
+  const infosModifiees = infos.titre !== p.titre || infos.categorie !== p.categorie || infos.resume !== (p.resume ?? '') || infos.description !== (p.description ?? '')
+    || infos.espace !== p.espace || infos.etiquettes.join('|') !== p.etiquettes.join('|');
   const etapeSel = sel?.type === 'etape' ? p.etapes.find((e) => e.id === sel.id) : undefined;
   const choixSel = sel?.type === 'choix' ? p.etapes.flatMap((e) => e.choix).find((c) => c.id === sel.id) : undefined;
   const avertissements = alertes(p, signalements);
@@ -558,7 +561,7 @@ export function AdminProcedure() {
   return (
     <div className="page gx ed">
       <Link to="/admin/procedures" className="btn-lien">← Pas-à-pas</Link>
-      <h1 className="gx-proc-titre">{p.titre}{estDiagnostic(p) && <span className="dg-badge ed-badge">Dépannage guidé</span>}</h1>
+      <h1 className="gx-proc-titre">{p.titre}{estDiagnostic(p) && <span className="dg-badge ed-badge">Dépannage guidé</span>} <BadgeZone zone={p.espace} /></h1>
       <Erreur e={erreur} />
 
       <div className="ed-haut">
@@ -595,12 +598,13 @@ export function AdminProcedure() {
               <ChoixCategorie valeur={infos.categorie} onChange={(categorie) => setInfos({ ...infos, categorie })} />
             </label>
             <label>Résumé (court, vu par le client dans la liste)<textarea rows={2} value={infos.resume} onChange={(e) => setInfos({ ...infos, resume: e.target.value })} /></label>
+            <BlocEtiquettes espace={infos.espace} etiquettes={infos.etiquettes} onChange={(v) => setInfos({ ...infos, ...v })} />
             <label>Description (pour vous et l'IA : à quoi elle sert, quand l'utiliser, symptômes, machine)
               <textarea rows={4} value={infos.description} onChange={(e) => setInfos({ ...infos, description: e.target.value })} />
             </label>
             {infosModifiees && (
               <button type="button" className="btn prim" disabled={infos.titre.trim().length < 2 || infos.categorie.trim().length < 2}
-                onClick={() => maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { titre: infos.titre.trim(), categorie: infos.categorie.trim(), resume: infos.resume.trim() || null, description: infos.description.trim() || null } })}>
+                onClick={() => maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { titre: infos.titre.trim(), categorie: infos.categorie.trim(), resume: infos.resume.trim() || null, description: infos.description.trim() || null, espace: infos.espace, etiquettes: infos.etiquettes } }).then((r) => r && viderEtiquettes())}>
                 Enregistrer
               </button>
             )}

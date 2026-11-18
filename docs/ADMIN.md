@@ -13,6 +13,14 @@ Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **L
 
 **Publiée / Non publiée** (anciennement « brouillon ») : 🔒 *non publiée* = visible seulement par l'admin, pour préparer et tester ; ✅ *publiée* = visible par les clients qui ont l'accès « Pas-à-pas et Bon à savoir ». Case « Publiée » en haut de l'écran de modification.
 
+## Étiquettes : qui voit quel contenu
+- Chaque **pas-à-pas** et **Bon à savoir** appartient à **un espace** (Lazzeko **ou** Kiavik, jamais les deux) et porte des **étiquettes** facultatives (🏷 familles, usages : *Laser pulsé*, *Soudure*, *DXonJet*…).
+- Chaque **modèle de machine** (Administration → Machines) porte aussi ses étiquettes, ex. soudeuse = *Laser pulsé* + *Soudure* + *Décapage*.
+- **Le client voit un contenu** de son espace s'il n'a **pas d'étiquette** (= toutes les machines), ou si **une de ses machines** porte **une** de ses étiquettes. Les autres lui sont cachés (listes, recherche, accueil).
+- **Nouvelle machine** : donnez-lui ses étiquettes une fois, elle reçoit tout de suite tous les contenus correspondants.
+- **Bien étiqueter** : l'étiquette la plus précise (« Souder de l'inox » → *Soudure*, pas *Laser pulsé*). Sous les étiquettes, « 👁 Visible par » montre les modèles concernés ; en rouge si aucune machine ne porte ces étiquettes.
+- Où : éditeur d'un pas-à-pas et d'un Bon à savoir, **mode terrain** (au démarrage), liste des pas-à-pas (filtres espace / étiquette / état). Les clients Lazzeko ont besoin de l'accès « Pas-à-pas et Bon à savoir » (Lazzeko) sur leur compte.
+
 ## Machines (Lazzeko et Kiavik)
 Administration → **🔧 Machines** (section Commun).
 - **+ Nouveau modèle** : fabricant (existant ou nouveau, ex. DXonJet), modèle (ex. i3200), **visible dans** Lazzeko et/ou Kiavik. Une variante « Standard » est créée avec ; ajoutez-en d'autres (largeur, nombre de têtes…).

@@ -2,8 +2,10 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Res, UploadedFile, U
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
-import { ArrayMaxSize, IsArray, IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
-import { Moi, ModuleRequis, Principal, Roles } from '../auth/decorators';
+import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
+import { EspaceCourant, Moi, ModuleRequis, Principal, Roles } from '../auth/decorators';
+import { PrismaService } from '../prisma/prisma.service';
+import { lecteur, moduleContenu } from '../procedures/visibilite';
 import { MIME_IMAGE } from '../stockage/stockage.service';
 import { SolutionsService } from './solutions.service';
 
@@ -18,6 +20,8 @@ class ChampsDto {
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) procedureId?: string | null;
   @IsOptional() @IsBoolean() publiee?: boolean;
   @IsOptional() @IsInt() @Min(0) ordre?: number;
+  @IsOptional() @IsIn(['lazzeko', 'kiavik']) espace?: string;
+  @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
 }
 class CreerDto extends ChampsDto {
   @IsString() @MinLength(3) @MaxLength(160) titre!: string;
@@ -30,20 +34,20 @@ class ModifierDto extends ChampsDto {
 
 const estAdmin = (m: Principal) => m.role === Role.ADMIN;
 
-/** Astuces & solutions (module procedures-kiavik) : lecture. */
-@ModuleRequis('procedures-kiavik')
+/** Bon à savoir (module de l'espace) : lecture, filtrée par les machines du client. */
+@ModuleRequis(moduleContenu)
 @Controller('solutions')
 export class SolutionsController {
-  constructor(private solutions: SolutionsService) {}
+  constructor(private solutions: SolutionsService, private prisma: PrismaService) {}
 
   @Get()
-  lister(@Moi() moi: Principal) {
-    return this.solutions.lister(estAdmin(moi));
+  async lister(@Moi() moi: Principal, @EspaceCourant() espace: string) {
+    return this.solutions.lister(estAdmin(moi), await lecteur(this.prisma, { id: moi.id, admin: estAdmin(moi) }, espace));
   }
 
   @Get(':id')
-  lire(@Param('id') id: string, @Moi() moi: Principal) {
-    return this.solutions.lire(id, estAdmin(moi));
+  async lire(@Param('id') id: string, @Moi() moi: Principal, @EspaceCourant() espace: string) {
+    return this.solutions.lire(id, estAdmin(moi), await lecteur(this.prisma, { id: moi.id, admin: estAdmin(moi) }, espace));
   }
 
   @Get(':id/photo')

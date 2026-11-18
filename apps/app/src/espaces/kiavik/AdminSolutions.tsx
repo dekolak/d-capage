@@ -7,6 +7,7 @@ import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
 import { chargerProcedures, chargerSolutions, ChoixCategorie, ImageApi, ResumeProcedure, Solution, viderSolutions } from './donneesProcedures';
 import './guides.css';
 import { BadgeZone } from '../../pages/Admin';
+import { BlocEtiquettes, EspaceContenu } from './Etiquettes';
 
 /* Administration → Astuces & solutions (admin, en français). */
 
@@ -33,7 +34,7 @@ export function AdminSolutions() {
   return (
     <div className="page gx">
       <Link to="/admin" className="btn-lien">← Administration</Link>
-      <h1>Bon à savoir <BadgeZone zone="kiavik" /></h1>
+      <h1>Bon à savoir</h1>
       <p className="muted petit">Un problème déjà résolu, ou une astuce : le symptôme, pourquoi, que faire. Les clients les retrouvent dans l'accueil, la recherche et la fiche du bouton lié.</p>
       <Erreur e={erreur} />
       <div className="carte form">
@@ -47,7 +48,8 @@ export function AdminSolutions() {
       <div className="gx-resultats">
         {liste.map((s) => (
           <Link key={s.id} to={`/admin/solutions/${s.id}`} className="carte gx-resultat">
-            <b>{s.titre}</b>
+            <b>{s.titre} <BadgeZone zone={s.espace} /></b>
+            {s.etiquettes.length > 0 && <span className="et-mini">{s.etiquettes.map((e) => <span key={e}>🏷 {e}</span>)}</span>}
             <span className="petit muted">
               {s.categorie}
               {s.publiee ? <span className="gx-publiee">✅ publiée</span> : <span className="gx-brouillon">🔒 non publiée</span>}
@@ -65,7 +67,7 @@ export function AdminSolution() {
   const guides = useGuidesAdmin();
   const [s, setS] = useState<Solution>();
   const [procedures, setProcedures] = useState<ResumeProcedure[]>([]);
-  const [f, setF] = useState({ titre: '', categorie: '', cause: '', texte: '', avertissement: '', mots: '', procedureId: '' });
+  const [f, setF] = useState({ titre: '', categorie: '', cause: '', texte: '', avertissement: '', mots: '', procedureId: '', espace: 'kiavik' as EspaceContenu, etiquettes: [] as string[] });
   const [lien, setLien] = useState<Lien>({ guide: null, ecran: null, pastille: null });
   const [erreur, setErreur] = useState<unknown>();
   const [ok, setOk] = useState(false);
@@ -73,7 +75,7 @@ export function AdminSolution() {
 
   const appliquer = (x: Solution) => {
     setS(x);
-    setF({ titre: x.titre, categorie: x.categorie, cause: x.cause ?? '', texte: x.texte, avertissement: x.avertissement ?? '', mots: x.motsCles.join(', '), procedureId: x.procedureId ?? '' });
+    setF({ titre: x.titre, categorie: x.categorie, cause: x.cause ?? '', texte: x.texte, avertissement: x.avertissement ?? '', mots: x.motsCles.join(', '), procedureId: x.procedureId ?? '', espace: x.espace, etiquettes: x.etiquettes });
     setLien({ guide: x.guide, ecran: x.ecran, pastille: x.pastille });
     viderSolutions();
   };
@@ -100,6 +102,7 @@ export function AdminSolution() {
       method: 'PATCH',
       json: {
         titre: f.titre, categorie: f.categorie, cause: f.cause || null, texte: f.texte, avertissement: f.avertissement || null,
+        espace: f.espace, etiquettes: f.etiquettes,
         motsCles: f.mots.split(',').map((m) => m.trim()).filter(Boolean), procedureId: f.procedureId || null, ...lien,
       },
     });
@@ -130,6 +133,7 @@ export function AdminSolution() {
           Catégorie
           <ChoixCategorie valeur={f.categorie} onChange={(categorie) => setF({ ...f, categorie })} />
         </label>
+        <BlocEtiquettes espace={f.espace} etiquettes={f.etiquettes} onChange={(v) => setF({ ...f, ...v })} />
         <label>Pourquoi ? (facultatif)<textarea rows={2} value={f.cause} maxLength={1000} onChange={(e) => setF({ ...f, cause: e.target.value })} /></label>
         <label>Que faire ?<textarea rows={5} value={f.texte} maxLength={3000} onChange={(e) => setF({ ...f, texte: e.target.value })} /></label>
         <label>⚠️ Précaution (facultatif)<input type="text" value={f.avertissement} maxLength={500} onChange={(e) => setF({ ...f, avertissement: e.target.value })} /></label>

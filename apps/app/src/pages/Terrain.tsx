@@ -6,6 +6,7 @@ import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { compresser } from '../lib/image';
 import { BadgeZone } from './Admin';
+import { BlocEtiquettes, EspaceContenu } from '../espaces/kiavik/Etiquettes';
 import './terrain.css';
 
 /*
@@ -28,6 +29,8 @@ export function TerrainAccueil() {
   const [titre, setTitre] = useState('');
   const [categorie, setCategorie] = useState('');
   const [trame, setTrame] = useState('');
+  const { espace: ouvert } = useEspace();
+  const [cible, setCible] = useState<{ espace: EspaceContenu; etiquettes: string[] }>({ espace: ouvert.slug as EspaceContenu, etiquettes: [] });
   const [envoi, setEnvoi] = useState(false);
   const [err, setErr] = useState<unknown>();
   useEffect(() => {
@@ -39,7 +42,7 @@ export function TerrainAccueil() {
     setEnvoi(true);
     setErr(undefined);
     try {
-      const p = await api<Procedure>('/admin/procedures', { method: 'POST', json: { titre: titre.trim(), ...(categorie ? { categorie } : {}) } });
+      const p = await api<Procedure>('/admin/procedures', { method: 'POST', json: { titre: titre.trim(), ...(categorie ? { categorie } : {}), espace: cible.espace, etiquettes: cible.etiquettes } });
       // trame : une étape par ligne (on les remplit ensuite une par une, rien n'est oublié)
       const lignes = trame.split('\n').map((l) => l.replace(/^[-•*\d.)\s]+/, '').trim()).filter((l) => l.length >= 2);
       for (const [i, texte] of lignes.entries()) await api(`/admin/procedures/${p.id}/etapes`, { method: 'POST', json: { texte, position: i } });
@@ -64,6 +67,7 @@ export function TerrainAccueil() {
       <div className="carte form">
         <label>Titre<input value={titre} maxLength={120} placeholder="ex. Changer les filtres F1080" onChange={(e) => setTitre(e.target.value)} /></label>
         <label>Catégorie<ChoixCategorie valeur={categorie} onChange={setCategorie} /></label>
+        <BlocEtiquettes espace={cible.espace} etiquettes={cible.etiquettes} onChange={setCible} />
         <label>
           Trame (facultatif) : les étapes prévues, une par ligne
           <textarea rows={6} value={trame} onChange={(e) => setTrame(e.target.value)}
@@ -78,8 +82,8 @@ export function TerrainAccueil() {
         <div className="liste">
           {brouillons.map((p) => (
             <Link key={p.id} to={`/admin/terrain/${p.id}`} className="carte lien-bloc cn-machine">
-              <b>{p.titre}</b>
-              <span className="muted petit">{p.categorie} · {p.nbEtapes} étape{p.nbEtapes > 1 ? 's' : ''}</span>
+              <b>{p.titre} <BadgeZone zone={p.espace} /></b>
+              <span className="muted petit">{p.categorie} · {p.nbEtapes} étape{p.nbEtapes > 1 ? 's' : ''}{p.etiquettes.length ? ` · 🏷 ${p.etiquettes.join(', ')}` : ''}</span>
             </Link>
           ))}
         </div>
