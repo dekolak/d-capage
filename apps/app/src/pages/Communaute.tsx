@@ -56,6 +56,7 @@ export default function Communaute() {
         <span>›</span>
       </Link>
       <div className="filtres">
+        <input className="recherche" placeholder={t('lazzeko.communaute.rechercher')} value={q} onChange={(e) => setQ(e.target.value)} />
         <select value={varianteId} onChange={(e) => setVariante(e.target.value)}>
           <option value="">{t('lazzeko.top.toutesMachines')}</option>
           {catalogue.flatMap((f) =>
@@ -71,7 +72,7 @@ export default function Communaute() {
           <button type="button" className={!meilleurs ? 'on' : ''} onClick={() => setMeilleurs(false)}>{t('lazzeko.communaute.tous')}</button>
         </div>
         <button type="button" className="btn petit" onClick={() => setOuverts(!ouverts)}>
-          {ouverts ? t('lazzeko.filtres.masquer') : tags.length || q ? t('lazzeko.communaute.filtresTriN', { n: tags.length + (q ? 1 : 0) }) : t('lazzeko.communaute.filtresTri')}
+          {ouverts ? t('lazzeko.filtres.masquer') : tags.length ? t('lazzeko.communaute.filtresTriN', { n: tags.length }) : t('lazzeko.communaute.filtresTri')}
         </button>
         {ouverts && (
           <>
@@ -79,7 +80,6 @@ export default function Communaute() {
           <button type="button" className={tri === 'note' ? 'on' : ''} onClick={() => setTri('note')}>{t('lazzeko.communaute.mieuxNotes')}</button>
           <button type="button" className={tri === 'recent' ? 'on' : ''} onClick={() => setTri('recent')}>{t('lazzeko.communaute.recents')}</button>
         </div>
-        <input className="recherche" placeholder={t('lazzeko.fiches.rechercher')} value={q} onChange={(e) => setQ(e.target.value)} />
         <FiltreTags groupes={groupes} tags={tags} onChange={setTags} />
           </>
         )}
@@ -87,15 +87,26 @@ export default function Communaute() {
       <Erreur e={err} />
       {!data ? (
         <Chargement />
-      ) : data.fiches.length === 0 ? (
-        <div className="vide-etat">
-          <p>{meilleurs ? t('lazzeko.communaute.aucunQuatre') : t('lazzeko.communaute.aucun')}</p>
-          {meilleurs && <button type="button" className="btn" onClick={() => setMeilleurs(false)}>{t('lazzeko.communaute.voirTous')}</button>}
-        </div>
       ) : (
         <>
-          <p className="muted petit">{tn('lazzeko.reglages', data.total)}</p>
-          <div className="liste">{data.fiches.map((f) => <CarteFiche key={f.id} f={f} montrerAuteur />)}</div>
+          {data.fiches.length === 0 ? (
+            <div className="vide-etat">
+              <p>{meilleurs ? t('lazzeko.communaute.aucunQuatre') : t('lazzeko.communaute.aucun')}</p>
+              {meilleurs && <button type="button" className="btn" onClick={() => setMeilleurs(false)}>{t('lazzeko.communaute.voirTous')}</button>}
+            </div>
+          ) : (
+            <>
+              <p className="muted petit">{tn('lazzeko.reglages', data.total)}</p>
+              <div className="liste">{data.fiches.map((f) => <CarteFiche key={f.id} f={f} montrerAuteur />)}</div>
+            </>
+          )}
+          {/* recherche précise (ex. « 6082 ») : les réglages de la même famille (Aluminium) juste après */}
+          {data.apparentees && (
+            <section className="apparentees">
+              <h2>{t('lazzeko.communaute.memeFamille', { familles: data.apparentees.familles.map((x) => x.nom).join(', ') })}</h2>
+              <div className="liste">{data.apparentees.fiches.map((f) => <CarteFiche key={f.id} f={f} montrerAuteur />)}</div>
+            </section>
+          )}
         </>
       )}
     </div>

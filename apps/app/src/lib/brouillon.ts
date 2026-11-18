@@ -11,6 +11,8 @@ export interface Brouillon {
   userMachineId: string;
   valeurs: Valeurs | null;
   tagIds: string[];
+  /** Précision libre par groupe (id du groupe → texte). */
+  precisions?: Record<string, string>;
   titre: string;
   commentaire: string;
   note: number | null;
@@ -37,7 +39,7 @@ export function ecrireBrouillon(b: Brouillon) {
 
 /** true si le brouillon contient autre chose que le choix de la machine. */
 export function brouillonUtile(b: Brouillon | null, nbPhotos = 0) {
-  return !!b && (b.tagIds.length > 0 || !!b.valeurs || !!b.titre || !!b.commentaire || !!b.note || nbPhotos > 0);
+  return !!b && (b.tagIds.length > 0 || Object.values(b.precisions ?? {}).some(Boolean) || !!b.valeurs || !!b.titre || !!b.commentaire || !!b.note || nbPhotos > 0);
 }
 
 // ---------- photos (IndexedDB) ----------

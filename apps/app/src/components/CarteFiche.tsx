@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Fiche } from '../lib/api';
 import { date } from '../lib/util';
-import { ImageProtegee, NoteResume } from './Composants';
+import { ImageProtegee, libellesTags, NoteResume } from './Composants';
 import { MiniatureMachine } from './MiniatureMachine';
 
 export function CarteFiche({ f, montrerAuteur }: { f: Fiche; montrerAuteur?: boolean }) {
@@ -19,8 +19,8 @@ export function CarteFiche({ f, montrerAuteur }: { f: Fiche; montrerAuteur?: boo
           {montrerAuteur ? ` · ${f.auteur}` : ''} · {date(f.createdAt)}
         </div>
         <div className="puces mini">
-          {f.tags.slice(0, 4).map((tag) => (
-            <span key={tag.id} className="puce">{tag.nom}</span>
+          {libellesTags(f).slice(0, 4).map((x) => (
+            <span key={x.id} className="puce">{x.nom}</span>
           ))}
         </div>
         <NoteResume moyenne={f.note.moyenne} nombre={f.note.nombre} />

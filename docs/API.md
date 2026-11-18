@@ -48,10 +48,12 @@ Sans `modules` à la création, le compte reçoit `["reglages-decapage"]`.
 | GET | `/catalogue/modeles/:id/image`, `/catalogue/variantes/:id/image` | public |
 | POST · DELETE | idem, champ multipart `image` (PNG conseillé, 5 Mo max) | admin |
 | GET · POST · PATCH · DELETE | `/moi/machines` | connecté |
-| GET · POST | `/tags` (proposer un tag) · PATCH `/tags/:id` (admin) | connecté |
-| GET · POST | `/fiches` · GET/PATCH/DELETE `/fiches/:id` | connecté (auteur pour modifier) |
+| GET | `/tags` (groupes, `choixUnique`, familles ; « Autre » en dernier) · `/tags/precisions?groupeId&q&tagId` (suggestions) | connecté |
+| POST · PATCH | `/tags` `{groupeId, nom}` (nouvelle famille) · `/tags/:id` `{nom}` | admin |
+| GET · POST | `/admin/precisions` · `/admin/precisions/corriger` `{groupeId, de, vers}` · `/admin/precisions/promouvoir` `{groupeId, texte, nom?}` | admin |
+| GET · POST | `/fiches` · GET/PATCH/DELETE `/fiches/:id` (`tagIds`, `precisions: {groupeId: texte}` ; un seul tag par groupe à choix unique) | connecté (auteur pour modifier) |
 | POST · DELETE | `/fiches/:id/evaluation` `{note 1–5, avis?}` | connecté |
-| GET | `/communaute?varianteId=&modeleId=&tags=id1,id2&noteMin=&tri=note\|recent` | connecté |
+| GET | `/communaute?varianteId=&modeleId=&tags=id1,id2&noteMin=&q=&tri=note\|recent` (`q` : titre, commentaire, précision, famille ; page 1 avec `q` : `apparentees` = réglages de la même famille) | connecté |
 | GET | `/top?varianteId=` (3 meilleurs réglages par tag) | connecté |
 | POST | `/fiches/:id/photos` (multipart `fichier`, `miniature`, `type`) | auteur |
 | GET · PATCH · DELETE | `/photos/:id[?taille=min]` | selon visibilité de la fiche |

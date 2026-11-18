@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Indicateur } from '@decapage/machine-kit';
-import { GroupeTag, PhotoRef, urlPhoto } from '../lib/api';
+import { api, GroupeTag, PhotoRef, Tag, urlPhoto } from '../lib/api';
 import { t, tn } from '../lib/i18n';
 
 export function Etoiles({ note, onChange, taille = 26 }: { note: number | null; onChange?: (n: number) => void; taille?: number }) {
@@ -90,61 +90,112 @@ export function Indicateurs({ liste }: { liste: Indicateur[] }) {
 }
 
 /**
- * Choix des tags : une liste déroulante par groupe (Matériau, À enlever, Application).
- * Plusieurs tags possibles par groupe ; « Autre… » permet d'en proposer un nouveau.
+ * Choix des familles (puces) par groupe : Matériau et Application = un seul choix, À enlever = plusieurs.
+ * Sous chaque groupe choisi, une précision libre facultative (ex. Aluminium → « 6082 brossé »),
+ * avec les précisions déjà utilisées par d'autres en suggestion. « Autre » : la précision dit quoi.
  */
 export function ChoixTags({
   groupes,
   choisis,
   onChange,
-  onProposer,
+  precisions,
+  onPrecisions,
 }: {
   groupes: GroupeTag[];
   choisis: string[];
   onChange(ids: string[]): void;
-  onProposer?: (groupeId: string, nom: string) => Promise<void>;
+  precisions: Record<string, string>;
+  onPrecisions(p: Record<string, string>): void;
 }) {
-  const AUTRE = '__autre__';
+  const basculer = (g: GroupeTag, id: string) => {
+    const autresGroupes = choisis.filter((x) => !g.tags.some((tag) => tag.id === x));
+    const ici = choisis.filter((x) => g.tags.some((tag) => tag.id === x));
+    if (ici.includes(id)) return onChange([...autresGroupes, ...ici.filter((x) => x !== id)]);
+    onChange(g.choixUnique ? [...autresGroupes, id] : [...choisis, id]);
+  };
   return (
     <div className="choix-tags">
       {groupes.map((g) => {
         const pris = g.tags.filter((tag) => choisis.includes(tag.id));
-        const libres = g.tags.filter((tag) => !choisis.includes(tag.id));
         return (
           <div key={g.id} className="groupe-tags">
-            <label className="champ-tag">
-              <span>{g.nom}</span>
-              <select
-                value=""
-                onChange={async (e) => {
-                  const v = e.target.value;
-                  if (v === AUTRE) {
-                    const nom = prompt(t('commun.tags.nouveau', { groupe: g.nom }))?.trim();
-                    if (nom && nom.length >= 2 && onProposer) await onProposer(g.id, nom);
-                  } else if (v) onChange([...choisis, v]);
-                }}
-              >
-                <option value="">{pris.length ? t('commun.tags.ajouter') : t('commun.tags.choisir')}</option>
-                {libres.map((tag) => (
-                  <option key={tag.id} value={tag.id}>{tag.nom}</option>
-                ))}
-                {onProposer && <option value={AUTRE}>{t('commun.tags.autre')}</option>}
-              </select>
-            </label>
+            <b className="gt-titre">
+              {g.nom} <small className="muted">{g.choixUnique ? t('commun.tags.unSeul') : t('commun.tags.plusieurs')}</small>
+            </b>
+            <div className="puces">
+              {g.tags.map((tag) => (
+                <button key={tag.id} type="button" className={`puce ${choisis.includes(tag.id) ? 'on' : ''}`} aria-pressed={choisis.includes(tag.id)} onClick={() => basculer(g, tag.id)}>
+                  {tag.nom}
+                </button>
+              ))}
+            </div>
             {pris.length > 0 && (
-              <div className="puces">
-                {pris.map((tag) => (
-                  <button key={tag.id} type="button" className="puce on" onClick={() => onChange(choisis.filter((x) => x !== tag.id))} aria-label={t('commun.tags.retirer', { nom: tag.nom })}>
-                    {tag.nom} ×
-                  </button>
-                ))}
-              </div>
+              <ChampPrecision
+                groupe={g}
+                tagId={pris[0].id}
+                autre={pris.some((tag) => tag.slug === 'autre')}
+                valeur={precisions[g.id] ?? ''}
+                onChange={(v) => onPrecisions({ ...precisions, [g.id]: v })}
+              />
             )}
           </div>
         );
       })}
     </div>
   );
+}
+
+/** Précision libre d'un groupe, avec les précisions déjà utilisées en suggestion. */
+function ChampPrecision({ groupe, tagId, autre, valeur, onChange }: { groupe: GroupeTag; tagId: string; autre: boolean; valeur: string; onChange(v: string): void }) {
+  const [suggestions, setSuggestions] = useState<{ texte: string; nb: number }[]>([]);
+  const [actif, setActif] = useState(false);
+  useEffect(() => {
+    if (!actif) return;
+    const h = setTimeout(() => {
+      const p = new URLSearchParams({ groupeId: groupe.id, q: valeur.trim(), tagId });
+      api<{ texte: string; nb: number }[]>(`/tags/precisions?${p}`).then(setSuggestions).catch(() => setSuggestions([]));
+    }, 250);
+    return () => clearTimeout(h);
+  }, [actif, valeur, groupe.id, tagId]);
+  const liste = suggestions.filter((x) => x.texte.toLowerCase() !== valeur.trim().toLowerCase());
+  return (
+    <div className="precision">
+      <input
+        value={valeur}
+        maxLength={80}
+        placeholder={autre ? t('commun.tags.precisezAutre') : t('commun.tags.precision')}
+        aria-label={t('commun.tags.precisionDe', { groupe: groupe.nom })}
+        onFocus={() => setActif(true)}
+        onBlur={() => setTimeout(() => setActif(false), 200)}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {actif && liste.length > 0 && (
+        <div className="puces mini-choix">
+          {liste.map((x) => (
+            <button key={x.texte} type="button" className="puce" onMouseDown={(e) => e.preventDefault()} onClick={() => onChange(x.texte)}>
+              {x.texte} <small className="muted">({x.nb})</small>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Familles d'une fiche avec leur précision : « Aluminium · 6082 brossé » (« Autre » est remplacé par la précision).
+ * Une seule précision par groupe, même avec plusieurs familles (À enlever) : jointe à la première.
+ */
+export function libellesTags(f: { tags: Tag[]; precisions?: { groupe: string; texte: string }[] }) {
+  const vus = new Set<string>();
+  const l = f.tags.map((tag) => {
+    const p = f.precisions?.find((x) => x.groupe === tag.groupe);
+    if (!p || vus.has(p.groupe)) return { id: tag.id, nom: tag.nom };
+    vus.add(p.groupe);
+    return { id: tag.id, nom: tag.slug === 'autre' ? p.texte : `${tag.nom} · ${p.texte}` };
+  });
+  for (const p of f.precisions ?? []) if (!vus.has(p.groupe)) l.push({ id: `p-${p.groupe}`, nom: p.texte });
+  return l;
 }
 
 /** Filtres de recherche : une liste déroulante par groupe de tags (« Tous » = pas de filtre). */
