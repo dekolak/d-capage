@@ -92,7 +92,7 @@ Administration → **💬 Messages**.
 ## 🎥 Mode terrain (capturer un pas-à-pas sur place)
 Administration → **🎥 Mode terrain** (section Commun, ou bandeau en haut de la page Pas-à-pas). Pensé pour le téléphone sur trépied ; marche depuis Lazzeko ou Kiavik.
 - **Démarrer** : titre, catégorie, et une **trame** facultative (les étapes prévues, une par ligne) pour ne rien oublier. Un pas-à-pas **non publié** est créé tout de suite.
-- **Par étape** : caméra en direct, **retardateur** Direct / 3 s / 5 s / 10 s (bip à chaque seconde, réglage gardé sur le téléphone), plusieurs photos (8 max, réduites sur le téléphone et envoyées aussitôt) ; ce que vous faites, **🎙 dicté** (Chrome Android, avec Internet) ou tapé ; **⚠️ point de vigilance**.
+- **Par étape** : caméra en direct, **retardateur** Direct / 3 s / 5 s / 10 s (bip à chaque seconde, réglage gardé sur le téléphone), plusieurs photos (8 max, réduites sur le téléphone et envoyées aussitôt), ou **🖼 Ajouter depuis la galerie** (photos déjà prises, plusieurs à la fois) ; ce que vous faites, **🎙 dicté** (Chrome Android, avec Internet) ou tapé ; **⚠️ point de vigilance**.
 - **Étape suivante ▶** (la prochaine de la trame, sinon une nouvelle), **＋ Insérer** une étape oubliée après celle-ci, ◀ revenir, 🗑 supprimer ; la bande du bas montre toutes les étapes (photo, nombre de photos, ⚠️) pour y revenir.
 - L'écran reste allumé. **Terminé** : récapitulatif (étapes sans texte ou sans photo), **📋 Copier les notes** (format de [CREER-PROCEDURE.md](CREER-PROCEDURE.md), à coller à Claude) et **✏️ Ouvrir dans l'éditeur** pour la mise au propre sur PC. « Reprendre un brouillon » sur la page d'accueil du mode terrain.
 - Vidéo : non (photos seulement) ; mettez la vidéo ensuite (Vimeo…) depuis le PC si besoin.
