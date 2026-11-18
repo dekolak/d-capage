@@ -815,6 +815,8 @@ model PlanEntretien {
   nom         String
   description String?
   modeles     Modele[]
+  /// Catégories de machines (Décapeuse, Soudeuse…) : tous les modèles de ces catégories ont ce plan, même ceux créés plus tard.
+  categories  String[]         @default([])
   taches      TacheEntretien[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
