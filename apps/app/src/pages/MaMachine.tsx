@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
-import { ICONE_TYPE, ResumeProcedure, Solution, useAccesProcedures, useProcedures, useSolutions } from '../espaces/kiavik/donneesProcedures';
-import { EnvoiRecu, ouvrirRecu } from '../components/EnvoisRecus';
+import { ResumeProcedure, Solution, useAccesProcedures, useProcedures, useSolutions } from '../espaces/kiavik/donneesProcedures';
+import { EnvoiRecu, ListeRecus } from '../components/EnvoisRecus';
 import { ListeProcedures } from '../espaces/kiavik/Procedures';
 import { ListeSolutions } from '../espaces/kiavik/Solutions';
 import { api } from '../lib/api';
@@ -57,7 +57,7 @@ export default function MaMachine() {
     );
   const m = machines.find((x) => x.id === id) ?? machines[0];
   const reglages = espace.slug === 'lazzeko' && !!moi?.modules.includes('reglages-decapage');
-  const recusIci = recus.filter((e) => e.machineId === m.id);
+  const recusIci = recus;
   const onglets: { o: Onglet; l: string }[] = [
     ...(acces ? [{ o: 'utilisation' as const, l: t('maMachine.utilisation') }, { o: 'aide' as const, l: t('maMachine.aide') }] : []),
     ...(recusIci.length ? [{ o: 'recus' as const, l: t('maMachine.recus') }] : []),
@@ -99,14 +99,7 @@ export default function MaMachine() {
             {m.miseEnService && t('carnet.miseEnService', { date: date(m.miseEnService) })}
           </small>
         </span>
-        {m.numero && (
-          <span className="mm-numero" title={t('maMachine.numeroAide')}>
-            <small>{t('maMachine.numero')}</small>
-            <b>{m.numero}</b>
-          </span>
-        )}
       </div>
-      {m.numero && <p className="muted petit">{t('maMachine.numeroAide')}</p>}
 
       <div className="seg mm-onglets">
         {onglets.map((x) => (
@@ -145,16 +138,7 @@ export default function MaMachine() {
         </>
       )}
 
-      {actif === 'recus' && (
-        <div className="gx-resultats">
-          {recusIci.map((e) => (
-            <button key={e.id} type="button" className="carte gx-resultat" onClick={() => ouvrirRecu(e, nav)}>
-              <b>{ICONE_TYPE[e.pasAPas.type] ?? '📋'} {e.pasAPas.titre}{e.termine ? ` · ${t('envoi.fait')}` : ''}</b>
-              <span className="petit muted">{t('envoi.recuLe', { date: date(e.creeLe), auteur: e.auteur })}{e.message ? ` · « ${e.message} »` : ''}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      {actif === 'recus' && <ListeRecus liste={recusIci} />}
 
       {actif === 'entretien' && (
         <>

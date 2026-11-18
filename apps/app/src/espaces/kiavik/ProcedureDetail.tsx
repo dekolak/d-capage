@@ -147,7 +147,7 @@ export default function ProcedureDetail() {
       )}
       {moi?.role === 'ADMIN' && (
         <details className="env-detail">
-          <summary className="btn">📤 Envoyer à un client (n° de sa machine)</summary>
+          <summary className="btn">📤 Envoyer à un client (n° client)</summary>
           <EnvoyerPasAPas procedureId={p.id} publiee={p.publiee} />
         </details>
       )}

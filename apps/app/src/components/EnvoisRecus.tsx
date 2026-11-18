@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { ICONE_TYPE, TypePasAPas, useAccesProcedures } from '../espaces/kiavik/donneesProcedures';
 import { api } from '../lib/api';
 import { t } from '../lib/i18n';
+import { date } from '../lib/util';
 
 export interface EnvoiRecu {
-  id: string; machineId: string; auteur: string; message: string | null; creeLe: string; vu: boolean; ouvert: boolean; termine: boolean;
+  id: string; machineId: string | null; auteur: string; message: string | null; creeLe: string; vu: boolean; ouvert: boolean; termine: boolean;
   pasAPas: { id: string; titre: string; type: TypePasAPas };
 }
 
@@ -51,6 +52,44 @@ export function EnvoisRecus() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** N° client court en haut à droite de l'app (à donner au support pour recevoir une notice). */
+export function NumeroClient({ numero }: { numero: number }) {
+  return (
+    <div className="numero-client" title={t('maMachine.numeroAide')}>
+      <span>{t('numeroClient.libelle')}</span> <b>{numero}</b>
+    </div>
+  );
+}
+
+/** Pas-à-pas reçus (liste) : Ma machine → Reçus, et page « Reçus » (Compte). */
+export function ListeRecus({ liste }: { liste: EnvoiRecu[] }) {
+  const nav = useNavigate();
+  return (
+    <div className="gx-resultats">
+      {liste.map((e) => (
+        <button key={e.id} type="button" className="carte gx-resultat" onClick={() => ouvrirRecu(e, nav)}>
+          <b>{ICONE_TYPE[e.pasAPas.type] ?? '📋'} {e.pasAPas.titre}{e.termine ? ` · ${t('envoi.fait')}` : ''}</b>
+          <span className="petit muted">{t('envoi.recuLe', { date: date(e.creeLe), auteur: e.auteur })}{e.message ? ` · « ${e.message} »` : ''}</span>
+        </button>
+      ))}
+      {!liste.length && <p className="muted">{t('maMachine.rienRecu')}</p>}
+    </div>
+  );
+}
+
+export function PageRecus() {
+  const [l, setL] = useState<EnvoiRecu[]>();
+  useEffect(() => {
+    api<EnvoiRecu[]>('/procedures/envois/miens').then(setL).catch(() => setL([]));
+  }, []);
+  return (
+    <div className="page">
+      <h1>{t('maMachine.recus')}</h1>
+      {l ? <ListeRecus liste={l} /> : <p className="muted">…</p>}
     </div>
   );
 }

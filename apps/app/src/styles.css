@@ -562,12 +562,14 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .mm-onglets { margin: 12px 0; }
 .mm-rubrique h2 { margin-top: 14px; }
 
-.mm-numero { margin-left: auto; display: grid; justify-items: center; background: var(--o-doux); color: var(--od); border-radius: var(--r-sm); padding: 6px 12px; }
-.mm-numero small { font-size: 11px; white-space: nowrap; }
-.mm-numero b { font-size: 26px; line-height: 1; letter-spacing: 1px; }
 .env { margin-bottom: 12px; }
 .env-client { margin: 0; }
 .env-liste { padding-left: 18px; margin: 6px 0 0; display: grid; gap: 4px; }
 .env-detail { margin: 14px 0; }
 .env-detail > summary { list-style: none; cursor: pointer; }
 .env-detail[open] > summary { margin-bottom: 8px; }
+
+/* N° client en haut à droite */
+.numero-client { display: flex; justify-content: flex-end; align-items: baseline; gap: 6px; margin: -4px 0 6px auto; width: fit-content; background: var(--o-doux); color: var(--od); border-radius: 999px; padding: 3px 12px; font-size: 13px; }
+.numero-client b { font-size: 17px; letter-spacing: 1px; }
+.badge-numero { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--o-doux); color: var(--od); }

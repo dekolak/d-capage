@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreerUserDto, ModifierUserDto } from './users.dto';
 
 export const USER_PUBLIC = {
-  id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true, clientLazzeko: true, numeroOdoo: true,
+  id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true, clientLazzeko: true, numeroOdoo: true, numero: true,
   accordPhotosMarketing: true, accordPhotosMarketingLe: true, langue: true,
   modules: { select: { module: true }, orderBy: { module: 'asc' } },
   acceptations: { select: { espace: true, version: true, accepteeLe: true } },
@@ -32,9 +32,23 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async creer(dto: CreerUserDto) {
+    // n° client court (621, 622…) pour les clients ; on réessaie si deux créations tombent sur le même
+    for (let essai = 0; ; essai++) {
+      const numero = dto.role === 'ADMIN' ? null : Math.max(620, (await this.prisma.user.aggregate({ _max: { numero: true } }))._max.numero ?? 620) + 1;
+      try {
+        return await this.creerAvec(dto, numero);
+      } catch (e) {
+        if (essai < 3 && e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002' && String(e.meta?.target ?? '').includes('numero')) continue;
+        throw e;
+      }
+    }
+  }
+
+  private async creerAvec(dto: CreerUserDto, numero: number | null) {
     try {
       return await this.prisma.user.create({
         data: {
+          numero,
           identifiant: dto.identifiant.trim().toLowerCase(),
           passwordHash: await AuthService.hasher(dto.motDePasse),
           nom: dto.nom,
@@ -48,7 +62,7 @@ export class UsersService {
         select: USER_PUBLIC,
       }).then(formater);
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002' && !String(e.meta?.target ?? '').includes('numero'))
         throw new ConflictException('Cet identifiant existe déjà');
       throw e;
     }
@@ -63,13 +77,32 @@ export class UsersService {
         ...(f.numeroOdoo ? { numeroOdoo: f.numeroOdoo.trim() } : {}),
         ...(f.module || f.espace ? { modules: { some: { module: { in: modules } } } } : {}),
         ...(q
-          ? { OR: [{ identifiant: { contains: q, mode: 'insensitive' } }, { nom: { contains: q, mode: 'insensitive' } }, { numeroOdoo: { contains: q, mode: 'insensitive' } }] }
+          ? {
+              OR: [
+                { identifiant: { contains: q, mode: 'insensitive' } }, { nom: { contains: q, mode: 'insensitive' } }, { numeroOdoo: { contains: q, mode: 'insensitive' } },
+                ...(/^[a-z]?-?\d+$/i.test(q) ? [{ numero: Number(q.replace(/\D/g, '')) }] : []),
+              ],
+            }
           : {}),
       },
       select: { ...USER_PUBLIC, _count: { select: { fiches: true } } },
       orderBy: { createdAt: 'desc' },
     });
     return liste.map(formater);
+  }
+
+  /** Client par son n° court (« 621 », « L621 ») : pour lui envoyer un pas-à-pas (admin). */
+  async parNumero(texte: string) {
+    const n = Number(texte.replace(/\D/g, ''));
+    const u = n
+      ? await this.prisma.user.findUnique({
+          where: { numero: n },
+          select: { id: true, numero: true, nom: true, identifiant: true, numeroOdoo: true, machines: { select: { surnom: true, variante: { select: { nom: true, modele: { select: { nom: true, fabricant: { select: { nom: true } } } } } } } } },
+        })
+      : null;
+    if (!u) throw new NotFoundException(`Aucun client avec le n° ${texte}`);
+    const { machines, ...client } = u;
+    return { ...client, machines: machines.map((m) => m.surnom || `${m.variante.modele.fabricant.nom} ${m.variante.modele.nom}`) };
   }
 
   async trouver(id: string) {

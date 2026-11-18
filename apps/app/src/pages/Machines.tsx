@@ -50,7 +50,6 @@ export default function Machines() {
                     <b>{m.surnom || m.nom}</b>
                     {m.surnom && <div className="muted petit">{m.nom}</div>}
                     {m.numeroSerie && <div className="muted petit">{t('machines.numeroSerie', { n: m.numeroSerie })}</div>}
-                    {m.numero && <div className="petit">{t('maMachine.numero')} <b>{m.numero}</b></div>}
                   </>
                 )}
               </div>
