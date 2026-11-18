@@ -187,7 +187,7 @@ export class EntretienService {
     );
     const ordre: Record<Etat, number> = { retard: 0, bientot: 1, ok: 2 };
     return {
-      id: m.id, nom: nomMachine(m.variante), surnom: m.surnom, numeroSerie: m.numeroSerie, miseEnService: m.miseEnService,
+      id: m.id, nom: nomMachine(m.variante), surnom: m.surnom, numeroSerie: m.numeroSerie, miseEnService: m.miseEnService, numero: m.numero,
       modeleId: m.variante.modeleId, espaces: m.variante.modele.espaces, etiquettes: m.variante.modele.etiquettes,
       imageUrl: imageMachine(m.variante),
       client: m.user,
@@ -294,7 +294,7 @@ export class EntretienService {
     const q = f.q?.trim().toLowerCase();
     return l
       .map((m) => this.vue(m))
-      .filter((m) => !q || [m.client.nom, m.client.identifiant, m.client.numeroOdoo, m.numeroSerie, m.nom, m.surnom].some((x) => x?.toLowerCase().includes(q)))
+      .filter((m) => !q || [m.client.nom, m.client.identifiant, m.client.numeroOdoo, m.numeroSerie, m.nom, m.surnom, m.numero ? String(m.numero) : null].some((x) => x?.toLowerCase().includes(q.replace(/^[a-z]-?(?=\d)/, ''))))
       .filter((m) => !f.etat?.length || m.taches.some((t) => f.etat!.includes(t.etat)))
       .map(({ historique: _h, ...m }) => m)
       .sort((a, b) => ({ retard: 0, bientot: 1, ok: 2 })[a.etat] - ({ retard: 0, bientot: 1, ok: 2 })[b.etat]);

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
-import { ChoixCategorie, Etape, ImageApi, Procedure, ResumeProcedure, viderProcedures } from '../espaces/kiavik/donneesProcedures';
+import { ChoixCategorie, Etape, ICONE_TYPE, ImageApi, Procedure, ResumeProcedure, TYPES_PAS_A_PAS, TypePasAPas, viderProcedures } from '../espaces/kiavik/donneesProcedures';
+import { t } from '../lib/i18n';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { compresser } from '../lib/image';
@@ -31,6 +32,7 @@ export function TerrainAccueil() {
   const [trame, setTrame] = useState('');
   const { espace: ouvert } = useEspace();
   const [cible, setCible] = useState<{ espace: EspaceContenu; etiquettes: string[] }>({ espace: ouvert.slug as EspaceContenu, etiquettes: [] });
+  const [type, setType] = useState<TypePasAPas>('procedure');
   const [envoi, setEnvoi] = useState(false);
   const [err, setErr] = useState<unknown>();
   useEffect(() => {
@@ -42,7 +44,7 @@ export function TerrainAccueil() {
     setEnvoi(true);
     setErr(undefined);
     try {
-      const p = await api<Procedure>('/admin/procedures', { method: 'POST', json: { titre: titre.trim(), ...(categorie ? { categorie } : {}), espace: cible.espace, etiquettes: cible.etiquettes } });
+      const p = await api<Procedure>('/admin/procedures', { method: 'POST', json: { titre: titre.trim(), ...(categorie ? { categorie } : {}), espace: cible.espace, etiquettes: cible.etiquettes, type } });
       // trame : une étape par ligne (on les remplit ensuite une par une, rien n'est oublié)
       const lignes = trame.split('\n').map((l) => l.replace(/^[-•*\d.)\s]+/, '').trim()).filter((l) => l.length >= 2);
       for (const [i, texte] of lignes.entries()) await api(`/admin/procedures/${p.id}/etapes`, { method: 'POST', json: { texte, position: i } });
@@ -67,6 +69,12 @@ export function TerrainAccueil() {
       <div className="carte form">
         <label>Titre<input value={titre} maxLength={120} placeholder="ex. Changer les filtres F1080" onChange={(e) => setTitre(e.target.value)} /></label>
         <label>Catégorie<ChoixCategorie valeur={categorie} onChange={setCategorie} /></label>
+        <div>
+          <b className="petit">Type</b>
+          <div className="seg">
+            {TYPES_PAS_A_PAS.map((x) => <button key={x} type="button" className={type === x ? 'on' : ''} onClick={() => setType(x)}>{ICONE_TYPE[x]} {t(`type.${x}`)}</button>)}
+          </div>
+        </div>
         <BlocEtiquettes espace={cible.espace} etiquettes={cible.etiquettes} onChange={setCible} />
         <label>
           Trame (facultatif) : les étapes prévues, une par ligne

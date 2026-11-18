@@ -47,6 +47,14 @@ export class MachinesController {
     if (!(await this.prisma.user.findUnique({ where: { id } }))) throw new NotFoundException('Utilisateur introuvable');
   }
 
+  /** Machine (et client) par son n° court : « 621 », « L621 »… */
+  @Get('admin/machines/numero/:numero')
+  @Roles(Role.ADMIN)
+  @AutoriseCleApi()
+  parNumero(@Param('numero') numero: string) {
+    return this.machines.parNumero(numero);
+  }
+
   @Get('users/:userId/machines')
   @Roles(Role.ADMIN)
   @AutoriseCleApi()

@@ -10,10 +10,12 @@ import { DiagnosticsService } from './diagnostics.service';
 import { SuiviService } from './suivi.service';
 import { ProceduresService } from './procedures.service';
 import { lecteur, moduleContenu } from './visibilite';
+import { EnvoisService } from './envois.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 class ProcedureDto {
   @IsString() @MinLength(2) @MaxLength(120) titre!: string;
+  @IsOptional() @IsIn(['tuto', 'procedure', 'depannage', 'entretien']) type?: string;
   @IsOptional() @IsIn(['lazzeko', 'kiavik']) espace?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
   @IsOptional() @IsString() @MinLength(2) @MaxLength(40) categorie?: string;
@@ -21,6 +23,7 @@ class ProcedureDto {
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) description?: string | null;
 }
 class ModifierProcedureDto {
+  @IsOptional() @IsIn(['tuto', 'procedure', 'depannage', 'entretien']) type?: string;
   @IsOptional() @IsIn(['lazzeko', 'kiavik']) espace?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) description?: string | null;
@@ -77,6 +80,10 @@ class SuiviDto {
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) derniere?: string | null;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsIn(['termine', 'resolu', 'contact']) fin?: string | null;
 }
+class EnvoyerDto {
+  @IsString() @MinLength(1) @MaxLength(12) numero!: string;
+  @IsOptional() @IsString() @MaxLength(500) message?: string;
+}
 class TermineDto {
   @IsString() @MaxLength(40) annonceId!: string;
 }
@@ -102,7 +109,26 @@ const estAdmin = (m: Principal) => m.role === Role.ADMIN;
 @ModuleRequis(moduleContenu)
 @Controller('procedures')
 export class ProceduresController {
-  constructor(private procedures: ProceduresService, private diagnostics: DiagnosticsService, private suivi: SuiviService, private prisma: PrismaService) {}
+  constructor(
+    private procedures: ProceduresService, private diagnostics: DiagnosticsService, private suivi: SuiviService, private prisma: PrismaService,
+    private envois: EnvoisService,
+  ) {}
+
+  /** Pas-à-pas reçus (envoyés par le n° de la machine). */
+  @Get('envois/miens')
+  mesEnvois(@Moi() moi: Principal, @EspaceCourant() espace: string) {
+    return this.envois.miens(moi.id, espace);
+  }
+
+  @Post('envois/:id/vu')
+  vu(@Moi() moi: Principal, @Param('id') id: string) {
+    return this.envois.marquer(id, moi.id, 'vu');
+  }
+
+  @Post('envois/:id/termine')
+  envoiTermine(@Moi() moi: Principal, @Param('id') id: string) {
+    return this.envois.marquer(id, moi.id, 'termine');
+  }
 
   /** « Pas clair ? » sur une étape : les admins sont prévenus. */
   @Post('etapes/:id/signaler')
@@ -143,13 +169,15 @@ export class ProceduresController {
 
   @Get(':id')
   async lire(@Param('id') id: string, @Moi() moi: Principal, @EspaceCourant() espace: string) {
-    return this.procedures.lire(id, estAdmin(moi), await lecteur(this.prisma, { id: moi.id, admin: estAdmin(moi) }, espace));
+    const admin = estAdmin(moi);
+    const recu = !admin && (await this.envois.aRecu(id, moi.id));
+    return this.procedures.lire(id, admin, await lecteur(this.prisma, { id: moi.id, admin }, espace), recu);
   }
 
   /** Une photo d'étape (adresse fixe : une photo n'est jamais modifiée). */
   @Get('photos/:id')
   async photo(@Param('id') id: string, @Moi() moi: Principal, @Res() res: Response) {
-    const { flux, ext } = await this.procedures.lirePhoto({ id }, estAdmin(moi));
+    const { flux, ext } = await this.procedures.lirePhoto({ id }, estAdmin(moi), moi.id);
     res.setHeader('Content-Type', MIME_IMAGE[ext as keyof typeof MIME_IMAGE] ?? 'application/octet-stream');
     res.setHeader('Cache-Control', 'private, max-age=2592000');
     flux.pipe(res);
@@ -169,7 +197,19 @@ export class ProceduresController {
 @Roles(Role.ADMIN)
 @Controller('admin/procedures')
 export class AdminProceduresController {
-  constructor(private procedures: ProceduresService, private suivi: SuiviService) {}
+  constructor(private procedures: ProceduresService, private suivi: SuiviService, private envois: EnvoisService) {}
+
+  /** Envoyer ce pas-à-pas à un client par le n° court de sa machine (621, L621…). */
+  @Post(':id/envoyer')
+  envoyer(@Param('id') id: string, @Body() d: EnvoyerDto, @Moi() moi: Principal) {
+    return this.envois.envoyer(id, d.numero, moi.id, d.message);
+  }
+
+  /** À qui ce pas-à-pas a été envoyé : ouvert, terminé. */
+  @Get(':id/envois')
+  envoisDu(@Param('id') id: string) {
+    return this.envois.duPasAPas(id);
+  }
 
   /** Signalements « pas clair » ouverts, par procédure. */
   @Get('signalements/ouverts')

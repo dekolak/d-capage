@@ -23,6 +23,8 @@ export interface CarnetMachine {
   id: string; nom: string; surnom: string | null; numeroSerie: string | null; miseEnService: string | null; espaces: string[];
   /** Étiquettes du modèle (filtre des contenus) et miniature. */
   etiquettes: string[]; imageUrl: string | null;
+  /** N° court dans l'app (621…). */
+  numero: number | null;
   client: { id: string; identifiant: string; nom: string | null; numeroOdoo: string | null };
   taches: TacheCarnet[]; etat: Etat; historique: LigneCarnet[]; interventions: InterventionVue[];
 }

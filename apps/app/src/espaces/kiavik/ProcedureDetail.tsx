@@ -14,6 +14,7 @@ import { ParcoursGuide } from './ParcoursGuide';
 import './guides.css';
 import { t } from '../../lib/i18n';
 import { RetourCarnet } from '../../pages/Carnet';
+import { EnvoyerPasAPas } from './Envoyer';
 
 /** « Partie — texte » : l'étape se range sous le titre « Partie » (ex. « Montage — Vérifier la courroie »). */
 export function decouperEtape(texte: string): { partie: string | null; texte: string } {
@@ -143,6 +144,12 @@ export default function ProcedureDetail() {
             <CaptureBouton guide={vue.guide} ecran={vue.ecran} pastille={vue.pastille} />
           </div>
         </div>
+      )}
+      {moi?.role === 'ADMIN' && (
+        <details className="env-detail">
+          <summary className="btn">📤 Envoyer à un client (n° de sa machine)</summary>
+          <EnvoyerPasAPas procedureId={p.id} publiee={p.publiee} />
+        </details>
       )}
       {parcours && <ParcoursGuide p={p} av={av} onFermer={() => setParcours(false)} />}
     </div>

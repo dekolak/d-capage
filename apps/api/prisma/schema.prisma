@@ -65,6 +65,7 @@ model User {
   apiKeys            ApiKey[]
   lecturesAnnonces   AnnonceLecture[]
   reponsesAnnonces   AnnonceReponse[]
+  envoisRecus        EnvoiPasAPas[]
   entretiensFaits    EntretienFait[]
   parcoursTermines   ParcoursTermine[]
   demandesAide       DemandeAide[]
@@ -199,6 +200,9 @@ model UserMachine {
   /// Saisis par l'admin : n° de série, date de mise en service (départ des échéances d'entretien).
   numeroSerie  String?
   miseEnService DateTime?
+  /// N° court de la machine dans l'app (621, 622…), visible par le client : sert à lui envoyer un pas-à-pas.
+  numero       Int?        @unique
+  envois       EnvoiPasAPas[]
   createdAt  DateTime @default(now())
   fiches     Fiche[]
   entretiens EntretienFait[]
@@ -503,6 +507,9 @@ model Procedure {
   module      String             @default("procedures-kiavik")
   /// Espace (technologie) : lazzeko ou kiavik, jamais les deux.
   espace      String             @default("kiavik")
+  /// Type affiché au client : tuto | procedure | depannage | entretien.
+  type        String             @default("procedure")
+  envois      EnvoiPasAPas[]
   /// Étiquettes : vide = toutes les machines de l'espace ; sinon, les clients dont une machine porte une de ces étiquettes.
   etiquettes  String[]           @default([])
   publiee     Boolean            @default(false)
@@ -904,4 +911,26 @@ model PhotoIntervention {
   ordre          Int
   cle            String
   createdAt      DateTime     @default(now())
+}
+
+/// Pas-à-pas envoyé à un client par le n° court de sa machine : bulle à l'ouverture de l'app, liste « Reçus ».
+/// Donne accès à CE pas-à-pas même non publié ou étiqueté pour une autre machine.
+model EnvoiPasAPas {
+  id            String      @id @default(cuid())
+  procedureId   String
+  procedure     Procedure   @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  userMachineId String
+  machine       UserMachine @relation(fields: [userMachineId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Nom de l'expéditeur (admin) et petit mot.
+  auteur        String
+  message       String?
+  /// Bulle fermée, pas-à-pas ouvert, terminé.
+  vuLe          DateTime?
+  ouvertLe      DateTime?
+  termineLe     DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@index([userId, createdAt])
 }

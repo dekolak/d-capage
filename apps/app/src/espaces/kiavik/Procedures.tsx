@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { useAuth } from '../../lib/auth';
-import { ResumeProcedure, useProcedures } from './donneesProcedures';
+import { ICONE_TYPE, ResumeProcedure, useProcedures } from './donneesProcedures';
 import { PreparerHorsLigne } from './PreparerHorsLigne';
 import { normaliser } from './recherche';
 import './guides.css';
@@ -62,7 +62,7 @@ export function ListeProcedures({ liste }: { liste: ResumeProcedure[] }) {
     <div className="gx-resultats">
       {liste.map((p) => (
         <Link key={p.id} to={`/procedures/${p.id}`} className="carte gx-resultat">
-          <b>{p.diagnostic ? '🩺' : '📋'} {p.titre}</b>
+          <b>{ICONE_TYPE[p.type] ?? (p.diagnostic ? '🩺' : '📋')} {p.titre}</b>
           {p.resume && <span className="muted petit">{p.resume}</span>}
           <span className="petit muted">
             {tn('kiavik.procedures.etapes', p.nbEtapes)}

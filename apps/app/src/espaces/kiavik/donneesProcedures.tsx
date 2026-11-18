@@ -5,11 +5,16 @@ import { api, espaceActuel } from '../../lib/api';
 import { useEspace } from '../../lib/espace';
 import { useAuth } from '../../lib/auth';
 
+/** Type d'un pas-à-pas (choisi par l'admin, icône pour le client). */
+export type TypePasAPas = 'tuto' | 'procedure' | 'depannage' | 'entretien';
+export const TYPES_PAS_A_PAS: TypePasAPas[] = ['tuto', 'procedure', 'depannage', 'entretien'];
+export const ICONE_TYPE: Record<TypePasAPas, string> = { tuto: '🎓', procedure: '📋', depannage: '🩺', entretien: '🧽' };
+
 export interface ResumeProcedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string;
   nbEtapes: number; textes: string[];
   /** Espace (lazzeko ou kiavik) et étiquettes des machines concernées (vide = toutes). */
-  espace: 'lazzeko' | 'kiavik'; etiquettes: string[];
+  espace: 'lazzeko' | 'kiavik'; etiquettes: string[]; type: TypePasAPas;
   /** Procédure proposée à la fin. */
   suivanteId: string | null;
   /** Contient des questions (diagnostic). */
@@ -41,7 +46,7 @@ export interface Choix {
 }
 export interface Procedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string; etapes: Etape[];
-  espace: 'lazzeko' | 'kiavik'; etiquettes: string[];
+  espace: 'lazzeko' | 'kiavik'; etiquettes: string[]; type: TypePasAPas;
   /** Procédure proposée à la fin (« Continuer avec … ? »). */
   suivanteId: string | null;
   /** Admin seulement (pour l'IA). */
