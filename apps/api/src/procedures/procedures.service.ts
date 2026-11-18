@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, StockageService } from '../stockage/stockage.service';
 import { SUITES } from './chemin';
 import { assurerCategorie } from '../categories/assurer';
+import { Lecteur, nettoyerEtiquettes, verifierEspace, visible } from './visibilite';
 
 export interface LienDto { guide?: string | null; ecran?: string | null; pastille?: string | null }
 export interface ControleDto { controle?: boolean; solutionId?: string | null }
@@ -31,7 +32,7 @@ export class ProceduresService {
   private vue(p: ProcedureComplete, admin = true) {
     return {
       id: p.id, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee, ordre: p.ordre, updatedAt: p.updatedAt,
-      suivanteId: p.suivanteId,
+      suivanteId: p.suivanteId, espace: p.espace, etiquettes: p.etiquettes,
       ...(admin ? { description: p.description, prompt: p.prompt, resumeIa: p.resumeIa, resumeIaLe: p.resumeIaLe } : {}),
       etapes: p.etapes.map(({ photos, procedureId: _p, note, choix, ...e }) => ({
         ...e,
@@ -54,13 +55,14 @@ export class ProceduresService {
   }
 
   /** Liste (sans le texte des étapes, avec les liens vers les pastilles pour l'affichage dans les guides). */
-  async lister(admin: boolean) {
+  /** Liste : l'admin voit tout ; un client, seulement les publiés de son espace qui concernent ses machines. */
+  async lister(admin: boolean, qui: Lecteur = null) {
     const l = await this.prisma.procedure.findMany({
-      where: admin ? {} : { publiee: true },
+      where: admin ? {} : { publiee: true, ...(qui ? { espace: qui.espace } : {}) },
       orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }],
       include: { etapes: { orderBy: { ordre: 'asc' }, select: { texte: true, guide: true, ecran: true, pastille: true, _count: { select: { choix: true } } } } },
     });
-    return l.map(({ etapes, cle: _c, module: _m, createdAt: _d, description, prompt: _pr, resumeIa: _r, resumeIaLe: _rl, ...p }) => ({
+    return l.filter((p) => !qui || visible(p, qui.espace, qui.etiquettes)).map(({ etapes, cle: _c, module: _m, createdAt: _d, description, prompt: _pr, resumeIa: _r, resumeIaLe: _rl, ...p }) => ({
       ...p,
       ...(admin ? { description } : {}),
       /** Contient des questions (diagnostic). */
@@ -72,14 +74,16 @@ export class ProceduresService {
     }));
   }
 
-  async lire(id: string, admin: boolean) {
+  async lire(id: string, admin: boolean, qui: Lecteur = null) {
     const p = await this.prisma.procedure.findUnique({ where: { id }, include: avecEtapes });
-    if (!p || (!admin && !p.publiee)) throw new NotFoundException('Procédure introuvable');
+    if (!p || (!admin && !p.publiee) || (qui && !visible(p, qui.espace, qui.etiquettes))) throw new NotFoundException('Procédure introuvable');
     return this.vue(p, admin);
   }
 
   // ---------- admin ----------
-  async creer(d: { titre: string; categorie?: string; resume?: string | null; description?: string | null }) {
+  async creer(d: { titre: string; categorie?: string; resume?: string | null; description?: string | null; espace?: string; etiquettes?: string[] }) {
+    verifierEspace(d.espace);
+    d = { ...d, etiquettes: nettoyerEtiquettes(d.etiquettes) };
     await assurerCategorie(this.prisma, d.categorie ?? 'Impression');
     const ordre = ((await this.prisma.procedure.aggregate({ _max: { ordre: true } }))._max.ordre ?? -1) + 1;
     const p = await this.prisma.procedure.create({ data: { ...d, ordre }, include: avecEtapes });
@@ -97,6 +101,7 @@ export class ProceduresService {
     const copie = await this.prisma.procedure.create({
       data: {
         titre: `${p.titre} (copie)`.slice(0, 120), categorie: p.categorie, resume: p.resume, description: p.description, prompt: p.prompt,
+        espace: p.espace, etiquettes: p.etiquettes,
         publiee: false, ordre, suivanteId: p.suivanteId,
       },
     });
@@ -136,8 +141,10 @@ export class ProceduresService {
     return this.lire(copie.id, true);
   }
 
-  async modifier(id: string, d: Omit<Prisma.ProcedureUncheckedUpdateInput, 'suivanteId'> & { suivanteId?: string | null }) {
+  async modifier(id: string, d: Omit<Prisma.ProcedureUncheckedUpdateInput, 'suivanteId' | 'etiquettes' | 'espace'> & { suivanteId?: string | null; espace?: string; etiquettes?: string[] }) {
     await this.existe(id);
+    verifierEspace(d.espace);
+    if (d.etiquettes) d = { ...d, etiquettes: nettoyerEtiquettes(d.etiquettes) };
     if (d.suivanteId) {
       if (d.suivanteId === id) throw new BadRequestException('Une procédure ne peut pas se proposer elle-même');
       await this.existe(d.suivanteId);

@@ -972,6 +972,64 @@ describe('Parcours complet', () => {
     await http.delete(`/api/admin/procedures/${p.id}`).set(A).expect(200);
   });
 
+  it('étiquettes : un contenu par espace, filtré par les machines du client (sans étiquette = toutes)', async () => {
+    const A = auth(admin);
+    // modèles : soudeuse (Laser pulsé + Soudure) et décapeuse (Laser pulsé) côté Lazzeko
+    let cat = (await http.post('/api/admin/catalogue/fabricants').set(A).send({ nom: `Etq ${id}` })).body;
+    const fab = cat.find((f: any) => f.nom === `Etq ${id}`);
+    await http.post('/api/admin/catalogue/modeles').set(A).send({ fabricantId: fab.id, nom: 'Soudeuse', espaces: ['lazzeko'] }).expect(201);
+    cat = (await http.post('/api/admin/catalogue/modeles').set(A).send({ fabricantId: fab.id, nom: 'Decapeuse', espaces: ['lazzeko'] })).body;
+    const [deca, soud] = cat.find((f: any) => f.id === fab.id).modeles;
+    cat = (await http.patch(`/api/admin/catalogue/modeles/${soud.id}`).set(A).send({ etiquettes: [`Laser ${id}`, `Soudure ${id}`, ` soudure ${id} `] })).body;
+    expect(cat.find((f: any) => f.id === fab.id).modeles.find((m: any) => m.id === soud.id).etiquettes).toEqual([`Laser ${id}`, `Soudure ${id}`]);
+    await http.patch(`/api/admin/catalogue/modeles/${deca.id}`).set(A).send({ etiquettes: [`laser ${id}`] }).expect(200);
+    const etq = (await http.get('/api/admin/catalogue/etiquettes').set(A)).body.find((e: any) => e.etiquette === `Laser ${id}`);
+    expect(etq).toMatchObject({ espace: 'lazzeko' });
+    expect(etq.modeles).toHaveLength(2);
+
+    // contenus Lazzeko : général, soudure, laser ; un contenu Kiavik
+    const creer = async (titre: string, espace: string, etiquettes: string[]) => {
+      const p = (await http.post('/api/admin/procedures').set(A).send({ titre, espace, etiquettes })).body;
+      await http.patch(`/api/admin/procedures/${p.id}`).set(A).send({ publiee: true }).expect(200);
+      return p;
+    };
+    expect((await http.post('/api/admin/procedures').set(A).send({ titre: 'x', espace: 'les deux' })).status).toBe(400);
+    const general = await creer(`General ${id}`, 'lazzeko', []);
+    const soudure = await creer(`Souder ${id}`, 'lazzeko', [`SOUDURE ${id}`]);
+    const lentille = await creer(`Lentille ${id}`, 'lazzeko', [`Laser ${id}`]);
+    const kiavik = await creer(`Kiavik ${id}`, 'kiavik', []);
+    const astuce = (await http.post('/api/admin/solutions').set(A).send({ titre: `Astuce soudure ${id}`, texte: 'xx', espace: 'lazzeko', etiquettes: [`Soudure ${id}`], publiee: true })).body;
+
+    // client Lazzeko avec la décapeuse seulement
+    const cle = (await http.post('/api/admin/cles-api').set(A).send({ nom: 'etq' })).body.cle;
+    const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `etq-${id}`, motDePasse: 'motdepasse1', modules: ['reglages-decapage', 'procedures-lazzeko'] })).body;
+    await http.post(`/api/users/${u.id}/machines`).set(A).send({ varianteId: deca.variantes[0].id }).expect(201);
+    const L = { ...auth((await http.post('/api/auth/connexion').send({ identifiant: `etq-${id}`, motDePasse: 'motdepasse1' })).body.jeton), 'X-Espace': 'lazzeko' };
+    const { version } = (await http.get('/api/conditions?espace=lazzeko').set(L)).body;
+    await http.post('/api/moi/conditions').set(L).send({ version }).expect(201);
+    const titres = async () => (await http.get('/api/procedures').set(L)).body.map((p: any) => p.titre).filter((t: string) => t.endsWith(id)).sort();
+    expect(await titres()).toEqual([`General ${id}`, `Lentille ${id}`]);
+    expect((await http.get(`/api/procedures/${soudure.id}`).set(L)).status).toBe(404);
+    expect((await http.get(`/api/procedures/${kiavik.id}`).set(L)).status).toBe(404);
+    expect((await http.get('/api/solutions').set(L)).body.some((x: any) => x.id === astuce.id)).toBe(false);
+
+    // on lui ajoute la soudeuse : il voit la soudure (pas de procédure à retoucher)
+    await http.post(`/api/users/${u.id}/machines`).set(A).send({ varianteId: soud.variantes[0].id }).expect(201);
+    expect(await titres()).toEqual([`General ${id}`, `Lentille ${id}`, `Souder ${id}`]);
+    expect((await http.get(`/api/solutions/${astuce.id}`).set(L)).status).toBe(200);
+    // sans le module de l'espace : refusé
+    const u2 = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `etq2-${id}`, motDePasse: 'motdepasse1', modules: ['reglages-decapage'] })).body;
+    const L2 = { ...auth((await http.post('/api/auth/connexion').send({ identifiant: `etq2-${id}`, motDePasse: 'motdepasse1' })).body.jeton), 'X-Espace': 'lazzeko' };
+    await http.post('/api/moi/conditions').set(L2).send({ version }).expect(201);
+    expect((await http.get('/api/procedures').set(L2)).status).toBe(403);
+    // l'admin voit tout, avec espace et étiquettes
+    expect((await http.get(`/api/procedures/${soudure.id}`).set(A)).body).toMatchObject({ espace: 'lazzeko', etiquettes: [`SOUDURE ${id}`] });
+
+    for (const p of [general, soudure, lentille, kiavik]) await http.delete(`/api/admin/procedures/${p.id}`).set(A).expect(200);
+    await http.delete(`/api/admin/solutions/${astuce.id}`).set(A).expect(200);
+    expect(u2.id).toBeTruthy();
+  });
+
   it('langue du compte : choisie par le client, par l\'admin ou à la création (clé API)', async () => {
     const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'langue' })).body.cle;
     const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `lea-${id}`, motDePasse: 'motdepasse1', langue: 'en' })).body;

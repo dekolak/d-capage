@@ -5,10 +5,11 @@ import { MiniatureMachine } from '../components/MiniatureMachine';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { BadgeZone } from './Admin';
+import { ChoixEtiquettes, viderEtiquettes } from '../espaces/kiavik/Etiquettes';
 
 /** Catalogue complet (administration) : Lazzeko et Kiavik. */
 export interface VarianteAdmin { id: string; nom: string; actif: boolean; imageUrl: string | null; imagePropre: boolean; reglages: boolean; machines: number }
-export interface ModeleAdmin { id: string; nom: string; espaces: string[]; technologie: string | null; imageUrl: string | null; variantes: VarianteAdmin[] }
+export interface ModeleAdmin { id: string; nom: string; espaces: string[]; etiquettes: string[]; technologie: string | null; imageUrl: string | null; variantes: VarianteAdmin[] }
 export interface FabricantAdmin { id: string; nom: string; modeles: ModeleAdmin[] }
 
 /**
@@ -160,6 +161,13 @@ function Modele({ f, mo, faire, nomEspace, espaces, BoutonImage }: {
           </div>
         </div>
         <BoutonImage cible="modeles" id={mo.id} a={!!mo.imageUrl} />
+      </div>
+      <div className="am-etiquettes">
+        <b className="petit">🏷 Étiquettes</b> <small className="muted">(familles, usages : ex. Laser pulsé, Soudure) — le client voit les pas-à-pas et Bon à savoir qui portent une de ces étiquettes</small>
+        {mo.espaces.length ? (
+          <ChoixEtiquettes espace={mo.espaces[0]} valeur={mo.etiquettes}
+            onChange={(l) => faire(`/admin/catalogue/modeles/${mo.id}`, { method: 'PATCH', json: { etiquettes: l } }).then(viderEtiquettes)} />
+        ) : <small className="muted">Rendez d'abord le modèle visible dans un espace.</small>}
       </div>
       <div className="actions-avis">
         {espaces.map((s) => (

@@ -146,6 +146,8 @@ model Modele {
   espaces       String[]    @default(["lazzeko"])
   /// Plans d'entretien qui s'appliquent à ce modèle (un plan peut servir à plusieurs modèles).
   plans         PlanEntretien[]
+  /// Étiquettes (familles, usages : « Laser pulsé », « Soudure », « DXonJet »…) : le client voit les contenus qui en portent une.
+  etiquettes    String[]    @default([])
   /// Miniature de la machine (clé de stockage) : envoyée par l'admin, PNG de préférence.
   imageCle      String?
   imageMaj      DateTime?
@@ -499,6 +501,10 @@ model Procedure {
   resume      String?
   /// Module requis pour la voir.
   module      String             @default("procedures-kiavik")
+  /// Espace (technologie) : lazzeko ou kiavik, jamais les deux.
+  espace      String             @default("kiavik")
+  /// Étiquettes : vide = toutes les machines de l'espace ; sinon, les clients dont une machine porte une de ces étiquettes.
+  etiquettes  String[]           @default([])
   publiee     Boolean            @default(false)
   ordre       Int                @default(0)
   /// Description détaillée (à quoi elle sert, quand l'utiliser, symptômes) : pour l'admin, et le catalogue lu par l'IA.
@@ -585,6 +591,9 @@ model Solution {
   cle            String?          @unique
   titre          String
   categorie      String           @default("Impression")
+  /// Espace (lazzeko ou kiavik) et étiquettes, comme les pas-à-pas.
+  espace         String           @default("kiavik")
+  etiquettes     String[]         @default([])
   cause          String?
   texte          String
   avertissement  String?

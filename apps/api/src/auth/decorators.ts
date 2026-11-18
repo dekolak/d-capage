@@ -20,7 +20,7 @@ export const SansConditions = () => SetMetadata(SANS_CONDITIONS, true);
  * Route réservée aux comptes qui ont ce module (ex. reglages-decapage) ; les conditions de son espace doivent être acceptées.
  * Le module peut dépendre de la requête (ex. guide-<slug> selon l'adresse appelée).
  */
-export type ModuleDeLaRequete = (req: { params: Record<string, string> }) => string;
+export type ModuleDeLaRequete = (req: { params: Record<string, string>; headers: Record<string, string | string[] | undefined> }) => string;
 export const ModuleRequis = (module: string | ModuleDeLaRequete) => SetMetadata(MODULE, module);
 
 export interface Principal {

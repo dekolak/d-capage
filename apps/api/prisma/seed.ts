@@ -126,6 +126,9 @@ interface ProcedureSeed {
   cle: string; titre: string; categorie: string; resume?: string; description?: string; prompt?: string; publiee?: boolean; ordre?: number; etapes: EtapeSeed[];
   /** Clé de la procédure proposée à la fin. */
   suivante?: string;
+  /** lazzeko ou kiavik (kiavik par défaut) ; étiquettes des machines concernées (vide = toutes). */
+  espace?: string;
+  etiquettes?: string[];
 }
 
 /** Crée une ligne d'étapes (route principale ou détour d'une réponse), avec les questions et leurs détours. */
@@ -157,7 +160,7 @@ async function procedures() {
     const cree = await prisma.procedure.create({
       data: {
         cle: p.cle, titre: p.titre, categorie: p.categorie, resume: p.resume, description: p.description, prompt: p.prompt,
-        publiee: p.publiee ?? false, ordre: p.ordre ?? i,
+        publiee: p.publiee ?? false, ordre: p.ordre ?? i, espace: p.espace ?? 'kiavik', etiquettes: p.etiquettes ?? [],
       },
     });
     await creerEtapes(cree.id, p.etapes);
@@ -174,7 +177,7 @@ async function procedures() {
 
 interface SolutionSeed {
   cle: string; titre: string; categorie: string; cause?: string; texte: string; avertissement?: string;
-  motsCles?: string[]; lien?: [string, string, string]; publiee?: boolean;
+  motsCles?: string[]; lien?: [string, string, string]; publiee?: boolean; espace?: string; etiquettes?: string[];
 }
 
 async function solutions() {
@@ -188,6 +191,7 @@ async function solutions() {
       data: {
         cle: s.cle, titre: s.titre, categorie: s.categorie, cause: s.cause, texte: s.texte, avertissement: s.avertissement,
         motsCles: s.motsCles ?? [], guide: s.lien?.[0], ecran: s.lien?.[1], pastille: s.lien?.[2], publiee: s.publiee ?? false, ordre: i,
+        espace: s.espace ?? 'kiavik', etiquettes: s.etiquettes ?? [],
       },
     });
     crees++;

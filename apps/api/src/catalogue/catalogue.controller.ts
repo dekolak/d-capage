@@ -21,6 +21,7 @@ class ModeleDto extends NomDto {
   @IsArray() @ArrayMaxSize(2) @IsIn(ESPACES, { each: true }) espaces!: string[];
 }
 class ModifierModeleDto {
+  @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
   @IsOptional() @IsString() @MinLength(1) @MaxLength(60) nom?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(2) @IsIn(ESPACES, { each: true }) espaces?: string[];
 }
@@ -41,6 +42,12 @@ export class AdminCatalogueController {
   @Get()
   lister() {
     return this.catalogue.listerAdmin();
+  }
+
+  /** Toutes les étiquettes utilisées (modèles, pas-à-pas, Bon à savoir), par espace, avec ce qui les porte. */
+  @Get('etiquettes')
+  etiquettes() {
+    return this.catalogue.etiquettes();
   }
 
   @Post('fabricants')

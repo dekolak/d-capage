@@ -7,6 +7,8 @@ import { useAuth } from '../../lib/auth';
 export interface ResumeProcedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string;
   nbEtapes: number; textes: string[];
+  /** Espace (lazzeko ou kiavik) et étiquettes des machines concernées (vide = toutes). */
+  espace: 'lazzeko' | 'kiavik'; etiquettes: string[];
   /** Procédure proposée à la fin. */
   suivanteId: string | null;
   /** Contient des questions (diagnostic). */
@@ -38,6 +40,7 @@ export interface Choix {
 }
 export interface Procedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string; etapes: Etape[];
+  espace: 'lazzeko' | 'kiavik'; etiquettes: string[];
   /** Procédure proposée à la fin (« Continuer avec … ? »). */
   suivanteId: string | null;
   /** Admin seulement (pour l'IA). */
@@ -145,6 +148,7 @@ export interface Solution {
   id: string; titre: string; categorie: string; cause: string | null; texte: string; avertissement: string | null; motsCles: string[];
   guide: string | null; ecran: string | null; pastille: string | null; procedureId: string | null;
   photo: string | null; publiee: boolean; ordre: number; updatedAt: string;
+  espace: 'lazzeko' | 'kiavik'; etiquettes: string[];
 }
 
 let cacheSolutions: Promise<Solution[]> | null = null;

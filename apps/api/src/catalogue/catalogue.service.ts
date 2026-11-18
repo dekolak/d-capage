@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { chargerConfig, ConfigMachine } from '@decapage/machine-kit';
 import { PrismaService } from '../prisma/prisma.service';
+import { nettoyerEtiquettes, norm } from '../procedures/visibilite';
 
 @Injectable()
 export class CatalogueService {
@@ -63,7 +64,7 @@ export class CatalogueService {
     return fabricants.map((f) => ({
       id: f.id, slug: f.slug, nom: f.nom,
       modeles: f.modeles.map((m) => ({
-        id: m.id, slug: m.slug, nom: m.nom, espaces: m.espaces, technologie: m.technologie?.slug ?? null,
+        id: m.id, slug: m.slug, nom: m.nom, espaces: m.espaces, etiquettes: m.etiquettes, technologie: m.technologie?.slug ?? null,
         imageUrl: imageMachine({ id: '', imageCle: null, imageMaj: null, modele: m }),
         variantes: m.variantes.map((v) => ({
           id: v.id, slug: v.slug, nom: v.nom, actif: v.actif, imageUrl: imageMachine({ ...v, modele: m }), imagePropre: !!v.imageCle,
@@ -72,6 +73,24 @@ export class CatalogueService {
         })),
       })),
     }));
+  }
+
+  /** Étiquettes utilisées, par espace : modèles qui les portent et nombre de contenus (pour les suggestions et l'aperçu). */
+  async etiquettes() {
+    const [modeles, procs, sols] = await Promise.all([
+      this.prisma.modele.findMany({ select: { id: true, nom: true, espaces: true, etiquettes: true, fabricant: { select: { nom: true } } } }),
+      this.prisma.procedure.findMany({ select: { espace: true, etiquettes: true } }),
+      this.prisma.solution.findMany({ select: { espace: true, etiquettes: true } }),
+    ]);
+    const r = new Map<string, { etiquette: string; espace: string; modeles: string[]; contenus: number }>();
+    const prendre = (espace: string, e: string) => {
+      const k = `${espace}:${norm(e)}`;
+      if (!r.has(k)) r.set(k, { etiquette: e, espace, modeles: [], contenus: 0 });
+      return r.get(k)!;
+    };
+    for (const m of modeles) for (const esp of m.espaces) for (const e of m.etiquettes) prendre(esp, e).modeles.push(`${m.fabricant.nom} ${m.nom}`);
+    for (const c of [...procs, ...sols]) for (const e of c.etiquettes) prendre(c.espace, e).contenus++;
+    return [...r.values()].sort((a, b) => a.espace.localeCompare(b.espace) || a.etiquette.localeCompare(b.etiquette, 'fr'));
   }
 
   async creerFabricant(nom: string) {
@@ -91,9 +110,12 @@ export class CatalogueService {
     return this.listerAdmin();
   }
 
-  async modifierModele(id: string, d: { nom?: string; espaces?: string[] }) {
+  async modifierModele(id: string, d: { nom?: string; espaces?: string[]; etiquettes?: string[] }) {
     if (!(await this.prisma.modele.findUnique({ where: { id } }))) throw new NotFoundException('Modèle introuvable');
-    await this.prisma.modele.update({ where: { id }, data: { ...(d.nom ? { nom: d.nom.trim() } : {}), ...(d.espaces ? { espaces: d.espaces } : {}) } });
+    await this.prisma.modele.update({
+      where: { id },
+      data: { ...(d.nom ? { nom: d.nom.trim() } : {}), ...(d.espaces ? { espaces: d.espaces } : {}), ...(d.etiquettes ? { etiquettes: nettoyerEtiquettes(d.etiquettes) } : {}) },
+    });
     return this.listerAdmin();
   }
 

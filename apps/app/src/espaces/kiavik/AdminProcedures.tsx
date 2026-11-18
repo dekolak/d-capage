@@ -7,6 +7,7 @@ import { chargerProcedures, Procedure, ResumeProcedure, viderProcedures } from '
 import './guides.css';
 import './editeur.css';
 import { BadgeZone } from '../../pages/Admin';
+import { useEspace } from '../../lib/espace';
 
 /** Administration → Procédures : liste, création, consignes générales pour l'IA, diagnostics reçus. */
 export function AdminProcedures() {
@@ -16,6 +17,11 @@ export function AdminProcedures() {
   const [titre, setTitre] = useState('');
   const [nonLus, setNonLus] = useState(0);
   const [pasClair, setPasClair] = useState<Record<string, number>>({});
+  const { espace: ouvert } = useEspace();
+  // filtres : espace (celui ouvert par défaut), étiquette, état
+  const [fEspace, setFEspace] = useState<string>(ouvert.slug);
+  const [fEtiquette, setFEtiquette] = useState('');
+  const [fEtat, setFEtat] = useState('');
   useEffect(() => {
     viderProcedures();
     chargerProcedures().then(setListe).catch(setErreur);
@@ -24,7 +30,7 @@ export function AdminProcedures() {
   }, []);
   const creer = async () => {
     try {
-      const p = await api<Procedure>('/admin/procedures', { method: 'POST', json: { titre: titre.trim() } });
+      const p = await api<Procedure>('/admin/procedures', { method: 'POST', json: { titre: titre.trim(), espace: fEspace || ouvert.slug } });
       viderProcedures();
       nav(`/admin/procedures/${p.id}`);
     } catch (e) {
@@ -32,6 +38,11 @@ export function AdminProcedures() {
     }
   };
   if (!liste) return erreur ? <Erreur e={erreur} /> : <Chargement />;
+  const etiquettes = [...new Set(liste.filter((p) => !fEspace || p.espace === fEspace).flatMap((p) => p.etiquettes))].sort((a, b) => a.localeCompare(b, 'fr'));
+  const visibles = liste.filter((p) =>
+    (!fEspace || p.espace === fEspace)
+    && (!fEtiquette || (fEtiquette === '∅' ? !p.etiquettes.length : p.etiquettes.some((e) => e.toLowerCase() === fEtiquette.toLowerCase())))
+    && (!fEtat || (fEtat === 'publiee') === p.publiee));
   return (
     <div className="page gx">
       <Link to="/admin" className="btn-lien">← Administration</Link>
@@ -39,7 +50,7 @@ export function AdminProcedures() {
         <span><b>🎥 Mode terrain</b> : capturer un nouveau pas-à-pas sur place (photos, dictée), le finir ici ensuite</span>
         <span>›</span>
       </Link>
-      <h1>Pas-à-pas <BadgeZone zone="kiavik" /></h1>
+      <h1>Pas-à-pas</h1>
       <Erreur e={erreur} />
       <Link to="/admin/diagnostics" className="bandeau lien-bandeau">
         <span><b>🩺 Dépannages reçus</b>{nonLus > 0 ? ` : ${nonLus} non lu${nonLus > 1 ? 's' : ''}` : ' : résultats envoyés par les clients'}</span>
@@ -52,11 +63,29 @@ export function AdminProcedures() {
         </label>
         <button type="button" className="btn prim" disabled={titre.trim().length < 2} onClick={creer}>Créer</button>
       </div>
-      <h4>{liste.length} pas-à-pas</h4>
+      <div className="ca-filtres">
+        <select value={fEspace} onChange={(e) => { setFEspace(e.target.value); setFEtiquette(''); }} aria-label="Espace">
+          <option value="">Lazzeko et Kiavik</option>
+          <option value="lazzeko">Lazzeko</option>
+          <option value="kiavik">Kiavik</option>
+        </select>
+        <select value={fEtiquette} onChange={(e) => setFEtiquette(e.target.value)} aria-label="Étiquette">
+          <option value="">Toutes les étiquettes</option>
+          <option value="∅">Sans étiquette (toutes les machines)</option>
+          {etiquettes.map((e) => <option key={e} value={e}>🏷 {e}</option>)}
+        </select>
+        <select value={fEtat} onChange={(e) => setFEtat(e.target.value)} aria-label="État">
+          <option value="">Publiés et non publiés</option>
+          <option value="publiee">✅ Publiés</option>
+          <option value="brouillon">🔒 Non publiés</option>
+        </select>
+      </div>
+      <h4>{visibles.length} pas-à-pas</h4>
       <div className="gx-resultats">
-        {liste.map((p) => (
+        {visibles.map((p) => (
           <Link key={p.id} to={`/admin/procedures/${p.id}`} className="carte gx-resultat">
-            <b>{p.titre}</b>
+            <b>{p.titre} <BadgeZone zone={p.espace} /></b>
+            {p.etiquettes.length > 0 && <span className="et-mini">{p.etiquettes.map((e) => <span key={e}>🏷 {e}</span>)}</span>}
             <span className="petit muted">
               {p.diagnostic && p.categorie !== 'Diagnostic' && <span className="dg-badge">Dépannage guidé</span>}
               {p.categorie} · {p.nbEtapes} étape{p.nbEtapes > 1 ? 's' : ''}

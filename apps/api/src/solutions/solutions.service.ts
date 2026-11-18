@@ -4,10 +4,12 @@ import { GuidesService } from '../guides/guides.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, StockageService } from '../stockage/stockage.service';
 import { assurerCategorie } from '../categories/assurer';
+import { Lecteur, nettoyerEtiquettes, verifierEspace, visible } from '../procedures/visibilite';
 
 export interface SolutionDto {
   titre?: string; categorie?: string; cause?: string | null; texte?: string; avertissement?: string | null; motsCles?: string[];
   guide?: string | null; ecran?: string | null; pastille?: string | null; procedureId?: string | null; publiee?: boolean; ordre?: number;
+  espace?: string; etiquettes?: string[];
 }
 
 /** Fiches « Astuces & solutions » : lecture (publiées pour les clients), édition par l'admin. */
@@ -19,14 +21,14 @@ export class SolutionsService {
     return { ...s, photo: photoCle ? `/solutions/${s.id}/photo?v=${photoMaj?.getTime() ?? 0}` : null };
   }
 
-  async lister(admin: boolean) {
+  async lister(admin: boolean, qui: Lecteur = null) {
     const l = await this.prisma.solution.findMany({ where: admin ? {} : { publiee: true }, orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }] });
-    return l.map((s) => this.vue(s));
+    return l.filter((s) => !qui || visible(s, qui.espace, qui.etiquettes)).map((s) => this.vue(s));
   }
 
-  async lire(id: string, admin: boolean) {
+  async lire(id: string, admin: boolean, qui: Lecteur = null) {
     const s = await this.prisma.solution.findUnique({ where: { id } });
-    if (!s || (!admin && !s.publiee)) throw new NotFoundException('Fiche introuvable');
+    if (!s || (!admin && !s.publiee) || (qui && !visible(s, qui.espace, qui.etiquettes))) throw new NotFoundException('Fiche introuvable');
     return this.vue(s);
   }
 
@@ -36,6 +38,8 @@ export class SolutionsService {
     for (const k of ['cause', 'avertissement'] as const) if (d[k] !== undefined) r[k] = d[k]?.trim() || null;
     for (const k of ['titre', 'texte', 'categorie'] as const) if (d[k] !== undefined) r[k] = d[k]!.trim();
     if (d.categorie !== undefined) await assurerCategorie(this.prisma, d.categorie);
+    verifierEspace(d.espace);
+    if (d.etiquettes) r.etiquettes = nettoyerEtiquettes(d.etiquettes);
     if (d.motsCles) r.motsCles = [...new Set(d.motsCles.map((m) => m.trim()).filter(Boolean))];
     if (d.guide !== undefined || d.ecran !== undefined || d.pastille !== undefined) {
       if (!d.guide || !d.ecran) Object.assign(r, { guide: null, ecran: null, pastille: null });
