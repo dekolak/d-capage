@@ -2,17 +2,18 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
+import { useEspace } from '../../lib/espace';
 import { Categorie, viderCategories, viderProcedures, viderSolutions } from './donneesProcedures';
 import { normaliser } from './recherche';
 import './guides.css';
 import './categories.css';
 import { BadgeZone } from '../../pages/Admin';
 
-/* Administration → Accueil et catégories (admin, en français) : tout le classement de l'accueil au même endroit. */
+/* Administration → Catégories (admin, en français, commun) : sections de l'accueil Kiavik et de l'onglet Guides de Ma machine (Lazzeko et Kiavik). */
 
 type Type = 'procedure' | 'astuce' | 'animation';
 interface Element {
-  type: Type; id: string; guide?: string; titre: string; categorie: string; publiee: boolean; diagnostic?: boolean; logiciels: string[];
+  type: Type; id: string; guide?: string; titre: string; categorie: string; publiee: boolean; espace: string; diagnostic?: boolean; logiciels: string[];
 }
 const cleDe = (e: Element) => `${e.type}:${e.guide ?? ''}:${e.id}`;
 const TYPES: Record<string, string> = { procedure: '📋 Pas-à-pas', diagnostic: '🩺 Dépannage guidé', astuce: '💡 Bon à savoir', animation: '▶ Démo animée' };
@@ -32,6 +33,8 @@ export function AdminCategories() {
   const [fType, setFType] = useState('');
   const [fLog, setFLog] = useState('');
   const [fEtat, setFEtat] = useState('');
+  const [fEsp, setFEsp] = useState('');
+  const { espaces } = useEspace();
   const [q, setQ] = useState('');
   const [coches, setCoches] = useState<string[]>([]);
   const [vers, setVers] = useState('');
@@ -70,13 +73,14 @@ export function AdminCategories() {
         (!fType || typeDe(e) === fType) &&
         (!fLog || e.logiciels.includes(fLog)) &&
         (!fEtat || (fEtat === 'publiee') === e.publiee) &&
+        (!fEsp || e.espace === fEsp) &&
         mots.every((w) => normaliser(e.titre).includes(w)),
     );
-  }, [elements, cats, fCat, fType, fLog, fEtat, q]);
+  }, [elements, cats, fCat, fType, fLog, fEtat, fEsp, q]);
 
   if (!cats || !elements) return erreur ? <Erreur e={erreur} /> : <Chargement />;
   // ordre d'affichage : une vraie catégorie choisie, sans autre filtre ; par groupe, comme sur l'accueil
-  const modeOrdre = !!fCat && fCat !== '∅' && !fType && !fLog && !fEtat && !q.trim();
+  const modeOrdre = !!fCat && fCat !== '∅' && !fType && !fLog && !fEtat && !fEsp && !q.trim();
   const groupe = (e: Element): Type => e.type;
   const deplacer = (e: Element, sens: -1 | 1) => {
     const l = visibles.filter((x) => groupe(x) === groupe(e));
@@ -102,9 +106,10 @@ export function AdminCategories() {
   return (
     <div className="page gx ca">
       <Link to="/admin" className="btn-lien">← Administration</Link>
-      <h1>🏠 Accueil et catégories <BadgeZone zone="kiavik" /></h1>
+      <h1>🗂 Catégories <BadgeZone zone="commun" /></h1>
       <p className="muted petit">
-        Les sections de l'accueil Kiavik : nom, icône, ordre, masquées. Rangez ici les pas-à-pas, dépannages guidés, « Bon à savoir » et démos animées.
+        Les sections de l'accueil Kiavik et de l'onglet « 📚 Guides » de Ma machine (Lazzeko et Kiavik) : nom, icône, ordre, masquées.
+        Rangez ici les pas-à-pas, dépannages guidés, « Bon à savoir » et démos animées. Une section n'apparaît chez un client que si elle a du contenu pour lui.
         Renommer une catégorie déplace tout son contenu.
       </p>
       <Erreur e={erreur} />
@@ -153,6 +158,10 @@ export function AdminCategories() {
                 {logiciels.map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
             )}
+            <select value={fEsp} aria-label="Espace" onChange={(e) => setFEsp(e.target.value)}>
+              <option value="">Lazzeko et Kiavik</option>
+              {espaces.map((x) => <option key={x.slug} value={x.slug}>{x.nom}</option>)}
+            </select>
             <select value={fEtat} aria-label="État" onChange={(e) => setFEtat(e.target.value)}>
               <option value="">Publiés et non publiés</option>
               <option value="publiee">Publiés</option>
@@ -191,7 +200,7 @@ export function AdminCategories() {
                 <span className="ca-titre">
                   <Link to={lienDe(e)}>{e.titre}</Link>
                   <small className="muted">
-                    {TYPES[typeDe(e)]}
+                    <BadgeZone zone={e.espace} /> {TYPES[typeDe(e)]}
                     {e.logiciels.length > 0 && ` · ${e.logiciels.join(', ')}`}
                     {e.publiee ? '' : <span className="gx-brouillon">🔒 non publiée</span>}
                   </small>

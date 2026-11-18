@@ -5,9 +5,9 @@ Compte → **Administration** (en français ; les écrans clients peuvent être 
 ## Organisation de l'administration
 Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **Lazzeko** (orange), **Kiavik** (bleu). Le même badge est sur le titre de chaque page.
 - Toujours dans le même ordre : **Commun**, puis **Lazzeko**, puis **Kiavik**. Chaque section se replie (▸ / ▾) ; le téléphone s'en souvient. Au départ, seule la section de l'espace ouvert est dépliée ; un compteur rouge sur le titre signale ce qui attend (tags, demandes d'aide). Ouvrir une entrée d'un autre espace **bascule dans cet espace**.
-- **Commun** : 👥 Utilisateurs, 💬 Messages, 📜 Conditions d'utilisation, 🔑 Clés API, 📤 Envoi vers une API. En haut, toujours : 🔐 Mots de passe oubliés et 🔔 Notifications.
-- **Lazzeko** : 📝 Fiches de réglage, 🔧 Machines, ⭐ Avis, 🏷️ Tags proposés, 🆘 Demandes d'aide (avec le nombre en attente).
-- **Kiavik** : 🏠 Accueil et catégories, 📋 Pas-à-pas, 🩺 Dépannages reçus, 💡 Bon à savoir.
+- **Commun** : 👥 Utilisateurs, 💬 Messages, 📜 Conditions d'utilisation, 🔑 Clés API, 📤 Envoi vers une API, 🔧 Machines, 🎥 Mode terrain, 📒 Entretien, 🗂 Catégories, 📋 Pas-à-pas, 🩺 Dépannages reçus, 💡 Bon à savoir. En haut, toujours : 🔐 Mots de passe oubliés et 🔔 Notifications.
+- **Lazzeko** : 📝 Fiches de réglage, ⭐ Avis, 🏷️ Tags proposés, 🆘 Demandes d'aide (avec le nombre en attente).
+- **🗂 Catégories** (Commun) : les sections de l'accueil Kiavik **et** de l'onglet « 📚 Guides » de Ma machine (Lazzeko et Kiavik). Les catégories sont communes aux deux espaces ; une section n'apparaît chez un client que si elle a du contenu pour lui. Filtre « Espace » et badge Lazzeko / Kiavik sur chaque ligne.
 
 **Noms des contenus Kiavik** : **Pas-à-pas** (anciennement procédures), **Dépannage guidé** (procédure avec des questions, anciennement diagnostic), **Bon à savoir** (anciennement astuces & solutions), **Démos animées** (animations). Côté clients, ces noms sont dans `apps/app/src/textes/fr.ts` (une ligne à changer pour renommer).
 
@@ -104,9 +104,9 @@ Administration → **💬 Messages**.
 ## Kiavik : accueil
 - En haut : la recherche et **les deux logiciels** (toujours visibles).
 - Dessous : une **section repliable par catégorie** (🚀 Mise en route, 🩺 Diagnostic, 🖨️ Impression, 🎛️ Réglages, 🧽 Entretien, puis les autres) avec ses procédures guidées (animations), procédures, diagnostics et astuces. Le client ouvre ce qui l'intéresse (une seule section ouverte à la fois : en ouvrir une ferme les autres) ; le téléphone se souvient de la section ouverte.
-- **Administration → 🏠 Accueil et catégories** : tout le classement au même endroit.
+- **Administration → 🗂 Catégories** (section Commun, sert aussi aux Guides de Ma machine côté Lazzeko) : tout le classement au même endroit.
   - **Catégories** (à gauche, dans l'ordre de l'accueil) : ↑ ↓ pour l'ordre, ✏️ pour **renommer** et changer l'**icône** (tout son contenu suit, animations comprises), 👁 / 🙈 pour **masquer** la section de l'accueil (le contenu reste dans les listes et la recherche), 🗑 pour **supprimer** (si elle n'est pas vide : choisir la catégorie qui reçoit son contenu), **+ Ajouter** une catégorie (même vide). Cliquer sur une catégorie filtre la liste.
-  - **Liste** (à droite) : toutes les procédures, diagnostics, astuces et animations, avec **filtres** (catégorie, type, logiciel, publié / brouillon) et recherche par titre. Le menu de chaque ligne la **range** dans une autre catégorie ; cocher plusieurs lignes pour les ranger d'un coup. « ⚠️ catégorie inconnue » signale un élément rangé dans une catégorie qui n'existe plus.
+  - **Liste** (à droite) : toutes les procédures, diagnostics, astuces et animations, avec **filtres** (catégorie, type, logiciel, espace, publié / brouillon) et recherche par titre. Le menu de chaque ligne la **range** dans une autre catégorie ; cocher plusieurs lignes pour les ranger d'un coup. « ⚠️ catégorie inconnue » signale un élément rangé dans une catégorie qui n'existe plus.
   - **Ordre dans une catégorie** : cliquer sur une catégorie (sans autre filtre) affiche son contenu par groupe, comme sur l'accueil (▶ démos animées, 📋 pas-à-pas et dépannages guidés, 💡 Bon à savoir), avec ↑ ↓ pour changer l'ordre d'affichage dans chaque groupe.
 - La catégorie se choisit aussi dans le menu **Catégorie** d'une procédure, d'une astuce, ou d'une animation (ouvrir l'animation → « ✏️ Modifier cette scène » → **Catégorie sur l'accueil**, « Revenir à l'original » pour reprendre celle du fichier).
 

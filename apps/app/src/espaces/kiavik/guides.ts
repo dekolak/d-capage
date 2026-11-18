@@ -42,7 +42,7 @@ export interface Guide {
   fenetreBlanc?: Record<string, { titre: string; usage: string; resultat: string }>;
 }
 export interface ResumeAnimation { id: string; titre: string; categorie?: string;
-  /** Ordre dans sa catégorie de l'accueil (Administration → Accueil et catégories). */
+  /** Ordre dans sa catégorie de l'accueil (Administration → Catégories). */
   ordre?: number; categorieCorrigee?: boolean; resume?: string; image?: string; nbScenes?: number }
 export interface ResumeGuide {
   slug: string; nom: string; nomCourt: string; role: string | null; miniature: string | null;
