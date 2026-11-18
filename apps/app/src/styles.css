@@ -593,3 +593,5 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .af-liste li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--bord); }
 .af-texte { display: grid; gap: 2px; min-width: 0; }
 .af-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.code-provisoire { display: grid; gap: 6px; }
+.code-gros { font: 700 26px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; user-select: all; }

@@ -162,7 +162,13 @@ export function AdminUtilisateurs() {
         <summary><b>+ Créer un utilisateur</b></summary>
       <form className="form" onSubmit={creerUser}>
         <label>Identifiant<input value={f.identifiant} autoCapitalize="none" onChange={(e) => setF({ ...f, identifiant: e.target.value })} required /></label>
-        <label>Mot de passe (8 min.)<input value={f.motDePasse} minLength={8} onChange={(e) => setF({ ...f, motDePasse: e.target.value })} required /></label>
+        <label>
+          Mot de passe provisoire (le client choisira le sien à la connexion)
+          <span className="ba-libre">
+            <input value={f.motDePasse} minLength={8} onChange={(e) => setF({ ...f, motDePasse: e.target.value })} required />
+            <button type="button" className="btn petit" onClick={() => setF({ ...f, motDePasse: genererCode() })}>🎲 Générer</button>
+          </span>
+        </label>
         <label>Nom<input value={f.nom} onChange={(e) => setF({ ...f, nom: e.target.value })} /></label>
         <label>N° client Odoo (facultatif)<input value={f.numeroOdoo} maxLength={40} onChange={(e) => setF({ ...f, numeroOdoo: e.target.value })} placeholder="ex. C00123" /></label>
         <label>Rôle
@@ -237,6 +243,7 @@ export function AdminUtilisateurs() {
             {selection?.id === u.id && (
               <div className="sous-bloc">
                 <NumeroOdoo u={u} onMaj={charger} />
+                {u.role !== 'ADMIN' && <CodeProvisoire u={u} onMaj={charger} />}
                 {u.role !== 'ADMIN' && (
                   <>
                     <b className="petit">Accès</b>
@@ -275,6 +282,59 @@ export function AdminUtilisateurs() {
         ))}
       </div>
 
+    </div>
+  );
+}
+
+/** Code provisoire facile à dicter : 8 caractères sans 0/O, 1/I/L (ex. K7PM-42QX). */
+export function genererCode() {
+  const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const n = crypto.getRandomValues(new Uint32Array(8));
+  const c = Array.from(n, (x) => A[x % A.length]).join('');
+  return `${c.slice(0, 4)}-${c.slice(4)}`;
+}
+
+/**
+ * Client qui a perdu son mot de passe (au téléphone) : nouveau code provisoire, à dicter ou envoyer par SMS / WhatsApp.
+ * Il choisira son mot de passe à la connexion ; ses autres téléphones sont déconnectés.
+ */
+function CodeProvisoire({ u, onMaj }: { u: U; onMaj: () => void }) {
+  const { espace, espaces } = useEspace();
+  // espace du client (adresse et nom de son app), sinon celui ouvert
+  const sienne = espaces.find((x) => x.slug === u.espaces[0]) ?? espace;
+  const [code, setCode] = useState('');
+  const [err, setErr] = useState<unknown>();
+  const generer = async () => {
+    if (!confirm(`Nouveau code provisoire pour ${u.nom || u.identifiant} ? Son mot de passe actuel ne marchera plus.`)) return;
+    const c = genererCode();
+    try {
+      await api(`/users/${u.id}`, { method: 'PATCH', json: { motDePasse: c, motDePasseProvisoire: true } });
+      setCode(c);
+      onMaj();
+    } catch (x) {
+      setErr(x);
+    }
+  };
+  const domaine = sienne.domaines?.[0];
+  const lien = `${domaine && location.hostname !== 'localhost' ? `https://${domaine}` : location.origin}/?identifiant=${encodeURIComponent(u.identifiant)}`;
+  const message = `Bonjour, voici votre code provisoire pour l'app ${sienne.nomApp} : ${code}\nIdentifiant : ${u.identifiant}\nÀ la connexion, vous choisirez votre mot de passe.\n${lien}`;
+  return (
+    <div className="carte form code-provisoire">
+      <b className="petit">🔑 Mot de passe perdu</b>
+      {!code ? (
+        <button type="button" className="btn petit" onClick={generer}>Créer un code provisoire</button>
+      ) : (
+        <>
+          <span className="code-gros">{code}</span>
+          <small className="muted">Identifiant : <b>{u.identifiant}</b> · à la connexion, le client choisira son mot de passe. Le code ne sera plus affiché.</small>
+          <div className="puces">
+            <button type="button" className="btn petit" onClick={() => navigator.clipboard?.writeText(message)}>📋 Copier le message</button>
+            <a className="btn petit" href={`sms:?&body=${encodeURIComponent(message)}`}>💬 SMS</a>
+            <a className="btn petit" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer">WhatsApp</a>
+          </div>
+        </>
+      )}
+      <Erreur e={err} />
     </div>
   );
 }

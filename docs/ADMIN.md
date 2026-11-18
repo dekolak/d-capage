@@ -65,7 +65,8 @@ Administration → **👥 Utilisateurs** (« + Créer un utilisateur » en haut,
   - Kiavik : *Guide Flexiprint*, *Guide DXonJet*, *Pas-à-pas et Bon à savoir*.
   - Un client peut avoir des accès dans les deux espaces.
 - **Client Lazzeko** (si accès Lazzeko) : décocher pour un utilisateur d'une autre marque. Sert à cibler les messages.
-- Dans la liste : recherche (identifiant, nom, n° Odoo), filtre par espace, badges d'espace, conditions acceptées, accord photos.
+- Dans la liste : recherche (identifiant, nom, n° Odoo), filtre par espace, badges d'espace, conditions acceptées, accord photos, **⏳ code provisoire** (pas encore connecté).
+- **Mot de passe perdu** (le client appelle) : toucher le client → **🔑 Créer un code provisoire** → le dicter ou l'envoyer (copier, SMS, WhatsApp). À la connexion, il choisit son mot de passe. Import de clients en nombre : voir [IMPORT-CLIENTS.md](IMPORT-CLIENTS.md).
 - **Langue** : par défaut celle du téléphone du client. Dès qu'une deuxième langue existe (anglais prévu), elle se choisit sur le compte (ou par le client dans Compte, ou depuis Odoo avec `langue`).
 - **Machines du client** : c'est **vous** qui les ajoutez, dès la création (bloc « Machines du client ») ou ensuite en touchant le compte (🔧 Machines) : modèle, **n° de série**, **date de mise en service** (aujourd'hui par défaut), surnom. ✏️ pour corriger, 🗑 pour retirer (ses fiches de réglage restent). Le client voit ses machines (dans l'espace où le modèle est visible) et peut seulement changer le surnom.
 - Toucher un compte : modifier ses accès, son n° Odoo, voir ses fiches, ses machines. **Désactiver** bloque la connexion sans rien supprimer.

@@ -39,6 +39,10 @@ Le `lien` ouvre l'app avec l'identifiant déjà rempli. Dans n8n : lire le CSV, 
 
 ## 4. Suivi
 Administration → Utilisateurs : badge **⏳ code provisoire** tant que le client n'a pas choisi son mot de passe.
-Code perdu : Utilisateurs → nouveau mot de passe (il redevient provisoire), ou « mot de passe oublié » côté client.
+## 5. Client qui a perdu son mot de passe (au téléphone)
+Administration → Utilisateurs → toucher le client → **🔑 Mot de passe perdu → Créer un code provisoire** : l'app génère un code (ex. `K7PM-42QX`)
+à dicter, ou à envoyer en un clic (**📋 Copier le message**, **💬 SMS**, **WhatsApp** : code, identifiant et lien de l'app).
+À sa connexion, le client choisit son mot de passe ; ses autres téléphones sont déconnectés. Le client peut aussi utiliser « mot de passe oublié » dans l'app.
+À la création d'un compte, **🎲 Générer** propose un code du même format.
 
 À savoir : un mot de passe donné par l'admin ou par l'API (Odoo, n8n) est **provisoire par défaut** (`motDePasseProvisoire: false` pour l'éviter).
