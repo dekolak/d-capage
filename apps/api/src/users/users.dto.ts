@@ -10,6 +10,9 @@ export class CreerUserDto {
 
   @IsString() @MinLength(8) @MaxLength(128) motDePasse!: string;
 
+  /** Le client devra choisir son mot de passe à la connexion (par défaut : oui, sauf pour un admin). */
+  @IsOptional() @IsBoolean() motDePasseProvisoire?: boolean;
+
   @IsOptional() @IsString() @MaxLength(120) nom?: string;
 
   @IsOptional() @IsEnum(Role) role?: Role;
@@ -34,6 +37,8 @@ export class ModifierUserDto {
   @IsOptional() @IsBoolean() clientLazzeko?: boolean;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) numeroOdoo?: string | null;
   @IsOptional() @IsString() @MinLength(8) @MaxLength(128) motDePasse?: string;
+  /** Avec `motDePasse` : le client devra en choisir un à la connexion (par défaut : oui). */
+  @IsOptional() @IsBoolean() motDePasseProvisoire?: boolean;
   /** Remplace la liste des modules. */
   @IsOptional() @IsArray() @ArrayMaxSize(20) @IsIn(TOUS_MODULES, { each: true }) modules?: string[];
   /** Langue de l'app (null = langue du téléphone). */
@@ -51,6 +56,11 @@ export class PreferencesDto {
   @IsOptional() @IsBoolean() accordPhotosMarketing?: boolean;
   /** Langue de l'app (null = langue du téléphone). */
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsIn(LANGUES, { message: `langue : ${LANGUES.join(', ')}` }) langue?: string | null;
+}
+
+/** Premier mot de passe choisi par le client (compte au mot de passe provisoire). */
+export class ChoisirMotDePasseDto {
+  @IsString() @MinLength(8) @MaxLength(128) nouveau!: string;
 }
 
 export class ChangerMotDePasseDto {

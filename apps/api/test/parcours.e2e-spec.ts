@@ -1426,4 +1426,25 @@ describe('Parcours complet', () => {
     await http.delete(url).set(A).expect(200);
     expect(ens((await http.get('/api/guides/dxonjet').set(C)).body)).toBeUndefined();
   });
+
+  it('code provisoire : le client choisit son mot de passe ; import par clé API avec le catalogue', async () => {
+    const cle = (await http.post('/api/admin/cles-api').set(auth(admin)).send({ nom: 'import' })).body.cle;
+    // le script d'import lit le catalogue avec la clé API
+    expect(Array.isArray((await http.get('/api/admin/catalogue').set('X-Api-Key', cle)).body)).toBe(true);
+    const u = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `prov-${id}`, motDePasse: 'K7PM-42QX', modules: ['procedures-kiavik'] })).body;
+    expect(u.motDePasseProvisoire).toBe(true); // par défaut quand l'admin / un import donne le mot de passe
+    const tk = (await http.post('/api/auth/connexion').send({ identifiant: `prov-${id}`, motDePasse: 'K7PM-42QX' })).body.jeton;
+    expect((await http.get('/api/moi').set(auth(tk))).body.motDePasseProvisoire).toBe(true);
+    expect((await http.post('/api/moi/premier-mot-de-passe').set(auth(tk)).send({ nouveau: 'K7PM-42QX' })).status).toBe(400); // pas le même
+    const r = (await http.post('/api/moi/premier-mot-de-passe').set(auth(tk)).send({ nouveau: 'monmotdepasse' })).body;
+    expect(r.jeton).toBeTruthy();
+    expect((await http.get('/api/moi').set(auth(r.jeton))).body.motDePasseProvisoire).toBe(false);
+    expect((await http.post('/api/moi/premier-mot-de-passe').set(auth(r.jeton)).send({ nouveau: 'encoreautre' })).status).toBe(403); // une seule fois
+    expect((await http.post('/api/auth/connexion').send({ identifiant: `prov-${id}`, motDePasse: 'monmotdepasse' })).status).toBe(200);
+    // nouveau mot de passe donné par l'admin : de nouveau provisoire (sauf si précisé)
+    await http.patch(`/api/users/${u.id}`).set(auth(admin)).send({ motDePasse: 'donneparadmin' }).expect(200);
+    expect((await http.get('/api/users').set(auth(admin))).body.find((x: any) => x.id === u.id).motDePasseProvisoire).toBe(true);
+    await http.patch(`/api/users/${u.id}`).set(auth(admin)).send({ motDePasse: 'donneparadmin2', motDePasseProvisoire: false }).expect(200);
+    expect((await http.get('/api/users').set(auth(admin))).body.find((x: any) => x.id === u.id).motDePasseProvisoire).toBe(false);
+  });
 });

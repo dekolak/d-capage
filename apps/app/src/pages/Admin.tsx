@@ -8,7 +8,7 @@ import { abonnementActuel, activerNotifications, desactiverNotifications } from 
 import { date } from '../lib/util';
 import type { FabricantAdmin } from './AdminCatalogue';
 
-interface U { id: string; identifiant: string; nom: string | null; numero: number | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; modules: string[]; espaces: string[]; conditions: Record<string, { version: number }>; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null; langue: string | null }
+interface U { id: string; identifiant: string; nom: string | null; numero: number | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; modules: string[]; espaces: string[]; conditions: Record<string, { version: number }>; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null; langue: string | null; motDePasseProvisoire?: boolean }
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
 
 type Zone = 'commun' | string;
@@ -231,6 +231,7 @@ export function AdminUtilisateurs() {
               {u.role !== 'ADMIN' && lazzeko(u.modules) && <span className={'badge-client' + (u.clientLazzeko ? '' : ' autre')}>{u.clientLazzeko ? 'Client Lazzeko' : 'Autre marque'}</span>}
               {u.numero && <span className="badge-numero" title="N° client dans l'app (en haut à droite de son app)">📱 {u.numero}</span>}
               {u.numeroOdoo && <span className="badge-odoo">Odoo {u.numeroOdoo}</span>}
+              {u.motDePasseProvisoire && u.role !== 'ADMIN' && <span className="badge-odoo" title="Pas encore connecté : il choisira son mot de passe à la première connexion">⏳ code provisoire</span>}
             </button>
             <button type="button" className="btn petit" onClick={() => basculerActif(u)}>{u.actif ? 'Désactiver' : 'Réactiver'}</button>
             {selection?.id === u.id && (

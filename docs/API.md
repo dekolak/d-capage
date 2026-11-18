@@ -32,7 +32,9 @@ JSON en entrée et en sortie. Les erreurs ont la forme `{ statusCode, message, c
 | POST | `/moi/mot-de-passe` `{ancien, nouveau}` | connecté |
 | PATCH | `/moi/preferences` `{accordPhotosMarketing?, langue?}` (`langue` : `fr`, `en` ou `null` = langue du téléphone) | connecté |
 | GET · POST | `/conditions?espace=` · `/moi/conditions` `{espace?, version, accordPhotosMarketing?}` | connecté |
-| POST | `/users` `{identifiant, motDePasse, nom?, role?, clientLazzeko?, numeroOdoo?, modules?, langue?}` | admin **ou clé API** |
+| POST | `/users` `{identifiant, motDePasse, motDePasseProvisoire?, nom?, role?, clientLazzeko?, numeroOdoo?, modules?, langue?}` (mot de passe **provisoire par défaut** : le client en choisit un à la connexion) | admin **ou clé API** |
+| POST | `/moi/premier-mot-de-passe` `{nouveau}` (compte au mot de passe provisoire, une fois ; renvoie un nouveau `jeton`) | connecté |
+| GET | `/admin/catalogue` (modèles et variantes, pour un import) | admin **ou clé API** |
 | GET | `/users[?numeroOdoo=&q=&espace=&module=]` | admin **ou clé API** |
 | GET · PATCH | `/users/:id` (`modules` remplace la liste, `numeroOdoo: null` l'efface, `langue: null` = langue du téléphone) | admin |
 | GET · POST | `/users/:id/machines` `{varianteId, surnom?}` | admin **ou clé API** |

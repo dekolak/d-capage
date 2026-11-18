@@ -44,6 +44,8 @@ model User {
   passwordHash            String
   /// Augmentée à chaque changement de mot de passe : les connexions plus anciennes (autres téléphones) ne valent plus.
   versionJeton            Int           @default(0)
+  /// Mot de passe donné par l'admin (import, création, nouveau mot de passe) : le client doit en choisir un à la connexion.
+  motDePasseProvisoire    Boolean       @default(false)
   nom                     String?
   role                    Role          @default(USER)
   /// Client Lazzeko (oui) ou utilisateur d'une autre marque (non) : sert au ciblage des messages.

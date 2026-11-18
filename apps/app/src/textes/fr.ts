@@ -36,6 +36,12 @@ const fr = {
   "partage.copier": "Copier le lien",
   "partage.copie": "Lien copié ✓",
   // ---------- Connexion ----------
+  "premierMdp.titre": "Choisissez votre mot de passe",
+  "premierMdp.texte": "Bienvenue {nom} ! Votre code provisoire a fonctionné : choisissez maintenant votre mot de passe (8 caractères au moins).",
+  "premierMdp.nouveau": "Nouveau mot de passe",
+  "premierMdp.confirmer": "Le retaper",
+  "premierMdp.different": "Les deux mots de passe ne sont pas identiques.",
+  "premierMdp.valider": "Enregistrer et continuer",
   "connexion.bouton": "Se connecter",
   "connexion.enCours": "Connexion…",
   "connexion.identifiant": "Identifiant",

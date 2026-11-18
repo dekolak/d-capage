@@ -113,7 +113,7 @@ export class MotDePasseService {
       throw new BadRequestException(ERREUR_CODE);
     }
     await this.prisma.$transaction([
-      this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: await AuthService.hasher(nouveau), versionJeton: { increment: 1 } } }),
+      this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: await AuthService.hasher(nouveau), versionJeton: { increment: 1 }, motDePasseProvisoire: false } }),
       this.prisma.demandeMotDePasse.update({ where: { id: d.id }, data: { statut: 'UTILISEE', traiteeLe: new Date(), codeHash: null } }),
     ]);
     this.activite.noter(user.id, { type: 'motdepasse', espace, detail: 'Mot de passe changé avec un code' });
