@@ -10,7 +10,6 @@ import type { FabricantAdmin } from './AdminCatalogue';
 
 interface U { id: string; identifiant: string; nom: string | null; numero: number | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; modules: string[]; espaces: string[]; conditions: Record<string, { version: number }>; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null; langue: string | null }
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
-interface TagAValider { id: string; nom: string; groupe: { nom: string } }
 
 type Zone = 'commun' | string;
 const CLE_SECTIONS = 'admin.sections';
@@ -48,14 +47,13 @@ export default function Admin() {
       return {};
     }
   });
-  const [compte, setCompte] = useState<{ tags: number; aide: number; utilisateurs: number; retard: number }>({ tags: 0, aide: 0, utilisateurs: 0, retard: 0 });
+  const [compte, setCompte] = useState<{ aide: number; utilisateurs: number; retard: number }>({ aide: 0, utilisateurs: 0, retard: 0 });
   useEffect(() => {
     Promise.all([
-      api<TagAValider[]>('/tags/a-valider').catch(() => []),
       api<unknown[]>('/admin/aide?traitee=non').catch(() => []),
       api<U[]>('/users').catch(() => []),
       api<unknown[]>('/admin/entretien/machines?etat=retard').catch(() => []),
-    ]).then(([t, a, u, r]) => setCompte({ tags: t.length, aide: a.length, utilisateurs: u.length, retard: r.length }));
+    ]).then(([a, u, r]) => setCompte({ aide: a.length, utilisateurs: u.length, retard: r.length }));
   }, []);
   const toutes: Entree[] = [
     { zone: 'commun', to: '/admin/utilisateurs', titre: '👥 Utilisateurs', texte: `créer un compte, accès, machines, activité (${compte.utilisateurs})` },
@@ -68,7 +66,7 @@ export default function Admin() {
     { zone: 'commun', to: '/admin/terrain', titre: '🎥 Mode terrain', texte: 'capturer un pas-à-pas sur place : photos (retardateur), dictée, étape par étape' },
     { zone: 'commun', to: '/admin/entretien', titre: "📒 Entretien", texte: "plans d'entretien des machines, suivi des retards, carnets", compte: compte.retard },
     { zone: 'lazzeko', to: '/admin/avis', titre: '⭐ Avis', texte: 'masquer ceux qui ne conviennent pas' },
-    { zone: 'lazzeko', to: '/admin/tags', titre: '🏷️ Tags proposés', texte: 'à valider', compte: compte.tags },
+    { zone: 'lazzeko', to: '/admin/familles', titre: '🏷️ Familles et précisions', texte: 'matériaux, à enlever, applications : listes et précisions des clients' },
     { zone: 'lazzeko', to: '/admin/aide', titre: "🆘 Demandes d'aide", texte: 'bouton sur les fiches, demandes reçues', compte: compte.aide },
     { zone: 'commun', to: '/admin/categories', titre: '🗂 Catégories', texte: "sections de l'accueil Kiavik et des Guides de Ma machine : renommer, ajouter, ordonner, ranger" },
     { zone: 'commun', to: '/admin/procedures', titre: '📋 Pas-à-pas', texte: 'Lazzeko et Kiavik : créer, étiqueter, publier' },
@@ -328,31 +326,6 @@ export function AdminClesApi() {
 }
 
 /** Administration → Tags proposés par les clients (Lazzeko). */
-export function AdminTags() {
-  const [tags, setTags] = useState<TagAValider[]>([]);
-  const [err, setErr] = useState<unknown>();
-  const charger = () => api<TagAValider[]>('/tags/a-valider').then(setTags).catch(setErr);
-  useEffect(() => {
-    charger();
-  }, []);
-  return (
-    <div className="page">
-      <EnteteAdmin titre="Tags proposés" zone="lazzeko" />
-      <Erreur e={err} />
-      {!tags.length && <p className="muted">Aucun tag à valider.</p>}
-      <div className="liste">
-        {tags.map((t) => (
-          <div key={t.id} className="carte ligne-machine">
-            <div>{t.nom} <span className="muted petit">({t.groupe.nom})</span></div>
-            <button type="button" className="btn petit prim" onClick={async () => { await api(`/tags/${t.id}`, { method: 'PATCH', json: { valide: true } }); charger(); }}>
-              Valider
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 /** Administration → Demandes d'aide (Lazzeko). */
 export function AdminAide() {

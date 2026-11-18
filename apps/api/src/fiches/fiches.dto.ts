@@ -23,6 +23,8 @@ export class CreerFicheDto {
   /** Valeurs saisies dans le miroir (validées par machine-kit). */
   @IsObject() valeurs!: Record<string, unknown>;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) tagIds?: string[];
+  /** Précision libre par groupe de tags : { [groupeId]: « 316L » } (vide = aucune). */
+  @IsOptional() @IsObject() precisions?: Record<string, string>;
   @IsOptional() @IsEnum(Visibilite) visibilite?: Visibilite;
   /** Note de l'auteur (1 à 5). */
   @IsOptional() @IsInt() @Min(1) @Max(5) note?: number;
@@ -35,6 +37,7 @@ export class ModifierFicheDto {
   @IsOptional() @IsString() @MaxLength(4000) commentaire?: string;
   @IsOptional() @IsObject() valeurs?: Record<string, unknown>;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) tagIds?: string[];
+  @IsOptional() @IsObject() precisions?: Record<string, string>;
   @IsOptional() @IsEnum(Visibilite) visibilite?: Visibilite;
 }
 

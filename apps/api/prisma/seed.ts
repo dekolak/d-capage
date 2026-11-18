@@ -21,10 +21,12 @@ const prisma = new PrismaClient();
 const RACINE_MACHINES = join(__dirname, '../../../machines');
 const RACINE_KIT = join(__dirname, '../../../kit-guides');
 
-const TAGS: { slug: string; nom: string; tags: [string, string][] }[] = [
+/** Familles (listes courtes) ; `choixUnique` : un seul choix par fiche. « Autre » est ajouté à chaque groupe. */
+const TAGS: { slug: string; nom: string; choixUnique?: boolean; tags: [string, string][] }[] = [
   {
     slug: 'materiau',
     nom: 'Matériau',
+    choixUnique: true,
     tags: [
       ['acier', 'Acier'], ['inox', 'Acier inox'], ['aluminium', 'Aluminium'], ['fonte', 'Fonte'],
       ['cuivre-laiton', 'Cuivre / laiton'], ['bois', 'Bois'], ['pierre', 'Pierre'], ['beton', 'Béton'],
@@ -42,6 +44,7 @@ const TAGS: { slug: string; nom: string; tags: [string, string][] }[] = [
   {
     slug: 'application',
     nom: 'Application',
+    choixUnique: true,
     tags: [
       ['degraissage', 'Dégraissage'], ['derouillage', 'Dérouillage'], ['soudure', 'Préparation / nettoyage soudure'],
       ['moule', 'Nettoyage de moule'], ['decapage-peinture', 'Décapage peinture'], ['restauration', 'Restauration'],
@@ -106,10 +109,10 @@ async function tags() {
   for (const [ordre, g] of TAGS.entries()) {
     const groupe = await prisma.groupeTag.upsert({
       where: { slug: g.slug },
-      update: { nom: g.nom, ordre },
-      create: { slug: g.slug, nom: g.nom, ordre },
+      update: { nom: g.nom, ordre, choixUnique: !!g.choixUnique },
+      create: { slug: g.slug, nom: g.nom, ordre, choixUnique: !!g.choixUnique },
     });
-    for (const [slug, nom] of g.tags)
+    for (const [slug, nom] of [...g.tags, ['autre', 'Autre'] as [string, string]])
       await prisma.tag.upsert({
         where: { groupeId_slug: { groupeId: groupe.id, slug } },
         update: { nom },

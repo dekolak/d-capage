@@ -579,3 +579,17 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .pq-case { display: inline-flex !important; align-items: center; gap: 6px; border: 1px solid var(--bord-fort); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-weight: 600; font-size: 14px; }
 .pq-case input { width: 16px; height: 16px; min-height: 0 !important; }
 .pq-case.on { background: var(--o-doux); border-color: var(--o); color: var(--od); }
+
+/* Choix des familles + précision (éditeur de fiche) */
+.groupe-tags { display: grid; gap: 6px; margin-bottom: 14px; }
+.groupe-tags .gt-titre small { font-weight: 400; }
+.precision input { width: 100%; }
+.precision .mini-choix { margin-top: 4px; }
+.apparentees { margin-top: 22px; }
+/* Admin : familles et précisions */
+.af-groupe { display: grid; gap: 8px; margin-top: 12px; }
+.af-groupe h2 { margin: 0; }
+.af-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.af-liste li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--bord); }
+.af-texte { display: grid; gap: 2px; min-width: 0; }
+.af-actions { display: flex; gap: 6px; flex-wrap: wrap; }

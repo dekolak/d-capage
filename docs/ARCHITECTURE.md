@@ -133,7 +133,7 @@ docs/                       documentation
 | `ApiKey` | création de comptes depuis un autre système ; seul le hash est stocké |
 | `Technologie`, `Fabricant`, `Modele`, `Variante`, `VersionInterface` | catalogue ; la version contient le JSON |
 | `UserMachine` | machines d'un utilisateur (variante + surnom facultatif, pas de n° de série) |
-| `GroupeTag`, `Tag` | tags par groupe (Matériau, À enlever, Application), administrables ; `valide=false` = proposé par un utilisateur |
+| `GroupeTag`, `Tag`, `FichePrecision` | familles par groupe (Matériau, À enlever, Application), gérées par l'admin ; `GroupeTag.choixUnique` (un seul choix) ; `FichePrecision` : précision libre par fiche et par groupe (recherche, suggestions, admin corriger / promouvoir) ; `Tag.valide` : ancien (tags proposés) |
 | `Fiche` | réglage : version d'interface, `valeurs` (JSON), titre, commentaire, `PRIVEE`/`PARTAGEE`, `parentId` (duplication) |
 | `Procedure`, `EtapeProcedure` | procédures Kiavik (voir plus haut) |
 | `FicheTag`, `Photo` (`AVANT`/`APRES`/`INTERFACE`/`AUTRE`), `Evaluation` (note 1–5, une par utilisateur et par fiche) |

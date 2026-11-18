@@ -139,20 +139,20 @@ model Fabricant {
 }
 
 model Modele {
-  id            String      @id @default(cuid())
+  id            String          @id @default(cuid())
   slug          String
   nom           String
   fabricantId   String
-  fabricant     Fabricant   @relation(fields: [fabricantId], references: [id])
+  fabricant     Fabricant       @relation(fields: [fabricantId], references: [id])
   /// Calcul des réglages (Lazzeko) ; vide pour une machine sans fiches de réglage (ex. imprimante Kiavik).
   technologieId String?
-  technologie   Technologie? @relation(fields: [technologieId], references: [id])
+  technologie   Technologie?    @relation(fields: [technologieId], references: [id])
   /// Espaces où le modèle est visible par les clients (« lazzeko », « kiavik »).
-  espaces       String[]    @default(["lazzeko"])
+  espaces       String[]        @default(["lazzeko"])
   /// Plans d'entretien qui s'appliquent à ce modèle (un plan peut servir à plusieurs modèles).
   plans         PlanEntretien[]
   /// Étiquettes (familles, usages : « Laser pulsé », « Soudure », « DXonJet »…) : le client voit les contenus qui en portent une.
-  etiquettes    String[]    @default([])
+  etiquettes    String[]        @default([])
   /// Catégorie de machine (« Décapeuse », « Soudeuse », « Accessoire »…) : les ressources ciblées sur cette catégorie s'appliquent à ses machines.
   categorie     String?
   /// Miniature de la machine (clé de stockage) : envoyée par l'admin, PNG de préférence.
@@ -197,20 +197,20 @@ model VersionInterface {
 
 /// Machines possédées par un utilisateur (pas de numéro de série).
 model UserMachine {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  varianteId String
-  variante   Variante @relation(fields: [varianteId], references: [id])
-  surnom     String?
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  varianteId    String
+  variante      Variante          @relation(fields: [varianteId], references: [id])
+  surnom        String?
   /// Saisis par l'admin : n° de série, date de mise en service (départ des échéances d'entretien).
-  numeroSerie  String?
+  numeroSerie   String?
   miseEnService DateTime?
-  envois       EnvoiPasAPas[]
-  createdAt  DateTime @default(now())
-  fiches     Fiche[]
-  entretiens EntretienFait[]
-  reports    ReportEntretien[]
+  envois        EnvoiPasAPas[]
+  createdAt     DateTime          @default(now())
+  fiches        Fiche[]
+  entretiens    EntretienFait[]
+  reports       ReportEntretien[]
   interventions Intervention[]
 
   @@unique([userId, varianteId, surnom])
@@ -219,12 +219,32 @@ model UserMachine {
 // ---------- Tags ----------
 
 /// Ex. « Matériau », « À enlever », « Application ». Administrable.
+/// Groupe de tags (Matériau, À enlever, Application) : une liste courte de familles gérée par l'admin.
+/// Le client peut ajouter une précision libre par groupe (FichePrecision), ex. Aluminium → « 6082 brossé ».
 model GroupeTag {
-  id    String @id @default(cuid())
-  slug  String @unique
-  nom   String
-  ordre Int    @default(0)
-  tags  Tag[]
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  nom         String
+  ordre       Int              @default(0)
+  /// Un seul tag par fiche dans ce groupe (Matériau, Application) ; sinon plusieurs (À enlever).
+  choixUnique Boolean          @default(false)
+  tags        Tag[]
+  precisions  FichePrecision[]
+}
+
+/// Précision libre d'une fiche dans un groupe (ex. « 316L », « peinture époxy ») : affichée et recherchable,
+/// sans grossir les listes. L'admin peut les corriger, les fusionner, ou en faire une famille (Tag).
+model FichePrecision {
+  id        String    @id @default(cuid())
+  ficheId   String
+  fiche     Fiche     @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  groupeId  String
+  groupe    GroupeTag @relation(fields: [groupeId], references: [id], onDelete: Cascade)
+  texte     String
+  createdAt DateTime  @default(now())
+
+  @@unique([ficheId, groupeId])
+  @@index([groupeId])
 }
 
 model Tag {
@@ -233,7 +253,7 @@ model Tag {
   nom      String
   groupeId String
   groupe   GroupeTag  @relation(fields: [groupeId], references: [id])
-  valide   Boolean    @default(true) // false = proposé par un utilisateur, à valider
+  valide   Boolean    @default(true) // ancien : tags proposés par les clients (remplacés par les précisions)
   fiches   FicheTag[]
 
   @@unique([groupeId, slug])
@@ -272,6 +292,7 @@ model Fiche {
   updatedAt          DateTime         @updatedAt
 
   tags         FicheTag[]
+  precisions   FichePrecision[]
   photos       Photo[]
   evaluations  Evaluation[]
   demandesAide DemandeAide[]
@@ -427,43 +448,43 @@ enum CibleClient {
 
 /// Message de l'admin vers les utilisateurs (pas de réponse possible).
 model Annonce {
-  id                 String           @id @default(cuid())
+  id                 String            @id @default(cuid())
   titre              String
   texte              String
-  niveau             NiveauAnnonce    @default(INFO)
+  niveau             NiveauAnnonce     @default(INFO)
   lienUrl            String?
   lienTexte          String?
-  debut              DateTime         @default(now())
+  debut              DateTime          @default(now())
   fin                DateTime?
-  actif              Boolean          @default(true)
+  actif              Boolean           @default(true)
   /// Message périodique : réapparaît tous les `intervalle` jours / semaines / mois après « J'ai compris ».
-  recurrence         Recurrence       @default(AUCUNE)
-  intervalle         Int              @default(1)
+  recurrence         Recurrence        @default(AUCUNE)
+  intervalle         Int               @default(1)
   /// Espaces visés (vide = tous) : le message s'affiche dans ces espaces, aux comptes qui y ont accès.
   espaces            String[]
   /// Ciblage (listes vides = toutes les machines).
-  cibleClient        CibleClient      @default(TOUS)
+  cibleClient        CibleClient       @default(TOUS)
   fabricantIds       String[]
   modeleIds          String[]
   varianteIds        String[]
   /// Ciblage par n° de client Odoo (vide = pas de restriction).
   numerosOdoo        String[]
   /// Question (facultative) : réponse en un toucher dans la bulle, une par personne et par période.
-  questionType       TypeQuestion     @default(AUCUNE)
+  questionType       TypeQuestion      @default(AUCUNE)
   question           String?
   options            String[]
-  autreOption        Boolean          @default(false)
-  reponseObligatoire Boolean          @default(false)
+  autreOption        Boolean           @default(false)
+  reponseObligatoire Boolean           @default(false)
   /// Question Oui / Non : demander ensuite une date (« À quelle date l'avez-vous fait ? ») après « non », « oui » ou « toujours » ; null = jamais.
   dateSi             String?
   dateQuestion       String?
   /// Rappel d'entretien : pas-à-pas Kiavik à faire (bouton « Faire le pas-à-pas », proposé après « Non » s'il y a une question Oui / Non).
   procedureId        String?
-  procedure          Procedure?       @relation("RappelProcedure", fields: [procedureId], references: [id], onDelete: SetNull)
+  procedure          Procedure?        @relation("RappelProcedure", fields: [procedureId], references: [id], onDelete: SetNull)
   termines           ParcoursTermine[]
   reponses           AnnonceReponse[]
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
   lectures           AnnonceLecture[]
 }
 
@@ -482,69 +503,69 @@ model AnnonceLecture {
 
 /// Réponse à la question d'un message : valeur = « oui » / « non », texte de l'option, « 1 » à « 5 », ou texte libre.
 model AnnonceReponse {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   annonceId  String
-  annonce    Annonce  @relation(fields: [annonceId], references: [id], onDelete: Cascade)
+  annonce    Annonce   @relation(fields: [annonceId], references: [id], onDelete: Cascade)
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   occurrence Int
   valeur     String
   /// Précision quand l'utilisateur choisit « Autre ».
   autre      String?
   /// Date indiquée par l'utilisateur (« À quelle date l'avez-vous fait ? »).
   dateFaite  DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@unique([annonceId, userId, occurrence])
 }
 
 /// Procédure Kiavik (pas à pas), créée et modifiée par l'admin depuis l'app.
 model Procedure {
-  id          String             @id @default(cuid())
+  id              String             @id @default(cuid())
   /// Clé fixe des procédures livrées par le seed (kit-guides/procedures.json) ; null si créée dans l'app.
-  cle         String?            @unique
-  titre       String
-  categorie   String             @default("Impression")
-  resume      String?
+  cle             String?            @unique
+  titre           String
+  categorie       String             @default("Impression")
+  resume          String?
   /// Module requis pour la voir.
-  module      String             @default("procedures-kiavik")
+  module          String             @default("procedures-kiavik")
   /// Espace (technologie) : lazzeko ou kiavik, jamais les deux.
-  espace      String             @default("kiavik")
+  espace          String             @default("kiavik")
   /// Type affiché au client : tuto | procedure | depannage | entretien.
-  type        String             @default("procedure")
-  envois      EnvoiPasAPas[]
+  type            String             @default("procedure")
+  envois          EnvoiPasAPas[]
   /// Étiquettes : vide = toutes les machines de l'espace ; sinon, les clients dont une machine porte une de ces étiquettes.
-  etiquettes  String[]           @default([])
+  etiquettes      String[]           @default([])
   /// « Pour qui ? » : catégories de machines et modèles précis (ids). Tout vide = toutes les machines de l'espace.
-  cibleCategories String[]       @default([])
-  cibleModeles    String[]       @default([])
-  publiee     Boolean            @default(false)
-  ordre       Int                @default(0)
+  cibleCategories String[]           @default([])
+  cibleModeles    String[]           @default([])
+  publiee         Boolean            @default(false)
+  ordre           Int                @default(0)
   /// Description détaillée (à quoi elle sert, quand l'utiliser, symptômes) : pour l'admin, et le catalogue lu par l'IA.
-  description String?
+  description     String?
   /// Consignes données à l'IA pour cette procédure (complètent le prompt général de l'espace).
-  prompt      String?
+  prompt          String?
   /// Résumé de la procédure généré par l'IA (plus tard), avec sa date.
-  resumeIa    String?
-  resumeIaLe  DateTime?
-  etapes      EtapeProcedure[]
+  resumeIa        String?
+  resumeIaLe      DateTime?
+  etapes          EtapeProcedure[]
   /// Procédure proposée à la fin (« Continuer avec … ? ») : enchaîner des procédures (ex. réglage FlexiPRINT → DXonJet → impression).
-  suivanteId  String?
-  suivante    Procedure?         @relation("Suivante", fields: [suivanteId], references: [id], onDelete: SetNull)
+  suivanteId      String?
+  suivante        Procedure?         @relation("Suivante", fields: [suivanteId], references: [id], onDelete: SetNull)
   /// Procédures qui proposent celle-ci à leur fin.
-  precedentes Procedure[]        @relation("Suivante")
+  precedentes     Procedure[]        @relation("Suivante")
   /// Réponses (choix) qui renvoient vers cette procédure.
-  choixVers   ChoixEtape[]       @relation("ProcedureCible")
-  diagnostics DiagnosticEnvoye[]
-  suivis      SuiviParcours[]
+  choixVers       ChoixEtape[]       @relation("ProcedureCible")
+  diagnostics     DiagnosticEnvoye[]
+  suivis          SuiviParcours[]
   /// Messages de rappel d'entretien qui renvoient vers ce pas-à-pas.
-  rappels     Annonce[]          @relation("RappelProcedure")
+  rappels         Annonce[]          @relation("RappelProcedure")
   /// Tâches d'entretien qui se font avec ce pas-à-pas.
   tachesEntretien TacheEntretien[]
-  termines    ParcoursTermine[]
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  termines        ParcoursTermine[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 }
 
 /// Étape d'une procédure : texte, avertissement, photo et lien vers une pastille d'un guide, tous facultatifs sauf le texte.
@@ -600,33 +621,33 @@ model CorrectionGuide {
 /// Fiche « Astuces & solutions » (Kiavik) : un symptôme, pourquoi, que faire, liens vers un bouton et une procédure.
 /// Créée et modifiée par l'admin depuis l'app ; sert aussi de base de connaissances (recherche, futur assistant).
 model Solution {
-  id             String           @id @default(cuid())
+  id              String           @id @default(cuid())
   /// Clé fixe des fiches livrées par le seed (kit-guides/solutions.json) ; null si créée dans l'app.
-  cle            String?          @unique
-  titre          String
-  categorie      String           @default("Impression")
+  cle             String?          @unique
+  titre           String
+  categorie       String           @default("Impression")
   /// Espace (lazzeko ou kiavik) et étiquettes, comme les pas-à-pas.
-  espace         String           @default("kiavik")
-  etiquettes     String[]         @default([])
-  cibleCategories String[]        @default([])
-  cibleModeles    String[]        @default([])
-  cause          String?
-  texte          String
-  avertissement  String?
-  motsCles       String[]
-  guide          String?
-  ecran          String?
-  pastille       String?
-  procedureId    String?
-  photoCle       String?
-  photoMaj       DateTime?
-  module         String           @default("procedures-kiavik")
-  publiee        Boolean          @default(false)
-  ordre          Int              @default(0)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  etapesControle EtapeProcedure[]
-  choix          ChoixEtape[]
+  espace          String           @default("kiavik")
+  etiquettes      String[]         @default([])
+  cibleCategories String[]         @default([])
+  cibleModeles    String[]         @default([])
+  cause           String?
+  texte           String
+  avertissement   String?
+  motsCles        String[]
+  guide           String?
+  ecran           String?
+  pastille        String?
+  procedureId     String?
+  photoCle        String?
+  photoMaj        DateTime?
+  module          String           @default("procedures-kiavik")
+  publiee         Boolean          @default(false)
+  ordre           Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  etapesControle  EtapeProcedure[]
+  choix           ChoixEtape[]
 }
 
 /// Réponse possible à une question (étape d'une procédure) : détour (étapes `detour`), puis suite.
@@ -657,18 +678,18 @@ model ChoixEtape {
 
 /// Résultat d'un diagnostic envoyé par un client (chemin question : réponse), pour l'admin et n8n / l'IA.
 model DiagnosticEnvoye {
-  id          String    @id @default(cuid())
-  procedureId String
-  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String         @id @default(cuid())
+  procedureId   String
+  procedure     Procedure      @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// { chemin: [{ question, reponse, signification? }], fin: { type, texte?, conclusion? } }
-  resultat    Json
+  resultat      Json
   /// Résumé lisible « question : réponse », une ligne par réponse.
-  texte       String
-  message     String?
-  lu          Boolean   @default(false)
-  createdAt   DateTime  @default(now())
+  texte         String
+  message       String?
+  lu            Boolean        @default(false)
+  createdAt     DateTime       @default(now())
   /// Interventions (rapports) faites suite à ce dépannage.
   interventions Intervention[]
 
@@ -729,19 +750,19 @@ model AbonnementPush {
 
 /// Photo d'une étape de procédure (plusieurs par étape, dans l'ordre).
 model PhotoEtape {
-  id        String         @id @default(cuid())
-  etapeId   String
-  etape     EtapeProcedure @relation(fields: [etapeId], references: [id], onDelete: Cascade)
-  ordre     Int
+  id           String         @id @default(cuid())
+  etapeId      String
+  etape        EtapeProcedure @relation(fields: [etapeId], references: [id], onDelete: Cascade)
+  ordre        Int
   /// Image affichée (annotée si un calque a été dessiné).
-  cle       String
+  cle          String
   /// Photo d'origine, gardée quand la photo est annotée (« Revenir à la photo d'origine »).
   cleOriginale String?
   /// Calque d'annotation (formes en coordonnées relatives 0–1), pour le rouvrir et le modifier.
   annotations  Json?
   /// Change à chaque annotation : l'adresse de l'image change (?v=), les téléphones ne gardent pas l'ancienne.
   majLe        DateTime?
-  createdAt DateTime       @default(now())
+  createdAt    DateTime       @default(now())
 
   @@index([etapeId, ordre])
 }
@@ -825,26 +846,26 @@ model PlanEntretien {
 /// Tâche d'un plan : tous les `frequence` `unite` (JOURS / SEMAINES / MOIS), à partir de la dernière fois faite
 /// (ou de la mise en service de la machine). « Bientôt » `bientotJours` avant l'échéance.
 model TacheEntretien {
-  id            String          @id @default(cuid())
+  id            String            @id @default(cuid())
   planId        String
-  plan          PlanEntretien   @relation(fields: [planId], references: [id], onDelete: Cascade)
-  ordre         Int             @default(0)
+  plan          PlanEntretien     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  ordre         Int               @default(0)
   titre         String
   description   String?
-  frequence     Int             @default(3)
-  unite         String          @default("MOIS")
-  bientotJours  Int             @default(15)
+  frequence     Int               @default(3)
+  unite         String            @default("MOIS")
+  bientotJours  Int               @default(15)
   /// Pas-à-pas à suivre (facultatif).
   procedureId   String?
-  procedure     Procedure?      @relation(fields: [procedureId], references: [id], onDelete: SetNull)
+  procedure     Procedure?        @relation(fields: [procedureId], references: [id], onDelete: SetNull)
   /// Photo demandée quand on valide : non | facultative | obligatoire.
-  photo         String          @default("non")
+  photo         String            @default("non")
   photoConsigne String?
   /// Réservée à un technicien (validée par l'admin seulement).
-  technicien    Boolean         @default(false)
+  technicien    Boolean           @default(false)
   faits         EntretienFait[]
   reports       ReportEntretien[]
-  createdAt     DateTime        @default(now())
+  createdAt     DateTime          @default(now())
 }
 
 /// Ligne du carnet d'une machine : tâche faite (par le client ou l'admin), ou note libre du client (tacheId vide).
@@ -927,14 +948,14 @@ model PhotoIntervention {
 /// Pas-à-pas envoyé à un client par son n° client court : bulle à l'ouverture de l'app, liste « Reçus ».
 /// Donne accès à CE pas-à-pas même non publié ou étiqueté pour une autre machine.
 model EnvoiPasAPas {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   procedureId   String
-  procedure     Procedure   @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  procedure     Procedure    @relation(fields: [procedureId], references: [id], onDelete: Cascade)
   /// Machine (facultatif : l'envoi se fait au client, par son n°).
   userMachineId String?
   machine       UserMachine? @relation(fields: [userMachineId], references: [id], onDelete: SetNull)
   userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Nom de l'expéditeur (admin) et petit mot.
   auteur        String
   message       String?
@@ -942,7 +963,7 @@ model EnvoiPasAPas {
   vuLe          DateTime?
   ouvertLe      DateTime?
   termineLe     DateTime?
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime     @default(now())
 
   @@index([userId, createdAt])
 }

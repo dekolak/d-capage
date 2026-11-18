@@ -19,6 +19,7 @@ const INCLUDE = {
     },
   },
   tags: { include: { tag: { include: { groupe: { select: { slug: true, nom: true } } } } } },
+  precisions: { include: { groupe: { select: { slug: true, nom: true } } } },
   photos: { orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }], select: { id: true, type: true, ordre: true } },
   parent: { select: { id: true, titre: true } },
   _count: { select: { copies: true } },
@@ -43,12 +44,12 @@ export class FichesService {
   private async chargeFiche(id: string) {
     const f = await this.prisma.fiche.findUnique({
       where: { id },
-      include: { user: { select: { id: true, identifiant: true, nom: true } }, tags: { include: { tag: true } } },
+      include: { user: { select: { id: true, identifiant: true, nom: true } }, tags: { include: { tag: true } }, precisions: true },
     });
     if (!f) return {};
     return {
       fiche: {
-        id: f.id, titre: f.titre, commentaire: f.commentaire, tags: f.tags.map((t) => t.tag.nom),
+        id: f.id, titre: f.titre, commentaire: f.commentaire, tags: f.tags.map((t) => t.tag.nom), precisions: f.precisions.map((p) => p.texte),
         auteur: f.user, creeLe: f.createdAt, lien: this.lien(`/fiches/${f.id}`),
       },
       moderation: { methode: 'PATCH', url: this.lien(`/api/admin/fiches/${f.id}`), exemple: { masquee: true, raison: '…' } },
@@ -127,6 +128,8 @@ export class FichesService {
           },
           version: { id: f.versionInterface.id, numero: f.versionInterface.numero },
           tags: f.tags.map((t) => ({ id: t.tag.id, slug: t.tag.slug, nom: t.tag.nom, groupe: t.tag.groupe.slug })),
+          // précision libre par groupe (ex. Matériau → « 316L »)
+          precisions: f.precisions.map((p) => ({ groupeId: p.groupeId, groupe: p.groupe.slug, texte: p.texte })),
           photos: f.photos,
           note: { moyenne: f.noteMoyenne, nombre: f.nbNotes, maNote: maNote.get(f.id) ?? null },
           parent: f.parent,
@@ -147,7 +150,17 @@ export class FichesService {
         : f.modeleId
           ? { versionInterface: { variante: { modeleId: f.modeleId } } }
           : {}),
-      ...(f.q ? { OR: [{ titre: { contains: f.q, mode: 'insensitive' } }, { commentaire: { contains: f.q, mode: 'insensitive' } }] } : {}),
+      // recherche : titre, commentaire, précisions (« 316L ») et noms des familles (« Aluminium »)
+      ...(f.q
+        ? {
+            OR: [
+              { titre: { contains: f.q, mode: 'insensitive' } },
+              { commentaire: { contains: f.q, mode: 'insensitive' } },
+              { precisions: { some: { texte: { contains: f.q, mode: 'insensitive' } } } },
+              { tags: { some: { tag: { nom: { contains: f.q, mode: 'insensitive' } } } } },
+            ],
+          }
+        : {}),
       ...(tags.length ? { AND: tags.map((tagId) => ({ tags: { some: { tagId } } })) } : {}),
       ...(f.noteMin ? { noteMoyenne: { gte: f.noteMin } } : {}),
     };
@@ -171,8 +184,32 @@ export class FichesService {
     return this.page({ ...this.where(f), userId: moi.id }, { tri: 'recent', ...f }, moi);
   }
 
-  communaute(moi: Principal, f: FiltresDto) {
-    return this.page({ ...this.where(f), visibilite: Visibilite.PARTAGEE, masquee: false }, { tri: 'note', ...f }, moi);
+  /**
+   * Communauté. Avec une recherche (ex. « 6082 ») : d'abord les fiches qui correspondent, puis (page 1)
+   * « Plus de réglages » de la même famille (ex. Aluminium) pour ne jamais tomber sur une liste vide.
+   */
+  async communaute(moi: Principal, f: FiltresDto) {
+    const base: Prisma.FicheWhereInput = { visibilite: Visibilite.PARTAGEE, masquee: false };
+    const r = await this.page({ ...this.where(f), ...base }, { tri: 'note', ...f }, moi);
+    if (!f.q?.trim() || (f.page ?? 1) > 1) return r;
+    // familles des précisions trouvées (même groupe que la précision)
+    const precisions = await this.prisma.fichePrecision.findMany({
+      where: { texte: { contains: f.q.trim(), mode: 'insensitive' }, fiche: base },
+      select: { groupeId: true, fiche: { select: { tags: { select: { tag: { select: { id: true, nom: true, slug: true, groupeId: true } } } } } } },
+      take: 200,
+    });
+    const familles = new Map<string, { id: string; nom: string }>();
+    for (const p of precisions)
+      for (const t of p.fiche.tags) if (t.tag.groupeId === p.groupeId && t.tag.slug !== 'autre') familles.set(t.tag.id, { id: t.tag.id, nom: t.tag.nom });
+    if (!familles.size) return { ...r, apparentees: null };
+    const sansQ = { ...f, q: undefined };
+    const proches = await this.prisma.fiche.findMany({
+      where: { ...this.where(sansQ), ...base, NOT: { id: { in: r.fiches.map((x) => x.id) } }, tags: { some: { tagId: { in: [...familles.keys()] } } } },
+      include: INCLUDE,
+      orderBy: [{ noteMoyenne: { sort: 'desc', nulls: 'last' } }, { nbNotes: 'desc' }, { createdAt: 'desc' }],
+      take: 10,
+    });
+    return { ...r, apparentees: proches.length ? { familles: [...familles.values()], fiches: await this.vues(proches, moi) } : null };
   }
 
   // ---------- top réglages ----------
@@ -316,12 +353,24 @@ export class FichesService {
 
   // ---------- écriture ----------
 
+  /** Tags existants et validés ; un seul par groupe à choix unique (Matériau, Application). */
   private async verifierTags(tagIds: string[] = []) {
     const ids = [...new Set(tagIds)];
     if (!ids.length) return ids;
-    const n = await this.prisma.tag.count({ where: { id: { in: ids } } });
-    if (n !== ids.length) throw new BadRequestException('Tag inconnu');
+    const tags = await this.prisma.tag.findMany({ where: { id: { in: ids }, valide: true }, include: { groupe: true } });
+    if (tags.length !== ids.length) throw new BadRequestException('Tag inconnu');
+    for (const g of new Set(tags.filter((t) => t.groupe.choixUnique).map((t) => t.groupe)))
+      if (tags.filter((t) => t.groupeId === g.id).length > 1) throw new BadRequestException(`${g.nom} : un seul choix`);
     return ids;
+  }
+
+  /** Précisions libres : { groupeId: texte } → lignes à créer (texte vide = pas de précision). */
+  private async verifierPrecisions(p?: Record<string, string>) {
+    if (!p) return undefined;
+    const l = Object.entries(p).map(([groupeId, texte]) => ({ groupeId, texte: String(texte ?? '').trim().replace(/\s+/g, ' ') })).filter((x) => x.texte);
+    if (l.some((x) => x.texte.length > 80)) throw new BadRequestException('Précision : 80 caractères au plus');
+    if (l.length && (await this.prisma.groupeTag.count({ where: { id: { in: l.map((x) => x.groupeId) } } })) !== l.length) throw new BadRequestException('Groupe inconnu');
+    return l;
   }
 
   private async valider(versionId: string, saisie: Record<string, unknown>) {
@@ -338,6 +387,7 @@ export class FichesService {
     const version = await this.catalogue.derniereVersion(um.varianteId);
     const valeurs = await this.valider(version.id, dto.valeurs);
     const tagIds = await this.verifierTags(dto.tagIds);
+    const precisions = (await this.verifierPrecisions(dto.precisions)) ?? [];
 
     const f = await this.prisma.fiche.create({
       data: {
@@ -350,6 +400,7 @@ export class FichesService {
         visibilite: dto.visibilite ?? Visibilite.PARTAGEE, // mise en commun par défaut
         parentId: dto.parentId ?? null,
         tags: { create: tagIds.map((tagId) => ({ tagId })) },
+        precisions: { create: precisions },
       },
     });
     if (dto.note) await this.evaluer(f.id, moi, { note: dto.note }, { silencieux: true });
@@ -376,8 +427,10 @@ export class FichesService {
       const ids = await this.verifierTags(dto.tagIds);
       data.tags = { deleteMany: {}, create: ids.map((tagId) => ({ tagId })) };
     }
+    const precisions = await this.verifierPrecisions(dto.precisions);
+    if (precisions) data.precisions = { deleteMany: {}, create: precisions };
     await this.prisma.fiche.update({ where: { id }, data });
-    if (dto.titre !== undefined || dto.commentaire !== undefined || dto.tagIds)
+    if (dto.titre !== undefined || dto.commentaire !== undefined || dto.tagIds || precisions)
       void this.chargeFiche(id).then((c) => this.webhooks.emettre('fiche.modifiee', c));
     return this.detail(id, moi);
   }

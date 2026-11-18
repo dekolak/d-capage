@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { completer, technologie, validerValeurs } from '@decapage/machine-kit';
-import { ChoixTags, Chargement, Erreur, Etoiles, Galerie, Indicateurs, libellePhoto } from '../components/Composants';
+import { ChoixTags, Chargement, libellesTags, Erreur, Etoiles, Galerie, Indicateurs, libellePhoto } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
 import { Miroir } from '../components/Miroir';
 import { api, chargerVersion, envoyerPhoto, Fiche, GroupeTag, MaMachine, PhotoRef, Tag, TypePhoto, Version } from '../lib/api';
@@ -15,6 +15,8 @@ interface NouvellePhoto { type: TypePhoto; fichier: Blob; miniature: Blob; aperc
 const ETAPES = ['machine', 'surface', 'avant', 'reglages', 'ecran', 'resultat'] as const;
 
 /** Création (avec brouillon local), duplication (?depuis=id) et modification (/fiches/:id/modifier). */
+const precisionsDe = (f: Fiche) => Object.fromEntries(f.precisions.map((p) => [p.groupeId, p.texte]));
+
 export default function FicheEditeur() {
   const { id: ficheId } = useParams();
   const [qs] = useSearchParams();
@@ -51,7 +53,7 @@ export default function FicheEditeur() {
         ajouterTagsInconnus(gs, f.tags);
         setB({
           userMachineId: f.machine.userMachineId ?? '', valeurs: completer(v.config, f.valeurs),
-          tagIds: f.tags.map((t) => t.id), titre: f.titre, commentaire: f.commentaire ?? '',
+          tagIds: f.tags.map((t) => t.id), precisions: precisionsDe(f), titre: f.titre, commentaire: f.commentaire ?? '',
           note: f.note.maNote, etape: 1,
         });
       } else if (depuis) {
@@ -59,7 +61,7 @@ export default function FicheEditeur() {
         setParent(p);
         ajouterTagsInconnus(gs, p.tags);
         const m = ms.find((x) => x.varianteId === p.machine.varianteId) ?? ms[0];
-        maj({ userMachineId: m?.id ?? '', valeurs: p.valeurs, tagIds: p.tags.map((t) => t.id), titre: p.titre, etape: m ? 1 : 0 });
+        maj({ userMachineId: m?.id ?? '', valeurs: p.valeurs, tagIds: p.tags.map((t) => t.id), precisions: precisionsDe(p), titre: p.titre, etape: m ? 1 : 0 });
       } else {
         const brouillon = lireBrouillon();
         const ph = await lirePhotosBrouillon();
@@ -130,14 +132,9 @@ export default function FicheEditeur() {
     }
   };
 
-  const proposerTag = async (groupeId: string, nom: string) => {
-    const tag = await api<Tag>('/tags', { method: 'POST', json: { groupeId, nom } });
-    setGroupes((gs) => gs.map((g) => (g.id === groupeId && !g.tags.some((x) => x.id === tag.id) ? { ...g, tags: [...g.tags, tag] } : g)));
-    maj({ tagIds: [...new Set([...b.tagIds, tag.id])] });
-  };
-
   const titreSuggere = () =>
-    groupes.flatMap((g) => g.tags).filter((tag) => b.tagIds.includes(tag.id)).map((tag) => tag.nom).slice(0, 3).join(' · ');
+    libellesTags({ tags: groupes.flatMap((g) => g.tags.map((tag) => ({ ...tag, groupe: g.slug }))).filter((tag) => b.tagIds.includes(tag.id)), precisions: groupes.filter((g) => b.precisions?.[g.id]?.trim()).map((g) => ({ groupe: g.slug, texte: b.precisions![g.id].trim() })) })
+      .map((x) => x.nom).slice(0, 3).join(' · ');
 
   const aller = (e: number) => {
     if (e === 5 && !b.titre) maj({ etape: e, titre: titreSuggere() });
@@ -153,6 +150,8 @@ export default function FicheEditeur() {
       setEnvoi(t('lazzeko.editeur.enregistrement'));
       const corps = {
         titre: b.titre, commentaire: b.commentaire, valeurs: validation.valeurs, tagIds: b.tagIds,
+        // précision gardée seulement si une famille du groupe est choisie
+        precisions: Object.fromEntries(groupes.map((g) => [g.id, g.tags.some((tag) => b.tagIds.includes(tag.id)) ? (b.precisions?.[g.id] ?? '').trim() : ''])),
       };
       const f = modif
         ? await api<Fiche>(`/fiches/${ficheId}`, { method: 'PATCH', json: corps })
@@ -276,7 +275,7 @@ export default function FicheEditeur() {
       {e === 1 && (
         <section>
           <h2>{t('lazzeko.editeur.surface')}</h2>
-          <ChoixTags groupes={groupes} choisis={b.tagIds} onChange={(tagIds) => maj({ tagIds })} onProposer={proposerTag} />
+          <ChoixTags groupes={groupes} choisis={b.tagIds} onChange={(tagIds) => maj({ tagIds })} precisions={b.precisions ?? {}} onPrecisions={(precisions) => maj({ precisions })} />
         </section>
       )}
 

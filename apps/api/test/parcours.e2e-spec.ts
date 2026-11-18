@@ -399,11 +399,13 @@ describe('Parcours complet', () => {
     // --- top réglages : la fiche notée apparaît sous ses tags ---
     // tag propre à ce test (la base de dev contient d'autres fiches « Acier »)
     const groupes = (await http.get('/api/tags').set(auth(alice))).body;
-    const tagTest = (await http.post('/api/tags').set(auth(alice)).send({ groupeId: groupes.find((g: any) => g.slug === 'materiau').id, nom: `Test ${id}` })).body;
+    // les familles sont créées par l'admin seulement (le client écrit une précision)
+    expect((await http.post('/api/tags').set(auth(alice)).send({ groupeId: groupes.find((g: any) => g.slug === 'a-enlever').id, nom: `Test ${id}` })).status).toBe(403);
+    const tagTest = (await http.post('/api/tags').set(auth(admin)).send({ groupeId: groupes.find((g: any) => g.slug === 'a-enlever').id, nom: `Test ${id}` })).body;
     await http.patch(`/api/fiches/${fiche}`).set(auth(alice)).send({ tagIds: [tagAcier, tagRouille, tagTest.id] }).expect(200);
     const top = (await http.get(`/api/top?varianteId=${varianteId}`).set(auth(bob))).body;
+    expect(top.find((g: any) => g.slug === 'a-enlever').tags.find((t: any) => t.id === tagTest.id).fiches.map((x: any) => x.id)).toEqual([fiche]);
     const mat = top.find((g: any) => g.slug === 'materiau');
-    expect(mat.tags.find((t: any) => t.id === tagTest.id).fiches.map((x: any) => x.id)).toEqual([fiche]);
     const acier = mat.tags.find((t: any) => t.id === tagAcier);
     expect(acier.fiches.length).toBeLessThanOrEqual(3);
     const notes = acier.fiches.map((x: any) => x.note.moyenne);
@@ -1337,5 +1339,61 @@ describe('Parcours complet', () => {
     // catégorie retirée du plan → plus de plan pour ce modèle
     await http.patch(`/api/admin/entretien/plans/${plan.id}`).set(A).send({ categories: [] }).expect(200);
     expect((await http.get('/api/moi/carnet').set(C)).body[0].taches).toEqual([]);
+  });
+
+  it('familles et précisions : un seul matériau, précision libre recherchable, réglages de la même famille, admin', async () => {
+    const groupes = (await http.get('/api/tags').set(auth(alice))).body;
+    const gMat = groupes.find((g: any) => g.slug === 'materiau');
+    const gEnl = groupes.find((g: any) => g.slug === 'a-enlever');
+    expect(gMat.choixUnique).toBe(true);
+    expect(gEnl.choixUnique).toBe(false);
+    expect(gMat.tags[gMat.tags.length - 1].slug).toBe('autre'); // « Autre » en dernier
+    const alu = gMat.tags.find((t: any) => t.slug === 'aluminium').id;
+    const acier = gMat.tags.find((t: any) => t.slug === 'acier').id;
+    const peinture = gEnl.tags.find((t: any) => t.slug === 'peinture').id;
+    const rouille = gEnl.tags.find((t: any) => t.slug === 'rouille').id;
+    const valeurs = { pwr: 85, freq: 20, pw: 500, scan: 2, oR: 10, iR: 2, speed: 20, lens: '254' };
+    const ref = `A${id}`.toUpperCase();
+
+    // un seul matériau ; plusieurs « à enlever »
+    expect((await http.post('/api/fiches').set(auth(alice)).send({ userMachineId: machineAlice, titre: 'x', valeurs, tagIds: [alu, acier] })).status).toBe(400);
+    const f1 = (await http.post('/api/fiches').set(auth(alice)).send({
+      userMachineId: machineAlice, titre: `Pièce ${id}`, valeurs, tagIds: [alu, peinture, rouille],
+      precisions: { [gMat.id]: `  6082   ${ref} `, [gEnl.id]: '' },
+    })).body;
+    expect(f1.precisions).toEqual([{ groupeId: gMat.id, groupe: 'materiau', texte: `6082 ${ref}` }]);
+    expect((await http.post('/api/fiches').set(auth(alice)).send({ userMachineId: machineAlice, titre: 'x', valeurs, precisions: { [gMat.id]: 'x'.repeat(81) } })).status).toBe(400);
+    // autre fiche alu sans précision : remonte comme « même famille »
+    const f2 = (await http.post('/api/fiches').set(auth(bob)).send({ userMachineId: machineBob, titre: `Alu brut ${id}`, valeurs, tagIds: [alu] })).body;
+
+    // recherche communauté par la précision : la fiche, puis les réglages de la famille Aluminium
+    const c = (await http.get(`/api/communaute?q=${encodeURIComponent(`6082 ${ref}`.toLowerCase())}`).set(auth(bob))).body;
+    expect(c.fiches.map((x: any) => x.id)).toEqual([f1.id]);
+    expect(c.apparentees.familles.map((x: any) => x.nom)).toEqual(['Aluminium']);
+    expect(c.apparentees.fiches.map((x: any) => x.id)).toContain(f2.id);
+    // modification : précision changée, puis retirée
+    await http.patch(`/api/fiches/${f1.id}`).set(auth(alice)).send({ precisions: { [gMat.id]: `6082 brossé ${ref}` } }).expect(200);
+    expect((await http.get(`/api/fiches/${f1.id}`).set(auth(bob))).body.precisions[0].texte).toBe(`6082 brossé ${ref}`);
+
+    // suggestions pendant la saisie (fiches partagées)
+    const sug = (await http.get(`/api/tags/precisions?groupeId=${gMat.id}&q=${ref}&tagId=${alu}`).set(auth(bob))).body;
+    expect(sug).toEqual([{ texte: `6082 brossé ${ref}`, nb: 1 }]);
+
+    // admin : liste regroupée (casse / espaces), corriger, promouvoir en famille
+    const f3 = (await http.post('/api/fiches').set(auth(bob)).send({ userMachineId: machineBob, titre: `Autre alu ${id}`, valeurs, tagIds: [alu], precisions: { [gMat.id]: `6082 BROSSÉ ${ref}` } })).body;
+    expect((await http.get('/api/admin/precisions').set(auth(alice))).status).toBe(403);
+    let adm = (await http.get('/api/admin/precisions').set(auth(admin))).body;
+    let p = adm.find((g: any) => g.id === gMat.id).precisions.find((x: any) => x.texte.endsWith(ref));
+    expect(p).toMatchObject({ nb: 2, familles: [{ nom: 'Aluminium', nb: 2 }] });
+    expect(p.variantes.sort()).toEqual([`6082 BROSSÉ ${ref}`, `6082 brossé ${ref}`].sort());
+    adm = (await http.post('/api/admin/precisions/corriger').set(auth(admin)).send({ groupeId: gMat.id, de: `6082 brosse ${ref}`, vers: `Alu 6082 ${ref}` })).body;
+    p = adm.find((g: any) => g.id === gMat.id).precisions.find((x: any) => x.texte.endsWith(ref));
+    expect(p).toMatchObject({ texte: `Alu 6082 ${ref}`, nb: 2, variantes: [`Alu 6082 ${ref}`] });
+    await http.post('/api/admin/precisions/promouvoir').set(auth(admin)).send({ groupeId: gMat.id, texte: `alu 6082 ${ref}`, nom: `Alu 6082 ${id}` }).expect(201);
+    const apres = (await http.get(`/api/fiches/${f3.id}`).set(auth(bob))).body;
+    expect(apres.tags.filter((t: any) => t.groupe === 'materiau').map((t: any) => t.nom)).toEqual([`Alu 6082 ${id}`]); // remplace Aluminium
+    expect(apres.precisions).toEqual([]);
+    expect((await http.get('/api/tags').set(auth(bob))).body.find((g: any) => g.id === gMat.id).tags.some((t: any) => t.nom === `Alu 6082 ${id}`)).toBe(true);
+    for (const f of [f1, f2, f3]) await http.delete(`/api/fiches/${f.id}`).set(auth(admin)).expect(200);
   });
 });

@@ -112,7 +112,10 @@ export interface MaMachine {
   numeroSerie: string | null; miseEnService: string | null; espaces: string[];
 }
 export interface Tag { id: string; slug: string; nom: string; groupe?: string }
-export interface GroupeTag { id: string; slug: string; nom: string; tags: Tag[] }
+/** Groupe de familles ; `choixUnique` : un seul choix par fiche (Matériau, Application). */
+export interface GroupeTag { id: string; slug: string; nom: string; choixUnique: boolean; tags: Tag[] }
+/** Précision libre d'une fiche dans un groupe (ex. Matériau → « 316L »). */
+export interface Precision { groupeId: string; groupe: string; texte: string }
 export type TypePhoto = 'AVANT' | 'APRES' | 'INTERFACE' | 'AUTRE';
 export interface PhotoRef { id: string; type: TypePhoto; ordre: number }
 export interface Fiche {
@@ -121,7 +124,7 @@ export interface Fiche {
   /** Présent uniquement pour les admins. */
   auteurAdmin?: { id: string; identifiant: string; nom: string | null; accordPhotosMarketing: boolean };
   machine: { userMachineId: string | null; surnom: string | null; varianteId: string; modeleId: string; nom: string; varianteNom: string; imageUrl: string | null };
-  version: { id: string; numero: number }; tags: Tag[]; photos: PhotoRef[];
+  version: { id: string; numero: number }; tags: Tag[]; precisions: Precision[]; photos: PhotoRef[];
   note: { moyenne: number | null; nombre: number; maNote: number | null };
   parent: { id: string; titre: string } | null; nbCopies: number; indicateurs: Indicateur[];
   evaluations?: Avis[];
@@ -131,7 +134,11 @@ export interface Avis {
   id: string; note: number; avis: string | null; date: string; auteur: string; estAuteurFiche: boolean;
   estMoi: boolean; statut: StatutAvis; moderationRaison?: string | null;
 }
-export interface PageFiches { total: number; page: number; parPage: number; fiches: Fiche[] }
+export interface PageFiches {
+  total: number; page: number; parPage: number; fiches: Fiche[];
+  /** Communauté avec une recherche : réglages de la même famille (ex. Aluminium pour « 6082 »). */
+  apparentees?: { familles: { id: string; nom: string }[]; fiches: Fiche[] } | null;
+}
 export interface Version { id: string; numero: number; varianteId: string; nomMachine: string; config: ConfigMachine }
 
 // ---------- cache simple des configs (immuables par version) ----------

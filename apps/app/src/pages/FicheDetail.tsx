@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Chargement, Erreur, Etoiles, Galerie, Indicateurs } from '../components/Composants';
+import { Chargement, Erreur, Etoiles, Galerie, Indicateurs, libellesTags } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
 import { Miroir } from '../components/Miroir';
 import { completer } from '@decapage/machine-kit';
@@ -97,7 +97,7 @@ export default function FicheDetail() {
         </p>
       </div>
       {f.parent && <p className="petit">{tr('lazzeko.fiche.dupliqueeDe', { lien: <Link to={`/fiches/${f.parent.id}`}>{f.parent.titre}</Link> })}</p>}
-      <div className="puces">{f.tags.map((tag) => <span key={tag.id} className="puce">{tag.nom}</span>)}</div>
+      <div className="puces">{libellesTags(f).map((x) => <span key={x.id} className="puce">{x.nom}</span>)}</div>
 
       <Galerie photos={photos} />
 

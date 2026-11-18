@@ -6,7 +6,7 @@ Compte → **Administration** (en français ; les écrans clients peuvent être 
 Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **Lazzeko** (orange), **Kiavik** (bleu). Le même badge est sur le titre de chaque page.
 - Toujours dans le même ordre : **Commun**, puis **Lazzeko**, puis **Kiavik**. Chaque section se replie (▸ / ▾) ; le téléphone s'en souvient. Au départ, seule la section de l'espace ouvert est dépliée ; un compteur rouge sur le titre signale ce qui attend (tags, demandes d'aide). Ouvrir une entrée d'un autre espace **bascule dans cet espace**.
 - **Commun** : 👥 Utilisateurs, 💬 Messages, 📜 Conditions d'utilisation, 🔑 Clés API, 📤 Envoi vers une API, 🔧 Machines, 🎥 Mode terrain, 📒 Entretien, 🗂 Catégories, 📋 Pas-à-pas, 🩺 Dépannages reçus, 💡 Bon à savoir. En haut, toujours : 🔐 Mots de passe oubliés et 🔔 Notifications.
-- **Lazzeko** : 📝 Fiches de réglage, ⭐ Avis, 🏷️ Tags proposés, 🆘 Demandes d'aide (avec le nombre en attente).
+- **Lazzeko** : 📝 Fiches de réglage, ⭐ Avis, 🏷️ Familles et précisions, 🆘 Demandes d'aide (avec le nombre en attente).
 - **🗂 Catégories** (Commun) : les sections de l'accueil Kiavik **et** de l'onglet « 📚 Guides » de Ma machine (Lazzeko et Kiavik). Les catégories sont communes aux deux espaces ; une section n'apparaît chez un client que si elle a du contenu pour lui. Filtre « Espace » et badge Lazzeko / Kiavik sur chaque ligne.
 
 **Noms des contenus Kiavik** : **Pas-à-pas** (anciennement procédures), **Dépannage guidé** (procédure avec des questions, anciennement diagnostic), **Bon à savoir** (anciennement astuces & solutions), **Démos animées** (animations). Côté clients, ces noms sont dans `apps/app/src/textes/fr.ts` (une ligne à changer pour renommer).
@@ -97,7 +97,12 @@ Administration → **💬 Messages**.
 ## Lazzeko : modération et réglages
 - **Toutes les fiches** : auteur, masquer / réafficher avec une raison.
 - **Avis** : masquer ceux qui ne conviennent pas (l'auteur voit la raison ; un avis masqué ne compte plus dans la moyenne).
-- **Tags proposés** par les clients : à valider.
+- **🏷️ Familles et précisions** (Matériau, À enlever, Application) :
+  - **Familles** : listes courtes que vous gérez (+ Nouvelle famille, ✏️ renommer) ; « Autre » en fin de liste. **Matériau** et **Application** : un seul choix par fiche ; **À enlever** : plusieurs.
+  - **Précision** : le client ajoute un texte libre sous la famille (ex. Aluminium → « 6082 brossé », Autre → « Titane »), avec en suggestion les précisions déjà utilisées. Affichée sur la fiche (« Aluminium · 6082 brossé ») et trouvée par la recherche, sans grossir la liste. Les clients ne créent plus de familles.
+  - **Communauté** : une recherche précise (« 6082 ») montre d'abord les fiches qui correspondent, puis « Plus de réglages sur : Aluminium ».
+  - **Précisions des clients**, regroupées malgré la casse, les espaces et les accents, avec leur nombre de fiches : ✏️ **Corriger / fusionner** (écrire une précision existante fusionne les deux), ⬆ **En faire une famille** (les fiches y sont rangées, la précision est retirée), à réserver à ce qui revient très souvent.
+  - À la mise à jour : les anciens tags proposés non validés deviennent des précisions (famille « Autre ») ; une fiche avec plusieurs matériaux garde le premier (ordre alphabétique), les autres passent en précision.
 - **Demandes d'aide** : bouton masqué par défaut, activable ; liste des demandes reçues.
 - **Envoi vers une API** : webhooks pour une modération automatique (voir [API.md](API.md)).
 
