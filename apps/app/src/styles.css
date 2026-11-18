@@ -553,3 +553,11 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .am-etiquettes { display: grid; gap: 4px; margin: 8px 0; }
 .gx .ca-filtres { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
 .gx .ca-filtres select { width: auto; flex: 1; min-width: 170px; min-height: 42px; }
+
+/* Ma machine */
+.mm-choix { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; }
+.mm-machine { display: grid; justify-items: center; gap: 4px; border: 2px solid var(--bord); background: var(--carte); border-radius: var(--r-sm); padding: 8px; min-width: 110px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.mm-machine.on { border-color: var(--o); }
+.mm-tete { display: flex; gap: 12px; align-items: center; }
+.mm-onglets { margin: 12px 0; }
+.mm-rubrique h2 { margin-top: 14px; }

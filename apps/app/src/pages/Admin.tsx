@@ -71,9 +71,9 @@ export default function Admin() {
     { zone: 'lazzeko', to: '/admin/tags', titre: '🏷️ Tags proposés', texte: 'à valider', compte: compte.tags },
     { zone: 'lazzeko', to: '/admin/aide', titre: "🆘 Demandes d'aide", texte: 'bouton sur les fiches, demandes reçues', compte: compte.aide },
     { zone: 'kiavik', to: '/admin/categories', titre: "🏠 Accueil et catégories", texte: 'renommer, ajouter, ordonner, ranger', module: 'procedures-kiavik' },
-    { zone: 'kiavik', to: '/admin/procedures', titre: '📋 Pas-à-pas', texte: 'créer, modifier, publier', module: 'procedures-kiavik' },
-    { zone: 'kiavik', to: '/admin/diagnostics', titre: '🩺 Dépannages reçus', texte: 'résultats envoyés par les clients', module: 'procedures-kiavik' },
-    { zone: 'kiavik', to: '/admin/solutions', titre: '💡 Bon à savoir', texte: 'problèmes déjà résolus, astuces', module: 'procedures-kiavik' },
+    { zone: 'commun', to: '/admin/procedures', titre: '📋 Pas-à-pas', texte: 'Lazzeko et Kiavik : créer, étiqueter, publier' },
+    { zone: 'commun', to: '/admin/diagnostics', titre: '🩺 Dépannages reçus', texte: 'résultats envoyés par les clients' },
+    { zone: 'commun', to: '/admin/solutions', titre: '💡 Bon à savoir', texte: 'Lazzeko et Kiavik : problèmes déjà résolus, astuces' },
   ].filter((e) => !e.module || espaces.some((x) => x.slug === e.zone && x.modules.some((m) => m.slug === e.module)));
   // ordre fixe : Commun, puis les espaces (Lazzeko, Kiavik) ; toutes repliables, ouvertes/fermées gardées sur ce téléphone
   const zones = ['commun', ...espaces.map((e) => e.slug)].filter((z) => entrees.some((e) => e.zone === z));

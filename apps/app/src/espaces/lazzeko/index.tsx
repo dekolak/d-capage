@@ -7,8 +7,17 @@ import Fiches from '../../pages/Fiches';
 import Machines from '../../pages/Machines';
 import Top from '../../pages/Top';
 import { AppEspace, ICONES } from '../types';
+import { AdminDiagnostics } from '../kiavik/AdminDiagnostics';
+import { AdminCategories } from '../kiavik/AdminCategories';
+import { AdminProcedures } from '../kiavik/AdminProcedures';
+import { AdminSolution, AdminSolutions } from '../kiavik/AdminSolutions';
+import { AdminProcedure } from '../kiavik/EditeurProcedure';
+import MesDiagnostics from '../kiavik/MesDiagnostics';
+import ProcedureDetail from '../kiavik/ProcedureDetail';
+import Procedures from '../kiavik/Procedures';
+import Solutions, { SolutionDetail } from '../kiavik/Solutions';
 
-/** Espace Lazzeko : réglages décapage (module reglages-decapage), communauté, aide aux réglages. */
+/** Espace Lazzeko : réglages décapage (module reglages-decapage), communauté, aide aux réglages, pas-à-pas et Bon à savoir (module procedures-lazzeko). */
 export const lazzeko: AppEspace = {
   onglets: [
     { to: '/', label: 'onglets.mesFiches', icone: ICONES.liste, end: true },
@@ -27,6 +36,18 @@ export const lazzeko: AppEspace = {
       <Route path="/top" element={<Top />} />
       <Route path="/machines" element={<Machines />} />
       <Route path="/aide" element={<Aide />} />
+      {/* Pas-à-pas, Bon à savoir, dépannages guidés : même moteur que Kiavik (contenus de l'espace Lazzeko) */}
+      <Route path="/procedures" element={<Procedures />} />
+      <Route path="/procedures/:id" element={<ProcedureDetail />} />
+      <Route path="/solutions" element={<Solutions />} />
+      <Route path="/solutions/:id" element={<SolutionDetail />} />
+      <Route path="/diagnostics" element={<MesDiagnostics />} />
+      <Route path="/admin/procedures" element={<AdminProcedures />} />
+      <Route path="/admin/procedures/:id" element={<AdminProcedure />} />
+      <Route path="/admin/solutions" element={<AdminSolutions />} />
+      <Route path="/admin/solutions/:id" element={<AdminSolution />} />
+      <Route path="/admin/diagnostics" element={<AdminDiagnostics />} />
+      <Route path="/admin/categories" element={<AdminCategories />} />
     </>
   ),
 };

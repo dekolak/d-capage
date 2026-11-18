@@ -20,6 +20,8 @@ Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **L
 - **Nouvelle machine** : donnez-lui ses étiquettes une fois, elle reçoit tout de suite tous les contenus correspondants.
 - **Bien étiqueter** : l'étiquette la plus précise (« Souder de l'inox » → *Soudure*, pas *Laser pulsé*). Sous les étiquettes, « 👁 Visible par » montre les modèles concernés ; en rouge si aucune machine ne porte ces étiquettes.
 - Où : éditeur d'un pas-à-pas et d'un Bon à savoir, **mode terrain** (au démarrage), liste des pas-à-pas (filtres espace / étiquette / état). Les clients Lazzeko ont besoin de l'accès « Pas-à-pas et Bon à savoir » (Lazzeko) sur leur compte.
+- **Côté client : 🛠 Ma machine** (bandeau en haut de l'accueil, Lazzeko et Kiavik, et Compte) : une page par machine du client, avec **🛠 Utilisation** (pas-à-pas rangés par étiquette : Soudure, Décapage…, puis Général), **💡 Aide** (dépannages guidés et Bon à savoir), **📒 Entretien** (son carnet) et, côté Lazzeko, **🎛 Réglages** (fiches de réglage). S'il a plusieurs machines, il choisit en haut.
+- **Pas-à-pas, Bon à savoir, Dépannages reçus** sont dans la section **Commun** de l'administration : on y crée les contenus des deux espaces (filtre espace en haut de la liste).
 
 ## Machines (Lazzeko et Kiavik)
 Administration → **🔧 Machines** (section Commun).

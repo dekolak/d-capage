@@ -33,7 +33,13 @@ export function langueDuTelephone(): string {
   return 'fr';
 }
 
-const remplir = (s: string, v?: Record<string, string | number>) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => (k in v ? String(v[k]) : m)) : s);
+/** Nom de la société de l'espace ouvert : `{societe}` dans les textes communs (Lazzeko ou Kiavik). */
+let societe = '';
+export const definirSociete = (nom: string) => (societe = nom);
+const remplir = (s: string, v?: Record<string, string | number>) => {
+  const w = { societe, ...v };
+  return s.replace(/\{(\w+)\}/g, (m, k) => (k in w ? String(w[k as keyof typeof w]) : m));
+};
 
 /** Texte traduit ; `{nom}` est remplacé par `v.nom`. */
 export function t(cle: Cle, v?: Record<string, string | number>): string {

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Forme } from './Annotateur';
-import { api } from '../../lib/api';
+import { api, espaceActuel } from '../../lib/api';
+import { useEspace } from '../../lib/espace';
 import { useAuth } from '../../lib/auth';
 
 export interface ResumeProcedure {
@@ -49,7 +50,8 @@ export interface Procedure {
 /** La procédure contient des questions (diagnostic). */
 export const estDiagnostic = (p: Procedure) => p.etapes.some((e) => e.choix.length > 0);
 
-export const MODULE_PROCEDURES = 'procedures-kiavik';
+/** Module « Pas-à-pas et Bon à savoir » de l'espace ouvert. */
+export const moduleProcedures = (espace: string) => (espace === 'lazzeko' ? 'procedures-lazzeko' : 'procedures-kiavik');
 
 /** Catégorie de l'accueil (Administration → Accueil et catégories) : nom, icône, ordre, masquée. */
 export interface Categorie { id: string; nom: string; icone: string; ordre: number; masquee: boolean }
@@ -109,13 +111,16 @@ export function ChoixCategorie({ valeur, onChange }: { valeur: string; onChange:
 /** Le compte a-t-il les procédures ? */
 export function useAccesProcedures() {
   const { moi } = useAuth();
-  return moi?.role === 'ADMIN' || !!moi?.modules.includes(MODULE_PROCEDURES);
+  const { espace } = useEspace();
+  return moi?.role === 'ADMIN' || !!moi?.modules.includes(moduleProcedures(espace.slug));
 }
 
 let cache: Promise<ResumeProcedure[]> | null = null;
-/** Liste des procédures (gardée en mémoire ; `vider` après une modification par l'admin). */
+let cacheEspace = '';
+/** Liste des procédures de l'espace ouvert (gardée en mémoire ; `vider` après une modification par l'admin). */
 export function chargerProcedures(): Promise<ResumeProcedure[]> {
-  if (!cache) {
+  if (!cache || cacheEspace !== espaceActuel()) {
+    cacheEspace = espaceActuel();
     cache = api<ResumeProcedure[]>('/procedures');
     cache.catch(() => (cache = null));
   }
@@ -152,8 +157,10 @@ export interface Solution {
 }
 
 let cacheSolutions: Promise<Solution[]> | null = null;
+let cacheSolutionsEspace = '';
 export function chargerSolutions(): Promise<Solution[]> {
-  if (!cacheSolutions) {
+  if (!cacheSolutions || cacheSolutionsEspace !== espaceActuel()) {
+    cacheSolutionsEspace = espaceActuel();
     cacheSolutions = api<Solution[]>('/solutions');
     cacheSolutions.catch(() => (cacheSolutions = null));
   }

@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { nomMachine } from '../catalogue/catalogue.service';
+import { imageMachine, nomMachine } from '../catalogue/catalogue.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, StockageService } from '../stockage/stockage.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
@@ -188,7 +188,8 @@ export class EntretienService {
     const ordre: Record<Etat, number> = { retard: 0, bientot: 1, ok: 2 };
     return {
       id: m.id, nom: nomMachine(m.variante), surnom: m.surnom, numeroSerie: m.numeroSerie, miseEnService: m.miseEnService,
-      modeleId: m.variante.modeleId, espaces: m.variante.modele.espaces,
+      modeleId: m.variante.modeleId, espaces: m.variante.modele.espaces, etiquettes: m.variante.modele.etiquettes,
+      imageUrl: imageMachine(m.variante),
       client: m.user,
       taches: taches.sort((a, b) => ordre[a.etat] - ordre[b.etat] || a.prochaine.getTime() - b.prochaine.getTime()),
       etat: (taches.some((t) => t.etat === 'retard') ? 'retard' : taches.some((t) => t.etat === 'bientot') ? 'bientot' : 'ok') as Etat,

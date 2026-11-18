@@ -39,7 +39,7 @@ export default function Compte() {
       </p>
       <div className="actions">
         {reglages && <Link to="/machines" className="btn">{t('compte.mesMachines')}</Link>}
-        <Link to="/carnet" className="btn">{t('carnet.lien')}</Link>
+        <Link to="/ma-machine" className="btn">{t('maMachine.titre')}</Link>
         {moi?.role === 'ADMIN' && <Link to="/admin" className="btn">{t('compte.administration')}</Link>}
       </div>
 

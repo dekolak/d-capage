@@ -202,9 +202,9 @@ export function TerrainCapture() {
     await sauver();
     setFini(true);
   };
-  /** L'éditeur des pas-à-pas est dans l'espace Kiavik : on y bascule si besoin. */
+  /** L'éditeur des pas-à-pas, dans l'espace du pas-à-pas (Lazzeko ou Kiavik). */
   const editeur = () => {
-    if (espace.slug !== 'kiavik' && espaces.some((x) => x.slug === 'kiavik')) choisir('kiavik');
+    if (p && espace.slug !== p.espace && espaces.some((x) => x.slug === p.espace)) choisir(p.espace);
     nav(`/admin/procedures/${id}`);
   };
 
