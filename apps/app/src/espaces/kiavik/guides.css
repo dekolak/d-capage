@@ -205,3 +205,23 @@
 .cx-categorie { display: grid; gap: 6px; margin-bottom: 10px; padding: 10px; border-radius: var(--r-sm); background: var(--carte); box-shadow: var(--ombre); }
 .cx-categorie label { display: grid; gap: 4px; font-weight: 600; font-size: 14px; }
 .cx-categorie > span { display: flex; gap: 8px; }
+
+/* Affichage des repères : discrètes (petits points transparents), masquées (invisibles, toucher = la plus proche) */
+.gx-shot.p-discretes .gx-p:not(.sel):not(.avant) { min-width: 10px; width: 10px; height: 10px; padding: 0; font-size: 0; opacity: 0.45; border-width: 1px; }
+.gx-shot.p-masquees .gx-p:not(.sel):not(.avant) { opacity: 0; }
+.gx-shot.p-masquees .gx-zone { opacity: 0; }
+/* appui long : tout disparaît le temps de regarder */
+.gx-shot.regarde .gx-p, .gx-shot.regarde .gx-zone { opacity: 0 !important; pointer-events: none; }
+.gx-shot .gx-p, .gx-shot .gx-zone { transition: opacity 0.15s, transform 0.12s; }
+/* recherche / groupe : les boutons concernés en avant, les autres estompés */
+.gx-shot.avec-avant .gx-p:not(.avant):not(.sel):not(.nav) { opacity: 0.25; }
+.gx-p.avant { background: var(--gx-sel); z-index: 4; transform: translate(-50%, -50%) scale(1.2); }
+.gx-shot.edition .gx-p { cursor: copy; }
+.gx-affichage { display: grid; gap: 8px; margin-bottom: 10px; }
+.gx-affichage .seg button { font-size: 13px; }
+.gx-cherche { display: grid; gap: 6px; margin-bottom: 10px; }
+.gx-cherche-res { margin: 0; }
+.gx-puce-groupe { border-style: dashed; }
+.gx-ens-boutons { display: grid; gap: 6px; margin-top: 8px; }
+.gx-ens-edition { position: sticky; bottom: 90px; z-index: 20; margin-top: 10px; }
+.gx-affichage .gx-option { color: var(--t); opacity: 1; display: flex; gap: 8px; align-items: center; }

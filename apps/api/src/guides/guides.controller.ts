@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
@@ -15,6 +15,12 @@ class PastilleDto {
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(1000) conseil?: string | null;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsIn(['astuce', 'avertissement', 'a_completer']) niveau?: 'astuce' | 'avertissement' | 'a_completer' | null;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) mots_cles?: string[];
+}
+class EnsembleDto {
+  @IsString() @MinLength(2) @MaxLength(60) nom!: string;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(1000) texte?: string | null;
+  @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) mots_cles?: string[];
+  @IsArray() @ArrayMaxSize(60) @IsString({ each: true }) @MaxLength(20, { each: true }) pastilles!: string[];
 }
 class CategorieDto {
   @IsString() @MinLength(2) @MaxLength(40) categorie!: string;
@@ -84,6 +90,18 @@ export class AdminGuidesController {
   @Delete('pastilles/:ecran/:pastille')
   retirerPastille(@Param('slug') slug: string, @Param('ecran') ecran: string, @Param('pastille') pastille: string) {
     return this.corrections.retirer(slug, 'pastille', `${ecran}/${pastille}`);
+  }
+
+  /** Groupe de boutons d'un écran (ex. « Flèches de direction ») ; `id` choisi par l'app (lettres, chiffres, tirets). */
+  @Put('ensembles/:ecran/:id')
+  enregistrerEnsemble(@Param('slug') slug: string, @Param('ecran') ecran: string, @Param('id') id: string, @Body() d: EnsembleDto) {
+    if (!/^[a-z0-9-]{1,60}$/.test(id)) throw new BadRequestException('Identifiant de groupe invalide');
+    return this.corrections.enregistrerEnsemble(slug, ecran, id, d);
+  }
+
+  @Delete('ensembles/:ecran/:id')
+  retirerEnsemble(@Param('slug') slug: string, @Param('ecran') ecran: string, @Param('id') id: string) {
+    return this.corrections.retirer(slug, 'ensemble', `${ecran}/${id}`);
   }
 
   @Put('animations/:anim/etapes/:scene/:etape')

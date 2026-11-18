@@ -56,8 +56,8 @@ export function EditeurPastille({ guide, e, p, onFermer }: { guide: Guide; e: Ec
         </select>
       </label>
       <label>
-        Mots-clés pour la recherche (séparés par des virgules)
-        <input type="text" value={f.mots} placeholder="ex. alignement, décalage, mire" onChange={(x) => setF({ ...f, mots: x.target.value })} />
+        🔎 Mots pour la recherche, invisibles pour le client (séparés par des virgules) : les mots que disent les clients
+        <input type="text" value={f.mots} placeholder="ex. délai, attendre, décalage, bouger la tête" onChange={(x) => setF({ ...f, mots: x.target.value })} />
       </label>
       <Erreur e={err} />
       <div className="cx-actions">
