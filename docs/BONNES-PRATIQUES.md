@@ -110,3 +110,7 @@ Les petites corrections (textes, sous-titres, photos d'animation) se font **dans
 - Changer le mot de passe admin du seed après la première connexion.
 - Les photos ne sortent de l'app que pour les comptes qui ont donné l'**accord photos**.
 - Sauvegarder la base et les photos (voir [DEPLOIEMENT.md](DEPLOIEMENT.md)).
+- **Limite d'essais** (`auth/limiteur.ts`, en mémoire) : connexion 30 essais / 5 min par adresse IP et 10 échecs / 15 min par identifiant (429 `TROP_D_ESSAIS`, même avec le bon mot de passe) ; mot de passe oublié 5 demandes / h et saisie du code 20 / 15 min par IP.
+- **Changer de mot de passe déconnecte les autres téléphones** (`User.versionJeton` dans le jeton) : par le client (Compte, il reçoit un nouveau jeton), avec un code, ou par l'admin. Téléphone perdu : changer le mot de passe du client (ou désactiver le compte).
+- En-têtes de sécurité (`main.ts`) ; pas de CORS (l'app et l'API sont à la même adresse ; `CORS_ORIGINS` pour en autoriser d'autres).
+- Nouvelle route : `@Roles(Role.ADMIN)` pour l'administration, vérifier que la donnée appartient bien au client (`userId`) pour le reste ; `npm audit` de temps en temps.

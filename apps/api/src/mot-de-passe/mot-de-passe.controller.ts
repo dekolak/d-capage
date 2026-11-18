@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Req } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 import { AutoriseCleApi, EspaceCourant, Public, Roles } from '../auth/decorators';
+import { ipDe, LIMITE_CODE_IP, LIMITE_DEMANDES_IP } from '../auth/limiteur';
 import { MotDePasseService } from './mot-de-passe.service';
 
 class DemandeDto {
@@ -28,7 +29,8 @@ export class MotDePasseController {
   @Public()
   @Post('auth/mot-de-passe-oublie')
   @HttpCode(200)
-  async demander(@Body() d: DemandeDto, @EspaceCourant() espace: string) {
+  async demander(@Body() d: DemandeDto, @EspaceCourant() espace: string, @Req() req: { ip?: string }) {
+    LIMITE_DEMANDES_IP.essai(ipDe(req));
     await this.mdp.demander(d.identifiant, d.message, espace);
     return { ok: true };
   }
@@ -37,7 +39,8 @@ export class MotDePasseController {
   @Public()
   @Post('auth/reinitialiser')
   @HttpCode(200)
-  reinitialiser(@Body() d: ReinitialiserDto, @EspaceCourant() espace: string) {
+  reinitialiser(@Body() d: ReinitialiserDto, @EspaceCourant() espace: string, @Req() req: { ip?: string }) {
+    LIMITE_CODE_IP.essai(ipDe(req));
     return this.mdp.reinitialiser(d.identifiant, d.code, d.nouveau, espace);
   }
 

@@ -12,7 +12,7 @@ import { CLE_API, MODULE, ModuleDeLaRequete, Principal, PUBLIC, ROLES, SANS_COND
  * Garde globale :
  *  - @Public() → libre ;
  *  - en-tête X-Api-Key → accepté seulement sur les routes @AutoriseCleApi() ;
- *  - sinon jeton JWT (Authorization: Bearer …) d'un utilisateur actif, puis :
+ *  - sinon jeton JWT (Authorization: Bearer …) d'un utilisateur actif, émis depuis son dernier changement de mot de passe, puis :
  *    - @ModuleRequis() → le compte doit avoir ce module (403 MODULE_NON_AUTORISE) ;
  *    - conditions d'utilisation de l'espace acceptées (403 CONDITIONS_A_ACCEPTER), sauf @SansConditions() ;
  *    - @Roles().
@@ -48,17 +48,20 @@ export class AuthGuard implements CanActivate {
 
     const [type, jeton] = String(req.headers.authorization ?? '').split(' ');
     if (type !== 'Bearer' || !jeton) throw new UnauthorizedException();
-    let sub: string;
+    let sub: string, version: number;
     try {
-      sub = (await this.jwt.verifyAsync<{ sub: string }>(jeton)).sub;
+      const p = await this.jwt.verifyAsync<{ sub: string; v?: number }>(jeton);
+      sub = p.sub;
+      version = p.v ?? 0;
     } catch {
       throw new UnauthorizedException();
     }
     const user = await this.prisma.user.findUnique({
       where: { id: sub },
-      select: { id: true, role: true, actif: true, modules: { select: { module: true } }, acceptations: { where: { espace: esp.slug }, select: { version: true } } },
+      select: { id: true, role: true, actif: true, versionJeton: true, modules: { select: { module: true } }, acceptations: { where: { espace: esp.slug }, select: { version: true } } },
     });
-    if (!user?.actif) throw new UnauthorizedException();
+    // compte désactivé, ou mot de passe changé depuis cette connexion (autre téléphone)
+    if (!user?.actif || user.versionJeton !== version) throw new UnauthorizedException();
     req.principal = { type: 'user', id: user.id, role: user.role } satisfies Principal;
 
     if (user.role !== Role.ADMIN) {

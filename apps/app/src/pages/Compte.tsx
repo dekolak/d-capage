@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Erreur } from '../components/Composants';
-import { api } from '../lib/api';
+import { api, jeton } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useEspace } from '../lib/espace';
 import { LANGUES, NOMS_LANGUES, t } from '../lib/i18n';
@@ -22,7 +22,9 @@ export default function Compte() {
     setErr(undefined);
     setOk(false);
     try {
-      await api('/moi/mot-de-passe', { method: 'POST', json: { ancien, nouveau } });
+      // nouveau jeton : ce téléphone reste connecté, les autres sont déconnectés
+      const r = await api<{ jeton?: string }>('/moi/mot-de-passe', { method: 'POST', json: { ancien, nouveau } });
+      if (r.jeton) jeton.set(r.jeton);
       setOk(true);
       setAncien('');
       setNouveau('');
