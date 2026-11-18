@@ -1,3 +1,4 @@
+import { nettoyerEtiquettes } from '../procedures/visibilite';
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { imageMachine, nomMachine } from '../catalogue/catalogue.service';
@@ -80,15 +81,32 @@ const MACHINE = {
   interventions: { orderBy: [{ date: 'desc' }, { createdAt: 'desc' }], include: { photos: { orderBy: { ordre: 'asc' } } } },
 } satisfies Prisma.UserMachineInclude;
 type Machine = Prisma.UserMachineGetPayload<{ include: typeof MACHINE }>;
+const PLAN_TACHES = { taches: { orderBy: { ordre: 'asc' }, include: { procedure: { select: { id: true, titre: true, publiee: true } } } } } satisfies Prisma.PlanEntretienInclude;
+const normCat = (c: string) => c.trim().toLowerCase();
 
 /**
- * Carnet d'entretien : plans (tâches périodiques) attachés aux modèles de machines, carnet de chaque machine de client
+ * Carnet d'entretien : plans (tâches périodiques) attachés aux modèles de machines et/ou à des catégories de machines
+ * (Décapeuse, Soudeuse… : les modèles créés plus tard en profitent), carnet de chaque machine de client
  * (échéances qui glissent selon la date où c'est vraiment fait), notes libres et photos du client, interventions de l'admin,
  * liste des échéances pour n8n (rappels par email, SMS, WhatsApp).
  */
 @Injectable()
 export class EntretienService {
   constructor(private prisma: PrismaService, private stockage: StockageService, private webhooks: WebhooksService) {}
+
+  /** Ajoute aux machines les plans de la catégorie de leur modèle (en plus des plans cochés pour le modèle). */
+  private async avecPlansCategorie<T extends Machine | null>(l: T[]): Promise<T[]> {
+    if (!l.some((m) => m?.variante.modele.categorie)) return l;
+    const plans = await this.prisma.planEntretien.findMany({ where: { categories: { isEmpty: false } }, include: PLAN_TACHES, orderBy: { nom: 'asc' } });
+    for (const m of l) {
+      const c = m?.variante.modele.categorie;
+      if (!m || !c) continue;
+      const modele = m.variante.modele;
+      for (const p of plans)
+        if (p.categories.some((x) => normCat(x) === normCat(c)) && !modele.plans.some((y) => y.id === p.id)) modele.plans.push({ ...p });
+    }
+    return l;
+  }
 
   // ---------- plans (admin) ----------
   listerPlans() {
@@ -106,7 +124,7 @@ export class EntretienService {
     return p;
   }
 
-  async modifierPlan(id: string, d: { nom?: string; description?: string | null; modeleIds?: string[] }) {
+  async modifierPlan(id: string, d: { nom?: string; description?: string | null; modeleIds?: string[]; categories?: string[] }) {
     await this.plan(id);
     if (d.modeleIds && (await this.prisma.modele.count({ where: { id: { in: d.modeleIds } } })) !== d.modeleIds.length) throw new BadRequestException('Modèle introuvable');
     await this.prisma.planEntretien.update({
@@ -115,6 +133,7 @@ export class EntretienService {
         ...(d.nom ? { nom: d.nom.trim() } : {}),
         ...(d.description !== undefined ? { description: d.description?.trim() || null } : {}),
         ...(d.modeleIds ? { modeles: { set: d.modeleIds.map((x) => ({ id: x })) } } : {}),
+        ...(d.categories ? { categories: nettoyerEtiquettes(d.categories) } : {}),
       },
     });
     return this.listerPlans();
@@ -204,14 +223,14 @@ export class EntretienService {
   }
 
   private async machine(id: string) {
-    const m = await this.prisma.userMachine.findUnique({ where: { id }, include: MACHINE });
+    const [m] = await this.avecPlansCategorie([await this.prisma.userMachine.findUnique({ where: { id }, include: MACHINE })]);
     if (!m) throw new NotFoundException('Machine introuvable');
     return m;
   }
 
   /** Carnets du client (machines visibles dans l'espace ouvert). */
   async mesCarnets(userId: string, espace: string) {
-    const l = await this.prisma.userMachine.findMany({ where: { userId, variante: { modele: { espaces: { has: espace } } } }, include: MACHINE, orderBy: { createdAt: 'asc' } });
+    const l = await this.avecPlansCategorie(await this.prisma.userMachine.findMany({ where: { userId, variante: { modele: { espaces: { has: espace } } } }, include: MACHINE, orderBy: { createdAt: 'asc' } }));
     return l.map((m) => this.vue(m, true));
   }
 
@@ -284,13 +303,20 @@ export class EntretienService {
    * état (retard / bientot / ok), modèle, client (nom, identifiant, n° Odoo, n° de série).
    */
   async suivi(f: { etat?: string[]; modeleId?: string; q?: string }) {
-    const l = await this.prisma.userMachine.findMany({
+    // machines dont le modèle a un plan, ou dont la catégorie a un plan
+    const categories = [...new Set((await this.prisma.planEntretien.findMany({ select: { categories: true } })).flatMap((p) => p.categories))];
+    const l = await this.avecPlansCategorie(await this.prisma.userMachine.findMany({
       where: {
         user: { actif: true },
-        variante: { modele: { plans: { some: {} }, ...(f.modeleId ? { id: f.modeleId } : {}) } },
+        variante: {
+          modele: {
+            OR: [{ plans: { some: {} } }, ...(categories.length ? [{ categorie: { in: categories, mode: 'insensitive' as const } }] : [])],
+            ...(f.modeleId ? { id: f.modeleId } : {}),
+          },
+        },
       },
       include: MACHINE,
-    });
+    }));
     const q = f.q?.trim().toLowerCase();
     return l
       .map((m) => this.vue(m))

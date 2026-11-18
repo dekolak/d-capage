@@ -43,7 +43,7 @@ Administration → **🔧 Machines** (section Commun).
 
 ## Carnet d'entretien (Lazzeko et Kiavik)
 Administration → **📒 Entretien** (section Commun).
-- **Plans d'entretien** : « + Créer » un plan (ex. *Entretien DXonJet*), cocher les **modèles concernés** (un plan sert à plusieurs modèles, ex. i3200 et F1080), puis ajouter les **tâches** :
+- **Plans d'entretien** : « + Créer » un plan (ex. *Entretien DXonJet*), choisir **pour quelles machines** : des **catégories** (🎯 Soudeuse, Décapeuse… : tous les modèles de la catégorie, **même ceux créés plus tard**, ont ce plan et ses rappels) et / ou des **modèles précis** (ex. i3200 et F1080), puis ajouter les **tâches** :
   - **fréquence** : tous les N jours / semaines / mois ; « **bientôt** » N jours avant (au plus un quart de la période) ;
   - **pas-à-pas à suivre** (facultatif) : le client l'ouvre depuis son carnet ; quand il le termine, la tâche est notée toute seule ;
   - **photo** quand c'est fait : non, facultative ou **obligatoire** (+ quoi photographier) ; compressée sur le téléphone avant l'envoi ;

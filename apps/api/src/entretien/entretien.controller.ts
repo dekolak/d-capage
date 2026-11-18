@@ -15,6 +15,8 @@ class ModifierPlanDto {
   @IsOptional() @IsString() @MinLength(2) @MaxLength(80) nom?: string;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(1000) description?: string | null;
   @IsOptional() @IsArray() @ArrayMaxSize(200) @IsString({ each: true }) modeleIds?: string[];
+  /** Catégories de machines (Décapeuse, Soudeuse…) : leurs modèles, même futurs, ont ce plan. */
+  @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) categories?: string[];
 }
 class ModifierTacheDto {
   @IsOptional() @IsString() @MinLength(2) @MaxLength(120) titre?: string;

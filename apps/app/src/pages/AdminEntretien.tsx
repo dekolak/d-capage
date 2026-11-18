@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useCategoriesMachines } from '../espaces/kiavik/Etiquettes';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { ImageApi } from '../espaces/kiavik/donneesProcedures';
@@ -16,7 +17,7 @@ interface Tache {
   bientotJours: number; procedureId: string | null; procedure: { id: string; titre: string; publiee: boolean } | null;
   photo: 'non' | 'facultative' | 'obligatoire'; photoConsigne: string | null; technicien: boolean;
 }
-interface Plan { id: string; nom: string; description: string | null; modeles: { id: string; nom: string; fabricant: { nom: string } }[]; taches: Tache[] }
+interface Plan { id: string; nom: string; description: string | null; categories: string[]; modeles: { id: string; nom: string; fabricant: { nom: string } }[]; taches: Tache[] }
 type Suivi = Omit<CarnetMachine, 'historique'>;
 const UNITES = { JOURS: 'jours', SEMAINES: 'semaines', MOIS: 'mois' };
 const ETATS: Record<Etat, string> = { retard: '🔴 En retard', bientot: '🟠 Bientôt', ok: '✅ À jour' };
@@ -273,10 +274,18 @@ function PlanCarte({ p, cat, pasAPas, faire }: {
   const [nouvelle, setNouvelle] = useState('');
   const ids = p.modeles.map((m) => m.id);
   const basculer = (id: string) => faire(`/admin/entretien/plans/${p.id}`, { method: 'PATCH', json: { modeleIds: ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id] } });
+  // catégories de machines (Décapeuse, Soudeuse…), même nom = même catégorie dans les deux espaces
+  const catsMachines = useCategoriesMachines();
+  const nomsCats = [...new Map([...catsMachines.map((c) => c.categorie), ...p.categories].map((c) => [c.trim().toLowerCase(), c])).values()];
+  const nbModeles = (c: string) => new Set(catsMachines.filter((x) => x.categorie.toLowerCase() === c.toLowerCase()).flatMap((x) => x.modeles.map((m) => m.id))).size;
+  const aCat = (c: string) => p.categories.some((x) => x.toLowerCase() === c.toLowerCase());
+  const basculerCat = (c: string) =>
+    faire(`/admin/entretien/plans/${p.id}`, { method: 'PATCH', json: { categories: aCat(c) ? p.categories.filter((x) => x.toLowerCase() !== c.toLowerCase()) : [...p.categories, c] } });
+  const pourQui = [...p.categories.map((c) => `🎯 ${c}`), ...p.modeles.map((m) => `${m.fabricant.nom} ${m.nom}`)];
   return (
     <details className="carte ae-plan" open={!p.taches.length}>
       <summary>
-        <b>{p.nom}</b> <span className="muted petit">· {p.taches.length} tâche{p.taches.length > 1 ? 's' : ''} · {p.modeles.length ? p.modeles.map((m) => `${m.fabricant.nom} ${m.nom}`).join(', ') : 'aucun modèle'}</span>
+        <b>{p.nom}</b> <span className="muted petit">· {p.taches.length} tâche{p.taches.length > 1 ? 's' : ''} · {pourQui.length ? pourQui.join(', ') : 'aucune machine'}</span>
       </summary>
       <div className="actions-avis">
         {nom === null ? (
@@ -290,7 +299,17 @@ function PlanCarte({ p, cat, pasAPas, faire }: {
         <button type="button" className="btn petit danger" onClick={() => confirm(`Supprimer le plan « ${p.nom} » ? (l'historique des carnets est gardé)`) && faire(`/admin/entretien/plans/${p.id}`, { method: 'DELETE' })}>🗑 Supprimer</button>
       </div>
 
-      <b className="petit">Modèles concernés</b>
+      <b className="petit">Catégories de machines <span className="muted">(les nouveaux modèles de la catégorie ont ce plan automatiquement)</span></b>
+      <div className="puces">
+        {nomsCats.map((c) => (
+          <button key={c} type="button" className={'puce' + (aCat(c) ? ' on' : '')} onClick={() => basculerCat(c)}>
+            🎯 {c} <small className="muted">({nbModeles(c)})</small>
+          </button>
+        ))}
+        {!nomsCats.length && <span className="muted petit">Donnez une catégorie aux modèles dans <Link to="/admin/catalogue">Machines</Link>.</span>}
+      </div>
+      <details open={p.modeles.length > 0}>
+        <summary className="petit"><b>Et / ou modèles précis</b>{p.modeles.length ? ` (${p.modeles.length})` : ''}</summary>
       <div className="puces">
         {cat.flatMap((f) => f.modeles.map((m) => (
           <button key={m.id} type="button" className={'puce' + (ids.includes(m.id) ? ' on' : '')} onClick={() => basculer(m.id)}>
@@ -299,6 +318,7 @@ function PlanCarte({ p, cat, pasAPas, faire }: {
         )))}
         {!cat.length && <span className="muted petit">Créez d'abord les modèles dans <Link to="/admin/catalogue">Machines</Link>.</span>}
       </div>
+      </details>
 
       <b className="petit">Tâches</b>
       <div className="liste">

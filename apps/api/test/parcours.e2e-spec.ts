@@ -1300,4 +1300,42 @@ describe('Parcours complet', () => {
     expect(bloque.body.code).toBe('TROP_D_ESSAIS');
     expect((await http.post('/api/auth/connexion').send({ identifiant: process.env.ADMIN_IDENTIFIANT, motDePasse: process.env.ADMIN_PASSWORD })).status).toBe(200);
   });
+
+  it('plan d\'entretien par catégorie de machine : un modèle créé ensuite l\'a automatiquement (carnet, suivi, rappels n8n)', async () => {
+    const A = auth(admin);
+    const categorie = `Soudeuse ${id}`;
+    let plans = (await http.post('/api/admin/entretien/plans').set(A).send({ nom: `Plan cat ${id}` })).body;
+    const plan = plans.find((p: any) => p.nom === `Plan cat ${id}`);
+    plans = (await http.patch(`/api/admin/entretien/plans/${plan.id}`).set(A).send({ categories: [categorie, ` ${categorie.toUpperCase()} `] })).body;
+    expect(plans.find((p: any) => p.id === plan.id).categories).toEqual([categorie]);
+    await http.post(`/api/admin/entretien/plans/${plan.id}/taches`).set(A).send({ titre: 'Buse', frequence: 1, unite: 'SEMAINES' }).expect(201);
+
+    // modèle créé APRÈS le plan, rangé dans la catégorie (casse différente) → il a le plan
+    let cat = (await http.post('/api/admin/catalogue/fabricants').set(A).send({ nom: `PlanCat ${id}` })).body;
+    const fab = cat.find((f: any) => f.nom === `PlanCat ${id}`);
+    cat = (await http.post('/api/admin/catalogue/modeles').set(A).send({ fabricantId: fab.id, nom: 'LZK', espaces: ['lazzeko'] })).body;
+    const mo = cat.find((f: any) => f.id === fab.id).modeles[0];
+    await http.patch(`/api/admin/catalogue/modeles/${mo.id}`).set(A).send({ categorie: categorie.toLowerCase() }).expect(200);
+    const u = (await http.post('/api/users').set(A).send({ identifiant: `pcat-${id}`, motDePasse: 'motdepasse1', modules: ['reglages-decapage'] })).body;
+    const il2sem = new Date(Date.now() - 14 * 86400_000);
+    const m = (await http.post(`/api/users/${u.id}/machines`).set(A).send({ varianteId: mo.variantes[0].id, miseEnService: il2sem.toISOString() })).body;
+    const C = { ...auth((await http.post('/api/auth/connexion').send({ identifiant: `pcat-${id}`, motDePasse: 'motdepasse1' })).body.jeton), 'X-Espace': 'lazzeko' };
+    const { version } = (await http.get('/api/conditions?espace=lazzeko').set(C)).body;
+    await http.post('/api/moi/conditions').set(C).send({ version }).expect(201);
+    const carnet = (await http.get('/api/moi/carnet').set(C)).body;
+    expect(carnet[0].taches.map((t: any) => [t.titre, t.etat])).toEqual([['Buse', 'retard']]);
+    // le client note la tâche du plan de catégorie
+    const tache = carnet[0].taches[0];
+    expect((await http.post(`/api/moi/carnet/${m.id}/faits`).set(C).send({ tacheId: tache.id })).status).toBe(201);
+    expect((await http.get('/api/moi/carnet').set(C)).body[0].taches[0].etat).not.toBe('retard');
+    // suivi admin et échéances n8n : la machine y est
+    expect((await http.get('/api/admin/entretien/machines').set(A)).body.some((x: any) => x.id === m.id)).toBe(true);
+    const fait = (await http.get(`/api/moi/carnet/${m.id}`).set(C)).body.historique[0];
+    await http.delete(`/api/moi/carnet/faits/${fait.id}`).set(C).expect(200);
+    const ech = (await http.get('/api/admin/entretien/echeances').set(A)).body.filter((e: any) => e.machine.id === m.id);
+    expect(ech.map((e: any) => e.tache.titre)).toEqual(['Buse']);
+    // catégorie retirée du plan → plus de plan pour ce modèle
+    await http.patch(`/api/admin/entretien/plans/${plan.id}`).set(A).send({ categories: [] }).expect(200);
+    expect((await http.get('/api/moi/carnet').set(C)).body[0].taches).toEqual([]);
+  });
 });
