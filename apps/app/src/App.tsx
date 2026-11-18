@@ -22,6 +22,8 @@ import Compte from './pages/Compte';
 import Conditions from './pages/Conditions';
 import Connexion from './pages/Connexion';
 import PremierMotDePasse from './pages/PremierMotDePasse';
+import { PageAcademie, PageCours, PageLecon } from './academie/Pages';
+import { AdminAcademie, AdminCours, AdminLecon, AdminSimulateurs } from './academie/Admin';
 import { t } from './lib/i18n';
 import Carnets, { CarnetRoute } from './pages/Carnet';
 import AdminEntretien, { AdminCarnet } from './pages/AdminEntretien';
@@ -76,6 +78,14 @@ export default function App() {
           <Route path="/carnet" element={<Carnets />} />
           <Route path="/recus" element={<PageRecus />} />
           <Route path="/ma-machine" element={<MaMachine />} />
+          {/* Académie (module isolé, Lazzeko et Kiavik) */}
+          <Route path="/academie" element={<PageAcademie />} />
+          <Route path="/academie/lecons/:leconId" element={<PageLecon />} />
+          <Route path="/academie/:coursId" element={<PageCours />} />
+          {admin && <Route path="/admin/academie" element={<AdminAcademie />} />}
+          {admin && <Route path="/admin/academie/simulateurs" element={<AdminSimulateurs />} />}
+          {admin && <Route path="/admin/academie/cours/:id" element={<AdminCours />} />}
+          {admin && <Route path="/admin/academie/lecons/:id" element={<AdminLecon />} />}
           <Route path="/ma-machine/:id" element={<MaMachine />} />
           <Route path="/carnet/:id" element={<CarnetRoute />} />
           <Route path="/conditions" element={<Conditions />} />

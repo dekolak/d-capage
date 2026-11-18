@@ -6,6 +6,8 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api');
+  // leçons de l'Académie avec un bloc HTML : corps JSON jusqu'à 2 Mo
+  app.useBodyParser('json', { limit: '2mb' });
   // derrière le proxy de Coolify : vraie adresse IP du client (limite d'essais)
   app.set('trust proxy', Number(process.env.TRUST_PROXY ?? 1));
   app.disable('x-powered-by');

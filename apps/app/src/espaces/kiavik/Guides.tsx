@@ -1,3 +1,4 @@
+import { LienAcademie } from '../../academie/Pages';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
@@ -55,6 +56,7 @@ export default function Guides() {
       </header>
 
       <LienMaMachine />
+      <LienAcademie />
 
       {guides.length > 0 && (
         <section>

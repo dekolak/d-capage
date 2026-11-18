@@ -1,3 +1,4 @@
+import { LienAcademie } from '../academie/Pages';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CarteFiche } from '../components/CarteFiche';
@@ -50,6 +51,7 @@ export default function Fiches() {
   return (
     <div className="page">
       <LienMaMachine />
+      <LienAcademie />
       <h1>{t('lazzeko.fiches.titre')}</h1>
       {brouillonUtile(lireBrouillon()) && (
         <Link to="/fiches/nouvelle" className="bandeau lien-bandeau">

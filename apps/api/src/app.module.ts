@@ -25,6 +25,7 @@ import { PhotosModule } from './photos/photos.module';
 import { ParametresModule } from './parametres/parametres.module';
 import { StockageModule } from './stockage/stockage.module';
 import { TagsModule } from './tags/tags.module';
+import { AcademieModule } from './academie/academie.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
@@ -48,6 +49,7 @@ const APP_DIST = process.env.APP_DIST ?? join(__dirname, '../../app/dist');
     CatalogueModule,
     MachinesModule,
     TagsModule,
+    AcademieModule,
     AnnoncesModule,
     WebhooksModule,
     FichesModule,

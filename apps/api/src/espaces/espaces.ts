@@ -44,6 +44,7 @@ export const ESPACES: EspaceDef[] = [
     modules: [
       { slug: 'reglages-decapage', nom: 'Réglages décapage' },
       { slug: 'procedures-lazzeko', nom: 'Pas-à-pas et Bon à savoir' },
+      { slug: 'academie-lazzeko', nom: 'Académie (cours en vidéo)' },
     ],
   },
   {
@@ -62,6 +63,7 @@ export const ESPACES: EspaceDef[] = [
       { slug: 'guide-flexiprint', nom: 'Guide Flexiprint' },
       { slug: 'guide-dxonjet', nom: 'Guide DXonJet' },
       { slug: 'procedures-kiavik', nom: 'Pas-à-pas et Bon à savoir' },
+      { slug: 'academie-kiavik', nom: 'Académie (cours en vidéo)' },
     ],
   },
 ];

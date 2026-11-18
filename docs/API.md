@@ -35,6 +35,8 @@ JSON en entrée et en sortie. Les erreurs ont la forme `{ statusCode, message, c
 | POST | `/users` `{identifiant, motDePasse, motDePasseProvisoire?, nom?, role?, clientLazzeko?, numeroOdoo?, modules?, langue?}` (mot de passe **provisoire par défaut** : le client en choisit un à la connexion) | admin **ou clé API** |
 | POST | `/moi/premier-mot-de-passe` `{nouveau}` (compte au mot de passe provisoire, une fois ; renvoie un nouveau `jeton`) | connecté |
 | GET | `/admin/catalogue` (modèles et variantes, pour un import) | admin **ou clé API** |
+| GET · POST | `/academie`, `/academie/cours/:id`, `/academie/lecons/:id`, `POST /academie/lecons/:id/terminee {terminee}`, `/academie/simulateurs/:id`, `/academie/fichiers/:id` (voir [ACADEMIE.md](ACADEMIE.md)) | module Académie de l'espace |
+| GET · POST · PATCH · DELETE | `/admin/academie/cours…`, `/admin/academie/lecons/:id…`, `/admin/academie/simulateurs…`, `POST /admin/academie/fichiers` | admin |
 | GET | `/users[?numeroOdoo=&q=&espace=&module=]` | admin **ou clé API** |
 | GET · PATCH | `/users/:id` (`modules` remplace la liste, `numeroOdoo: null` l'efface, `langue: null` = langue du téléphone) | admin |
 | GET · POST | `/users/:id/machines` `{varianteId, surnom?}` | admin **ou clé API** |

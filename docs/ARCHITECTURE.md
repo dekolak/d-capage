@@ -187,3 +187,4 @@ docs/                       documentation
 8. Traduction : ✅ app prête (textes dans `src/textes/`, langue par compte) ; à venir : anglais, puis les contenus (voir [TRADUCTION.md](TRADUCTION.md)).
 9. Hors ligne : ✅ lecture des pages déjà ouvertes (Kiavik et Lazzeko), préparation Kiavik, file d'envoi (diagnostics, « pas clair ? », suivi) ; à venir : file d'envoi des fiches Lazzeko.
 10. À venir : stockage S3 (implémenter `StockageService`), édition des configs dans l'admin, entreprises (`organisationId`), simulateur du site branché sur le JSON, lecture auto de la photo d'écran.
+- **Académie** (module isolé, Lazzeko et Kiavik) : voir [ACADEMIE.md](ACADEMIE.md) — `apps/api/src/academie/`, `apps/app/src/academie/`, tables `*Academie`, modules `academie-<espace>`.

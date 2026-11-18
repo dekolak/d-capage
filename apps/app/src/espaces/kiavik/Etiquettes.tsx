@@ -31,7 +31,7 @@ function useEtiquettes() {
   }, []);
   return l;
 }
-function useCatalogue() {
+export function useCatalogue() {
   const [l, setL] = useState<FabricantCat[]>([]);
   useEffect(() => {
     if (!cacheCatalogue) cacheCatalogue = api<FabricantCat[]>('/admin/catalogue').catch(() => (cacheCatalogue = null, []) as never);
