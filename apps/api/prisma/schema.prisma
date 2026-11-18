@@ -708,7 +708,14 @@ model PhotoEtape {
   etapeId   String
   etape     EtapeProcedure @relation(fields: [etapeId], references: [id], onDelete: Cascade)
   ordre     Int
+  /// Image affichée (annotée si un calque a été dessiné).
   cle       String
+  /// Photo d'origine, gardée quand la photo est annotée (« Revenir à la photo d'origine »).
+  cleOriginale String?
+  /// Calque d'annotation (formes en coordonnées relatives 0–1), pour le rouvrir et le modifier.
+  annotations  Json?
+  /// Change à chaque annotation : l'adresse de l'image change (?v=), les téléphones ne gardent pas l'ancienne.
+  majLe        DateTime?
   createdAt DateTime       @default(now())
 
   @@index([etapeId, ordre])

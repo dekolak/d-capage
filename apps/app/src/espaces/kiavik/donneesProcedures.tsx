@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { Forme } from './Annotateur';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 
@@ -17,7 +18,7 @@ export interface ResumeProcedure {
 export interface Etape {
   id: string; ordre: number; texte: string; avertissement: string | null;
   /** Première photo (adresse), et toutes les photos dans l'ordre. */
-  photo: string | null; photos: { id: string; url: string }[];
+  photo: string | null; photos: { id: string; url: string; annotee?: boolean; annotations?: Forme[] | null }[];
   guide: string | null; ecran: string | null; pastille: string | null;
   /** Étape de contrôle : réponse Oui / Non ; si Non, astuce `solutionId` proposée. */
   controle: boolean; solutionId: string | null;
