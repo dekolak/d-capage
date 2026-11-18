@@ -25,9 +25,9 @@ export class CategoriesService {
     const [procedures, astuces, cats] = await Promise.all([
       this.prisma.procedure.findMany({
         orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }],
-        select: { id: true, titre: true, categorie: true, publiee: true, etapes: { select: { guide: true, _count: { select: { choix: true } } } } },
+        select: { id: true, titre: true, categorie: true, publiee: true, espace: true, etapes: { select: { guide: true, _count: { select: { choix: true } } } } },
       }),
-      this.prisma.solution.findMany({ orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }], select: { id: true, titre: true, categorie: true, publiee: true, guide: true } }),
+      this.prisma.solution.findMany({ orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }], select: { id: true, titre: true, categorie: true, publiee: true, espace: true, guide: true } }),
       this.corrections.categoriesAnimations(),
     ]);
     const ordres = await this.corrections.ordresAnimations();
@@ -35,7 +35,7 @@ export class CategoriesService {
       .lister('tous')
       .flatMap((g, gi) =>
         g.animations.map((a, i) => ({
-          type: 'animation' as const, id: a.id, guide: g.slug, titre: a.titre, categorie: cats[g.slug]?.[a.id] ?? a.categorie ?? '', publiee: true, logiciels: [g.slug],
+          type: 'animation' as const, id: a.id, guide: g.slug, titre: a.titre, categorie: cats[g.slug]?.[a.id] ?? a.categorie ?? '', publiee: true, espace: 'kiavik', logiciels: [g.slug],
           ordre: ordres[g.slug]?.[a.id] ?? 1000 + gi * 100 + i,
         })),
       )
@@ -43,11 +43,11 @@ export class CategoriesService {
       .map(({ ordre: _o, ...a }) => a);
     return [
       ...procedures.map((p) => ({
-        type: 'procedure' as const, id: p.id, titre: p.titre, categorie: p.categorie, publiee: p.publiee,
+        type: 'procedure' as const, id: p.id, titre: p.titre, categorie: p.categorie, publiee: p.publiee, espace: p.espace,
         diagnostic: p.etapes.some((e) => e._count.choix > 0),
         logiciels: [...new Set(p.etapes.map((e) => e.guide).filter((x): x is string => !!x))],
       })),
-      ...astuces.map((s) => ({ type: 'astuce' as const, id: s.id, titre: s.titre, categorie: s.categorie, publiee: s.publiee, logiciels: s.guide ? [s.guide] : [] })),
+      ...astuces.map((s) => ({ type: 'astuce' as const, id: s.id, titre: s.titre, categorie: s.categorie, publiee: s.publiee, espace: s.espace, logiciels: s.guide ? [s.guide] : [] })),
       ...animations,
     ];
   }

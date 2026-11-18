@@ -69,7 +69,7 @@ export default function MaMachine() {
     l.map((x, i) => ({ x, i })).sort((a, b) => precision(a.x, m.modeleId) - precision(b.x, m.modeleId) || a.i - b.i).map((y) => y.x);
   const pas = parPrecision((procedures ?? []).filter((p) => pourModele(p, m)));
   const astuces = parPrecision((solutions ?? []).filter((s) => pourModele(s, m)));
-  // sections comme l'accueil : ordre, icônes et sections masquées dans Administration → Accueil et catégories
+  // sections comme l'accueil : ordre, icônes et sections masquées dans Administration → Catégories
   const masquees = (cats ?? []).filter((c) => c.masquee).map((c) => c.nom);
   const categories = trierCategories([...pas.map((p) => p.categorie), ...astuces.map((x) => x.categorie)], cats).filter((c) => !masquees.includes(c));
   const retard = m.taches.filter((x) => x.etat === 'retard').length;

@@ -58,7 +58,7 @@ export const estDiagnostic = (p: Procedure) => p.etapes.some((e) => e.choix.leng
 /** Module « Pas-à-pas et Bon à savoir » de l'espace ouvert. */
 export const moduleProcedures = (espace: string) => (espace === 'lazzeko' ? 'procedures-lazzeko' : 'procedures-kiavik');
 
-/** Catégorie de l'accueil (Administration → Accueil et catégories) : nom, icône, ordre, masquée. */
+/** Catégorie de l'accueil (Administration → Catégories) : nom, icône, ordre, masquée. */
 export interface Categorie { id: string; nom: string; icone: string; ordre: number; masquee: boolean }
 
 let cacheCategories: Promise<Categorie[]> | null = null;
@@ -95,7 +95,7 @@ export function trierCategories(l: string[], cats: Categorie[] = []): string[] {
   return [...new Set(l)].sort((a, b) => rang(a) - rang(b) || a.localeCompare(b, 'fr'));
 }
 
-/** Choix de la catégorie dans les écrans d'administration (les catégories se créent dans « Accueil et catégories »). */
+/** Choix de la catégorie dans les écrans d'administration (les catégories se créent dans « Catégories »). */
 export function ChoixCategorie({ valeur, onChange }: { valeur: string; onChange: (v: string) => void }) {
   const cats = useCategories();
   const noms = [...(cats ?? []).map((c) => c.nom), ...(valeur && !cats?.some((c) => c.nom === valeur) ? [valeur] : [])];

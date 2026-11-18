@@ -57,7 +57,7 @@ export default function Admin() {
       api<unknown[]>('/admin/entretien/machines?etat=retard').catch(() => []),
     ]).then(([t, a, u, r]) => setCompte({ tags: t.length, aide: a.length, utilisateurs: u.length, retard: r.length }));
   }, []);
-  const entrees: Entree[] = [
+  const toutes: Entree[] = [
     { zone: 'commun', to: '/admin/utilisateurs', titre: '👥 Utilisateurs', texte: `créer un compte, accès, machines, activité (${compte.utilisateurs})` },
     { zone: 'commun', to: '/admin/messages', titre: '💬 Messages', texte: "bulles d'info à l'ouverture de l'app" },
     { zone: 'commun', to: '/admin/conditions', titre: "📜 Conditions d'utilisation", texte: 'texte et version, par espace' },
@@ -70,11 +70,12 @@ export default function Admin() {
     { zone: 'lazzeko', to: '/admin/avis', titre: '⭐ Avis', texte: 'masquer ceux qui ne conviennent pas' },
     { zone: 'lazzeko', to: '/admin/tags', titre: '🏷️ Tags proposés', texte: 'à valider', compte: compte.tags },
     { zone: 'lazzeko', to: '/admin/aide', titre: "🆘 Demandes d'aide", texte: 'bouton sur les fiches, demandes reçues', compte: compte.aide },
-    { zone: 'kiavik', to: '/admin/categories', titre: "🏠 Accueil et catégories", texte: 'renommer, ajouter, ordonner, ranger', module: 'procedures-kiavik' },
+    { zone: 'commun', to: '/admin/categories', titre: '🗂 Catégories', texte: "sections de l'accueil Kiavik et des Guides de Ma machine : renommer, ajouter, ordonner, ranger" },
     { zone: 'commun', to: '/admin/procedures', titre: '📋 Pas-à-pas', texte: 'Lazzeko et Kiavik : créer, étiqueter, publier' },
     { zone: 'commun', to: '/admin/diagnostics', titre: '🩺 Dépannages reçus', texte: 'résultats envoyés par les clients' },
     { zone: 'commun', to: '/admin/solutions', titre: '💡 Bon à savoir', texte: 'Lazzeko et Kiavik : problèmes déjà résolus, astuces' },
-  ].filter((e) => !e.module || espaces.some((x) => x.slug === e.zone && x.modules.some((m) => m.slug === e.module)));
+  ];
+  const entrees = toutes.filter((e) => !e.module || espaces.some((x) => x.slug === e.zone && x.modules.some((m) => m.slug === e.module)));
   // ordre fixe : Commun, puis les espaces (Lazzeko, Kiavik) ; toutes repliables, ouvertes/fermées gardées sur ce téléphone
   const zones = ['commun', ...espaces.map((e) => e.slug)].filter((z) => entrees.some((e) => e.zone === z));
   const nomZone = (z: Zone) => espaces.find((e) => e.slug === z)?.nom ?? 'Commun';
