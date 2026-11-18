@@ -1,5 +1,7 @@
 # Créer une procédure ou un diagnostic à deux
 
+**Sur le terrain** : capturez d'abord avec **🎥 Mode terrain** (photos avec retardateur, dictée, une étape à la fois), puis « 📋 Copier les notes » et collez-les ici.
+
 **Le principe** : vous résumez les étapes (même en vrac), Claude prépare la procédure complète en **brouillon**, vous la **finissez dans l'app** (photos, vérification, publication).
 
 ```

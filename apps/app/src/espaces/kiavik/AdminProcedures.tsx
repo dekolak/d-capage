@@ -35,6 +35,10 @@ export function AdminProcedures() {
   return (
     <div className="page gx">
       <Link to="/admin" className="btn-lien">← Administration</Link>
+      <Link to="/admin/terrain" className="bandeau lien-bandeau">
+        <span><b>🎥 Mode terrain</b> : capturer un nouveau pas-à-pas sur place (photos, dictée), le finir ici ensuite</span>
+        <span>›</span>
+      </Link>
       <h1>Pas-à-pas <BadgeZone zone="kiavik" /></h1>
       <Erreur e={erreur} />
       <Link to="/admin/diagnostics" className="bandeau lien-bandeau">

@@ -65,6 +65,7 @@ export default function Admin() {
     { zone: 'commun', to: '/admin/webhooks', titre: '📤 Envoi vers une API', texte: 'événements envoyés à n8n ou une IA' },
     { zone: 'lazzeko', to: '/admin/fiches', titre: '📝 Fiches de réglage', texte: 'voir qui les a faites, masquer' },
     { zone: 'commun', to: '/admin/catalogue', titre: '🔧 Machines', texte: 'modèles Lazzeko et Kiavik, où ils sont visibles, images' },
+    { zone: 'commun', to: '/admin/terrain', titre: '🎥 Mode terrain', texte: 'capturer un pas-à-pas sur place : photos (retardateur), dictée, étape par étape' },
     { zone: 'commun', to: '/admin/entretien', titre: "📒 Entretien", texte: "plans d'entretien des machines, suivi des retards, carnets", compte: compte.retard },
     { zone: 'lazzeko', to: '/admin/avis', titre: '⭐ Avis', texte: 'masquer ceux qui ne conviennent pas' },
     { zone: 'lazzeko', to: '/admin/tags', titre: '🏷️ Tags proposés', texte: 'à valider', compte: compte.tags },
