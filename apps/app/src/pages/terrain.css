@@ -34,3 +34,5 @@
 .tr-vignette small { font-size: 11px; }
 .tr-fin { display: grid; gap: 10px; }
 .tr-notes { white-space: pre-wrap; background: var(--fond); padding: 12px; border-radius: var(--r-sm); font-size: 13px; }
+.tr-galerie { width: 100%; }
+.tr-galerie.desactive { opacity: .5; pointer-events: none; }

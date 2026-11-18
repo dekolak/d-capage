@@ -247,6 +247,7 @@ export function TerrainCapture() {
       {e && (
         <>
           <Camera pleine={e.photos.length >= MAX_PHOTOS} onPhoto={photo} />
+          <Galerie reste={MAX_PHOTOS - e.photos.length} onPhoto={photo} />
 
           {e.photos.length > 0 && (
             <div className="tr-photos">
@@ -390,6 +391,22 @@ function Camera({ onPhoto, pleine }: { onPhoto: (b: Blob) => void; pleine: boole
         </button>
       </div>
     </div>
+  );
+}
+
+/** Ajouter des photos déjà prises (galerie du téléphone, ou fichiers sur PC), plusieurs à la fois. */
+function Galerie({ reste, onPhoto }: { reste: number; onPhoto: (b: Blob) => Promise<void> }) {
+  return (
+    <label className={`btn tr-galerie ${reste <= 0 ? 'desactive' : ''}`}>
+      🖼 Ajouter depuis la galerie
+      <input type="file" accept="image/*" multiple hidden disabled={reste <= 0}
+        onChange={async (x) => {
+          const l = [...(x.target.files ?? [])].slice(0, reste);
+          x.target.value = '';
+          // une par une, dans l'ordre choisi
+          for (const f of l) await onPhoto(f);
+        }} />
+    </label>
   );
 }
 
