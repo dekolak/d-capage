@@ -33,7 +33,9 @@ export async function activerNotifications() {
   const reg = await enregistrement();
   const { cle } = await api<{ cle: string }>('/push/cle');
   const abo = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64EnOctets(cle) }));
-  await api('/push/abonnement', { method: 'POST', json: abo.toJSON() });
+  // seulement l'adresse et les clés (le navigateur ajoute d'autres champs, ex. expirationTime)
+  const { endpoint, keys } = abo.toJSON();
+  await api('/push/abonnement', { method: 'POST', json: { endpoint, keys } });
   return api<{ telephones: number }>('/push/test', { method: 'POST' });
 }
 

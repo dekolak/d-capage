@@ -1396,4 +1396,12 @@ describe('Parcours complet', () => {
     expect((await http.get('/api/tags').set(auth(bob))).body.find((g: any) => g.id === gMat.id).tags.some((t: any) => t.nom === `Alu 6082 ${id}`)).toBe(true);
     for (const f of [f1, f2, f3]) await http.delete(`/api/fiches/${f.id}`).set(auth(admin)).expect(200);
   });
+
+  it('notifications : l\'abonnement du navigateur (avec expirationTime) est accepté', async () => {
+    const abo = { endpoint: `https://push.example.com/${id}`, expirationTime: null, keys: { p256dh: 'BKey', auth: 'auth' } };
+    await http.post('/api/push/abonnement').set(auth(admin)).send(abo).expect(201);
+    await http.post('/api/push/abonnement').set(auth(admin)).send({ ...abo, expirationTime: 1700000000000 }).expect(201);
+    expect((await http.post('/api/push/abonnement').set(auth(admin)).send({ ...abo, expirationTime: 'x' })).status).toBe(400);
+    await http.delete('/api/push/abonnement').set(auth(admin)).send({ endpoint: abo.endpoint }).expect(200);
+  });
 });

@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsString, IsUrl, MaxLength, ValidateNested } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsUrl, MaxLength, ValidateIf, ValidateNested } from 'class-validator';
 import { Moi, Principal, Roles, SansConditions } from '../auth/decorators';
 import { PushService } from './push.service';
 
@@ -12,6 +12,8 @@ class ClesDto {
 class AbonnementDto {
   @IsUrl({ protocols: ['https'], require_tld: false }) @MaxLength(1000) endpoint!: string;
   @ValidateNested() @Type(() => ClesDto) keys!: ClesDto;
+  /** Envoyé par le navigateur (souvent null) : accepté, non utilisé. */
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsNumber() expirationTime?: number | null;
 }
 class DesabonnementDto {
   @IsString() @MaxLength(1000) endpoint!: string;
