@@ -8,7 +8,7 @@ import { abonnementActuel, activerNotifications, desactiverNotifications } from 
 import { date } from '../lib/util';
 import type { FabricantAdmin } from './AdminCatalogue';
 
-interface U { id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; modules: string[]; espaces: string[]; conditions: Record<string, { version: number }>; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null; langue: string | null }
+interface U { id: string; identifiant: string; nom: string | null; numero: number | null; role: 'ADMIN' | 'USER'; actif: boolean; createdAt: string; _count?: { fiches: number }; modules: string[]; espaces: string[]; conditions: Record<string, { version: number }>; accordPhotosMarketing: boolean; clientLazzeko: boolean; numeroOdoo: string | null; langue: string | null }
 interface Cle { id: string; nom: string; prefixe: string; derniereUtilisation: string | null; revoqueeLe: string | null; createdAt: string }
 interface TagAValider { id: string; nom: string; groupe: { nom: string } }
 
@@ -201,7 +201,7 @@ export function AdminUtilisateurs() {
       </details>
 
       <h2>Utilisateurs ({users.length})</h2>
-      <input className="recherche" placeholder="Rechercher (identifiant, nom, n° Odoo)…" value={recherche} onChange={(e) => setRecherche(e.target.value)} />
+      <input className="recherche" placeholder="Rechercher (identifiant, nom, n° Odoo, n° client)…" value={recherche} onChange={(e) => setRecherche(e.target.value)} />
       <select value={filtreEspace} onChange={(e) => setFiltreEspace(e.target.value)} style={{ marginBottom: 10 }}>
         <option value="">Tous les espaces</option>
         {espaces.map((e) => <option key={e.slug} value={e.slug}>{e.nom}</option>)}
@@ -210,7 +210,7 @@ export function AdminUtilisateurs() {
         {users.filter((u) => {
           const q = recherche.trim().toLowerCase();
           if (filtreEspace && !u.espaces.includes(filtreEspace)) return false;
-          return !q || [u.identifiant, u.nom ?? '', u.numeroOdoo ?? ''].some((x) => x.toLowerCase().includes(q));
+          return !q || [u.identifiant, u.nom ?? '', u.numeroOdoo ?? '', u.numero ? String(u.numero) : ''].some((x) => x.toLowerCase().includes(q.replace(/^[a-z]-?(?=\d)/, '')));
         }).map((u) => (
           <div key={u.id} className={'carte ligne-machine' + (u.actif ? '' : ' inactif')}>
             <button type="button" className="lien-bloc" onClick={() => setSelection(selection?.id === u.id ? null : u)}>
@@ -230,6 +230,7 @@ export function AdminUtilisateurs() {
               })}
               {u.role !== 'ADMIN' && !u.espaces.length && <span className="badge-masquee">Aucun accès</span>}
               {u.role !== 'ADMIN' && lazzeko(u.modules) && <span className={'badge-client' + (u.clientLazzeko ? '' : ' autre')}>{u.clientLazzeko ? 'Client Lazzeko' : 'Autre marque'}</span>}
+              {u.numero && <span className="badge-numero" title="N° client dans l'app (en haut à droite de son app)">📱 {u.numero}</span>}
               {u.numeroOdoo && <span className="badge-odoo">Odoo {u.numeroOdoo}</span>}
             </button>
             <button type="button" className="btn petit" onClick={() => basculerActif(u)}>{u.actif ? 'Désactiver' : 'Réactiver'}</button>
@@ -455,7 +456,7 @@ function MachinesClient({ userId, catalogue }: { userId: string; catalogue: Fabr
                 <b>{m.surnom ? `${m.surnom} · ` : ''}{m.nom}</b>
                 <br />
                 <span className="muted">
-                  {m.numero ? `📱 n° app ${m.numero} · ` : ''}{m.numeroSerie ? `n° de série ${m.numeroSerie}` : 'sans n° de série'} · mise en service {m.miseEnService ? date(m.miseEnService) : '?'}
+                  {m.numeroSerie ? `n° de série ${m.numeroSerie}` : 'sans n° de série'} · mise en service {m.miseEnService ? date(m.miseEnService) : '?'}
                   {' · '}{m.espaces.map((e) => e).join(', ') || 'non visible'}
                 </span>
               </span>

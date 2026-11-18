@@ -134,8 +134,8 @@ Chaque route renvoie le guide corrigé ; `DELETE` = revenir à l'original.
 | PATCH | `/admin/avis/:id` `{statut, raison?}` | admin **ou clé API** |
 | GET · POST · PATCH · DELETE | `/admin/webhooks` (+ `/:id/test`, `/:id/livraisons`) | admin |
 
-### Envoi d'un pas-à-pas par n° de machine
-- `GET admin/machines/numero/:numero` (clé API) : machine et client (« 621 », « L621 »). `POST admin/procedures/:id/envoyer {numero, message?}`, `GET admin/procedures/:id/envois`.
+### Envoi d'un pas-à-pas par n° client
+- `GET admin/clients/numero/:numero` (clé API) : client et ses machines (« 621 », « L621 »). `GET /moi` renvoie `numero`. `POST admin/procedures/:id/envoyer {numero, message?}`, `GET admin/procedures/:id/envois`.
 - Client : `GET procedures/envois/miens`, `POST procedures/envois/:id/vu`, `POST procedures/envois/:id/termine` ; un pas-à-pas reçu se lit même non publié.
 
 ### Carnet d'entretien
@@ -177,7 +177,7 @@ Retrouver un compte par n° client : `GET /api/users?numeroOdoo=C00123`.
 
 ## Webhooks (envoi vers un service externe, ex. modération IA)
 - Configurés dans Administration → *Envoi vers une API* : une ou plusieurs adresses, événements choisis.
-- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`, `aide.demandee`, `etape.signalee` (`{signalement: {id, message, creeLe}, etape: {id, texte, procedure}, user}`), `diagnostic.envoye` (`{diagnostic: {id, procedure, chemin: [{question, reponse, signification?}], fin: {type, texte, conclusion?}, texte, message}, user, ia: {promptGeneral, prompt, description, paquet}}`), `pasapas.envoye` (`{envoi: {id, message, auteur, creeLe}, pasAPas: {id, titre, espace, lien}, machine: {id, numero, nom, numeroSerie}, client}`), `intervention.creee` (`{intervention: {numero, mode, date, motif, travaux, pieces, resultat, visibleClient, entretiens}, machine, client}`), `entretien.reporte` (`{entretien: {tache, jusquau}, machine, client}`), `entretien.fait` (`{entretien: {id, tache, date, source, note, photo, prochaine}, machine: {id, nom, numeroSerie}, client}`), `motdepasse.demande` (`{demande: {id, email?, message, espace, creeLe}, user: {id, identifiant, nom, numeroOdoo} | null}` — `user` vide pour une demande faite avec un email ; jamais le code ; recette n8n dans [ADMIN.md](ADMIN.md)).
+- Événements : `fiche.creee`, `fiche.modifiee`, `avis.publie`, `avis.modifie`, `aide.demandee`, `etape.signalee` (`{signalement: {id, message, creeLe}, etape: {id, texte, procedure}, user}`), `diagnostic.envoye` (`{diagnostic: {id, procedure, chemin: [{question, reponse, signification?}], fin: {type, texte, conclusion?}, texte, message}, user, ia: {promptGeneral, prompt, description, paquet}}`), `pasapas.envoye` (`{envoi: {id, message, auteur, creeLe}, pasAPas: {id, titre, espace, lien}, client: {id, numero, nom, identifiant, numeroOdoo}}`), `intervention.creee` (`{intervention: {numero, mode, date, motif, travaux, pieces, resultat, visibleClient, entretiens}, machine, client}`), `entretien.reporte` (`{entretien: {tache, jusquau}, machine, client}`), `entretien.fait` (`{entretien: {id, tache, date, source, note, photo, prochaine}, machine: {id, nom, numeroSerie}, client}`), `motdepasse.demande` (`{demande: {id, email?, message, espace, creeLe}, user: {id, identifiant, nom, numeroOdoo} | null}` — `user` vide pour une demande faite avec un email ; jamais le code ; recette n8n dans [ADMIN.md](ADMIN.md)).
 - `POST` JSON signé : `X-Decapage-Signature: sha256=<HMAC-SHA256(secret, corps)>`, plus `X-Decapage-Evenement` et `X-Decapage-Livraison`.
 - File d'envoi en base : rien n'est perdu au redémarrage, 6 tentatives espacées (jusqu'à 2 h), journal dans l'admin.
 - Le corps contient le texte à modérer et l'adresse pour agir (`moderation.url`). Le service répond avec une clé API :

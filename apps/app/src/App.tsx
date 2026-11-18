@@ -26,7 +26,7 @@ import AdminEntretien, { AdminCarnet } from './pages/AdminEntretien';
 import { RappelsEntretien } from './components/RappelsEntretien';
 import { TerrainAccueil, TerrainCapture } from './pages/Terrain';
 import MaMachine from './pages/MaMachine';
-import { EnvoisRecus } from './components/EnvoisRecus';
+import { EnvoisRecus, NumeroClient, PageRecus } from './components/EnvoisRecus';
 
 /**
  * Une seule app, plusieurs espaces (Lazzeko, Kiavik) : chaque espace a ses écrans et sa barre du bas (src/espaces/),
@@ -63,12 +63,14 @@ export default function App() {
         <BandeauHorsLigne />
         {!admin && <Annonces />}
         {!admin && <RappelsEntretien />}
+        {!admin && moi.numero ? <NumeroClient numero={moi.numero} /> : null}
         {!admin && <EnvoisRecus />}
         {!admin && <JournalPages />}
         <Routes>
           {app.routes()}
           <Route path="/compte" element={<Compte />} />
           <Route path="/carnet" element={<Carnets />} />
+          <Route path="/recus" element={<PageRecus />} />
           <Route path="/ma-machine" element={<MaMachine />} />
           <Route path="/ma-machine/:id" element={<MaMachine />} />
           <Route path="/carnet/:id" element={<CarnetRoute />} />

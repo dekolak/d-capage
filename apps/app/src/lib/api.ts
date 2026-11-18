@@ -81,6 +81,8 @@ function messageErreur(statut: number, e: { message?: string | string[]; code?: 
 
 // ---------- types renvoyés par l'API ----------
 export interface Moi {
+  /** N° client court (621…), affiché en haut à droite de l'app du client. */
+  numero?: number | null;
   id: string; identifiant: string; nom: string | null; role: 'ADMIN' | 'USER';
   /** Conditions de l'espace ouvert acceptées (version en vigueur). */
   conditionsAJour: boolean;
@@ -108,8 +110,6 @@ export interface MaMachine {
   version: { id: string; numero: number } | null;
   /** Saisis par l'admin. */
   numeroSerie: string | null; miseEnService: string | null; espaces: string[];
-  /** N° court dans l'app (621…). */
-  numero: number | null;
 }
 export interface Tag { id: string; slug: string; nom: string; groupe?: string }
 export interface GroupeTag { id: string; slug: string; nom: string; tags: Tag[] }

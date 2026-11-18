@@ -28,7 +28,6 @@ export class MachinesService {
       espaces: m.variante.modele.espaces,
       numeroSerie: m.numeroSerie,
       miseEnService: m.miseEnService,
-      numero: m.numero,
       version,
     };
   }
@@ -43,19 +42,11 @@ export class MachinesService {
       ? await this.prisma.userMachine.findFirst({ where: { varianteId, numeroSerie: serie } })
       : await this.prisma.userMachine.findFirst({ where: { userId, varianteId, surnom: s, numeroSerie: null } });
     if (existe) throw new ConflictException(serie ? 'Ce n° de série est déjà attribué' : 'Cette machine est déjà dans la liste (ajoutez un n° de série ou un surnom)');
-    // n° court : le suivant (621, 622…) ; on réessaie si deux ajouts tombent sur le même
-    for (let essai = 0; ; essai++) {
-      const numero = Math.max(620, (await this.prisma.userMachine.aggregate({ _max: { numero: true } }))._max.numero ?? 620) + 1;
-      try {
-        const m = await this.prisma.userMachine.create({
-          data: { userId, varianteId, surnom: s, numeroSerie: serie, miseEnService: d.miseEnService ?? new Date(), numero },
-          include: INCLUDE,
-        });
-        return this.vue(m);
-      } catch (e) {
-        if (essai >= 3 || (e as { code?: string }).code !== 'P2002') throw e;
-      }
-    }
+    const m = await this.prisma.userMachine.create({
+      data: { userId, varianteId, surnom: s, numeroSerie: serie, miseEnService: d.miseEnService ?? new Date() },
+      include: INCLUDE,
+    });
+    return this.vue(m);
   }
 
   /** Le client peut changer le surnom ; l'admin aussi le n° de série et la mise en service. */
@@ -78,14 +69,6 @@ export class MachinesService {
     // Les fiches restent (userMachineId passe à null), elles gardent leur version d'interface.
     await this.prisma.userMachine.delete({ where: { id } });
     return { ok: true };
-  }
-
-  /** Machine par son n° court (« 621 », « L621 », « K-621 ») : pour envoyer un pas-à-pas (admin). */
-  async parNumero(texte: string) {
-    const n = Number(texte.replace(/\D/g, ''));
-    const m = n ? await this.prisma.userMachine.findUnique({ where: { numero: n }, include: { ...INCLUDE, user: { select: { id: true, nom: true, identifiant: true, numeroOdoo: true } } } }) : null;
-    if (!m) throw new NotFoundException(`Aucune machine avec le n° ${texte}`);
-    return { ...(await this.vue(m)), client: m.user };
   }
 
   async trouver(userId: string, id: string) {

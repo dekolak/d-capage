@@ -13,10 +13,10 @@ Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **L
 
 **Publiée / Non publiée** (anciennement « brouillon ») : 🔒 *non publiée* = visible seulement par l'admin, pour préparer et tester ; ✅ *publiée* = visible par les clients qui ont l'accès « Pas-à-pas et Bon à savoir ». Case « Publiée » en haut de l'écran de modification.
 
-## 📤 Envoyer un pas-à-pas à un client (n° de machine)
-- Chaque machine de client a un **n° court** (621, 622…), créé automatiquement quand vous l'ajoutez. Le client le voit en grand dans **🛠 Ma machine** (« Votre n° ») et dans Mes machines ; vous le voyez dans Utilisateurs (📱 n° app). Une lettre devant est acceptée (« L621 », « K-621 »).
-- **Envoyer** : dans l'éditeur d'un pas-à-pas (PC) ou en bas d'un pas-à-pas ouvert sur le téléphone (« 📤 Envoyer à un client »), tapez le n° : le client et sa machine s'affichent pour vérifier, ajoutez un petit mot si besoin, **📤 Envoyer**.
-- Le client voit à l'ouverture de l'app : « 📤 *Votre prénom* vous a envoyé : … » avec **▶ Ouvrir** ; il le retrouve dans **Ma machine → 📤 Reçus**. L'envoi lui ouvre **ce** pas-à-pas même **non publié** ou étiqueté pour une autre machine (notice sur mesure).
+## 📤 Envoyer un pas-à-pas à un client (n° client)
+- Chaque client a un **n° client court** (621, 622…), créé avec son compte. Il est affiché **en haut à droite de son app** (« N° client 621 »), sur toutes les pages ; vous le voyez dans Utilisateurs (📱 621) et pouvez le rechercher. Une lettre devant est acceptée (« L621 »).
+- **Envoyer** : dans l'éditeur d'un pas-à-pas (PC) ou en bas d'un pas-à-pas ouvert sur le téléphone (« 📤 Envoyer à un client »), tapez son n° : le client et ses machines s'affichent pour vérifier, ajoutez un petit mot si besoin, **📤 Envoyer**.
+- Le client voit à l'ouverture de l'app : « 📤 *Votre prénom* vous a envoyé : … » avec **▶ Ouvrir** ; il le retrouve dans **📤 Reçus** (Ma machine et Compte). L'envoi lui ouvre **ce** pas-à-pas même **non publié** ou étiqueté pour une autre machine (notice sur mesure).
 - Suivi : « Déjà envoyé à … » sous le bouton (⏳ pas encore ouvert, 👁 ouvert, ✅ terminé). Webhook **`pasapas.envoye`** (client, n° Odoo, lien) pour l'envoyer aussi par SMS / WhatsApp / email via n8n. Pas de notification sur le téléphone : prévenez le client (« tu vas recevoir la notice dans l'app »).
 - Le nom affiché est le prénom de votre compte admin (Compte → nom).
 

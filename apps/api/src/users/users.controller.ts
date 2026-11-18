@@ -40,6 +40,14 @@ export class UsersController {
     return this.users.modifier(id, dto);
   }
 
+  /** Client par son n° court (621…) : vérification avant d'envoyer un pas-à-pas. */
+  @Get('admin/clients/numero/:numero')
+  @Roles(Role.ADMIN)
+  @AutoriseCleApi()
+  parNumero(@Param('numero') numero: string) {
+    return this.users.parNumero(numero);
+  }
+
   @Get('moi')
   @SansConditions()
   async moi(@Moi() moi: Principal, @EspaceCourant() courant?: string) {

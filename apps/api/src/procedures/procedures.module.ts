@@ -5,7 +5,7 @@ import { SuiviService } from './suivi.service';
 import { AdminDiagnosticsController, AdminProceduresController, IaController, ProceduresController } from './procedures.controller';
 import { ProceduresService } from './procedures.service';
 import { EnvoisService } from './envois.service';
-import { MachinesModule } from '../machines/machines.module';
+import { UsersModule } from '../users/users.module';
 
-@Module({ imports: [GuidesModule, MachinesModule], controllers: [ProceduresController, AdminProceduresController, AdminDiagnosticsController, IaController], providers: [ProceduresService, DiagnosticsService, SuiviService, EnvoisService] })
+@Module({ imports: [GuidesModule, UsersModule], controllers: [ProceduresController, AdminProceduresController, AdminDiagnosticsController, IaController], providers: [ProceduresService, DiagnosticsService, SuiviService, EnvoisService] })
 export class ProceduresModule {}
