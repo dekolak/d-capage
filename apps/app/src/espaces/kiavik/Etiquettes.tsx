@@ -11,7 +11,7 @@ import { useEspace } from '../../lib/espace';
 
 export type EspaceContenu = 'lazzeko' | 'kiavik';
 interface InfoEtiquette { etiquette: string; espace: string; modeles: string[]; contenus: number }
-interface ModeleCat { id: string; nom: string; espaces: string[]; etiquettes: string[] }
+interface ModeleCat { id: string; nom: string; espaces: string[]; etiquettes: string[]; categorie: string | null }
 interface FabricantCat { id: string; nom: string; modeles: ModeleCat[] }
 
 const norm = (e: string) => e.trim().toLowerCase();
@@ -126,6 +126,88 @@ export function BlocEtiquettes({ espace, etiquettes, onChange }: {
       <b className="petit">Machines concernées (étiquettes)</b>
       <ChoixEtiquettes espace={espace} valeur={etiquettes} onChange={(l) => onChange({ espace, etiquettes: l })} />
       <VisiblePar espace={espace} etiquettes={etiquettes} />
+    </div>
+  );
+}
+
+// ---------- « Pour qui ? » : catégories de machines et machines précises (remplace la saisie d'étiquettes) ----------
+interface CategorieMachine { espace: string; categorie: string; modeles: { id: string; nom: string }[] }
+let cacheCategoriesMachines: Promise<CategorieMachine[]> | null = null;
+export const viderCategoriesMachines = () => (cacheCategoriesMachines = null);
+export function useCategoriesMachines() {
+  const [l, setL] = useState<CategorieMachine[]>([]);
+  useEffect(() => {
+    if (!cacheCategoriesMachines) cacheCategoriesMachines = api<CategorieMachine[]>('/admin/catalogue/categories').catch(() => (cacheCategoriesMachines = null, []) as never);
+    cacheCategoriesMachines.then(setL);
+  }, []);
+  return l;
+}
+
+export interface Cible { espace: EspaceContenu; cibleCategories: string[]; cibleModeles: string[]; etiquettes: string[] }
+
+/**
+ * Espace + « Pour qui ? » : toutes les machines de l'espace, ou des catégories (Décapeuse, Soudeuse…) et/ou des machines précises.
+ * Une nouvelle machine d'une catégorie cochée reçoit automatiquement la ressource.
+ */
+export function BlocPourQui({ valeur, onChange }: { valeur: Cible; onChange: (v: Cible) => void }) {
+  const cats = useCategoriesMachines().filter((c) => c.espace === valeur.espace);
+  const catalogue = useCatalogue();
+  const modeles = catalogue.flatMap((f) => f.modeles.filter((m) => m.espaces.includes(valeur.espace)).map((m) => ({ ...m, nom: `${f.nom} ${m.nom}` })));
+  const toutes = !valeur.cibleCategories.length && !valeur.cibleModeles.length && !valeur.etiquettes.length;
+  const [ouvert, setOuvert] = useState(!toutes);
+  const basculer = <K extends 'cibleCategories' | 'cibleModeles'>(k: K, x: string) =>
+    onChange({ ...valeur, [k]: valeur[k].includes(x) ? valeur[k].filter((y) => y !== x) : [...valeur[k], x] });
+  // aperçu : les modèles qui verront la ressource
+  const voient = toutes ? modeles : modeles.filter((m) =>
+    valeur.cibleModeles.includes(m.id)
+    || cats.some((c) => valeur.cibleCategories.some((x) => norm(x) === norm(c.categorie)) && c.modeles.some((cm) => cm.id === m.id))
+    || m.etiquettes.some((e) => valeur.etiquettes.some((x) => norm(x) === norm(e))));
+  return (
+    <div className="et-bloc pq">
+      <b className="petit">Espace (technologie)</b>
+      <ChoixEspace valeur={valeur.espace} onChange={(e) => onChange({ espace: e, cibleCategories: [], cibleModeles: [], etiquettes: [] })} />
+      <b className="petit">Pour qui ?</b>
+      <div className="seg">
+        <button type="button" className={!ouvert ? 'on' : ''} onClick={() => { setOuvert(false); onChange({ ...valeur, cibleCategories: [], cibleModeles: [], etiquettes: [] }); }}>
+          Toutes les machines
+        </button>
+        <button type="button" className={ouvert ? 'on' : ''} onClick={() => setOuvert(true)}>Certaines machines</button>
+      </div>
+      {ouvert && (
+        <>
+          <small className="muted">Catégories (les nouvelles machines de la catégorie suivent automatiquement)</small>
+          <div className="pq-cases">
+            {cats.map((c) => (
+              <label key={c.categorie} className={`pq-case ${valeur.cibleCategories.some((x) => norm(x) === norm(c.categorie)) ? 'on' : ''}`}>
+                <input type="checkbox" checked={valeur.cibleCategories.some((x) => norm(x) === norm(c.categorie))}
+                  onChange={() => basculer('cibleCategories', valeur.cibleCategories.find((x) => norm(x) === norm(c.categorie)) ?? c.categorie)} />
+                {c.categorie} <small className="muted">({c.modeles.length})</small>
+              </label>
+            ))}
+          </div>
+          <small className="muted">Machines précises</small>
+          <div className="pq-cases">
+            {modeles.map((m) => (
+              <label key={m.id} className={`pq-case ${valeur.cibleModeles.includes(m.id) ? 'on' : ''}`}>
+                <input type="checkbox" checked={valeur.cibleModeles.includes(m.id)} onChange={() => basculer('cibleModeles', m.id)} />
+                {m.nom}
+              </label>
+            ))}
+            {!modeles.length && <small className="muted">Aucune machine dans cet espace (Administration → Machines).</small>}
+          </div>
+          {valeur.etiquettes.length > 0 && (
+            <div className="et-puces">
+              <small className="muted">Anciennes étiquettes :</small>
+              {valeur.etiquettes.map((e) => (
+                <span key={e} className="et-puce">🏷 {e}<button type="button" onClick={() => onChange({ ...valeur, etiquettes: valeur.etiquettes.filter((x) => x !== e) })}>✕</button></span>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+      <small className={`et-visible ${!toutes && !voient.length ? 'alerte' : ''}`}>
+        👁 Visible par : {toutes ? `toutes les machines ${valeur.espace === 'lazzeko' ? 'Lazzeko' : 'Kiavik'}` : voient.length ? voient.map((m) => m.nom).join(', ') : 'aucune machine pour l\'instant (les futures machines des catégories cochées suivront)'}
+      </small>
     </div>
   );
 }

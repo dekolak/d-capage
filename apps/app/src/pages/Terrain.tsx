@@ -7,7 +7,7 @@ import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { compresser } from '../lib/image';
 import { BadgeZone } from './Admin';
-import { BlocEtiquettes, EspaceContenu } from '../espaces/kiavik/Etiquettes';
+import { BlocPourQui, Cible, EspaceContenu } from '../espaces/kiavik/Etiquettes';
 import './terrain.css';
 
 /*
@@ -31,7 +31,7 @@ export function TerrainAccueil() {
   const [categorie, setCategorie] = useState('');
   const [trame, setTrame] = useState('');
   const { espace: ouvert } = useEspace();
-  const [cible, setCible] = useState<{ espace: EspaceContenu; etiquettes: string[] }>({ espace: ouvert.slug as EspaceContenu, etiquettes: [] });
+  const [cible, setCible] = useState<Cible>({ espace: ouvert.slug as EspaceContenu, etiquettes: [], cibleCategories: [], cibleModeles: [] });
   const [type, setType] = useState<TypePasAPas>('procedure');
   const [envoi, setEnvoi] = useState(false);
   const [err, setErr] = useState<unknown>();
@@ -44,7 +44,7 @@ export function TerrainAccueil() {
     setEnvoi(true);
     setErr(undefined);
     try {
-      const p = await api<Procedure>('/admin/procedures', { method: 'POST', json: { titre: titre.trim(), ...(categorie ? { categorie } : {}), espace: cible.espace, etiquettes: cible.etiquettes, type } });
+      const p = await api<Procedure>('/admin/procedures', { method: 'POST', json: { titre: titre.trim(), ...(categorie ? { categorie } : {}), espace: cible.espace, etiquettes: cible.etiquettes, cibleCategories: cible.cibleCategories, cibleModeles: cible.cibleModeles, type } });
       // trame : une étape par ligne (on les remplit ensuite une par une, rien n'est oublié)
       const lignes = trame.split('\n').map((l) => l.replace(/^[-•*\d.)\s]+/, '').trim()).filter((l) => l.length >= 2);
       for (const [i, texte] of lignes.entries()) await api(`/admin/procedures/${p.id}/etapes`, { method: 'POST', json: { texte, position: i } });
@@ -75,7 +75,7 @@ export function TerrainAccueil() {
             {TYPES_PAS_A_PAS.map((x) => <button key={x} type="button" className={type === x ? 'on' : ''} onClick={() => setType(x)}>{ICONE_TYPE[x]} {t(`type.${x}`)}</button>)}
           </div>
         </div>
-        <BlocEtiquettes espace={cible.espace} etiquettes={cible.etiquettes} onChange={setCible} />
+        <BlocPourQui valeur={cible} onChange={setCible} />
         <label>
           Trame (facultatif) : les étapes prévues, une par ligne
           <textarea rows={6} value={trame} onChange={(e) => setTrame(e.target.value)}
@@ -91,7 +91,7 @@ export function TerrainAccueil() {
           {brouillons.map((p) => (
             <Link key={p.id} to={`/admin/terrain/${p.id}`} className="carte lien-bloc cn-machine">
               <b>{p.titre} <BadgeZone zone={p.espace} /></b>
-              <span className="muted petit">{p.categorie} · {p.nbEtapes} étape{p.nbEtapes > 1 ? 's' : ''}{p.etiquettes.length ? ` · 🏷 ${p.etiquettes.join(', ')}` : ''}</span>
+              <span className="muted petit">{p.categorie} · {p.nbEtapes} étape{p.nbEtapes > 1 ? 's' : ''}{p.cibleCategories.length || p.cibleModeles.length || p.etiquettes.length ? ' · 🎯 certaines machines' : ''}</span>
             </Link>
           ))}
         </div>

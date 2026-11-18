@@ -18,6 +18,8 @@ class ProcedureDto {
   @IsOptional() @IsIn(['tuto', 'procedure', 'depannage', 'entretien']) type?: string;
   @IsOptional() @IsIn(['lazzeko', 'kiavik']) espace?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
+  @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) cibleCategories?: string[];
+  @IsOptional() @IsArray() @ArrayMaxSize(100) @IsString({ each: true }) @MaxLength(40, { each: true }) cibleModeles?: string[];
   @IsOptional() @IsString() @MinLength(2) @MaxLength(40) categorie?: string;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(400) resume?: string | null;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) description?: string | null;
@@ -26,6 +28,8 @@ class ModifierProcedureDto {
   @IsOptional() @IsIn(['tuto', 'procedure', 'depannage', 'entretien']) type?: string;
   @IsOptional() @IsIn(['lazzeko', 'kiavik']) espace?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
+  @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) cibleCategories?: string[];
+  @IsOptional() @IsArray() @ArrayMaxSize(100) @IsString({ each: true }) @MaxLength(40, { each: true }) cibleModeles?: string[];
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) description?: string | null;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) prompt?: string | null;
   @IsOptional() @IsString() @MinLength(2) @MaxLength(120) titre?: string;

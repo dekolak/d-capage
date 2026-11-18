@@ -1,7 +1,7 @@
 import {
   BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Res, UploadedFile, UseInterceptors,
 } from '@nestjs/common';
-import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from 'class-validator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
@@ -18,9 +18,11 @@ class NomDto {
 }
 class ModeleDto extends NomDto {
   @IsString() fabricantId!: string;
+  @IsOptional() @IsString() @MaxLength(40) categorie?: string;
   @IsArray() @ArrayMaxSize(2) @IsIn(ESPACES, { each: true }) espaces!: string[];
 }
 class ModifierModeleDto {
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) categorie?: string | null;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
   @IsOptional() @IsString() @MinLength(1) @MaxLength(60) nom?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(2) @IsIn(ESPACES, { each: true }) espaces?: string[];
@@ -53,6 +55,12 @@ export class AdminCatalogueController {
   @Post('fabricants')
   creerFabricant(@Body() d: NomDto) {
     return this.catalogue.creerFabricant(d.nom);
+  }
+
+  /** Catégories de machines utilisées (Décapeuse, Soudeuse, Accessoire…), par espace. */
+  @Get('categories')
+  categories() {
+    return this.catalogue.categoriesMachines();
   }
 
   @Post('modeles')

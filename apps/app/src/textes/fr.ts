@@ -166,6 +166,7 @@ const fr = {
   "maMachine.entretien": "📒 Entretien",
   "maMachine.reglages": "🎛 Réglages",
   "maMachine.general": "Général",
+  "maMachine.pourVotreMachine": "⭐ Pour votre machine",
   "maMachine.depannages": "🩺 Dépannages guidés",
   "maMachine.rienUtilisation": "Pas encore de pas-à-pas pour cette machine.",
   "maMachine.rienAide": "Pas encore d’aide pour cette machine.",

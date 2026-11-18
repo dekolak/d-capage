@@ -1016,6 +1016,22 @@ describe('Parcours complet', () => {
     // on lui ajoute la soudeuse : il voit la soudure (pas de procédure à retoucher)
     await http.post(`/api/users/${u.id}/machines`).set(A).send({ varianteId: soud.variantes[0].id }).expect(201);
     expect(await titres()).toEqual([`General ${id}`, `Lentille ${id}`, `Souder ${id}`]);
+    // « Pour qui ? » : par catégorie de machine et par modèle précis
+    await http.patch(`/api/admin/catalogue/modeles/${deca.id}`).set(A).send({ categorie: `Décapeuse ${id}` }).expect(200);
+    const catDeca = await creer(`Cat deca ${id}`, 'lazzeko', []);
+    await http.patch(`/api/admin/procedures/${catDeca.id}`).set(A).send({ cibleCategories: [`décapeuse ${id}`] }).expect(200);
+    const pourSoud = await creer(`Pour soudeuse ${id}`, 'lazzeko', []);
+    await http.patch(`/api/admin/procedures/${pourSoud.id}`).set(A).send({ cibleModeles: [soud.id] }).expect(200);
+    const autreCat = await creer(`Cat soudeuse ${id}`, 'lazzeko', []);
+    await http.patch(`/api/admin/procedures/${autreCat.id}`).set(A).send({ cibleCategories: [`Soudeuse ${id}`] }).expect(200);
+    const vues = await titres();
+    expect(vues).toContain(`Cat deca ${id}`);
+    expect(vues).toContain(`Pour soudeuse ${id}`);
+    expect(vues).not.toContain(`Cat soudeuse ${id}`);
+    const catsM = (await http.get('/api/admin/catalogue/categories').set(A)).body.find((c: any) => c.categorie === `Décapeuse ${id}`);
+    expect(catsM.modeles.map((m: any) => m.id)).toEqual([deca.id]);
+    for (const p of [catDeca, pourSoud, autreCat]) await http.delete(`/api/admin/procedures/${p.id}`).set(A).expect(200);
+
     // « Ma machine » : chaque machine du client avec les étiquettes de son modèle
     const carnets = (await http.get('/api/moi/carnet').set(L)).body;
     expect(carnets.map((c: any) => c.etiquettes.length).sort()).toEqual([1, 2]);

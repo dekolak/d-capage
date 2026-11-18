@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
-import { ResumeProcedure, Solution, useAccesProcedures, useProcedures, useSolutions } from '../espaces/kiavik/donneesProcedures';
+import { pourModele, ResumeProcedure, Solution, useAccesProcedures, useProcedures, useSolutions } from '../espaces/kiavik/donneesProcedures';
 import { EnvoiRecu, ListeRecus } from '../components/EnvoisRecus';
 import { ListeProcedures } from '../espaces/kiavik/Procedures';
 import { ListeSolutions } from '../espaces/kiavik/Solutions';
@@ -15,12 +15,11 @@ import { CarnetMachine, ICONE_ETAT } from './Carnet';
 
 type Onglet = 'utilisation' | 'aide' | 'recus' | 'entretien' | 'reglages';
 const norm = (e: string) => e.trim().toLowerCase();
-/** Le contenu concerne cette machine : sans étiquette (toutes les machines), ou une étiquette en commun avec le modèle. */
-const pourMachine = (c: { etiquettes: string[] }, m: { etiquettes: string[] }) =>
-  !c.etiquettes.length || c.etiquettes.some((e) => m.etiquettes.some((x) => norm(x) === norm(e)));
-/** Rubrique d'un contenu pour cette machine : sa première étiquette portée par la machine, sinon « Général ». */
-const rubrique = (c: { etiquettes: string[] }, m: { etiquettes: string[] }) =>
-  c.etiquettes.find((e) => m.etiquettes.some((x) => norm(x) === norm(e))) ?? '';
+/** Rubrique d'une ressource pour cette machine : « pour votre machine », sa catégorie, une ancienne étiquette, sinon « Général ». */
+const rubrique = (c: { etiquettes: string[]; cibleCategories: string[]; cibleModeles: string[] }, m: { modeleId: string; categorie: string | null; etiquettes: string[] }) =>
+  c.cibleModeles.includes(m.modeleId) ? '★'
+  : m.categorie && c.cibleCategories.some((x) => norm(x) === norm(m.categorie!)) ? m.categorie
+  : c.etiquettes.find((e) => m.etiquettes.some((x) => norm(x) === norm(e))) ?? '';
 
 /**
  * Ma machine : tout ce qui concerne UNE machine du client, filtré par les étiquettes de son modèle.
@@ -66,12 +65,13 @@ export default function MaMachine() {
   ];
   const actif = onglets.some((x) => x.o === onglet) ? onglet : onglets[0].o;
 
-  const pas = (procedures ?? []).filter((p) => pourMachine(p, m));
+  const pas = (procedures ?? []).filter((p) => pourModele(p, m));
   const utilisation = pas.filter((p) => !p.diagnostic);
   const depannages = pas.filter((p) => p.diagnostic);
-  const astuces = (solutions ?? []).filter((s: Solution) => pourMachine(s, m));
+  const astuces = (solutions ?? []).filter((s: Solution) => pourModele(s, m));
   // utilisation rangée par usage (étiquette de la machine), le général à la fin
-  const rubriques = [...new Set(utilisation.map((p) => rubrique(p, m)))].sort((a, b) => (a ? (b ? a.localeCompare(b, 'fr') : -1) : 1));
+  const rang = (r: string) => (r === '★' ? 0 : r ? 1 : 2);
+  const rubriques = [...new Set(utilisation.map((p) => rubrique(p, m)))].sort((a, b) => rang(a) - rang(b) || a.localeCompare(b, 'fr'));
   const retard = m.taches.filter((x) => x.etat === 'retard').length;
 
   return (
@@ -113,7 +113,7 @@ export default function MaMachine() {
         !procedures ? <Chargement /> : !utilisation.length ? <p className="muted">{t('maMachine.rienUtilisation')}</p> : (
           rubriques.map((r) => (
             <section key={r || 'general'} className="mm-rubrique">
-              <h2>{r ? `🏷 ${r}` : t('maMachine.general')}</h2>
+              <h2>{r === '★' ? t('maMachine.pourVotreMachine') : r ? `🎯 ${r}` : t('maMachine.general')}</h2>
               <ListeProcedures liste={utilisation.filter((p: ResumeProcedure) => rubrique(p, m) === r)} />
             </section>
           ))

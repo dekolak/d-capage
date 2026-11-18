@@ -38,10 +38,11 @@ export function AdminProcedures() {
     }
   };
   if (!liste) return erreur ? <Erreur e={erreur} /> : <Chargement />;
-  const etiquettes = [...new Set(liste.filter((p) => !fEspace || p.espace === fEspace).flatMap((p) => p.etiquettes))].sort((a, b) => a.localeCompare(b, 'fr'));
+  const etiquettes = [...new Set(liste.filter((p) => !fEspace || p.espace === fEspace).flatMap((p) => [...p.cibleCategories, ...p.etiquettes]))].sort((a, b) => a.localeCompare(b, 'fr'));
+  const cible = (p: ResumeProcedure) => p.cibleCategories.length + p.cibleModeles.length + p.etiquettes.length > 0;
   const visibles = liste.filter((p) =>
     (!fEspace || p.espace === fEspace)
-    && (!fEtiquette || (fEtiquette === '∅' ? !p.etiquettes.length : p.etiquettes.some((e) => e.toLowerCase() === fEtiquette.toLowerCase())))
+    && (!fEtiquette || (fEtiquette === '∅' ? !cible(p) : [...p.cibleCategories, ...p.etiquettes].some((e) => e.toLowerCase() === fEtiquette.toLowerCase())))
     && (!fEtat || (fEtat === 'publiee') === p.publiee));
   return (
     <div className="page gx">
@@ -70,9 +71,9 @@ export function AdminProcedures() {
           <option value="kiavik">Kiavik</option>
         </select>
         <select value={fEtiquette} onChange={(e) => setFEtiquette(e.target.value)} aria-label="Étiquette">
-          <option value="">Toutes les étiquettes</option>
-          <option value="∅">Sans étiquette (toutes les machines)</option>
-          {etiquettes.map((e) => <option key={e} value={e}>🏷 {e}</option>)}
+          <option value="">Pour qui : tout</option>
+          <option value="∅">Toutes les machines</option>
+          {etiquettes.map((e) => <option key={e} value={e}>🎯 {e}</option>)}
         </select>
         <select value={fEtat} onChange={(e) => setFEtat(e.target.value)} aria-label="État">
           <option value="">Publiés et non publiés</option>
@@ -85,7 +86,7 @@ export function AdminProcedures() {
         {visibles.map((p) => (
           <Link key={p.id} to={`/admin/procedures/${p.id}`} className="carte gx-resultat">
             <b>{ICONE_TYPE[p.type] ?? '📋'} {p.titre} <BadgeZone zone={p.espace} /></b>
-            {p.etiquettes.length > 0 && <span className="et-mini">{p.etiquettes.map((e) => <span key={e}>🏷 {e}</span>)}</span>}
+            {cible(p) && <span className="et-mini">{[...p.cibleCategories, ...p.etiquettes].map((e) => <span key={e}>🎯 {e}</span>)}{p.cibleModeles.length > 0 && <span>🔧 {p.cibleModeles.length} machine{p.cibleModeles.length > 1 ? 's' : ''}</span>}</span>}
             <span className="petit muted">
               {p.diagnostic && p.categorie !== 'Diagnostic' && <span className="dg-badge">Dépannage guidé</span>}
               {p.categorie} · {p.nbEtapes} étape{p.nbEtapes > 1 ? 's' : ''}

@@ -32,7 +32,7 @@ export class ProceduresService {
   private vue(p: ProcedureComplete, admin = true) {
     return {
       id: p.id, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee, ordre: p.ordre, updatedAt: p.updatedAt,
-      suivanteId: p.suivanteId, espace: p.espace, etiquettes: p.etiquettes, type: p.type,
+      suivanteId: p.suivanteId, espace: p.espace, etiquettes: p.etiquettes, type: p.type, cibleCategories: p.cibleCategories, cibleModeles: p.cibleModeles,
       ...(admin ? { description: p.description, prompt: p.prompt, resumeIa: p.resumeIa, resumeIaLe: p.resumeIaLe } : {}),
       etapes: p.etapes.map(({ photos, procedureId: _p, note, choix, ...e }) => ({
         ...e,
@@ -62,7 +62,7 @@ export class ProceduresService {
       orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }],
       include: { etapes: { orderBy: { ordre: 'asc' }, select: { texte: true, guide: true, ecran: true, pastille: true, _count: { select: { choix: true } } } } },
     });
-    return l.filter((p) => !qui || visible(p, qui.espace, qui.etiquettes)).map(({ etapes, cle: _c, module: _m, createdAt: _d, description, prompt: _pr, resumeIa: _r, resumeIaLe: _rl, ...p }) => ({
+    return l.filter((p) => !qui || visible(p, qui.espace, qui)).map(({ etapes, cle: _c, module: _m, createdAt: _d, description, prompt: _pr, resumeIa: _r, resumeIaLe: _rl, ...p }) => ({
       ...p,
       ...(admin ? { description } : {}),
       /** Contient des questions (diagnostic). */
@@ -77,14 +77,17 @@ export class ProceduresService {
   /** `recu` : le client a reçu ce pas-à-pas (envoi par le n° de sa machine) : il le lit même non publié ou pour une autre machine. */
   async lire(id: string, admin: boolean, qui: Lecteur = null, recu = false) {
     const p = await this.prisma.procedure.findUnique({ where: { id }, include: avecEtapes });
-    if (!p || (!recu && ((!admin && !p.publiee) || (qui && !visible(p, qui.espace, qui.etiquettes))))) throw new NotFoundException('Procédure introuvable');
+    if (!p || (!recu && ((!admin && !p.publiee) || (qui && !visible(p, qui.espace, qui))))) throw new NotFoundException('Procédure introuvable');
     return this.vue(p, admin);
   }
 
   // ---------- admin ----------
-  async creer(d: { titre: string; categorie?: string; resume?: string | null; description?: string | null; espace?: string; etiquettes?: string[]; type?: string }) {
+  async creer(d: {
+    titre: string; categorie?: string; resume?: string | null; description?: string | null; espace?: string; etiquettes?: string[]; type?: string;
+    cibleCategories?: string[]; cibleModeles?: string[];
+  }) {
     verifierEspace(d.espace);
-    d = { ...d, etiquettes: nettoyerEtiquettes(d.etiquettes) };
+    d = { ...d, etiquettes: nettoyerEtiquettes(d.etiquettes), cibleCategories: nettoyerEtiquettes(d.cibleCategories) };
     await assurerCategorie(this.prisma, d.categorie ?? 'Impression');
     const ordre = ((await this.prisma.procedure.aggregate({ _max: { ordre: true } }))._max.ordre ?? -1) + 1;
     const p = await this.prisma.procedure.create({ data: { ...d, ordre }, include: avecEtapes });
@@ -102,7 +105,7 @@ export class ProceduresService {
     const copie = await this.prisma.procedure.create({
       data: {
         titre: `${p.titre} (copie)`.slice(0, 120), categorie: p.categorie, resume: p.resume, description: p.description, prompt: p.prompt,
-        espace: p.espace, etiquettes: p.etiquettes, type: p.type,
+        espace: p.espace, etiquettes: p.etiquettes, type: p.type, cibleCategories: p.cibleCategories, cibleModeles: p.cibleModeles,
         publiee: false, ordre, suivanteId: p.suivanteId,
       },
     });
@@ -142,10 +145,15 @@ export class ProceduresService {
     return this.lire(copie.id, true);
   }
 
-  async modifier(id: string, d: Omit<Prisma.ProcedureUncheckedUpdateInput, 'suivanteId' | 'etiquettes' | 'espace'> & { suivanteId?: string | null; espace?: string; etiquettes?: string[] }) {
+  async modifier(
+    id: string,
+    d: Omit<Prisma.ProcedureUncheckedUpdateInput, 'suivanteId' | 'etiquettes' | 'espace' | 'cibleCategories' | 'cibleModeles'>
+      & { suivanteId?: string | null; espace?: string; etiquettes?: string[]; cibleCategories?: string[]; cibleModeles?: string[] },
+  ) {
     await this.existe(id);
     verifierEspace(d.espace);
     if (d.etiquettes) d = { ...d, etiquettes: nettoyerEtiquettes(d.etiquettes) };
+    if (d.cibleCategories) d = { ...d, cibleCategories: nettoyerEtiquettes(d.cibleCategories) };
     if (d.suivanteId) {
       if (d.suivanteId === id) throw new BadRequestException('Une procédure ne peut pas se proposer elle-même');
       await this.existe(d.suivanteId);
