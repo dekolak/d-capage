@@ -24,6 +24,8 @@ export class ErreurApi extends Error {
 /** Espace ouvert (lazzeko, kiavik…) : envoyé à chaque requête, l'API s'en sert pour les conditions et les messages. */
 let espaceCourant = '';
 export const definirEspace = (slug: string) => (espaceCourant = slug);
+/** Espace ouvert (slug). */
+export const espaceActuel = () => espaceCourant;
 
 let surDeconnexion: () => void = () => {};
 export const onDeconnexion = (f: () => void) => (surDeconnexion = f);

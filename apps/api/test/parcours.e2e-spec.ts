@@ -1016,6 +1016,9 @@ describe('Parcours complet', () => {
     // on lui ajoute la soudeuse : il voit la soudure (pas de procédure à retoucher)
     await http.post(`/api/users/${u.id}/machines`).set(A).send({ varianteId: soud.variantes[0].id }).expect(201);
     expect(await titres()).toEqual([`General ${id}`, `Lentille ${id}`, `Souder ${id}`]);
+    // « Ma machine » : chaque machine du client avec les étiquettes de son modèle
+    const carnets = (await http.get('/api/moi/carnet').set(L)).body;
+    expect(carnets.map((c: any) => c.etiquettes.length).sort()).toEqual([1, 2]);
     expect((await http.get(`/api/solutions/${astuce.id}`).set(L)).status).toBe(200);
     // sans le module de l'espace : refusé
     const u2 = (await http.post('/api/users').set('X-Api-Key', cle).send({ identifiant: `etq2-${id}`, motDePasse: 'motdepasse1', modules: ['reglages-decapage'] })).body;

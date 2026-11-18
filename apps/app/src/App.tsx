@@ -25,6 +25,7 @@ import Carnets, { CarnetRoute } from './pages/Carnet';
 import AdminEntretien, { AdminCarnet } from './pages/AdminEntretien';
 import { RappelsEntretien } from './components/RappelsEntretien';
 import { TerrainAccueil, TerrainCapture } from './pages/Terrain';
+import MaMachine from './pages/MaMachine';
 
 /**
  * Une seule app, plusieurs espaces (Lazzeko, Kiavik) : chaque espace a ses écrans et sa barre du bas (src/espaces/),
@@ -66,6 +67,8 @@ export default function App() {
           {app.routes()}
           <Route path="/compte" element={<Compte />} />
           <Route path="/carnet" element={<Carnets />} />
+          <Route path="/ma-machine" element={<MaMachine />} />
+          <Route path="/ma-machine/:id" element={<MaMachine />} />
           <Route path="/carnet/:id" element={<CarnetRoute />} />
           <Route path="/conditions" element={<Conditions />} />
           {admin && <Route path="/admin" element={<Admin />} />}

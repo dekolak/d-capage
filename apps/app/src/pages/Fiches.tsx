@@ -7,6 +7,7 @@ import { brouillonUtile, lireBrouillon } from '../lib/brouillon';
 import { nomMachine } from '../lib/util';
 import { noterRecherche } from '../lib/activite';
 import { t, tn } from '../lib/i18n';
+import { LienMaMachine } from './MaMachine';
 
 /** Mes réglages : recherche texte + filtres machine et tags (combinables). */
 export default function Fiches() {
@@ -46,6 +47,7 @@ export default function Fiches() {
 
   return (
     <div className="page">
+      <LienMaMachine />
       <h1>{t('lazzeko.fiches.titre')}</h1>
       {brouillonUtile(lireBrouillon()) && (
         <Link to="/fiches/nouvelle" className="bandeau lien-bandeau">

@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { Chargement } from '../components/Composants';
 import { api, definirEspace, Espace } from './api';
+import { definirSociete } from './i18n';
 
 /**
  * Espace ouvert : Lazzeko (app.lazzeko.com) ou Kiavik (app.kiavikcopilot.ovh).
@@ -24,6 +25,7 @@ function espaceInitial(espaces: Espace[]): Espace {
 
 function appliquer(e: Espace) {
   definirEspace(e.slug);
+  definirSociete(e.nom);
   const r = document.documentElement.style;
   r.setProperty('--o', e.couleur);
   r.setProperty('--od', e.couleurFoncee);
