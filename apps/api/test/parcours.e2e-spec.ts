@@ -1404,4 +1404,26 @@ describe('Parcours complet', () => {
     expect((await http.post('/api/push/abonnement').set(auth(admin)).send({ ...abo, expirationTime: 'x' })).status).toBe(400);
     await http.delete('/api/push/abonnement').set(auth(admin)).send({ endpoint: abo.endpoint }).expect(200);
   });
+
+  it('groupes de boutons d\'un écran (admin) : créés, visibles par le client, modifiés, supprimés', async () => {
+    const A = auth(admin);
+    await http.post('/api/users').set(A).send({ identifiant: `grp-${id}`, motDePasse: 'motdepasse1', modules: ['guide-dxonjet'] }).expect(201);
+    const C = { ...auth((await http.post('/api/auth/connexion').send({ identifiant: `grp-${id}`, motDePasse: 'motdepasse1' })).body.jeton), 'X-Espace': 'kiavik' };
+    const { version } = (await http.get('/api/conditions?espace=kiavik').set(C)).body;
+    await http.post('/api/moi/conditions').set(C).send({ version }).expect(201);
+    const url = `/api/admin/guides/dxonjet/ensembles/d4a/reglages-${id}`;
+    const ens = (g: any) => (g.ecrans.find((e: any) => e.id === 'd4a').ensembles ?? []).find((x: any) => x.id === `reglages-${id}`);
+    const corps = { nom: 'Réglages de la tête', texte: 'Plage, distance, vitesse', mots_cles: ['tête', ' tête '], pastilles: ['a.4', 'a.5', 'a.6', 'a.6'] };
+    expect((await http.put(url).set(C).send(corps)).status).toBe(403);
+    expect((await http.put(url).set(A).send({ ...corps, pastilles: ['a.4'] })).status).toBe(400); // 2 au moins
+    expect((await http.put(url).set(A).send({ ...corps, pastilles: ['a.4', 'zz'] })).status).toBe(400);
+    expect((await http.put('/api/admin/guides/dxonjet/ensembles/d4a/Pas%20bon').set(A).send(corps)).status).toBe(400);
+    const g = (await http.put(url).set(A).send(corps)).body;
+    expect(ens(g)).toEqual({ id: `reglages-${id}`, nom: 'Réglages de la tête', texte: 'Plage, distance, vitesse', mots_cles: ['tête'], pastilles: ['a.4', 'a.5', 'a.6'] });
+    expect(ens((await http.get('/api/guides/dxonjet').set(C)).body).pastilles).toEqual(['a.4', 'a.5', 'a.6']);
+    await http.put(url).set(A).send({ ...corps, nom: 'Tête', pastilles: ['a.5', 'a.6'] }).expect(200);
+    expect(ens((await http.get('/api/guides/dxonjet').set(C)).body)).toMatchObject({ nom: 'Tête', pastilles: ['a.5', 'a.6'] });
+    await http.delete(url).set(A).expect(200);
+    expect(ens((await http.get('/api/guides/dxonjet').set(C)).body)).toBeUndefined();
+  });
 });

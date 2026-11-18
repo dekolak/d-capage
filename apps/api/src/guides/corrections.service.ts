@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { CorrectionGuide, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, StockageService } from '../stockage/stockage.service';
-import { Guide, GuidesService } from './guides.service';
+import { Ensemble, Guide, GuidesService } from './guides.service';
 import { assurerCategorie } from '../categories/assurer';
 
 /** Champs d'une fiche de bouton modifiables dans l'app. */
@@ -49,6 +49,14 @@ export class CorrectionsService {
         else delete p.conseil;
         if (pv.niveau) p.niveau = pv.niveau;
         else delete p.niveau;
+      } else if (c.type === 'ensemble') {
+        const [ecran, id] = morceaux;
+        const e = g.ecrans.find((x) => x.id === ecran);
+        if (!e) continue;
+        const ev = v as unknown as Ensemble;
+        // seulement les boutons qui existent encore sur l'écran
+        const pastilles = ev.pastilles.filter((p) => e.pastilles.some((x) => x.id === p));
+        if (pastilles.length) (e.ensembles ??= []).push({ id, nom: ev.nom, texte: ev.texte ?? null, mots_cles: ev.mots_cles ?? [], pastilles });
       } else if (c.type === 'etape') {
         const [anim, scene, etape] = morceaux;
         const s = g.animations?.find((a) => a.id === anim)?.scenes[Number(scene)] as Scene | undefined;
@@ -93,6 +101,22 @@ export class CorrectionsService {
       mots_cles: [...new Set((v.mots_cles ?? []).map((m) => m.trim()).filter(Boolean))],
     };
     return this.enregistrer(slug, 'pastille', `${ecran}/${pastille}`, { valeur });
+  }
+
+  /** Créer ou modifier un groupe de boutons d'un écran (2 boutons au moins). */
+  enregistrerEnsemble(slug: string, ecran: string, id: string, v: Omit<Ensemble, 'id'>) {
+    const e = this.guides.brut(slug).ecrans.find((x) => x.id === ecran);
+    if (!e) throw new NotFoundException('Écran introuvable');
+    const pastilles = [...new Set(v.pastilles)];
+    if (pastilles.some((p) => !e.pastilles.some((x) => x.id === p))) throw new BadRequestException('Bouton introuvable sur cet écran');
+    if (pastilles.length < 2) throw new BadRequestException('Choisissez au moins 2 boutons');
+    const valeur = {
+      nom: v.nom.trim(),
+      texte: v.texte?.trim() || null,
+      mots_cles: [...new Set((v.mots_cles ?? []).map((m) => m.trim()).filter(Boolean))],
+      pastilles,
+    };
+    return this.enregistrer(slug, 'ensemble', `${ecran}/${id}`, { valeur });
   }
 
   corrigerEtape(slug: string, anim: string, scene: number, etape: number, cap: string) {
@@ -158,7 +182,7 @@ export class CorrectionsService {
   }
 
   /** Revenir à l'original. */
-  async retirer(slug: string, type: 'pastille' | 'etape' | 'photo' | 'animation', cle: string) {
+  async retirer(slug: string, type: 'pastille' | 'etape' | 'photo' | 'animation' | 'ensemble', cle: string) {
     const c = await this.prisma.correctionGuide.findUnique({ where: { guide_type_cle: { guide: slug, type, cle } } });
     if (c) {
       if (c.photoCle) await this.stockage.supprimer(c.photoCle);

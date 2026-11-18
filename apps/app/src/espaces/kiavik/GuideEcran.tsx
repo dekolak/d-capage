@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { BoutonPartager } from '../../components/Partager';
 import { EditeurPastille } from './Corrections';
+import { EditeurEnsemble, EditionEnsemble, editionDe, FicheEnsemble, nouvelEnsemble, supprimerEnsemble } from './Ensembles';
+import { lienResultat, rechercher } from './recherche';
 import { useAuth } from '../../lib/auth';
 import { Fenetre } from './Fenetres';
 import { CANAUX_DEPART, CommandesInteractif, EtatCanaux, Interactif } from './Interactifs';
@@ -12,12 +14,19 @@ import './guides.css';
 import { t } from '../../lib/i18n';
 
 const CLE_REPERES = 'kiavik.reperes';
+/** Affichage des pastilles (gardé sur le téléphone) : visibles, discrètes (points transparents) ou masquées. */
+type Affichage = 'visibles' | 'discretes' | 'masquees';
+const CLE_AFFICHAGE = 'kiavik.pastilles';
+const CLE_ESSENTIELS = 'kiavik.essentiels';
+const ICONE_AFFICHAGE: Record<Affichage, string> = { visibles: '👁', discretes: '◌', masquees: '🙈' };
 const pct = (v: number, total: number) => `${(v / total) * 100}%`;
 
 /**
  * Un écran d'un guide : capture (ou fenêtre recréée) + pastilles. Toucher une pastille ouvre sa fiche en bas.
  * Mobile d'abord : menu repliable (☰), zoom 240 % avec défilement au doigt, liste des repères sous la capture.
- * Adresse : /guides/<guide>/<écran>?p=<pastille> (la pastille est mise en surbrillance).
+ * Adresse : /guides/<guide>/<écran>?p=<pastille> (la pastille est mise en surbrillance), ?g=<groupe> (groupe de boutons).
+ * Recherche dans le guide (phrases, mots-clés, groupes) en haut ; affichage des pastilles (👁 visibles / discrètes / masquées,
+ * essentiels seulement) ; appui long sur l'écran = les pastilles disparaissent le temps de regarder.
  */
 export default function GuideEcran() {
   const { slug = '', ecran: idEcran } = useParams();
@@ -36,6 +45,17 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
   const loc = useLocation();
   const [params, setParams] = useSearchParams();
   const sel = params.get('p');
+  const selGroupe = params.get('g');
+  const [q, setQ] = useState('');
+  const [affichage, setAffichage0] = useState<Affichage>(() => (localStorage.getItem(CLE_AFFICHAGE) as Affichage) || 'visibles');
+  const [essentiels, setEssentiels0] = useState(() => localStorage.getItem(CLE_ESSENTIELS) === '1');
+  const [reglages, setReglages] = useState(false);
+  const [regarder, setRegarder] = useState(false);
+  const [edition, setEdition] = useState<EditionEnsemble | null>(null);
+  const appui = useRef<{ x: number; y: number; t: ReturnType<typeof setTimeout> } | null>(null);
+  const apresAppui = useRef(false);
+  const setAffichage = (a: Affichage) => (setAffichage0(a), localStorage.setItem(CLE_AFFICHAGE, a));
+  const setEssentiels = (v: boolean) => (setEssentiels0(v), localStorage.setItem(CLE_ESSENTIELS, v ? '1' : '0'));
   const [menu, setMenu] = useState(false);
   const [zoom, setZoom] = useState(() => sessionStorage.getItem('kiavik.zoom') === '1');
   const [reperes, setReperes] = useState(() => admin && localStorage.getItem(CLE_REPERES) === '1');
@@ -49,8 +69,57 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
   const [remise, setRemise] = useState(0);
   const [canaux, setCanaux] = useState<EtatCanaux>(CANAUX_DEPART);
   const choisir = (id: string | null) => {
+    if (edition) {
+      // admin : on compose un groupe en touchant les boutons
+      if (id) setEdition({ ...edition, pastilles: edition.pastilles.includes(id) ? edition.pastilles.filter((x) => x !== id) : [...edition.pastilles, id] });
+      return;
+    }
     if (id && e.interactif?.type === 'echantillon' && id === e.interactif.remise) setRemise((n) => n + 1);
     setParams(id ? { p: id } : {}, { replace: true });
+  };
+  const choisirGroupe = (id: string | null) => setParams(id ? { g: id } : {}, { replace: true });
+  const ensemble = (e.ensembles ?? []).find((x) => x.id === selGroupe);
+
+  // recherche dans ce guide : résultats en puces sous la barre
+  const resultats = useMemo(() => (q.trim() ? rechercher([guide], q, 8) : []), [guide, q]);
+  // boutons mis en avant (les autres s'estompent) : groupe choisi, ou résultats de la recherche sur cet écran
+  const enAvant = new Set<string>(
+    edition ? edition.pastilles : ensemble ? ensemble.pastilles : resultats.filter((r) => r.ecran === e.id).flatMap((r) => (r.type === 'ensemble' ? r.pastilles ?? [] : [r.pastille])),
+  );
+  const masquee = (p: Pastille) => essentiels && p.etat === 'non_utilise' && sel !== p.id && !enAvant.has(p.id);
+  const ouvrirResultat = (r: (typeof resultats)[number]) => {
+    setQ('');
+    if (r.ecran === e.id) return r.type === 'ensemble' ? choisirGroupe(r.pastille) : choisir(r.pastille);
+    nav(lienResultat(r));
+  };
+
+  // appui long sur l'écran : les pastilles disparaissent le temps de regarder
+  const debutAppui = (ev: React.PointerEvent) => {
+    const x = ev.clientX, y = ev.clientY;
+    if (appui.current) clearTimeout(appui.current.t);
+    appui.current = { x, y, t: setTimeout(() => (setRegarder(true), (apresAppui.current = true)), 450) };
+  };
+  const bougeAppui = (ev: React.PointerEvent) => {
+    const a = appui.current;
+    if (a && !regarder && Math.hypot(ev.clientX - a.x, ev.clientY - a.y) > 10) (clearTimeout(a.t), (appui.current = null));
+  };
+  const finAppui = () => {
+    if (appui.current) clearTimeout(appui.current.t);
+    appui.current = null;
+    setRegarder(false);
+  };
+  /** Pastilles masquées : toucher l'écran ouvre la pastille la plus proche. */
+  const toucherEcran = (ev: React.MouseEvent<HTMLDivElement>) => {
+    if (apresAppui.current) return void (apresAppui.current = false);
+    if (affichage !== 'masquees' || (ev.target as HTMLElement).closest('button')) return;
+    const r = ev.currentTarget.getBoundingClientRect();
+    const x = ((ev.clientX - r.left) / r.width) * e.largeur;
+    const y = ((ev.clientY - r.top) / r.height) * e.hauteur;
+    const proche = e.pastilles
+      .filter((p) => !masquee(p))
+      .map((p) => ({ p, d: Math.hypot(p.x - x, p.y - y) }))
+      .sort((a, b) => a.d - b.d)[0];
+    if (proche && proche.d < e.largeur * 0.08) choisir(proche.p.id);
   };
 
   useEffect(() => {
@@ -69,14 +138,63 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
       <div className="gx-barre">
         <button type="button" className="gx-ic" aria-label={t('kiavik.guide.menu')} onClick={() => setMenu(true)}>☰</button>
         <div className="gx-titre"><small>{guide.nom}</small>{e.code} · {e.titre}</div>
+        <button type="button" className={`gx-ic ${reglages ? 'on' : ''}`} aria-label={t('kiavik.guide.affichage')} onClick={() => setReglages(!reglages)}>
+          {ICONE_AFFICHAGE[affichage]}
+        </button>
         <button type="button" className={`gx-ic ${zoom ? 'on' : ''}`} aria-label={t('kiavik.guide.zoom')} onClick={() => setZoom(!zoom)}>⤢</button>
+      </div>
+
+      {reglages && (
+        <div className="gx-affichage carte">
+          <b className="petit">{t('kiavik.guide.affichage')}</b>
+          <div className="seg">
+            {(['visibles', 'discretes', 'masquees'] as Affichage[]).map((a) => (
+              <button key={a} type="button" className={affichage === a ? 'on' : ''} onClick={() => setAffichage(a)}>
+                {ICONE_AFFICHAGE[a]} {t(`kiavik.guide.pastilles.${a}`)}
+              </button>
+            ))}
+          </div>
+          {e.pastilles.some((p) => p.etat === 'non_utilise') && (
+            <label className="gx-option">
+              <input type="checkbox" checked={essentiels} onChange={(ev) => setEssentiels(ev.target.checked)} /> {t('kiavik.guide.essentiels')}
+            </label>
+          )}
+          <small className="muted">{t('kiavik.guide.appuiLong')}</small>
+        </div>
+      )}
+
+      <div className="gx-cherche">
+        <input type="search" className="recherche" value={q} placeholder={t('kiavik.guide.chercher')} onChange={(ev) => setQ(ev.target.value)} />
+        {q.trim() && (
+          <div className="puces gx-cherche-res">
+            {resultats.map((r) => (
+              <button key={`${r.type}/${r.ecran}/${r.pastille}`} type="button" className={`puce ${r.type === 'ensemble' ? 'gx-puce-groupe' : ''}`} onClick={() => ouvrirResultat(r)}>
+                {r.ecran !== e.id && <small className="muted">{r.codeEcran} · </small>}
+                {r.type === 'ensemble' ? `▦ ${r.titre} (${r.pastilles?.length})` : `${r.pastille} · ${r.titre}`}
+              </button>
+            ))}
+            {!resultats.length && <span className="muted petit">{t('kiavik.guide.rienTrouve')}</span>}
+          </div>
+        )}
       </div>
 
       {e.intro && <p className="gx-intro">{e.intro}</p>}
       {flash && <div className="gx-ok">✅ {flash}</div>}
 
-      <div className={`gx-defile ${zoom ? 'zoom' : ''}`}>
-        <div className="gx-shot" style={{ aspectRatio: `${e.largeur} / ${e.hauteur}` }}>
+      <div
+        className={`gx-defile ${zoom ? 'zoom' : ''}`}
+        onPointerDown={debutAppui}
+        onPointerMove={bougeAppui}
+        onPointerUp={finAppui}
+        onPointerCancel={finAppui}
+        onPointerLeave={finAppui}
+        onContextMenu={(ev) => ev.preventDefault()}
+      >
+        <div
+          className={`gx-shot p-${affichage} ${regarder ? 'regarde' : ''} ${enAvant.size ? 'avec-avant' : ''} ${edition ? 'edition' : ''}`}
+          style={{ aspectRatio: `${e.largeur} / ${e.hauteur}` }}
+          onClick={toucherEcran}
+        >
           {e.type === 'capture' && e.image ? (
             <img src={e.image} alt={e.titre} draggable={false} />
           ) : (
@@ -117,11 +235,11 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
               {n.label}
             </button>
           ))}
-          {e.pastilles.map((p) => (
+          {e.pastilles.filter((p) => !masquee(p)).map((p) => (
             <button
               type="button"
               key={p.id}
-              className={`gx-p ${p.etat && p.etat !== 'actif' ? 'off' : ''} ${sel === p.id ? 'sel' : ''}`}
+              className={`gx-p ${p.etat && p.etat !== 'actif' ? 'off' : ''} ${sel === p.id ? 'sel' : ''} ${enAvant.has(p.id) ? 'avant' : ''}`}
               style={{ left: pct(p.x, e.largeur), top: pct(p.y, e.hauteur) }}
               onClick={() => choisir(sel === p.id ? null : p.id)}
               aria-label={`${p.id} ${p.titre}`}
@@ -139,9 +257,24 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
         {suiv && <button type="button" className="btn petit" onClick={() => aller(suiv.id)}>{suiv.code} →</button>}
       </div>
 
+      {edition && <EditeurEnsemble guide={guide} e={e} v={edition} onChange={setEdition} onFini={(id) => (setEdition(null), id && choisirGroupe(id))} />}
+
+      {(e.ensembles ?? []).length > 0 && (
+        <>
+          <h4>{t('kiavik.guide.groupes')}</h4>
+          <div className="puces">
+            {e.ensembles!.map((en) => (
+              <button key={en.id} type="button" className={`puce gx-puce-groupe ${selGroupe === en.id ? 'on' : ''}`} onClick={() => choisirGroupe(selGroupe === en.id ? null : en.id)}>
+                ▦ {en.nom} ({en.pastilles.length})
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       <h4>{t('kiavik.guide.reperes')}</h4>
       <div className="gx-liste">
-        {e.pastilles.map((p) => (
+        {e.pastilles.filter((p) => !masquee(p)).map((p) => (
           <button type="button" key={p.id} className={`gx-item ${p.etat && p.etat !== 'actif' ? 'off' : ''} ${sel === p.id ? 'on' : ''}`} onClick={() => choisir(p.id)}>
             <b>{p.id}</b>{p.titre}
             {p.etat === 'non_utilise' && <i>{t('kiavik.guide.nonUtiliseListe')}</i>}
@@ -150,7 +283,23 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
         ))}
       </div>
 
-      {pastille && (
+      {ensemble && !pastille && !edition && (
+        <>
+          <div className="gx-masque" onClick={() => choisirGroupe(null)} />
+          <div className="gx-fiche" role="dialog" aria-label={ensemble.nom}>
+            <button type="button" className="gx-fermer" aria-label={t('commun.fermer')} onClick={() => choisirGroupe(null)}>✕</button>
+            <FicheEnsemble
+              e={e}
+              en={ensemble}
+              onBouton={(id) => setParams({ p: id }, { replace: true })}
+              onModifier={() => setEdition(editionDe(ensemble))}
+              onSupprimer={() => supprimerEnsemble(guide, e, ensemble.id).then(() => choisirGroupe(null))}
+            />
+          </div>
+        </>
+      )}
+
+      {pastille && !edition && (
         <>
           <div className="gx-masque" onClick={() => choisir(null)} />
           <div className="gx-fiche" role="dialog" aria-label={pastille.titre}>
@@ -180,6 +329,11 @@ function Vue({ guide, e }: { guide: Guide; e: Ecran }) {
                 ))}
               </details>
             ))}
+            {admin && (
+              <button type="button" className="btn petit" onClick={() => (setMenu(false), setParams({}, { replace: true }), setEdition(nouvelEnsemble()))}>
+                ▦ Nouveau groupe de boutons (admin)
+              </button>
+            )}
             {admin && (
               <label className="gx-option">
                 <input

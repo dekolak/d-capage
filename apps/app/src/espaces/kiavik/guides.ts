@@ -12,10 +12,13 @@ export interface Pastille {
   /** Modifié dans l'app (visible par l'admin). */
   corrige?: boolean;
 }
+/** Groupe de boutons d'un écran (ex. « Flèches de direction »), créé par l'admin dans l'app. */
+export interface Ensemble { id: string; nom: string; texte?: string | null; mots_cles?: string[]; pastilles: string[] }
 export interface Ecran {
   id: string; code: string; titre: string; groupe: string; intro?: string;
   type: 'capture' | 'fenetre_recreee'; image?: string; fenetre?: string;
   largeur: number; hauteur: number; pastilles: Pastille[];
+  ensembles?: Ensemble[];
   interactif?: Interactif;
 }
 export interface Rect { x: number; y: number; largeur: number; hauteur: number }

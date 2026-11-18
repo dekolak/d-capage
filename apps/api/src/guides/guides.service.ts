@@ -23,6 +23,15 @@ export interface Pastille {
   /** Modifié dans l'app (admin). */
   corrige?: boolean;
 }
+/** Groupe de boutons d'un écran (créé dans l'app par l'admin). */
+export interface Ensemble {
+  id: string;
+  nom: string;
+  texte?: string | null;
+  mots_cles?: string[];
+  pastilles: string[];
+}
+
 export interface Ecran {
   id: string;
   code: string;
@@ -35,6 +44,8 @@ export interface Ecran {
   largeur: number;
   hauteur: number;
   pastilles: Pastille[];
+  /** Groupes de boutons créés par l'admin (ex. « Flèches de direction ») : trouvés ensemble par la recherche. */
+  ensembles?: Ensemble[];
   corrige?: boolean;
   /** Zone interactive (T5 : échantillon à taille réelle ; T9 : aperçu canal par canal). */
   interactif?: { type: string; images?: Record<string, string> } & Record<string, unknown>;

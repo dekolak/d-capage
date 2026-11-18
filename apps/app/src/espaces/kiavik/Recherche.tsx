@@ -4,7 +4,7 @@ import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { chargerGuide, Guide, ResumeGuide } from './guides';
 import { useProcedures, useSolutions } from './donneesProcedures';
-import { normaliser, rechercher } from './recherche';
+import { lienResultat, motsRecherche, nbTrouves, rechercher } from './recherche';
 import { noterRecherche } from '../../lib/activite';
 import { ListeSolutions } from './Solutions';
 import './guides.css';
@@ -28,35 +28,37 @@ export default function Recherche() {
 
   const resultats = useMemo(() => (guides ? rechercher(guides, q) : []), [guides, q]);
   const anims = useMemo(() => {
-    const mots = normaliser(q).split(' ').filter(Boolean);
+    const mots = motsRecherche(q);
     if (!mots.length || !guides) return [];
-    return guides.flatMap((g) =>
-      (g.animations ?? [])
-        .filter((a) => {
+    return guides
+      .flatMap((g) =>
+        (g.animations ?? []).map((a) => {
           const caps = a.scenes.map((s) => ('cap' in s ? s.cap : s.etapes.map((e) => e.cap ?? '').join(' ')));
-          const t = normaliser(`${a.titre} ${a.resume ?? ''} ${a.scenes.map((s) => s.titre).join(' ')} ${caps.join(' ')}`).split(' ');
-          return mots.every((m) => t.some((w) => w.startsWith(m)));
-        })
-        .map((a) => ({ ...a, slug: g.slug })),
-    );
+          return { ...a, slug: g.slug, n: nbTrouves(mots, `${a.titre} ${a.resume ?? ''} ${a.scenes.map((s) => s.titre).join(' ')} ${caps.join(' ')}`) };
+        }),
+      )
+      .filter((a) => a.n)
+      .sort((a, b) => b.n - a.n);
   }, [guides, q]);
   const { liste: procedures } = useProcedures();
   const { liste: solutions } = useSolutions();
   const astuces = useMemo(() => {
-    const mots = normaliser(q).split(' ').filter(Boolean);
+    const mots = motsRecherche(q);
     if (!mots.length) return [];
-    return (solutions ?? []).filter((s) => {
-      const txt = normaliser(`${s.titre} ${s.categorie} ${s.cause ?? ''} ${s.texte} ${s.motsCles.join(' ')}`).split(' ');
-      return mots.every((m) => txt.some((w) => w.startsWith(m)));
-    });
+    return (solutions ?? [])
+      .map((s) => ({ s, n: nbTrouves(mots, `${s.titre} ${s.categorie} ${s.cause ?? ''} ${s.texte} ${s.motsCles.join(' ')}`) }))
+      .filter((x) => x.n)
+      .sort((a, b) => b.n - a.n)
+      .map((x) => x.s);
   }, [solutions, q]);
   const procs = useMemo(() => {
-    const mots = normaliser(q).split(' ').filter(Boolean);
+    const mots = motsRecherche(q);
     if (!mots.length) return [];
-    return (procedures ?? []).filter((p) => {
-      const t = normaliser(`${p.titre} ${p.categorie} ${p.resume ?? ''} ${p.textes.join(' ')}`).split(' ');
-      return mots.every((m) => t.some((w) => w.startsWith(m)));
-    });
+    return (procedures ?? [])
+      .map((p) => ({ p, n: nbTrouves(mots, `${p.titre} ${p.categorie} ${p.resume ?? ''} ${p.textes.join(' ')}`) }))
+      .filter((x) => x.n)
+      .sort((a, b) => b.n - a.n)
+      .map((x) => x.p);
   }, [procedures, q]);
   const plusieurs = (guides?.length ?? 0) > 1;
 
@@ -127,9 +129,11 @@ export default function Recherche() {
           {resultats.length > 0 && <h4>{t('kiavik.recherche.boutons', { n: `${resultats.length}${resultats.length === 50 ? '+' : ''}` })}</h4>}
           <div className="gx-resultats">
             {resultats.map((r) => (
-              <Link key={`${r.guide}/${r.ecran}/${r.pastille}`} className="carte gx-resultat" to={`/guides/${r.guide}/${r.ecran}?p=${encodeURIComponent(r.pastille)}`}>
-                <span className="gx-ref">{plusieurs ? `${r.nomGuide.split(' ')[0]} · ` : ''}{r.codeEcran} · {r.pastille}</span>
-                <b>{r.titre}</b>
+              <Link key={`${r.type}/${r.guide}/${r.ecran}/${r.pastille}`} className="carte gx-resultat" to={lienResultat(r)}>
+                <span className="gx-ref">
+                  {plusieurs ? `${r.nomGuide.split(' ')[0]} · ` : ''}{r.codeEcran} · {r.type === 'ensemble' ? t('kiavik.recherche.groupe', { n: r.pastilles?.length ?? 0 }) : r.pastille}
+                </span>
+                <b>{r.type === 'ensemble' ? '▦ ' : ''}{r.titre}</b>
                 <span className="muted petit">{r.titreEcran}</span>
                 <span className="petit gx-extrait">{r.extrait}</span>
               </Link>
