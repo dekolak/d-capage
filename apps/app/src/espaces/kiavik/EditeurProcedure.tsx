@@ -12,7 +12,7 @@ import { useSolutions } from './donneesProcedures';
 import './guides.css';
 import './editeur.css';
 import { Annotateur } from './Annotateur';
-import { BlocEtiquettes, EspaceContenu, viderEtiquettes } from './Etiquettes';
+import { BlocPourQui, EspaceContenu, viderEtiquettes } from './Etiquettes';
 import { EnvoyerPasAPas } from './Envoyer';
 import { t } from '../../lib/i18n';
 import { BadgeZone } from '../../pages/Admin';
@@ -520,14 +520,14 @@ export function AdminProcedure() {
   const [procedures, setProcedures] = useState<ResumeProcedure[]>([]);
   const [p, setP] = useState<Procedure>();
   const [erreur, setErreur] = useState<unknown>();
-  const [infos, setInfos] = useState({ titre: '', categorie: '', resume: '', description: '', espace: 'kiavik' as EspaceContenu, etiquettes: [] as string[], type: 'procedure' as TypePasAPas });
+  const [infos, setInfos] = useState({ titre: '', categorie: '', resume: '', description: '', espace: 'kiavik' as EspaceContenu, etiquettes: [] as string[], type: 'procedure' as TypePasAPas, cibleCategories: [] as string[], cibleModeles: [] as string[] });
   const [sel, setSel] = useState<Sel>(null);
   const [stats, setStats] = useState<Stats>();
   const [signalements, setSignalements] = useState<Signalement[]>([]);
 
   const appliquer = (x: Procedure) => {
     setP(x);
-    setInfos({ titre: x.titre, categorie: x.categorie, resume: x.resume ?? '', description: x.description ?? '', espace: x.espace, etiquettes: x.etiquettes, type: x.type });
+    setInfos({ titre: x.titre, categorie: x.categorie, resume: x.resume ?? '', description: x.description ?? '', espace: x.espace, etiquettes: x.etiquettes, type: x.type, cibleCategories: x.cibleCategories, cibleModeles: x.cibleModeles });
     viderProcedures();
   };
   useEffect(() => {
@@ -555,7 +555,8 @@ export function AdminProcedure() {
 
   if (!p) return erreur ? <Erreur e={erreur} /> : <Chargement />;
   const infosModifiees = infos.titre !== p.titre || infos.categorie !== p.categorie || infos.resume !== (p.resume ?? '') || infos.description !== (p.description ?? '')
-    || infos.espace !== p.espace || infos.etiquettes.join('|') !== p.etiquettes.join('|') || infos.type !== p.type;
+    || infos.espace !== p.espace || infos.etiquettes.join('|') !== p.etiquettes.join('|') || infos.type !== p.type
+    || infos.cibleCategories.join('|') !== p.cibleCategories.join('|') || infos.cibleModeles.join('|') !== p.cibleModeles.join('|');
   const etapeSel = sel?.type === 'etape' ? p.etapes.find((e) => e.id === sel.id) : undefined;
   const choixSel = sel?.type === 'choix' ? p.etapes.flatMap((e) => e.choix).find((c) => c.id === sel.id) : undefined;
   const avertissements = alertes(p, signalements);
@@ -606,13 +607,13 @@ export function AdminProcedure() {
                 {TYPES_PAS_A_PAS.map((x) => <button key={x} type="button" className={infos.type === x ? 'on' : ''} onClick={() => setInfos({ ...infos, type: x })}>{ICONE_TYPE[x]} {t(`type.${x}`)}</button>)}
               </div>
             </div>
-            <BlocEtiquettes espace={infos.espace} etiquettes={infos.etiquettes} onChange={(v) => setInfos({ ...infos, ...v })} />
+            <BlocPourQui valeur={infos} onChange={(v) => setInfos({ ...infos, ...v })} />
             <label>Description (pour vous et l'IA : à quoi elle sert, quand l'utiliser, symptômes, machine)
               <textarea rows={4} value={infos.description} onChange={(e) => setInfos({ ...infos, description: e.target.value })} />
             </label>
             {infosModifiees && (
               <button type="button" className="btn prim" disabled={infos.titre.trim().length < 2 || infos.categorie.trim().length < 2}
-                onClick={() => maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { titre: infos.titre.trim(), categorie: infos.categorie.trim(), resume: infos.resume.trim() || null, description: infos.description.trim() || null, espace: infos.espace, etiquettes: infos.etiquettes, type: infos.type } }).then((r) => r && viderEtiquettes())}>
+                onClick={() => maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { titre: infos.titre.trim(), categorie: infos.categorie.trim(), resume: infos.resume.trim() || null, description: infos.description.trim() || null, espace: infos.espace, etiquettes: infos.etiquettes, type: infos.type, cibleCategories: infos.cibleCategories, cibleModeles: infos.cibleModeles } }).then((r) => r && viderEtiquettes())}>
                 Enregistrer
               </button>
             )}

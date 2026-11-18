@@ -7,7 +7,7 @@ import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
 import { chargerProcedures, chargerSolutions, ChoixCategorie, ImageApi, ResumeProcedure, Solution, viderSolutions } from './donneesProcedures';
 import './guides.css';
 import { BadgeZone } from '../../pages/Admin';
-import { BlocEtiquettes, EspaceContenu } from './Etiquettes';
+import { BlocPourQui, EspaceContenu } from './Etiquettes';
 
 /* Administration → Astuces & solutions (admin, en français). */
 
@@ -49,7 +49,7 @@ export function AdminSolutions() {
         {liste.map((s) => (
           <Link key={s.id} to={`/admin/solutions/${s.id}`} className="carte gx-resultat">
             <b>{s.titre} <BadgeZone zone={s.espace} /></b>
-            {s.etiquettes.length > 0 && <span className="et-mini">{s.etiquettes.map((e) => <span key={e}>🏷 {e}</span>)}</span>}
+            {(s.cibleCategories.length > 0 || s.etiquettes.length > 0) && <span className="et-mini">{[...s.cibleCategories, ...s.etiquettes].map((e) => <span key={e}>🎯 {e}</span>)}</span>}
             <span className="petit muted">
               {s.categorie}
               {s.publiee ? <span className="gx-publiee">✅ publiée</span> : <span className="gx-brouillon">🔒 non publiée</span>}
@@ -67,7 +67,7 @@ export function AdminSolution() {
   const guides = useGuidesAdmin();
   const [s, setS] = useState<Solution>();
   const [procedures, setProcedures] = useState<ResumeProcedure[]>([]);
-  const [f, setF] = useState({ titre: '', categorie: '', cause: '', texte: '', avertissement: '', mots: '', procedureId: '', espace: 'kiavik' as EspaceContenu, etiquettes: [] as string[] });
+  const [f, setF] = useState({ titre: '', categorie: '', cause: '', texte: '', avertissement: '', mots: '', procedureId: '', espace: 'kiavik' as EspaceContenu, etiquettes: [] as string[], cibleCategories: [] as string[], cibleModeles: [] as string[] });
   const [lien, setLien] = useState<Lien>({ guide: null, ecran: null, pastille: null });
   const [erreur, setErreur] = useState<unknown>();
   const [ok, setOk] = useState(false);
@@ -75,7 +75,7 @@ export function AdminSolution() {
 
   const appliquer = (x: Solution) => {
     setS(x);
-    setF({ titre: x.titre, categorie: x.categorie, cause: x.cause ?? '', texte: x.texte, avertissement: x.avertissement ?? '', mots: x.motsCles.join(', '), procedureId: x.procedureId ?? '', espace: x.espace, etiquettes: x.etiquettes });
+    setF({ titre: x.titre, categorie: x.categorie, cause: x.cause ?? '', texte: x.texte, avertissement: x.avertissement ?? '', mots: x.motsCles.join(', '), procedureId: x.procedureId ?? '', espace: x.espace, etiquettes: x.etiquettes, cibleCategories: x.cibleCategories, cibleModeles: x.cibleModeles });
     setLien({ guide: x.guide, ecran: x.ecran, pastille: x.pastille });
     viderSolutions();
   };
@@ -102,7 +102,7 @@ export function AdminSolution() {
       method: 'PATCH',
       json: {
         titre: f.titre, categorie: f.categorie, cause: f.cause || null, texte: f.texte, avertissement: f.avertissement || null,
-        espace: f.espace, etiquettes: f.etiquettes,
+        espace: f.espace, etiquettes: f.etiquettes, cibleCategories: f.cibleCategories, cibleModeles: f.cibleModeles,
         motsCles: f.mots.split(',').map((m) => m.trim()).filter(Boolean), procedureId: f.procedureId || null, ...lien,
       },
     });
@@ -133,7 +133,7 @@ export function AdminSolution() {
           Catégorie
           <ChoixCategorie valeur={f.categorie} onChange={(categorie) => setF({ ...f, categorie })} />
         </label>
-        <BlocEtiquettes espace={f.espace} etiquettes={f.etiquettes} onChange={(v) => setF({ ...f, ...v })} />
+        <BlocPourQui valeur={f} onChange={(v) => setF({ ...f, ...v })} />
         <label>Pourquoi ? (facultatif)<textarea rows={2} value={f.cause} maxLength={1000} onChange={(e) => setF({ ...f, cause: e.target.value })} /></label>
         <label>Que faire ?<textarea rows={5} value={f.texte} maxLength={3000} onChange={(e) => setF({ ...f, texte: e.target.value })} /></label>
         <label>⚠️ Précaution (facultatif)<input type="text" value={f.avertissement} maxLength={500} onChange={(e) => setF({ ...f, avertissement: e.target.value })} /></label>

@@ -188,7 +188,7 @@ export class EntretienService {
     const ordre: Record<Etat, number> = { retard: 0, bientot: 1, ok: 2 };
     return {
       id: m.id, nom: nomMachine(m.variante), surnom: m.surnom, numeroSerie: m.numeroSerie, miseEnService: m.miseEnService,
-      modeleId: m.variante.modeleId, espaces: m.variante.modele.espaces, etiquettes: m.variante.modele.etiquettes,
+      modeleId: m.variante.modeleId, espaces: m.variante.modele.espaces, etiquettes: m.variante.modele.etiquettes, categorie: m.variante.modele.categorie,
       imageUrl: imageMachine(m.variante),
       client: m.user,
       taches: taches.sort((a, b) => ordre[a.etat] - ordre[b.etat] || a.prochaine.getTime() - b.prochaine.getTime()),

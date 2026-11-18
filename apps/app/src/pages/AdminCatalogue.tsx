@@ -5,11 +5,11 @@ import { MiniatureMachine } from '../components/MiniatureMachine';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { BadgeZone } from './Admin';
-import { ChoixEtiquettes, viderEtiquettes } from '../espaces/kiavik/Etiquettes';
+import { ChoixEtiquettes, useCategoriesMachines, viderCategoriesMachines, viderEtiquettes } from '../espaces/kiavik/Etiquettes';
 
 /** Catalogue complet (administration) : Lazzeko et Kiavik. */
 export interface VarianteAdmin { id: string; nom: string; actif: boolean; imageUrl: string | null; imagePropre: boolean; reglages: boolean; machines: number }
-export interface ModeleAdmin { id: string; nom: string; espaces: string[]; etiquettes: string[]; technologie: string | null; imageUrl: string | null; variantes: VarianteAdmin[] }
+export interface ModeleAdmin { id: string; nom: string; espaces: string[]; etiquettes: string[]; categorie: string | null; technologie: string | null; imageUrl: string | null; variantes: VarianteAdmin[] }
 export interface FabricantAdmin { id: string; nom: string; modeles: ModeleAdmin[] }
 
 /**
@@ -163,11 +163,17 @@ function Modele({ f, mo, faire, nomEspace, espaces, BoutonImage }: {
         <BoutonImage cible="modeles" id={mo.id} a={!!mo.imageUrl} />
       </div>
       <div className="am-etiquettes">
-        <b className="petit">🏷 Étiquettes</b> <small className="muted">(familles, usages : ex. Laser pulsé, Soudure) — le client voit les pas-à-pas et Bon à savoir qui portent une de ces étiquettes</small>
-        {mo.espaces.length ? (
-          <ChoixEtiquettes espace={mo.espaces[0]} valeur={mo.etiquettes}
-            onChange={(l) => faire(`/admin/catalogue/modeles/${mo.id}`, { method: 'PATCH', json: { etiquettes: l } }).then(viderEtiquettes)} />
-        ) : <small className="muted">Rendez d'abord le modèle visible dans un espace.</small>}
+        <label className="petit"><b>Catégorie</b> <small className="muted">— les ressources ciblées « Pour qui ? » sur cette catégorie s'appliquent à cette machine</small>
+          <ChoixCategorieMachine espace={mo.espaces[0] ?? 'lazzeko'} valeur={mo.categorie}
+            onChange={(c) => faire(`/admin/catalogue/modeles/${mo.id}`, { method: 'PATCH', json: { categorie: c } }).then(() => { viderEtiquettes(); viderCategoriesMachines(); })} />
+        </label>
+        {mo.etiquettes.length > 0 && (
+          <details>
+            <summary className="petit muted">Anciennes étiquettes ({mo.etiquettes.length})</summary>
+            <ChoixEtiquettes espace={mo.espaces[0] ?? 'lazzeko'} valeur={mo.etiquettes}
+              onChange={(l) => faire(`/admin/catalogue/modeles/${mo.id}`, { method: 'PATCH', json: { etiquettes: l } }).then(viderEtiquettes)} />
+          </details>
+        )}
       </div>
       <div className="actions-avis">
         {espaces.map((s) => (
@@ -200,5 +206,23 @@ function Modele({ f, mo, faire, nomEspace, espaces, BoutonImage }: {
           onClick={() => faire('/admin/catalogue/variantes', { method: 'POST', json: { modeleId: mo.id, nom: variante } }).then((ok) => ok && setVariante(''))}>Ajouter</button>
       </div>
     </div>
+  );
+}
+
+/** Catégorie d'une machine : liste (Décapeuse, Soudeuse, Accessoire… et celles déjà utilisées) ou nouvelle. */
+function ChoixCategorieMachine({ espace, valeur, onChange }: { espace: string; valeur: string | null; onChange: (c: string | null) => void }) {
+  const cats = useCategoriesMachines().filter((c) => c.espace === espace).map((c) => c.categorie);
+  const liste = [...new Set([...cats, ...(valeur ? [valeur] : [])])];
+  return (
+    <select value={valeur ?? ''} onChange={(e) => {
+      if (e.target.value === '+') {
+        const n = prompt('Nouvelle catégorie de machine (ex. Nettoyeur, Marquage)')?.trim();
+        if (n) onChange(n);
+      } else onChange(e.target.value || null);
+    }}>
+      <option value="">— Sans catégorie</option>
+      {liste.map((c) => <option key={c} value={c}>{c}</option>)}
+      <option value="+">＋ Nouvelle catégorie…</option>
+    </select>
   );
 }

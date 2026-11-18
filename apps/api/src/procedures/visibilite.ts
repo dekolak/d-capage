@@ -38,20 +38,36 @@ export function verifierEspace(e?: string) {
   return e;
 }
 
-/** Étiquettes des machines du client (modèles visibles dans l'espace). */
-export async function etiquettesClient(prisma: PrismaService, userId: string, espace: string): Promise<Set<string>> {
+/** Ce que portent les machines du client (modèles visibles dans l'espace) : étiquettes, catégories, modèles. */
+export interface Siennes { etiquettes: Set<string>; categories: Set<string>; modeles: Set<string> }
+export async function machinesClient(prisma: PrismaService, userId: string, espace: string): Promise<Siennes> {
   const ms = await prisma.userMachine.findMany({
     where: { userId, variante: { modele: { espaces: { has: espace } } } },
-    select: { variante: { select: { modele: { select: { etiquettes: true } } } } },
+    select: { variante: { select: { modele: { select: { id: true, etiquettes: true, categorie: true } } } } },
   });
-  return new Set(ms.flatMap((m) => m.variante.modele.etiquettes.map(norm)));
+  return {
+    etiquettes: new Set(ms.flatMap((m) => m.variante.modele.etiquettes.map(norm))),
+    categories: new Set(ms.flatMap((m) => (m.variante.modele.categorie ? [norm(m.variante.modele.categorie)] : []))),
+    modeles: new Set(ms.map((m) => m.variante.modele.id)),
+  };
 }
 
-export const visible = (c: { espace: string; etiquettes: string[] }, espace: string, siennes: Set<string>) =>
-  c.espace === espace && (!c.etiquettes.length || c.etiquettes.some((e) => siennes.has(norm(e))));
+/** Ressource ciblée ? (catégories, modèles précis ou étiquettes) ; sinon elle est pour toutes les machines de l'espace. */
+export const ciblee = (c: { etiquettes: string[]; cibleCategories?: string[]; cibleModeles?: string[] }) =>
+  c.etiquettes.length + (c.cibleCategories?.length ?? 0) + (c.cibleModeles?.length ?? 0) > 0;
+
+export const visible = (c: { espace: string; etiquettes: string[]; cibleCategories?: string[]; cibleModeles?: string[] }, espace: string, s: Siennes) =>
+  c.espace === espace
+  && (!ciblee(c)
+    || (c.cibleModeles ?? []).some((id) => s.modeles.has(id))
+    || (c.cibleCategories ?? []).some((x) => s.categories.has(norm(x)))
+    || c.etiquettes.some((e) => s.etiquettes.has(norm(e))));
 
 /** Contexte d'un client (null = admin : il voit tout). */
-export type Lecteur = { espace: string; etiquettes: Set<string> } | null;
+export type Lecteur = ({ espace: string } & Siennes) | null;
 export async function lecteur(prisma: PrismaService, moi: { id: string; admin: boolean }, espace: string): Promise<Lecteur> {
-  return moi.admin ? null : { espace, etiquettes: await etiquettesClient(prisma, moi.id, espace) };
+  return moi.admin ? null : { espace, ...(await machinesClient(prisma, moi.id, espace)) };
 }
+
+/** Catégories nettoyées (sans doublon) ; modèles : ids. */
+export const nettoyerListe = (l?: string[]) => (l ? nettoyerEtiquettes(l) : undefined);

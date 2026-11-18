@@ -151,6 +151,8 @@ model Modele {
   plans         PlanEntretien[]
   /// Étiquettes (familles, usages : « Laser pulsé », « Soudure », « DXonJet »…) : le client voit les contenus qui en portent une.
   etiquettes    String[]    @default([])
+  /// Catégorie de machine (« Décapeuse », « Soudeuse », « Accessoire »…) : les ressources ciblées sur cette catégorie s'appliquent à ses machines.
+  categorie     String?
   /// Miniature de la machine (clé de stockage) : envoyée par l'admin, PNG de préférence.
   imageCle      String?
   imageMaj      DateTime?
@@ -512,6 +514,9 @@ model Procedure {
   envois      EnvoiPasAPas[]
   /// Étiquettes : vide = toutes les machines de l'espace ; sinon, les clients dont une machine porte une de ces étiquettes.
   etiquettes  String[]           @default([])
+  /// « Pour qui ? » : catégories de machines et modèles précis (ids). Tout vide = toutes les machines de l'espace.
+  cibleCategories String[]       @default([])
+  cibleModeles    String[]       @default([])
   publiee     Boolean            @default(false)
   ordre       Int                @default(0)
   /// Description détaillée (à quoi elle sert, quand l'utiliser, symptômes) : pour l'admin, et le catalogue lu par l'IA.
@@ -601,6 +606,8 @@ model Solution {
   /// Espace (lazzeko ou kiavik) et étiquettes, comme les pas-à-pas.
   espace         String           @default("kiavik")
   etiquettes     String[]         @default([])
+  cibleCategories String[]        @default([])
+  cibleModeles    String[]        @default([])
   cause          String?
   texte          String
   avertissement  String?

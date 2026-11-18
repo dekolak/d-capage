@@ -14,7 +14,7 @@ export interface ResumeProcedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string;
   nbEtapes: number; textes: string[];
   /** Espace (lazzeko ou kiavik) et étiquettes des machines concernées (vide = toutes). */
-  espace: 'lazzeko' | 'kiavik'; etiquettes: string[]; type: TypePasAPas;
+  espace: 'lazzeko' | 'kiavik'; etiquettes: string[]; type: TypePasAPas; cibleCategories: string[]; cibleModeles: string[];
   /** Procédure proposée à la fin. */
   suivanteId: string | null;
   /** Contient des questions (diagnostic). */
@@ -46,7 +46,7 @@ export interface Choix {
 }
 export interface Procedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string; etapes: Etape[];
-  espace: 'lazzeko' | 'kiavik'; etiquettes: string[]; type: TypePasAPas;
+  espace: 'lazzeko' | 'kiavik'; etiquettes: string[]; type: TypePasAPas; cibleCategories: string[]; cibleModeles: string[];
   /** Procédure proposée à la fin (« Continuer avec … ? »). */
   suivanteId: string | null;
   /** Admin seulement (pour l'IA). */
@@ -158,7 +158,7 @@ export interface Solution {
   id: string; titre: string; categorie: string; cause: string | null; texte: string; avertissement: string | null; motsCles: string[];
   guide: string | null; ecran: string | null; pastille: string | null; procedureId: string | null;
   photo: string | null; publiee: boolean; ordre: number; updatedAt: string;
-  espace: 'lazzeko' | 'kiavik'; etiquettes: string[];
+  espace: 'lazzeko' | 'kiavik'; etiquettes: string[]; cibleCategories: string[]; cibleModeles: string[];
 }
 
 let cacheSolutions: Promise<Solution[]> | null = null;
@@ -211,4 +211,18 @@ export function ImageApi({ chemin, className, onClick }: { chemin: string; class
     };
   }, [chemin]);
   return src ? <img src={src} className={className} onClick={onClick} alt="" /> : <div className={`img-vide ${className ?? ''}`} />;
+}
+
+const normC = (e: string) => e.trim().toLowerCase();
+/** « Pour qui ? » : la ressource concerne-t-elle cette machine (modèle) ? Rien de coché = toutes les machines de l'espace. */
+export function pourModele(
+  c: { etiquettes: string[]; cibleCategories?: string[]; cibleModeles?: string[] },
+  m: { modeleId: string; categorie: string | null; etiquettes: string[] },
+): boolean {
+  const cc = c.cibleCategories ?? [];
+  const cm = c.cibleModeles ?? [];
+  if (!c.etiquettes.length && !cc.length && !cm.length) return true;
+  return cm.includes(m.modeleId)
+    || (!!m.categorie && cc.some((x) => normC(x) === normC(m.categorie!)))
+    || c.etiquettes.some((e) => m.etiquettes.some((x) => normC(x) === normC(e)));
 }

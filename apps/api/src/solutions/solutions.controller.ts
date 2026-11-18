@@ -22,6 +22,8 @@ class ChampsDto {
   @IsOptional() @IsInt() @Min(0) ordre?: number;
   @IsOptional() @IsIn(['lazzeko', 'kiavik']) espace?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
+  @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) cibleCategories?: string[];
+  @IsOptional() @IsArray() @ArrayMaxSize(100) @IsString({ each: true }) @MaxLength(40, { each: true }) cibleModeles?: string[];
 }
 class CreerDto extends ChampsDto {
   @IsString() @MinLength(3) @MaxLength(160) titre!: string;

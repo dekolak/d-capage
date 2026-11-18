@@ -23,14 +23,15 @@ Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **L
 ## Type de pas-à-pas
 🎓 **Tuto**, 📋 **Procédure**, 🩺 **Dépannage**, 🧽 **Entretien** : choisi dans l'éditeur et au démarrage du mode terrain ; le client voit l'icône. Les pas-à-pas existants : « Dépannage » s'ils ont des questions, « Entretien » s'ils sont dans la catégorie Entretien, sinon « Procédure ».
 
-## Étiquettes : qui voit quel contenu
-- Chaque **pas-à-pas** et **Bon à savoir** appartient à **un espace** (Lazzeko **ou** Kiavik, jamais les deux) et porte des **étiquettes** facultatives (🏷 familles, usages : *Laser pulsé*, *Soudure*, *DXonJet*…).
-- Chaque **modèle de machine** (Administration → Machines) porte aussi ses étiquettes, ex. soudeuse = *Laser pulsé* + *Soudure* + *Décapage*.
-- **Le client voit un contenu** de son espace s'il n'a **pas d'étiquette** (= toutes les machines), ou si **une de ses machines** porte **une** de ses étiquettes. Les autres lui sont cachés (listes, recherche, accueil).
-- **Nouvelle machine** : donnez-lui ses étiquettes une fois, elle reçoit tout de suite tous les contenus correspondants.
-- **Bien étiqueter** : l'étiquette la plus précise (« Souder de l'inox » → *Soudure*, pas *Laser pulsé*). Sous les étiquettes, « 👁 Visible par » montre les modèles concernés ; en rouge si aucune machine ne porte ces étiquettes.
-- Où : éditeur d'un pas-à-pas et d'un Bon à savoir, **mode terrain** (au démarrage), liste des pas-à-pas (filtres espace / étiquette / état). Les clients Lazzeko ont besoin de l'accès « Pas-à-pas et Bon à savoir » (Lazzeko) sur leur compte.
-- **Côté client : 🛠 Ma machine** (bandeau en haut de l'accueil, Lazzeko et Kiavik, et Compte) : une page par machine du client, avec **🛠 Utilisation** (pas-à-pas rangés par étiquette : Soudure, Décapage…, puis Général), **💡 Aide** (dépannages guidés et Bon à savoir), **📒 Entretien** (son carnet) et, côté Lazzeko, **🎛 Réglages** (fiches de réglage). S'il a plusieurs machines, il choisit en haut.
+## Pour qui ? (qui voit quel contenu)
+- Chaque **pas-à-pas** et **Bon à savoir** appartient à **un espace** (Lazzeko **ou** Kiavik, jamais les deux).
+- Chaque **modèle de machine** (Administration → Machines) a une **catégorie** : *Décapeuse*, *Soudeuse*, *Accessoire* (Kiavik : *Imprimante*, *Accessoire*), ou « ＋ Nouvelle catégorie… ».
+- Sur une ressource, **« Pour qui ? »** : *Toutes les machines* (par défaut) ou *Certaines machines* → cocher des **catégories** et/ou des **machines précises**.
+- **Le client voit un contenu** de son espace s'il est pour toutes les machines, ou si **une de ses machines** est cochée ou est dans une catégorie cochée.
+- **Nouvelle machine** : choisissez sa catégorie, elle reçoit tout de suite les contenus de cette catégorie.
+- « 👁 Visible par » montre les modèles concernés. Les anciennes étiquettes restent prises en compte (affichées en puces, supprimables).
+- Où : éditeur d'un pas-à-pas et d'un Bon à savoir, **mode terrain** (au démarrage), liste des pas-à-pas (filtres espace / pour qui / état). Les clients Lazzeko ont besoin de l'accès « Pas-à-pas et Bon à savoir » (Lazzeko) sur leur compte.
+- **Côté client : 🛠 Ma machine** (bandeau en haut de l'accueil, Lazzeko et Kiavik, et Compte) : une page par machine du client, avec **🛠 Utilisation** (pas-à-pas rangés : ⭐ Pour votre machine, sa catégorie, puis Général), **💡 Aide** (dépannages guidés et Bon à savoir), **📒 Entretien** (son carnet) et, côté Lazzeko, **🎛 Réglages** (fiches de réglage). S'il a plusieurs machines, il choisit en haut.
 - **Pas-à-pas, Bon à savoir, Dépannages reçus** sont dans la section **Commun** de l'administration : on y crée les contenus des deux espaces (filtre espace en haut de la liste).
 
 ## Machines (Lazzeko et Kiavik)
