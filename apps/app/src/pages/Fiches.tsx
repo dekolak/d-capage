@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { CarteFiche } from '../components/CarteFiche';
 import { Chargement, Erreur, FiltreTags } from '../components/Composants';
 import { api, GroupeTag, MaMachine, PageFiches } from '../lib/api';
@@ -9,14 +9,16 @@ import { noterRecherche } from '../lib/activite';
 import { t, tn } from '../lib/i18n';
 import { LienMaMachine } from './MaMachine';
 
-/** Mes réglages : recherche texte + filtres machine et tags (combinables). */
+/** Mes réglages : recherche texte, machine (puces visibles si plusieurs machines, ?machine= depuis Ma machine) et tags, combinables. */
 export default function Fiches() {
   const [data, setData] = useState<PageFiches>();
   const [groupes, setGroupes] = useState<GroupeTag[]>([]);
   const [machines, setMachines] = useState<MaMachine[]>([]);
   const [q, setQ] = useState('');
   const [tags, setTags] = useState<string[]>([]);
-  const [machine, setMachine] = useState('');
+  const [params, setParams] = useSearchParams();
+  const machine = params.get('machine') ?? '';
+  const setMachine = (id: string) => setParams(id ? { machine: id } : {}, { replace: true });
   const [ouverts, setOuverts] = useState(false);
   const [err, setErr] = useState<unknown>();
 
@@ -35,8 +37,8 @@ export default function Fiches() {
     return () => clearTimeout(h);
   }, [q, tags, machine]);
 
-  const nbFiltres = tags.length + (machine ? 1 : 0);
-  const filtre = nbFiltres > 0 || q.trim() !== '';
+  const nbFiltres = tags.length;
+  const filtre = nbFiltres > 0 || !!machine || q.trim() !== '';
 
   // journal d'activité : recherche notée quand le client arrête de taper
   useEffect(() => {
@@ -55,6 +57,14 @@ export default function Fiches() {
           <span>›</span>
         </Link>
       )}
+      {machines.length > 1 && (
+        <div className="puces" role="group" aria-label={t('lazzeko.filtres.machine')}>
+          <button type="button" className={`puce ${!machine ? 'on' : ''}`} onClick={() => setMachine('')}>{t('lazzeko.filtres.toutes')}</button>
+          {machines.map((m) => (
+            <button key={m.id} type="button" className={`puce ${machine === m.id ? 'on' : ''}`} onClick={() => setMachine(m.id)}>{m.surnom || nomMachine(m)}</button>
+          ))}
+        </div>
+      )}
       <div className="filtres">
         <input className="recherche" placeholder={t('lazzeko.fiches.rechercher')} value={q} onChange={(e) => setQ(e.target.value)} />
         <button type="button" className="btn petit" onClick={() => setOuverts(!ouverts)}>
@@ -62,18 +72,9 @@ export default function Fiches() {
         </button>
         {ouverts && (
           <>
-            {machines.length > 1 && (
-              <label className="champ-tag">
-                <span>{t('lazzeko.filtres.machine')}</span>
-                <select value={machine} onChange={(e) => setMachine(e.target.value)}>
-                  <option value="">{t('lazzeko.filtres.toutes')}</option>
-                  {machines.map((m) => <option key={m.id} value={m.id}>{nomMachine(m)}</option>)}
-                </select>
-              </label>
-            )}
             <FiltreTags groupes={groupes} tags={tags} onChange={setTags} />
             {nbFiltres > 0 && (
-              <button type="button" className="lien btn-lien" onClick={() => { setTags([]); setMachine(''); }}>{t('lazzeko.filtres.effacer')}</button>
+              <button type="button" className="lien btn-lien" onClick={() => setTags([])}>{t('lazzeko.filtres.effacer')}</button>
             )}
           </>
         )}
