@@ -68,6 +68,7 @@ export default function Admin() {
     { zone: 'lazzeko', to: '/admin/avis', titre: '⭐ Avis', texte: 'masquer ceux qui ne conviennent pas' },
     { zone: 'lazzeko', to: '/admin/familles', titre: '🏷️ Familles et précisions', texte: 'matériaux, à enlever, applications : listes et précisions des clients' },
     { zone: 'lazzeko', to: '/admin/aide', titre: "🆘 Demandes d'aide", texte: 'bouton sur les fiches, demandes reçues', compte: compte.aide },
+    { zone: 'commun', to: '/admin/academie', titre: '🎓 Académie', texte: 'cours en vidéo (Vimeo), simulateurs, réservés à une machine ou pour tous' },
     { zone: 'commun', to: '/admin/categories', titre: '🗂 Catégories', texte: "sections de l'accueil Kiavik et des Guides de Ma machine : renommer, ajouter, ordonner, ranger" },
     { zone: 'commun', to: '/admin/procedures', titre: '📋 Pas-à-pas', texte: 'Lazzeko et Kiavik : créer, étiqueter, publier' },
     { zone: 'commun', to: '/admin/diagnostics', titre: '🩺 Dépannages reçus', texte: 'résultats envoyés par les clients' },

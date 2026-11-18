@@ -5,7 +5,7 @@ Compte → **Administration** (en français ; les écrans clients peuvent être 
 ## Organisation de l'administration
 Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **Lazzeko** (orange), **Kiavik** (bleu). Le même badge est sur le titre de chaque page.
 - Toujours dans le même ordre : **Commun**, puis **Lazzeko**, puis **Kiavik**. Chaque section se replie (▸ / ▾) ; le téléphone s'en souvient. Au départ, seule la section de l'espace ouvert est dépliée ; un compteur rouge sur le titre signale ce qui attend (tags, demandes d'aide). Ouvrir une entrée d'un autre espace **bascule dans cet espace**.
-- **Commun** : 👥 Utilisateurs, 💬 Messages, 📜 Conditions d'utilisation, 🔑 Clés API, 📤 Envoi vers une API, 🔧 Machines, 🎥 Mode terrain, 📒 Entretien, 🗂 Catégories, 📋 Pas-à-pas, 🩺 Dépannages reçus, 💡 Bon à savoir. En haut, toujours : 🔐 Mots de passe oubliés et 🔔 Notifications.
+- **Commun** : 👥 Utilisateurs, 💬 Messages, 📜 Conditions d'utilisation, 🔑 Clés API, 📤 Envoi vers une API, 🔧 Machines, 🎥 Mode terrain, 📒 Entretien, 🗂 Catégories, 🎓 Académie (voir [ACADEMIE.md](ACADEMIE.md)), 📋 Pas-à-pas, 🩺 Dépannages reçus, 💡 Bon à savoir. En haut, toujours : 🔐 Mots de passe oubliés et 🔔 Notifications.
 - **Lazzeko** : 📝 Fiches de réglage, ⭐ Avis, 🏷️ Familles et précisions, 🆘 Demandes d'aide (avec le nombre en attente).
 - **🗂 Catégories** (Commun) : les sections de l'accueil Kiavik **et** de l'onglet « 📚 Guides » de Ma machine (Lazzeko et Kiavik). Les catégories sont communes aux deux espaces ; une section n'apparaît chez un client que si elle a du contenu pour lui. Filtre « Espace » et badge Lazzeko / Kiavik sur chaque ligne.
 

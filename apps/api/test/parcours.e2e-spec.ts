@@ -1447,4 +1447,97 @@ describe('Parcours complet', () => {
     await http.patch(`/api/users/${u.id}`).set(auth(admin)).send({ motDePasse: 'donneparadmin2', motDePasseProvisoire: false }).expect(200);
     expect((await http.get('/api/users').set(auth(admin))).body.find((x: any) => x.id === u.id).motDePasseProvisoire).toBe(false);
   });
+
+  it('Académie : cours, leçons en blocs, cadenas « Pour qui ? », progression, simulateur HTML, fichiers', async () => {
+    const A = { ...auth(admin), 'X-Espace': 'kiavik' };
+    // modèle Kiavik + client qui l'a, client qui ne l'a pas
+    let cat = (await http.post('/api/admin/catalogue/fabricants').set(A).send({ nom: `Acad ${id}` })).body;
+    const fab = cat.find((f: any) => f.nom === `Acad ${id}`);
+    cat = (await http.post('/api/admin/catalogue/modeles').set(A).send({ fabricantId: fab.id, nom: 'F1080', espaces: ['kiavik'] })).body;
+    const mo = cat.find((f: any) => f.id === fab.id).modeles[0];
+    const client = async (nom: string) => {
+      const u = (await http.post('/api/users').set(A).send({ identifiant: `${nom}-${id}`, motDePasse: 'motdepasse1', modules: ['guide-dxonjet', 'academie-kiavik'] })).body;
+      const H = { ...auth((await http.post('/api/auth/connexion').send({ identifiant: `${nom}-${id}`, motDePasse: 'motdepasse1' })).body.jeton), 'X-Espace': 'kiavik' };
+      const { version } = (await http.get('/api/conditions?espace=kiavik').set(H)).body;
+      await http.post('/api/moi/conditions').set(H).send({ version }).expect(201);
+      return { u, H };
+    };
+    const avec = await client('acav');
+    const sans = await client('acsa');
+    await http.post(`/api/users/${avec.u.id}/machines`).set(A).send({ varianteId: mo.variantes[0].id }).expect(201);
+
+    // cours général + cours réservé au modèle
+    const general = (await http.post('/api/admin/academie/cours').set(A).send({ espace: 'kiavik', titre: `Général ${id}` })).body;
+    const dedie = (await http.post('/api/admin/academie/cours').set(A).send({ espace: 'kiavik', titre: `F1080 ${id}`, description: 'Prise en main' })).body;
+    await http.patch(`/api/admin/academie/cours/${dedie.id}`).set(A).send({ cibleModeles: [mo.id], publie: true }).expect(200);
+    await http.patch(`/api/admin/academie/cours/${general.id}`).set(A).send({ publie: true }).expect(200);
+    expect((await http.post('/api/admin/academie/cours').set(avec.H).send({ espace: 'kiavik', titre: 'x' })).status).toBe(403);
+
+    // simulateur HTML + fichier image
+    const sim = (await http.post('/api/admin/academie/simulateurs').set(A).field('nom', 'Écran F1080').field('espace', 'kiavik').field('modeleId', mo.id)
+      .attach('fichier', Buffer.from('<!doctype html><button>Start</button><script>1</script>'), 'f1080.html')).body;
+    expect(sim).toMatchObject({ nom: 'Écran F1080', espace: 'kiavik', modeleId: mo.id });
+    expect((await http.post('/api/admin/academie/simulateurs').set(A).field('nom', 'x').attach('fichier', Buffer.from('pas du html'), 'x.html')).status).toBe(400);
+    const img = (await http.post('/api/admin/academie/fichiers').set(A).attach('fichier', JPEG, 'photo.jpg')).body;
+    expect(img).toMatchObject({ type: 'image/jpeg' });
+    expect((await http.post('/api/admin/academie/fichiers').set(A).attach('fichier', Buffer.from('exe'), 'x.exe')).status).toBe(400);
+
+    // leçons en blocs (validés)
+    const blocs = [
+      { type: 'titre', texte: 'Démarrer' },
+      { type: 'vimeo', url: 'https://vimeo.com/123456789/abcdef1234', titre: 'Démarrage', vignette: 'https://i.vimeocdn.com/video/1.jpg', duree: 95, inconnu: 'retiré' },
+      { type: 'texte', texte: 'Appuyez sur **Start**.' },
+      { type: 'encadre', niveau: 'avertissement', texte: 'Lunettes obligatoires' },
+      { type: 'simulateur', simulateurId: sim.id },
+      { type: 'image', fichierId: img.id, legende: 'La tête' },
+      { type: 'html', html: '<p>Calcul</p>' },
+      { type: 'fichier', nom: 'Notice', url: 'https://exemple.fr/notice.pdf' },
+    ];
+    expect((await http.post(`/api/admin/academie/cours/${dedie.id}/lecons`).set(A).send({ titre: 'x', blocs: [{ type: 'vimeo', url: 'https://youtube.com/watch?v=1' }] })).status).toBe(400);
+    expect((await http.post(`/api/admin/academie/cours/${dedie.id}/lecons`).set(A).send({ titre: 'x', blocs: [{ type: 'script' }] })).status).toBe(400);
+    const l1 = (await http.post(`/api/admin/academie/cours/${dedie.id}/lecons`).set(A).send({ titre: 'Leçon 1', blocs })).body;
+    const l2 = (await http.post(`/api/admin/academie/cours/${dedie.id}/lecons`).set(A).send({ titre: 'Leçon 2' })).body;
+    await http.patch(`/api/admin/academie/lecons/${l2.id}`).set(A).send({ blocs: [{ type: 'texte', texte: 'Fin' }] }).expect(200);
+    expect(l1.blocs[1]).not.toHaveProperty('inconnu');
+
+    // client avec la machine : tout ouvert ; sans : cadenas
+    const listeAvec = (await http.get('/api/academie').set(avec.H)).body.filter((c: any) => c.titre.endsWith(id));
+    expect(listeAvec.map((c: any) => [c.titre, c.verrouille])).toEqual([[`Général ${id}`, false], [`F1080 ${id}`, false]]);
+    const coursSans = (await http.get('/api/academie').set(sans.H)).body.find((c: any) => c.id === dedie.id);
+    expect(coursSans).toMatchObject({ verrouille: true, pourQui: [`Acad ${id} F1080`], reprendre: null, vignette: 'https://i.vimeocdn.com/video/1.jpg', nbLecons: 2 });
+    const refus = await http.get(`/api/academie/lecons/${l1.id}`).set(sans.H);
+    expect(refus.status).toBe(403);
+    expect(refus.body.code).toBe('VERROUILLE');
+    expect((await http.get(`/api/academie/cours/${dedie.id}`).set(sans.H)).status).toBe(403);
+
+    // leçon : blocs, simulateur nommé, fichier avec chemin, navigation
+    const lecon = (await http.get(`/api/academie/lecons/${l1.id}`).set(avec.H)).body;
+    expect(lecon).toMatchObject({ titre: 'Leçon 1', faite: false, suivante: l2.id, precedente: null, cours: { id: dedie.id, rang: 1, nbLecons: 2 } });
+    expect(lecon.blocs.find((b: any) => b.type === 'simulateur').nom).toBe('Écran F1080');
+    expect(lecon.blocs.find((b: any) => b.type === 'image').chemin).toBe(`/academie/fichiers/${img.id}`);
+    expect((await http.get(`/api/academie/simulateurs/${sim.id}`).set(avec.H)).body.html).toContain('<button>Start</button>');
+    const f = await http.get(`/api/academie/fichiers/${img.id}`).set(avec.H);
+    expect(f.status).toBe(200);
+    expect(f.headers['content-type']).toBe('image/jpeg');
+
+    // progression et reprise
+    await http.post(`/api/academie/lecons/${l1.id}/terminee`).set(avec.H).send({ terminee: true }).expect(200);
+    let c = (await http.get('/api/academie').set(avec.H)).body.find((x: any) => x.id === dedie.id);
+    expect(c).toMatchObject({ faites: 1, reprendre: l2.id });
+    expect((await http.get(`/api/academie/cours/${dedie.id}`).set(avec.H)).body.lecons.map((x: any) => x.faite)).toEqual([true, false]);
+    await http.post(`/api/academie/lecons/${l1.id}/terminee`).set(avec.H).send({ terminee: false }).expect(200);
+    c = (await http.get('/api/academie').set(avec.H)).body.find((x: any) => x.id === dedie.id);
+    expect(c.faites).toBe(0);
+
+    // brouillon invisible ; autre espace invisible ; sans le module : refusé
+    await http.patch(`/api/admin/academie/cours/${general.id}`).set(A).send({ publie: false }).expect(200);
+    expect((await http.get('/api/academie').set(avec.H)).body.some((x: any) => x.id === general.id)).toBe(false);
+    expect((await http.get('/api/academie').set({ ...avec.H, 'X-Espace': 'lazzeko' })).status).toBe(403);
+    // ordre, suppression
+    await http.post(`/api/admin/academie/lecons/${l2.id}/deplacer`).set(A).send({ sens: -1 }).expect(200);
+    expect((await http.get(`/api/academie/cours/${dedie.id}`).set(avec.H)).body.lecons.map((x: any) => x.id)).toEqual([l2.id, l1.id]);
+    await http.delete(`/api/admin/academie/simulateurs/${sim.id}`).set(A).expect(200);
+    for (const x of [general, dedie]) await http.delete(`/api/admin/academie/cours/${x.id}`).set(A).expect(200);
+    expect((await http.get(`/api/academie/lecons/${l1.id}`).set(avec.H)).status).toBe(404);
+  });
 });

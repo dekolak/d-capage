@@ -65,25 +65,26 @@ model User {
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt
 
-  machines           UserMachine[]
-  fiches             Fiche[]
-  evaluations        Evaluation[]
-  apiKeys            ApiKey[]
-  lecturesAnnonces   AnnonceLecture[]
-  reponsesAnnonces   AnnonceReponse[]
-  envoisRecus        EnvoiPasAPas[]
-  entretiensFaits    EntretienFait[]
-  parcoursTermines   ParcoursTermine[]
-  demandesAide       DemandeAide[]
+  machines            UserMachine[]
+  fiches              Fiche[]
+  evaluations         Evaluation[]
+  apiKeys             ApiKey[]
+  lecturesAnnonces    AnnonceLecture[]
+  reponsesAnnonces    AnnonceReponse[]
+  envoisRecus         EnvoiPasAPas[]
+  entretiensFaits     EntretienFait[]
+  parcoursTermines    ParcoursTermine[]
+  demandesAide        DemandeAide[]
   /// Modules accessibles (et donc espaces : Lazzeko, Kiavik…) — voir src/espaces/espaces.ts.
-  modules            UserModule[]
+  modules             UserModule[]
   /// Conditions d'utilisation acceptées, par espace.
-  acceptations       AcceptationConditions[]
-  activites          Activite[]
-  demandesMotDePasse DemandeMotDePasse[]
-  abonnementsPush    AbonnementPush[]
-  diagnostics        DiagnosticEnvoye[]
-  signalements       SignalementEtape[]
+  acceptations        AcceptationConditions[]
+  activites           Activite[]
+  demandesMotDePasse  DemandeMotDePasse[]
+  abonnementsPush     AbonnementPush[]
+  diagnostics         DiagnosticEnvoye[]
+  signalements        SignalementEtape[]
+  progressionAcademie ProgressionAcademie[]
 
   @@index([numeroOdoo])
 }
@@ -968,4 +969,75 @@ model EnvoiPasAPas {
   createdAt     DateTime     @default(now())
 
   @@index([userId, createdAt])
+}
+
+// ---------- Académie (cours en vidéo, Lazzeko et Kiavik) ----------
+
+/// Cours de l'Académie : une suite de leçons. Visible par tous les clients de l'espace (module academie-<espace>) ;
+/// ciblé « Pour qui ? » (modèles, catégories de machines) : les autres clients le voient avec un cadenas.
+model CoursAcademie {
+  id              String          @id @default(cuid())
+  espace          String
+  titre           String
+  description     String?
+  /// Image de couverture (stockage) ; sinon la vignette de la première vidéo.
+  couvertureCle   String?
+  publie          Boolean         @default(false)
+  ordre           Int             @default(0)
+  cibleCategories String[]        @default([])
+  cibleModeles    String[]        @default([])
+  /// Toujours vide (même filtre que les pas-à-pas).
+  etiquettes      String[]        @default([])
+  lecons          LeconAcademie[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([espace])
+}
+
+/// Leçon = une page faite de blocs (titre, texte, Vimeo, image, encadré, simulateur, HTML libre, fichier), en JSON.
+model LeconAcademie {
+  id          String                @id @default(cuid())
+  coursId     String
+  cours       CoursAcademie         @relation(fields: [coursId], references: [id], onDelete: Cascade)
+  titre       String
+  ordre       Int                   @default(0)
+  blocs       Json                  @default("[]")
+  progression ProgressionAcademie[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([coursId])
+}
+
+/// Simulateur d'une machine : un fichier HTML (stockage), réutilisé dans les leçons (bloc « simulateur »).
+model SimulateurAcademie {
+  id        String   @id @default(cuid())
+  espace    String
+  nom       String
+  modeleId  String?
+  cle       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Image ou PDF d'un bloc de leçon.
+model FichierAcademie {
+  id        String   @id @default(cuid())
+  cle       String
+  nom       String
+  type      String
+  createdAt DateTime @default(now())
+}
+
+/// Leçon terminée par un client (progression, reprise).
+model ProgressionAcademie {
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leconId   String
+  lecon     LeconAcademie @relation(fields: [leconId], references: [id], onDelete: Cascade)
+  termineLe DateTime      @default(now())
+
+  @@id([userId, leconId])
+  @@index([leconId])
 }
