@@ -1028,6 +1028,29 @@ describe('Parcours complet', () => {
     // l'admin voit tout, avec espace et étiquettes
     expect((await http.get(`/api/procedures/${soudure.id}`).set(A)).body).toMatchObject({ espace: 'lazzeko', etiquettes: [`SOUDURE ${id}`] });
 
+    // n° court de la machine (621…) et envoi d'un pas-à-pas : même non publié et pour une autre machine
+    const machinesL = (await http.get(`/api/users/${u.id}/machines`).set(A)).body;
+    const num = machinesL[0].numero;
+    expect(num).toBeGreaterThanOrEqual(621);
+    expect(machinesL[1].numero).toBe(num + 1);
+    const prive = (await http.post('/api/admin/procedures').set(A).send({ titre: `Prive ${id}`, espace: 'lazzeko', etiquettes: [`Autre ${id}`], type: 'tuto' })).body;
+    expect(prive.type).toBe('tuto');
+    expect((await http.get(`/api/procedures/${prive.id}`).set(L)).status).toBe(404);
+    expect((await http.get(`/api/admin/machines/numero/L${num}`).set(A)).body).toMatchObject({ numero: num, client: { id: u.id } });
+    expect((await http.get('/api/admin/machines/numero/99999').set(A)).status).toBe(404);
+    expect((await http.post(`/api/admin/procedures/${prive.id}/envoyer`).set(L).send({ numero: String(num) })).status).toBe(403);
+    const env = (await http.post(`/api/admin/procedures/${prive.id}/envoyer`).set(A).send({ numero: `l-${num}`, message: 'Pour les filtres' })).body;
+    expect(env).toMatchObject({ client: { id: u.id }, machine: { numero: num } });
+    let recus = (await http.get('/api/procedures/envois/miens').set(L)).body;
+    expect(recus[0]).toMatchObject({ message: 'Pour les filtres', vu: false, ouvert: false, pasAPas: { id: prive.id, type: 'tuto' } });
+    expect((await http.get(`/api/procedures/${prive.id}`).set(L)).status).toBe(200);
+    await http.post(`/api/procedures/envois/${recus[0].id}/termine`).set(L).expect(201);
+    recus = (await http.get('/api/procedures/envois/miens').set(L)).body;
+    expect(recus[0]).toMatchObject({ vu: true, ouvert: true, termine: true });
+    expect((await http.get(`/api/admin/procedures/${prive.id}/envois`).set(A)).body[0]).toMatchObject({ message: 'Pour les filtres', machine: { numero: num } });
+    expect((await http.post(`/api/procedures/envois/${recus[0].id}/vu`).set(L2)).status).toBe(403);
+    await http.delete(`/api/admin/procedures/${prive.id}`).set(A).expect(200);
+
     for (const p of [general, soudure, lentille, kiavik]) await http.delete(`/api/admin/procedures/${p.id}`).set(A).expect(200);
     await http.delete(`/api/admin/solutions/${astuce.id}`).set(A).expect(200);
     expect(u2.id).toBeTruthy();

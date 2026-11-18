@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
-import { ResumeProcedure, Solution, useAccesProcedures, useProcedures, useSolutions } from '../espaces/kiavik/donneesProcedures';
+import { ICONE_TYPE, ResumeProcedure, Solution, useAccesProcedures, useProcedures, useSolutions } from '../espaces/kiavik/donneesProcedures';
+import { EnvoiRecu, ouvrirRecu } from '../components/EnvoisRecus';
 import { ListeProcedures } from '../espaces/kiavik/Procedures';
 import { ListeSolutions } from '../espaces/kiavik/Solutions';
 import { api } from '../lib/api';
@@ -12,7 +13,7 @@ import { t, tn } from '../lib/i18n';
 import { date } from '../lib/util';
 import { CarnetMachine, ICONE_ETAT } from './Carnet';
 
-type Onglet = 'utilisation' | 'aide' | 'entretien' | 'reglages';
+type Onglet = 'utilisation' | 'aide' | 'recus' | 'entretien' | 'reglages';
 const norm = (e: string) => e.trim().toLowerCase();
 /** Le contenu concerne cette machine : sans étiquette (toutes les machines), ou une étiquette en commun avec le modèle. */
 const pourMachine = (c: { etiquettes: string[] }, m: { etiquettes: string[] }) =>
@@ -37,9 +38,13 @@ export default function MaMachine() {
   const [onglet, setOnglet] = useState<Onglet>('utilisation');
   const { liste: procedures } = useProcedures();
   const { liste: solutions } = useSolutions();
+  const [recus, setRecus] = useState<EnvoiRecu[]>([]);
   useEffect(() => {
     api<CarnetMachine[]>('/moi/carnet').then(setMachines).catch(setErr);
   }, []);
+  useEffect(() => {
+    if (acces) api<EnvoiRecu[]>('/procedures/envois/miens').then(setRecus).catch(() => {});
+  }, [acces]);
 
   if (err) return <div className="page"><Erreur e={err} /></div>;
   if (!machines) return <Chargement />;
@@ -52,8 +57,10 @@ export default function MaMachine() {
     );
   const m = machines.find((x) => x.id === id) ?? machines[0];
   const reglages = espace.slug === 'lazzeko' && !!moi?.modules.includes('reglages-decapage');
+  const recusIci = recus.filter((e) => e.machineId === m.id);
   const onglets: { o: Onglet; l: string }[] = [
     ...(acces ? [{ o: 'utilisation' as const, l: t('maMachine.utilisation') }, { o: 'aide' as const, l: t('maMachine.aide') }] : []),
+    ...(recusIci.length ? [{ o: 'recus' as const, l: t('maMachine.recus') }] : []),
     { o: 'entretien', l: t('maMachine.entretien') },
     ...(reglages ? [{ o: 'reglages' as const, l: t('maMachine.reglages') }] : []),
   ];
@@ -92,7 +99,14 @@ export default function MaMachine() {
             {m.miseEnService && t('carnet.miseEnService', { date: date(m.miseEnService) })}
           </small>
         </span>
+        {m.numero && (
+          <span className="mm-numero" title={t('maMachine.numeroAide')}>
+            <small>{t('maMachine.numero')}</small>
+            <b>{m.numero}</b>
+          </span>
+        )}
       </div>
+      {m.numero && <p className="muted petit">{t('maMachine.numeroAide')}</p>}
 
       <div className="seg mm-onglets">
         {onglets.map((x) => (
@@ -129,6 +143,17 @@ export default function MaMachine() {
           )}
           {!depannages.length && !astuces.length && <p className="muted">{t('maMachine.rienAide')}</p>}
         </>
+      )}
+
+      {actif === 'recus' && (
+        <div className="gx-resultats">
+          {recusIci.map((e) => (
+            <button key={e.id} type="button" className="carte gx-resultat" onClick={() => ouvrirRecu(e, nav)}>
+              <b>{ICONE_TYPE[e.pasAPas.type] ?? '📋'} {e.pasAPas.titre}{e.termine ? ` · ${t('envoi.fait')}` : ''}</b>
+              <span className="petit muted">{t('envoi.recuLe', { date: date(e.creeLe), auteur: e.auteur })}{e.message ? ` · « ${e.message} »` : ''}</span>
+            </button>
+          ))}
+        </div>
       )}
 
       {actif === 'entretien' && (

@@ -32,7 +32,7 @@ export class ProceduresService {
   private vue(p: ProcedureComplete, admin = true) {
     return {
       id: p.id, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee, ordre: p.ordre, updatedAt: p.updatedAt,
-      suivanteId: p.suivanteId, espace: p.espace, etiquettes: p.etiquettes,
+      suivanteId: p.suivanteId, espace: p.espace, etiquettes: p.etiquettes, type: p.type,
       ...(admin ? { description: p.description, prompt: p.prompt, resumeIa: p.resumeIa, resumeIaLe: p.resumeIaLe } : {}),
       etapes: p.etapes.map(({ photos, procedureId: _p, note, choix, ...e }) => ({
         ...e,
@@ -74,14 +74,15 @@ export class ProceduresService {
     }));
   }
 
-  async lire(id: string, admin: boolean, qui: Lecteur = null) {
+  /** `recu` : le client a reçu ce pas-à-pas (envoi par le n° de sa machine) : il le lit même non publié ou pour une autre machine. */
+  async lire(id: string, admin: boolean, qui: Lecteur = null, recu = false) {
     const p = await this.prisma.procedure.findUnique({ where: { id }, include: avecEtapes });
-    if (!p || (!admin && !p.publiee) || (qui && !visible(p, qui.espace, qui.etiquettes))) throw new NotFoundException('Procédure introuvable');
+    if (!p || (!recu && ((!admin && !p.publiee) || (qui && !visible(p, qui.espace, qui.etiquettes))))) throw new NotFoundException('Procédure introuvable');
     return this.vue(p, admin);
   }
 
   // ---------- admin ----------
-  async creer(d: { titre: string; categorie?: string; resume?: string | null; description?: string | null; espace?: string; etiquettes?: string[] }) {
+  async creer(d: { titre: string; categorie?: string; resume?: string | null; description?: string | null; espace?: string; etiquettes?: string[]; type?: string }) {
     verifierEspace(d.espace);
     d = { ...d, etiquettes: nettoyerEtiquettes(d.etiquettes) };
     await assurerCategorie(this.prisma, d.categorie ?? 'Impression');
@@ -101,7 +102,7 @@ export class ProceduresService {
     const copie = await this.prisma.procedure.create({
       data: {
         titre: `${p.titre} (copie)`.slice(0, 120), categorie: p.categorie, resume: p.resume, description: p.description, prompt: p.prompt,
-        espace: p.espace, etiquettes: p.etiquettes,
+        espace: p.espace, etiquettes: p.etiquettes, type: p.type,
         publiee: false, ordre, suivanteId: p.suivanteId,
       },
     });
@@ -413,13 +414,15 @@ export class ProceduresService {
   }
 
   /** Photo (procédure publiée, ou admin). Par son id, ou la première photo d'une étape (`etapeId`, anciennes adresses). */
-  async lirePhoto(q: { id?: string; etapeId?: string }, admin: boolean) {
+  async lirePhoto(q: { id?: string; etapeId?: string }, admin: boolean, userId?: string) {
     const ph = await this.prisma.photoEtape.findFirst({
       where: q.id ? { id: q.id } : { etapeId: q.etapeId },
       orderBy: { ordre: 'asc' },
-      include: { etape: { select: { procedure: { select: { publiee: true } } } } },
+      include: { etape: { select: { procedure: { select: { id: true, publiee: true } } } } },
     });
-    if (!ph || (!admin && !ph.etape.procedure.publiee)) throw new NotFoundException();
+    const recu = !!ph && !admin && !ph.etape.procedure.publiee && !!userId
+      && (await this.prisma.envoiPasAPas.count({ where: { procedureId: ph.etape.procedure.id, userId } })) > 0;
+    if (!ph || (!admin && !ph.etape.procedure.publiee && !recu)) throw new NotFoundException();
     const flux = this.stockage.lire(ph.cle);
     if (!flux) throw new NotFoundException();
     return { flux, ext: ph.cle.split('.').pop()! };

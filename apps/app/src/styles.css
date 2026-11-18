@@ -561,3 +561,13 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .mm-tete { display: flex; gap: 12px; align-items: center; }
 .mm-onglets { margin: 12px 0; }
 .mm-rubrique h2 { margin-top: 14px; }
+
+.mm-numero { margin-left: auto; display: grid; justify-items: center; background: var(--o-doux); color: var(--od); border-radius: var(--r-sm); padding: 6px 12px; }
+.mm-numero small { font-size: 11px; white-space: nowrap; }
+.mm-numero b { font-size: 26px; line-height: 1; letter-spacing: 1px; }
+.env { margin-bottom: 12px; }
+.env-client { margin: 0; }
+.env-liste { padding-left: 18px; margin: 6px 0 0; display: grid; gap: 4px; }
+.env-detail { margin: 14px 0; }
+.env-detail > summary { list-style: none; cursor: pointer; }
+.env-detail[open] > summary { margin-bottom: 8px; }

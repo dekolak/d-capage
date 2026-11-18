@@ -455,7 +455,7 @@ function MachinesClient({ userId, catalogue }: { userId: string; catalogue: Fabr
                 <b>{m.surnom ? `${m.surnom} · ` : ''}{m.nom}</b>
                 <br />
                 <span className="muted">
-                  {m.numeroSerie ? `n° ${m.numeroSerie}` : 'sans n° de série'} · mise en service {m.miseEnService ? date(m.miseEnService) : '?'}
+                  {m.numero ? `📱 n° app ${m.numero} · ` : ''}{m.numeroSerie ? `n° de série ${m.numeroSerie}` : 'sans n° de série'} · mise en service {m.miseEnService ? date(m.miseEnService) : '?'}
                   {' · '}{m.espaces.map((e) => e).join(', ') || 'non visible'}
                 </span>
               </span>

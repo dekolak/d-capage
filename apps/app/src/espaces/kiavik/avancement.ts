@@ -46,6 +46,12 @@ export function useAvancement(p: Procedure | undefined, id: string) {
     const fin = estDiagnostic(p) ? chemin.fin?.type ?? null : chemin.pas.length > 0 && faitesIci.length >= chemin.pas.length ? 'termine' : null;
     const minuteur = setTimeout(() => {
       envoyerOuPlusTard(`/procedures/${p.id}/suivi`, 'PUT', { session, reponses, faites: faitesIci.length, total: chemin.pas.length, derniere, fin }, `suivi:${session}`).catch(() => {});
+      // pas-à-pas reçu (envoyé par le n° de la machine) : terminé → l'admin le voit
+      const envoi = localStorage.getItem(`kiavik.envoi.${p.id}`);
+      if (fin && envoi) {
+        localStorage.removeItem(`kiavik.envoi.${p.id}`);
+        envoyerOuPlusTard(`/procedures/envois/${envoi}/termine`, 'POST', {}, `envoi:${envoi}`).catch(() => {});
+      }
       // ouvert depuis le carnet d'entretien : terminé → tâche notée (sauf photo demandée : le client la note dans le carnet)
       const carnet = localStorage.getItem(`kiavik.carnet.${p.id}`);
       if (fin && carnet) {

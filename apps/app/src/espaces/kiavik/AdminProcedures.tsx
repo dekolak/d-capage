@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { chargerGuide, Guide, pastillesNavigation, ResumeGuide } from './guides';
-import { chargerProcedures, Procedure, ResumeProcedure, viderProcedures } from './donneesProcedures';
+import { chargerProcedures, ICONE_TYPE, Procedure, ResumeProcedure, viderProcedures } from './donneesProcedures';
 import './guides.css';
 import './editeur.css';
 import { BadgeZone } from '../../pages/Admin';
@@ -84,7 +84,7 @@ export function AdminProcedures() {
       <div className="gx-resultats">
         {visibles.map((p) => (
           <Link key={p.id} to={`/admin/procedures/${p.id}`} className="carte gx-resultat">
-            <b>{p.titre} <BadgeZone zone={p.espace} /></b>
+            <b>{ICONE_TYPE[p.type] ?? '📋'} {p.titre} <BadgeZone zone={p.espace} /></b>
             {p.etiquettes.length > 0 && <span className="et-mini">{p.etiquettes.map((e) => <span key={e}>🏷 {e}</span>)}</span>}
             <span className="petit muted">
               {p.diagnostic && p.categorie !== 'Diagnostic' && <span className="dg-badge">Dépannage guidé</span>}
