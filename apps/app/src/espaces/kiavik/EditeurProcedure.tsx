@@ -1,4 +1,5 @@
 import { createContext, Fragment, useContext, useEffect, useState } from 'react';
+import { RefId } from '../../components/RefId';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
@@ -564,7 +565,7 @@ export function AdminProcedure() {
   return (
     <div className="page gx ed">
       <Link to="/admin/procedures" className="btn-lien">← Pas-à-pas</Link>
-      <h1 className="gx-proc-titre">{p.titre}{estDiagnostic(p) && <span className="dg-badge ed-badge">Dépannage guidé</span>} <BadgeZone zone={p.espace} /></h1>
+      <h1 className="gx-proc-titre">{p.titre}{estDiagnostic(p) && <span className="dg-badge ed-badge">Dépannage guidé</span>} <BadgeZone zone={p.espace} /> <RefId id={p.id} p="P" /></h1>
       <Erreur e={erreur} />
 
       <div className="ed-haut">

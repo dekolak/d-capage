@@ -211,6 +211,10 @@ Administration → Comptes → toucher le client → **Voir son activité** (con
 - Les admins ne sont pas enregistrés. Le journal est **effacé automatiquement après 12 mois**.
 - **Conditions d'utilisation** : le journal y est mentionné, partie « Vos données » (Lazzeko et Kiavik). La phrase a été ajoutée automatiquement aux conditions en vigueur au déploiement (nouvelle version, acceptée par les clients à leur prochaine ouverture). À garder si on réécrit les conditions.
 
+## Références fixes
+À côté des noms, dans l'administration, une petite étiquette **M-k3x9q2** : la référence fixe de l'élément (fin de son identifiant interne). Elle ne change jamais, même après un renommage : donnez-la à Claude pour désigner sans erreur ce qu'il faut modifier. Un clic copie l'identifiant complet.
+**M** modèle de machine · **V** variante · **P** pas-à-pas · **B** Bon à savoir · **C** cours · **L** leçon · **S** simulateur · **E** plan d'entretien. Les clients ont leur n° client (📱 621).
+
 ## Navigation de l'app (clients)
 - **Barre du bas** : Lazzeko *Mes fiches · Communauté · Aide · 🎓 Académie* ; Kiavik *Accueil · Pas-à-pas · Rechercher · 🎓 Académie* (Académie seulement si le compte y a accès).
 - **＋ flottant** (Lazzeko) en bas à droite : nouvelle fiche ; caché sur une fiche (où se trouve « Partager ») et dans l'éditeur.

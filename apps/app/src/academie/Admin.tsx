@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { RefId } from '../components/RefId';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { BlocPourQui, useCatalogue } from '../espaces/kiavik/Etiquettes';
@@ -103,7 +104,7 @@ export function AdminAcademie() {
         {liste.map((c, i) => (
           <div key={c.id} className="carte ac-ligne">
             <Link to={`/admin/academie/cours/${c.id}`} className="ac-ligne-lien">
-              <b>{c.titre}</b>
+              <b>{c.titre} <RefId id={c.id} p="C" /></b>
               <small className="muted">
                 {c.nbLecons} leçon{c.nbLecons > 1 ? 's' : ''} · {c.pourQui.length ? `🎯 ${c.pourQui.join(', ')}` : 'tout le monde'}
                 {c.publie ? ' · ✅ publié' : ' · 🔒 brouillon'}
@@ -155,7 +156,7 @@ export function AdminCours() {
   return (
     <div className="page ac-admin">
       <Link to="/admin/academie" className="btn-lien">← Académie</Link>
-      <h1>{c.titre}</h1>
+      <h1>{c.titre} <RefId id={c.id} p="C" /></h1>
       <Erreur e={err} />
       {ok && <p className="succes">{ok}</p>}
       <div className="carte form">
@@ -180,7 +181,7 @@ export function AdminCours() {
       <div className="liste">
         {c.lecons.map((l, i) => (
           <div key={l.id} className="carte ac-ligne">
-            <Link to={`/admin/academie/lecons/${l.id}`} className="ac-ligne-lien"><b>{i + 1}. {l.titre}</b></Link>
+            <Link to={`/admin/academie/lecons/${l.id}`} className="ac-ligne-lien"><b>{i + 1}. {l.titre} <RefId id={l.id} p="L" /></b></Link>
             <span className="cx-actions">
               <button type="button" className="btn petit" disabled={i === 0} onClick={() => api(`/admin/academie/lecons/${l.id}/deplacer`, { method: 'POST', json: { sens: -1 } }).then(charger)}>↑</button>
               <button type="button" className="btn petit" disabled={i === c.lecons.length - 1} onClick={() => api(`/admin/academie/lecons/${l.id}/deplacer`, { method: 'POST', json: { sens: 1 } }).then(charger)}>↓</button>
@@ -249,7 +250,7 @@ export function AdminLecon() {
   };
   return (
     <div className="page ac-admin">
-      <Link to={`/admin/academie/cours/${coursId}`} className="btn-lien">← Cours</Link>
+      <Link to={`/admin/academie/cours/${coursId}`} className="btn-lien">← Cours</Link> <RefId id={id} p="L" />
       <input className="ac-titre-lecon" value={titre} maxLength={150} onChange={(e) => ((setTitre(e.target.value), setModifie(true)))} />
       <div className="seg">
         <button type="button" className={!apercu ? 'on' : ''} onClick={() => setApercu(false)}>✏️ Blocs</button>
@@ -444,7 +445,7 @@ export function AdminSimulateurs() {
         {l.map((s) => (
           <div key={s.id} className="carte ac-ligne">
             <span className="ac-ligne-lien">
-              <b>{s.nom}</b>
+              <b>{s.nom} <RefId id={s.id} p="S" /></b>
               <small className="muted">{s.espace}{s.modeleId ? ` · ${modeles.find((m) => m.id === s.modeleId)?.nom ?? ''}` : ''}</small>
             </span>
             <span className="cx-actions">

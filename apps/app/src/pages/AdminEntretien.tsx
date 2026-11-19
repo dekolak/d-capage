@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { RefId } from '../components/RefId';
 import { useCategoriesMachines } from '../espaces/kiavik/Etiquettes';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
@@ -285,7 +286,7 @@ function PlanCarte({ p, cat, pasAPas, faire }: {
   return (
     <details className="carte ae-plan" open={!p.taches.length}>
       <summary>
-        <b>{p.nom}</b> <span className="muted petit">· {p.taches.length} tâche{p.taches.length > 1 ? 's' : ''} · {pourQui.length ? pourQui.join(', ') : 'aucune machine'}</span>
+        <b>{p.nom}</b> <RefId id={p.id} p="E" /> <span className="muted petit">· {p.taches.length} tâche{p.taches.length > 1 ? 's' : ''} · {pourQui.length ? pourQui.join(', ') : 'aucune machine'}</span>
       </summary>
       <div className="actions-avis">
         {nom === null ? (

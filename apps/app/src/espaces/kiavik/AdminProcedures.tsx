@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { RefId } from '../../components/RefId';
 import { Link, useNavigate } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
@@ -85,7 +86,7 @@ export function AdminProcedures() {
       <div className="gx-resultats">
         {visibles.map((p) => (
           <Link key={p.id} to={`/admin/procedures/${p.id}`} className="carte gx-resultat">
-            <b>{ICONE_TYPE[p.type] ?? '📋'} {p.titre} <BadgeZone zone={p.espace} /></b>
+            <b>{ICONE_TYPE[p.type] ?? '📋'} {p.titre} <BadgeZone zone={p.espace} /> <RefId id={p.id} p="P" /></b>
             {cible(p) && <span className="et-mini">{[...p.cibleCategories, ...p.etiquettes].map((e) => <span key={e}>🎯 {e}</span>)}{p.cibleModeles.length > 0 && <span>🔧 {p.cibleModeles.length} machine{p.cibleModeles.length > 1 ? 's' : ''}</span>}</span>}
             <span className="petit muted">
               {p.diagnostic && p.categorie !== 'Diagnostic' && <span className="dg-badge">Dépannage guidé</span>}
