@@ -2,12 +2,17 @@
 
 Compte → **Administration** (en français ; les écrans clients peuvent être traduits, voir [TRADUCTION.md](TRADUCTION.md)). L'admin a accès à tout, dans les deux espaces (Compte → **Mes espaces** pour passer de Lazzeko à Kiavik).
 
+**Le menu** est rangé par usage, en tuiles (2 colonnes sur téléphone) :
+- **À traiter** en haut, seulement s'il y a quelque chose (mots de passe oubliés, demandes d'aide, entretiens en retard, « C'était clair ? » à lire).
+- **Clients** : utilisateurs, mots de passe, demandes d'aide, dépannages reçus, avis, fiches de réglage.
+- **Contenus** : pas-à-pas, Bon à savoir, Académie, mode terrain, catégories, messages.
+- **Machines** : modèles, entretien, familles.
+- **⚙️ Réglages** (replié) : notifications sur ce téléphone, conditions d'utilisation, clés API, envoi vers une API.
+
+Une pastille de couleur signale une entrée propre à une société ; l'ouvrir bascule dans cet espace.
+
 ## Organisation de l'administration
-Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **Lazzeko** (orange), **Kiavik** (bleu). Le même badge est sur le titre de chaque page.
-- Toujours dans le même ordre : **Commun**, puis **Lazzeko**, puis **Kiavik**. Chaque section se replie (▸ / ▾) ; le téléphone s'en souvient. Au départ, seule la section de l'espace ouvert est dépliée ; un compteur rouge sur le titre signale ce qui attend (tags, demandes d'aide). Ouvrir une entrée d'un autre espace **bascule dans cet espace**.
-- **Commun** : 👥 Utilisateurs, 💬 Messages, 📜 Conditions d'utilisation, 🔑 Clés API, 📤 Envoi vers une API, 🔧 Machines, 🎥 Mode terrain, 📒 Entretien, 🗂 Catégories, 🎓 Académie (voir [ACADEMIE.md](ACADEMIE.md)), 📋 Pas-à-pas, 🩺 Dépannages reçus, 💡 Bon à savoir. En haut, toujours : 🔐 Mots de passe oubliés et 🔔 Notifications.
-- **Lazzeko** : 📝 Fiches de réglage, ⭐ Avis, 🏷️ Familles et précisions, 🆘 Demandes d'aide (avec le nombre en attente).
-- **🗂 Catégories** (Commun) : les sections de la **Bibliothèque** (accueil Kiavik, onglet Aide Lazzeko) et de l'onglet « 📚 Guides » de Ma machine. Chaque catégorie a ses **sociétés** (boutons ✓ Lazzeko / ✓ Kiavik sur la ligne ; les deux = toutes) : l'éditeur d'un contenu ne propose que les catégories de sa société. Une catégorie créée depuis un contenu prend la société de ce contenu. Une section n'apparaît chez un client que si elle a du contenu pour lui.
+- **🗂 Catégories** (groupe Contenus) : les sections de la **Bibliothèque** (accueil Kiavik, onglet Aide Lazzeko) et de l'onglet « 📚 Guides » de Ma machine. Chaque catégorie a ses **sociétés** (boutons ✓ Lazzeko / ✓ Kiavik sur la ligne ; les deux = toutes) : l'éditeur d'un contenu ne propose que les catégories de sa société. Une catégorie créée depuis un contenu prend la société de ce contenu. Une section n'apparaît chez un client que si elle a du contenu pour lui.
 
 **Noms des contenus Kiavik** : **Pas-à-pas** (anciennement procédures), **Dépannage guidé** (procédure avec des questions, anciennement diagnostic), **Bon à savoir** (anciennement astuces & solutions), **Démos animées** (animations). Côté clients, ces noms sont dans `apps/app/src/textes/fr.ts` (une ligne à changer pour renommer).
 
@@ -35,14 +40,14 @@ Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **L
 - **Pas-à-pas, Bon à savoir, Dépannages reçus** sont dans la section **Commun** de l'administration : on y crée les contenus des deux espaces (filtre espace en haut de la liste).
 
 ## Machines (Lazzeko et Kiavik)
-Administration → **🔧 Machines** (section Commun).
+Administration → **🔧 Machines** (groupe Machines).
 - **+ Nouveau modèle** : fabricant (existant ou nouveau, ex. DXonJet), modèle (ex. i3200), **visible dans** Lazzeko et/ou Kiavik. Une variante « Standard » est créée avec ; ajoutez-en d'autres (largeur, nombre de têtes…).
 - Par modèle : cases « Visible dans… », ✏️ renommer, 🗑 (seulement si aucune machine de client ni fiche de réglage ne l'utilise ; sinon **Désactiver** la variante).
 - **Image** : PNG par modèle (machine entière, fond transparent ou clair, ~800 × 800 px) ; une variante peut avoir la sienne.
 - Les modèles Lazzeko avec écran de réglage viennent des fichiers `machines/` (fiches de réglage) ; ceux créés ici n'ont pas de fiches de réglage (carnet d'entretien à venir).
 
 ## Carnet d'entretien (Lazzeko et Kiavik)
-Administration → **📒 Entretien** (section Commun).
+Administration → **📒 Entretien** (groupe Machines).
 - **Plans d'entretien** : « + Créer » un plan (ex. *Entretien DXonJet*), choisir **pour quelles machines** : des **catégories** (🎯 Soudeuse, Décapeuse… : tous les modèles de la catégorie, **même ceux créés plus tard**, ont ce plan et ses rappels) et / ou des **modèles précis** (ex. i3200 et F1080), puis ajouter les **tâches** :
   - **fréquence** : tous les N jours / semaines / mois ; « **bientôt** » N jours avant (au plus un quart de la période) ;
   - **pas-à-pas à suivre** (facultatif) : le client l'ouvre depuis son carnet ; quand il le termine, la tâche est notée toute seule ;
@@ -111,14 +116,14 @@ Administration → **💬 Messages**.
 ## Kiavik : accueil
 - En haut : la recherche et **les deux logiciels** (toujours visibles).
 - Dessous : une **section repliable par catégorie** (🚀 Mise en route, 🩺 Diagnostic, 🖨️ Impression, 🎛️ Réglages, 🧽 Entretien, puis les autres) avec ses procédures guidées (animations), procédures, diagnostics et astuces. Le client ouvre ce qui l'intéresse (une seule section ouverte à la fois : en ouvrir une ferme les autres) ; le téléphone se souvient de la section ouverte.
-- **Administration → 🗂 Catégories** (section Commun, sert aussi aux Guides de Ma machine côté Lazzeko) : tout le classement au même endroit.
+- **Administration → 🗂 Catégories** (groupe Contenus, sert aussi aux Guides de Ma machine côté Lazzeko) : tout le classement au même endroit.
   - **Catégories** (à gauche, dans l'ordre de l'accueil) : ↑ ↓ pour l'ordre, ✏️ pour **renommer** et changer l'**icône** (tout son contenu suit, animations comprises), 👁 / 🙈 pour **masquer** la section de l'accueil (le contenu reste dans les listes et la recherche), 🗑 pour **supprimer** (si elle n'est pas vide : choisir la catégorie qui reçoit son contenu), **+ Ajouter** une catégorie (même vide). Cliquer sur une catégorie filtre la liste.
   - **Liste** (à droite) : toutes les procédures, diagnostics, astuces et animations, avec **filtres** (catégorie, type, logiciel, espace, publié / brouillon) et recherche par titre. Le menu de chaque ligne la **range** dans une autre catégorie ; cocher plusieurs lignes pour les ranger d'un coup. « ⚠️ catégorie inconnue » signale un élément rangé dans une catégorie qui n'existe plus.
   - **Ordre dans une catégorie** : cliquer sur une catégorie (sans autre filtre) affiche son contenu par groupe, comme sur l'accueil (▶ démos animées, 📋 pas-à-pas et dépannages guidés, 💡 Bon à savoir), avec ↑ ↓ pour changer l'ordre d'affichage dans chaque groupe.
 - La catégorie se choisit aussi dans le menu **Catégorie** d'une procédure, d'une astuce, ou d'une animation (ouvrir l'animation → « ✏️ Modifier cette scène » → **Catégorie sur l'accueil**, « Revenir à l'original » pour reprendre celle du fichier).
 
 ## 🎥 Mode terrain (capturer un pas-à-pas sur place)
-Administration → **🎥 Mode terrain** (section Commun, ou bandeau en haut de la page Pas-à-pas). Pensé pour le téléphone sur trépied ; marche depuis Lazzeko ou Kiavik.
+Administration → **🎥 Mode terrain** (groupe Contenus, ou bandeau en haut de la page Pas-à-pas). Pensé pour le téléphone sur trépied ; marche depuis Lazzeko ou Kiavik.
 - **Démarrer** : titre, catégorie, et une **trame** facultative (les étapes prévues, une par ligne) pour ne rien oublier. Un pas-à-pas **non publié** est créé tout de suite.
 - **Par étape** : caméra en direct, **retardateur** Direct / 3 s / 5 s / 10 s (bip à chaque seconde, réglage gardé sur le téléphone), plusieurs photos (8 max, réduites sur le téléphone et envoyées aussitôt), ou **🖼 Ajouter depuis la galerie** (photos déjà prises, plusieurs à la fois) ; ce que vous faites, **🎙 dicté** (Chrome Android, avec Internet) ou tapé ; **⚠️ point de vigilance**.
 - **Étape suivante ▶** (la prochaine de la trame, sinon une nouvelle), **＋ Insérer** une étape oubliée après celle-ci, ◀ revenir, 🗑 supprimer ; la bande du bas montre toutes les étapes (photo, nombre de photos, ⚠️) pour y revenir.
