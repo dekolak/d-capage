@@ -236,34 +236,27 @@ textarea { resize: vertical; }
 .m-sc svg { width: 60px; height: 42px; }
 .m-ligne.sel .m-v, .m-ligne.sel .m-sc { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--o); }
 .m-ligne.err .m-v { background: var(--ko); }
-/* Apparence « écran » (config.apparence = 'ecran') : reprend l'écran de la machine */
+/* Apparence « écran » (config.apparence = 'ecran') : copie fidèle de l'écran de la machine,
+   dessinée à taille fixe (760 px) puis réduite à la largeur disponible : même disposition sur téléphone et ordinateur. */
 .miroir.ecran { background: #151515; padding: 5px; border-radius: 10px; font-family: Arial, Helvetica, sans-serif; color: #fff; }
-.m-ecran { display: grid; grid-template-columns: 52px minmax(0, 1fr); background: linear-gradient(var(--m-fond), var(--m-fond2, var(--m-fond))); border: 2px solid #0b0b0b; }
-.m-barre { display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 10px 0; }
-.m-icone { background: none; border: 0; color: #fff; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; text-shadow: 0 1px 1px #000; padding: 0; }
-.m-icone i { width: 38px; height: 38px; border-radius: 8px; background: linear-gradient(#4a9cf5, #1e64d0); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 20px; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 2px 3px rgba(0, 0, 0, 0.4); }
+.m-cadre { position: relative; overflow: hidden; }
+.m-ecran { position: absolute; left: 0; top: 0; width: 760px; transform-origin: 0 0; display: grid; grid-template-columns: 72px minmax(0, 1fr); background: linear-gradient(var(--m-fond), var(--m-fond2, var(--m-fond))); border: 2px solid #0b0b0b; }
+.m-barre { display: flex; flex-direction: column; gap: 14px; align-items: center; padding: 12px 0; }
+.m-icone { background: none; border: 0; color: #fff; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; text-shadow: 0 1px 1px #000; padding: 0; }
+.m-icone i { width: 48px; height: 48px; border-radius: 9px; background: linear-gradient(#4a9cf5, #1e64d0); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 24px; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 2px 3px rgba(0, 0, 0, 0.4); }
 .m-icone.on i { background: linear-gradient(#fb923c, #ea580c); }
-.m-zone { padding: 4px 4px 4px 0; min-width: 0; }
-.m-colonnes { display: grid; gap: 3px; }
+.m-zone { padding: 6px 6px 6px 0; min-width: 0; }
+.m-colonnes { display: grid; gap: 4px; }
 .m-bloc { background: rgba(0, 0, 0, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); min-width: 0; }
-.m-bloc h5 { margin: 0; background: linear-gradient(#6b7c92, #4b5a6e); font-weight: 400; font-size: 11px; text-align: center; padding: 4px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+.m-bloc h5 { margin: 0; background: linear-gradient(#6b7c92, #4b5a6e); font-weight: 400; font-size: 16px; text-align: center; padding: 5px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
 .m-bloc-cols { display: grid; gap: 0 4px; }
-.miroir.ecran .m-ligne { border: 2px solid transparent; padding: 3px 4px; gap: 2px; font-size: 11px; line-height: 1.1; color: #fff; text-shadow: 0 1px 1px #000; }
-.miroir.ecran .m-v { background: #050505; color: var(--m-valeur, #7cfc00); border-radius: 0; border: 1px solid #000; font-family: 'Courier New', monospace; font-size: 15px; text-align: left; padding: 3px 5px; width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; text-shadow: none; }
-.miroir.ecran .m-tg { background: linear-gradient(#9aa6b5, #6b7686); border: 2px solid #d1d5db; border-radius: 2px; color: #fff; font-size: 12px; padding: 4px; width: 100%; min-width: 0; white-space: normal; line-height: 1.05; }
+.miroir.ecran .m-ligne { flex-direction: row; align-items: center; gap: 6px; min-height: 48px; border: 2px solid transparent; padding: 4px 6px; font-size: 13px; line-height: 1.05; color: #fff; text-shadow: 0 1px 1px #000; }
+.miroir.ecran .m-lab { flex: 0 0 72px; text-align: right; }
+.miroir.ecran .m-v { flex: 1; width: auto; min-width: 0; background: #050505; color: var(--m-valeur, #7cfc00); border-radius: 0; border: 1px solid #000; font-family: 'Courier New', monospace; font-size: 21px; text-align: left; padding: 4px 6px; overflow: hidden; text-overflow: ellipsis; text-shadow: none; }
+.miroir.ecran .m-tg { flex: 1; width: auto; min-width: 0; background: linear-gradient(#9aa6b5, #6b7686); border: 2px solid #d1d5db; border-radius: 2px; color: #fff; font-size: 16px; padding: 6px 4px; white-space: normal; line-height: 1.05; }
 .miroir.ecran .m-tg.on { background: linear-gradient(#fb923c, #ea580c); border-color: #fed7aa; }
 .miroir.ecran .m-ligne.sel { border-color: var(--o); background: rgba(241, 90, 33, 0.18); }
 .miroir.ecran .m-ligne.sel .m-v { box-shadow: none; }
-@media (min-width: 600px) {
-  .m-ecran { grid-template-columns: 72px minmax(0, 1fr); }
-  .m-icone { font-size: 12px; }
-  .m-icone i { width: 48px; height: 48px; font-size: 24px; }
-  .m-bloc h5 { font-size: 15px; }
-  .miroir.ecran .m-ligne { flex-direction: row; align-items: center; min-height: 44px; font-size: 12px; }
-  .miroir.ecran .m-lab { flex: 0 0 68px; text-align: right; }
-  .miroir.ecran .m-v, .miroir.ecran .m-tg { flex: 1; width: auto; min-width: 0; }
-  .miroir.ecran .m-v { font-size: 19px; }
-}
 .m-lib { background: var(--m-carte); border-radius: 14px; padding: 6px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .m-lib button { border: 0; background: var(--m-marine); color: #fff; border-radius: 10px; min-height: 42px; font-size: 13px; padding: 0 4px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
