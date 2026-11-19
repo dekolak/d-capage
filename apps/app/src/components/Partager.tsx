@@ -48,7 +48,7 @@ export function BoutonPartager({ titre, flottant }: { titre?: string; flottant?:
     <>
       <button type="button" className={flottant ? 'partage-flottant' : 'btn petit'} onClick={partager} aria-label={t('partage.bouton')} title={t('partage.bouton')}>
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13" />
+          <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
         </svg>
         {!flottant && <span>{t('partage.bouton')}</span>}
       </button>
