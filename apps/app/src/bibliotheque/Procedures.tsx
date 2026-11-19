@@ -2,16 +2,22 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { useAuth } from '../lib/auth';
-import { categoriesDe, ICONE_TYPE, ResumeProcedure, useProcedures } from './donneesProcedures';
+import { categoriesDe, ICONE_TYPE, ResumeProcedure, trierCategories, useCategories, useProcedures } from './donneesProcedures';
+import { SectionCategorie, useSectionOuverte } from './SectionCategorie';
 import { PreparerHorsLigne } from './PreparerHorsLigne';
 import { normaliser } from './recherche';
 import './bibliotheque.css';
 import { t, tn } from '../lib/i18n';
 
-/** Liste des procédures par catégorie, avec un filtre. */
+/**
+ * Liste des pas-à-pas par catégorie, avec un filtre. Sections repliables, une seule ouverte à la fois
+ * (comme l'accueil) ; pendant un filtre, toutes sont ouvertes pour voir les résultats.
+ */
 export default function Procedures() {
   const { moi } = useAuth();
   const { liste, erreur, acces } = useProcedures();
+  const cats = useCategories();
+  const { ouverte, basculer } = useSectionOuverte('pas-a-pas.ouvertes');
   const [q, setQ] = useState('');
   const groupes = useMemo(() => {
     const mots = normaliser(q).split(' ').filter(Boolean);
@@ -20,8 +26,8 @@ export default function Procedures() {
       const t = normaliser(`${p.titre} ${p.categorie} ${p.resume ?? ''} ${p.textes.join(' ')}`);
       if (mots.every((w) => t.includes(w))) for (const c of categoriesDe(p)) m.set(c, [...(m.get(c) ?? []), p]);
     }
-    return [...m];
-  }, [liste, q]);
+    return trierCategories([...m.keys()], cats).map((c) => [c, m.get(c)!] as const);
+  }, [liste, q, cats]);
 
   if (!acces) return <div className="page"><h1>{t('kiavik.procedures.titre')}</h1><p className="muted">{t('kiavik.procedures.nonActivees')}</p></div>;
   if (erreur) return <div className="page"><Erreur e={erreur} /></div>;
@@ -47,10 +53,10 @@ export default function Procedures() {
       )}
       {!groupes.length && <p className="muted">{liste.length ? t('kiavik.procedures.aucuneCorrespond') : t('kiavik.accueil.aucuneProcedure')}</p>}
       {groupes.map(([cat, l]) => (
-        <section key={cat}>
-          <h4>{cat}</h4>
+        <SectionCategorie key={cat} icone={cats?.find((c) => c.nom === cat)?.icone ?? '📁'} nom={cat} resume={tn('kiavik.accueil.nbProcedures', l.length)}
+          ouverte={!!q.trim() || ouverte === cat} onBasculer={() => basculer(cat)}>
           <ListeProcedures liste={l} />
-        </section>
+        </SectionCategorie>
       ))}
       <PreparerHorsLigne />
     </div>
