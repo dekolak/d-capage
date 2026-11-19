@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { envoyerOuPlusTard } from '../../lib/api';
+import { envoyerOuPlusTard } from '../lib/api';
 import { calculerChemin } from './chemin';
 import { Choix, estDiagnostic, Etape, Procedure } from './donneesProcedures';
 

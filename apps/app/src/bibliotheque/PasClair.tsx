@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Erreur } from '../../components/Composants';
-import { envoyerOuPlusTard } from '../../lib/api';
-import { t } from '../../lib/i18n';
+import { Erreur } from '../components/Composants';
+import { envoyerOuPlusTard } from '../lib/api';
+import { t } from '../lib/i18n';
 
 /** « ❓ Pas clair ? » : le client signale une étape difficile à comprendre (message facultatif). */
 export function PasClair({ etape }: { etape: string }) {

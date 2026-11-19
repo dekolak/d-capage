@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { chargerGuide, Guide, ResumeGuide } from './guides';
+import { Chargement, Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { chargerGuide, Guide, ResumeGuide } from '../espaces/kiavik/guides';
 import { useProcedures, useSolutions } from './donneesProcedures';
 import { lienResultat, motsRecherche, nbTrouves, rechercher } from './recherche';
-import { noterRecherche } from '../../lib/activite';
+import { noterRecherche } from '../lib/activite';
 import { ListeSolutions } from './Solutions';
-import './guides.css';
-import { t } from '../../lib/i18n';
+import './bibliotheque.css';
+import { t } from '../lib/i18n';
 
-/** Recherche par mot-clé dans les guides du compte : un résultat ouvre l'écran sur le bon repère. */
-export default function Recherche() {
+/** Recherche par mot-clé (commune) : guides écran du compte (Kiavik), pas-à-pas, Bon à savoir. */
+/** `avecGuides` : la société a des guides écran (Kiavik) ; sinon pas-à-pas et Bon à savoir seulement. */
+export default function Recherche({ avecGuides = false }: { avecGuides?: boolean }) {
   const [params, setParams] = useSearchParams();
   const q = params.get('q') ?? '';
   const [guides, setGuides] = useState<Guide[]>();
@@ -19,12 +20,14 @@ export default function Recherche() {
   const champ = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    api<ResumeGuide[]>('/guides')
-      .then((l) => Promise.all(l.map((g) => chargerGuide(g.slug))))
-      .then(setGuides)
-      .catch(setErreur);
+    if (!avecGuides) setGuides([]);
+    else
+      api<ResumeGuide[]>('/guides')
+        .then((l) => Promise.all(l.map((g) => chargerGuide(g.slug))))
+        .then(setGuides)
+        .catch(setErreur);
     champ.current?.focus();
-  }, []);
+  }, [avecGuides]);
 
   const resultats = useMemo(() => (guides ? rechercher(guides, q) : []), [guides, q]);
   const anims = useMemo(() => {

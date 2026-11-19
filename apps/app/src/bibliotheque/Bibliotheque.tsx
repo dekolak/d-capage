@@ -1,25 +1,27 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { useAuth } from '../../lib/auth';
-import { t, tn } from '../../lib/i18n';
+import { Chargement, Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { useAuth } from '../lib/auth';
+import { t, tn } from '../lib/i18n';
 import { trierCategories, useCategories, useProcedures, useSolutions } from './donneesProcedures';
-import { ResumeGuide } from './guides';
+import { ResumeGuide } from '../espaces/kiavik/guides';
 import { ListeProcedures } from './Procedures';
 import { ListeSolutions } from './Solutions';
-import './guides.css';
+import './bibliotheque.css';
 import './accueil.css';
 import { SectionCategorie, useSectionOuverte } from './SectionCategorie';
 
-const CLE_OUVERTES = 'kiavik.accueil.ouvertes';
+const CLE_OUVERTES = 'bibliotheque.ouvertes';
 
 /**
- * Accueil Kiavik : recherche, les logiciels (miniature de l'écran, dans l'ordre du travail, toujours visibles),
- * puis une section repliable par catégorie (Mise en route, Diagnostic, Impression…) avec ses procédures guidées
- * (animations), procédures, diagnostics et astuces. Une seule section ouverte à la fois, gardée sur le téléphone.
+ * Bibliothèque d'aide, commune à toutes les sociétés (accueil Kiavik, onglet Aide Lazzeko) : recherche, un bloc propre
+ * à la société (Kiavik : les logiciels ; Lazzeko : comprendre les réglages), puis une section repliable par catégorie
+ * (Mise en route, Diagnostic…) avec ses procédures guidées (animations), pas-à-pas, dépannages et Bon à savoir,
+ * filtrés selon les machines du client. Une seule section ouverte à la fois, gardée sur le téléphone.
+ * `avecGuides` : la société a des guides écran (Kiavik) ; `entete` : bloc propre à la société ; `titre` : remplace le bonjour.
  */
-export default function Guides() {
+export default function Bibliotheque({ avecGuides = false, entete, titre }: { avecGuides?: boolean; entete?: ReactNode; titre?: string }) {
   const { moi } = useAuth();
   const { liste: procedures, acces: accesProcedures } = useProcedures();
   const { liste: solutions } = useSolutions();
@@ -28,8 +30,9 @@ export default function Guides() {
   const [erreur, setErreur] = useState<unknown>();
   const { ouverte, basculer } = useSectionOuverte(CLE_OUVERTES);
   useEffect(() => {
+    if (!avecGuides) return setGuides([]);
     api<ResumeGuide[]>('/guides').then(setGuides).catch(setErreur);
-  }, []);
+  }, [avecGuides]);
   if (erreur) return <div className="page"><Erreur e={erreur} /></div>;
   if (!guides) return <Chargement />;
   const prenom = moi?.nom?.split(' ')[0];
@@ -45,13 +48,14 @@ export default function Guides() {
   return (
     <div className="page kh">
       <header className="kh-tete">
-        <h1>{prenom ? t('kiavik.accueil.bonjour', { nom: prenom }) : t('kiavik.accueil.bonjourSans')}</h1>
+        <h1>{titre ?? (prenom ? t('kiavik.accueil.bonjour', { nom: prenom }) : t('kiavik.accueil.bonjourSans'))}</h1>
         <p className="muted">{t('kiavik.accueil.question')}</p>
         <Link to="/recherche" className="kh-recherche">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16M21 21l-4.3-4.3" /></svg>
           <span>{t('kiavik.accueil.rechercher')}</span>
         </Link>
       </header>
+      {entete}
 
 
       {guides.length > 0 && (

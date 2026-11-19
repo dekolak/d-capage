@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { copier } from '../../lib/copier';
-import './guides.css';
+import { Chargement, Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { copier } from '../lib/copier';
+import './bibliotheque.css';
 import './editeur.css';
 import './parcours.css';
-import { BadgeZone } from '../../pages/Admin';
+import { BadgeZone } from '../pages/Admin';
 
 interface Diagnostic {
   id: string; texte: string; message: string | null; lu: boolean; createdAt: string;

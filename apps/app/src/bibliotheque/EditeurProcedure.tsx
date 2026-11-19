@@ -1,23 +1,23 @@
 import { createContext, Fragment, useContext, useEffect, useState } from 'react';
-import { RefId } from '../../components/RefId';
+import { RefId } from '../components/RefId';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { copier } from '../../lib/copier';
-import { compresser } from '../../lib/image';
+import { Chargement, Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { copier } from '../lib/copier';
+import { compresser } from '../lib/image';
 import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
 import { ChoixCategorie, ICONE_TYPE, TYPES_PAS_A_PAS, TypePasAPas, Choix, Etape, Procedure, ResumeProcedure, Solution, chargerProcedures, estDiagnostic, viderProcedures } from './donneesProcedures';
-import { Guide } from './guides';
+import { Guide } from '../espaces/kiavik/guides';
 import { decouperEtape } from './ProcedureDetail';
 import { useSolutions } from './donneesProcedures';
-import './guides.css';
+import './bibliotheque.css';
 import './editeur.css';
-import { Annotateur, SourceAnnotation } from '../../components/Annotateur';
-import { ImageReperes } from '../../components/Reperes';
+import { Annotateur, SourceAnnotation } from '../components/Annotateur';
+import { ImageReperes } from '../components/Reperes';
 import { BlocPourQui, EspaceContenu, viderEtiquettes } from './Etiquettes';
 import { EnvoyerPasAPas } from './Envoyer';
-import { t } from '../../lib/i18n';
-import { BadgeZone } from '../../pages/Admin';
+import { t } from '../lib/i18n';
+import { BadgeZone } from '../pages/Admin';
 
 /*
  * Administration → une procédure (écran pensé pour le PC, utilisable sur téléphone) :

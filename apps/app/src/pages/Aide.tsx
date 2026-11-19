@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { tousLesChamps, universTechnologie } from '@decapage/machine-kit';
+import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { AnimationReglage } from '../components/AnimationsLaser';
 import { Icone } from '../components/Miroir';
@@ -52,7 +53,8 @@ export default function Aide() {
 
   return (
     <div className="page aide">
-      <h1>{t('aide.titre')}</h1>
+      <p className="petit"><Link to="/aide">‹ {t('aide.titre')}</Link></p>
+      <h1>{t('aide.reglagesTitre')}</h1>
       <p className="muted">{t('aide.intro')}</p>
       <BasculeUnivers {...u} />
       {choix.length > 1 && (

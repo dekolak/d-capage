@@ -2,9 +2,9 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { t } from '../../lib/i18n';
 import { Fenetre } from './Fenetres';
-import { lienGuide } from './donneesProcedures';
+import { lienGuide } from '../../bibliotheque/donneesProcedures';
 import { pastillesNavigation, useGuide } from './guides';
-import './parcours.css';
+import '../../bibliotheque/parcours.css';
 
 /**
  * Capture d'un écran du guide avec le bouton à toucher entouré (cercle qui clignote), sans quitter la page.

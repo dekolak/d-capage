@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../../lib/api';
-import { useEspace } from '../../lib/espace';
+import { api } from '../lib/api';
+import { useEspace } from '../lib/espace';
 
 /*
  * Espace (technologie) et étiquettes d'un contenu (pas-à-pas, Bon à savoir) — administration, en français.

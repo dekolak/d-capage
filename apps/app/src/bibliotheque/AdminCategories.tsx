@@ -1,13 +1,13 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { useEspace } from '../../lib/espace';
+import { Chargement, Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { useEspace } from '../lib/espace';
 import { Categorie, viderCategories, viderProcedures, viderSolutions } from './donneesProcedures';
 import { normaliser } from './recherche';
-import './guides.css';
+import './bibliotheque.css';
 import './categories.css';
-import { BadgeZone } from '../../pages/Admin';
+import { BadgeZone } from '../pages/Admin';
 
 /* Administration → Catégories (admin, en français, commun) : sections de l'accueil Kiavik et de l'onglet Guides de Ma machine (Lazzeko et Kiavik). */
 

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Erreur } from '../../components/Composants';
-import { envoyerOuPlusTard } from '../../lib/api';
-import { t } from '../../lib/i18n';
+import { Erreur } from '../components/Composants';
+import { envoyerOuPlusTard } from '../lib/api';
+import { t } from '../lib/i18n';
 import { Avancement } from './avancement';
 import { decouperEtape } from './ProcedureDetail';
 import { estDiagnostic, Procedure, useProcedures, useSolutions } from './donneesProcedures';
-import { RetourCarnet } from '../../pages/Carnet';
+import { RetourCarnet } from '../pages/Carnet';
 
 /** Questions répondues sur le chemin : « question : réponse ». */
 export function resumeReponses(av: Avancement) {

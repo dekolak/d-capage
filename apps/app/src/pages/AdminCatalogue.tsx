@@ -6,7 +6,7 @@ import { MiniatureMachine } from '../components/MiniatureMachine';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { BadgeZone } from './Admin';
-import { ChoixEtiquettes, viderCategoriesMachines, viderEtiquettes } from '../espaces/kiavik/Etiquettes';
+import { ChoixEtiquettes, viderCategoriesMachines, viderEtiquettes } from '../bibliotheque/Etiquettes';
 
 /** Catalogue complet (administration) : Lazzeko et Kiavik. */
 export interface VarianteAdmin { id: string; nom: string; actif: boolean; imageUrl: string | null; imagePropre: boolean; reglages: boolean; machines: number }

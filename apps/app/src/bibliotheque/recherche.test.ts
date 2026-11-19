@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Guide } from './guides';
+import type { Guide } from '../espaces/kiavik/guides';
 import { motsRecherche, nbTrouves, rechercher } from './recherche';
 
 const p = (id: string, titre: string, texte = '', extra: Record<string, unknown> = {}) => ({ id, x: 0, y: 0, titre, texte, ...extra });

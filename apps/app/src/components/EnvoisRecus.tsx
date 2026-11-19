@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ICONE_TYPE, TypePasAPas, useAccesProcedures } from '../espaces/kiavik/donneesProcedures';
+import { ICONE_TYPE, TypePasAPas, useAccesProcedures } from '../bibliotheque/donneesProcedures';
 import { api } from '../lib/api';
 import { t } from '../lib/i18n';
 import { date } from '../lib/util';

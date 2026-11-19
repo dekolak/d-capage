@@ -1,4 +1,4 @@
-import { ImageApi } from '../espaces/kiavik/donneesProcedures';
+import { ImageApi } from '../bibliotheque/donneesProcedures';
 import './reperes.css';
 
 /**

@@ -7,17 +7,25 @@ import Fiches from '../../pages/Fiches';
 import Machines from '../../pages/Machines';
 import Top from '../../pages/Top';
 import { AppEspace, ICONES } from '../types';
-import { AdminDiagnostics } from '../kiavik/AdminDiagnostics';
-import { AdminCategories } from '../kiavik/AdminCategories';
-import { AdminProcedures } from '../kiavik/AdminProcedures';
-import { AdminSolution, AdminSolutions } from '../kiavik/AdminSolutions';
-import { AdminProcedure } from '../kiavik/EditeurProcedure';
-import MesDiagnostics from '../kiavik/MesDiagnostics';
-import ProcedureDetail from '../kiavik/ProcedureDetail';
-import Procedures from '../kiavik/Procedures';
-import Solutions, { SolutionDetail } from '../kiavik/Solutions';
+import { AdminDiagnostics } from '../../bibliotheque/AdminDiagnostics';
+import { AdminCategories } from '../../bibliotheque/AdminCategories';
+import { AdminProcedures } from '../../bibliotheque/AdminProcedures';
+import { AdminSolution, AdminSolutions } from '../../bibliotheque/AdminSolutions';
+import { AdminProcedure } from '../../bibliotheque/EditeurProcedure';
+import MesDiagnostics from '../../bibliotheque/MesDiagnostics';
+import ProcedureDetail from '../../bibliotheque/ProcedureDetail';
+import Procedures from '../../bibliotheque/Procedures';
+import Solutions, { SolutionDetail } from '../../bibliotheque/Solutions';
+import Bibliotheque from '../../bibliotheque/Bibliotheque';
+import Recherche from '../../bibliotheque/Recherche';
+import { t } from '../../lib/i18n';
+import { BlocReglages } from './BlocReglages';
 
-/** Espace Lazzeko : réglages décapage (module reglages-decapage), communauté, aide aux réglages, pas-à-pas et Bon à savoir (module procedures-lazzeko). */
+/**
+ * Espace Lazzeko : brique propre = fiches de réglage (décapage, soudure) et communauté.
+ * L'aide (onglet Aide) est la Bibliothèque commune à toutes les sociétés (pas-à-pas, dépannages, Bon à savoir, recherche),
+ * avec en tête le bloc « Comprendre les réglages ».
+ */
 export const lazzeko: AppEspace = {
   onglets: [
     { to: '/', label: 'onglets.mesFiches', icone: ICONES.liste, end: true },
@@ -36,8 +44,10 @@ export const lazzeko: AppEspace = {
       <Route path="/communaute" element={<Communaute />} />
       <Route path="/top" element={<Top />} />
       <Route path="/machines" element={<Machines />} />
-      <Route path="/aide" element={<Aide />} />
-      {/* Pas-à-pas, Bon à savoir, dépannages guidés : même moteur que Kiavik (contenus de l'espace Lazzeko) */}
+      {/* Aide = Bibliothèque commune (même écran que l'accueil Kiavik), filtrée par les machines du client */}
+      <Route path="/aide" element={<Bibliotheque titre={t('aide.titre')} entete={<BlocReglages />} />} />
+      <Route path="/aide/reglages" element={<Aide />} />
+      <Route path="/recherche" element={<Recherche />} />
       <Route path="/procedures" element={<Procedures />} />
       <Route path="/procedures/:id" element={<ProcedureDetail />} />
       <Route path="/solutions" element={<Solutions />} />

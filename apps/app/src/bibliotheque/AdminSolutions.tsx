@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { RefId } from '../../components/RefId';
+import { RefId } from '../components/RefId';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { compresser } from '../../lib/image';
+import { Chargement, Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { compresser } from '../lib/image';
 import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
 import { chargerProcedures, chargerSolutions, ChoixCategorie, ImageApi, ResumeProcedure, Solution, viderSolutions } from './donneesProcedures';
-import './guides.css';
-import { BadgeZone } from '../../pages/Admin';
+import './bibliotheque.css';
+import { BadgeZone } from '../pages/Admin';
 import { BlocPourQui, EspaceContenu } from './Etiquettes';
 
 /* Administration → Astuces & solutions (admin, en français). */

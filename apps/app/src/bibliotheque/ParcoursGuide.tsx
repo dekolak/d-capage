@@ -1,8 +1,8 @@
 import { TouchEvent, useEffect, useRef, useState } from 'react';
-import { t } from '../../lib/i18n';
+import { t } from '../lib/i18n';
 import { Avancement } from './avancement';
-import { CaptureBouton } from './CaptureBouton';
-import { AvisContenu } from '../../components/AvisContenu';
+import { CaptureBouton } from '../espaces/kiavik/CaptureBouton';
+import { AvisContenu } from '../components/AvisContenu';
 import { AideNon } from './Controle';
 import { FinDiagnostic } from './FinDiagnostic';
 import { Procedure } from './donneesProcedures';

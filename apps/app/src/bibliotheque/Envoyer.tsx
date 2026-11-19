@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { date } from '../../lib/util';
+import { Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { date } from '../lib/util';
 
 /* Admin (en français) : envoyer un pas-à-pas à un client par son n° client court (621, L621…), affiché en haut à droite de son app. */
 

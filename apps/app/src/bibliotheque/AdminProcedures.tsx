@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { RefId } from '../../components/RefId';
+import { RefId } from '../components/RefId';
 import { Link, useNavigate } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { chargerGuide, Guide, pastillesNavigation, ResumeGuide } from './guides';
+import { Chargement, Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { chargerGuide, Guide, pastillesNavigation, ResumeGuide } from '../espaces/kiavik/guides';
 import { chargerProcedures, ICONE_TYPE, Procedure, ResumeProcedure, viderProcedures } from './donneesProcedures';
-import './guides.css';
+import './bibliotheque.css';
 import './editeur.css';
-import { BadgeZone } from '../../pages/Admin';
-import { useEspace } from '../../lib/espace';
+import { BadgeZone } from '../pages/Admin';
+import { useEspace } from '../lib/espace';
 
 /** Administration → Procédures : liste, création, consignes générales pour l'IA, diagnostics reçus. */
 export function AdminProcedures() {

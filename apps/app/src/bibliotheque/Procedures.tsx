@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { useAuth } from '../../lib/auth';
+import { Chargement, Erreur } from '../components/Composants';
+import { useAuth } from '../lib/auth';
 import { ICONE_TYPE, ResumeProcedure, useProcedures } from './donneesProcedures';
 import { PreparerHorsLigne } from './PreparerHorsLigne';
 import { normaliser } from './recherche';
-import './guides.css';
-import { t, tn } from '../../lib/i18n';
+import './bibliotheque.css';
+import { t, tn } from '../lib/i18n';
 
 /** Liste des procédures par catégorie, avec un filtre. */
 export default function Procedures() {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { langue, t } from '../../lib/i18n';
+import { langue, t } from '../lib/i18n';
 
 /**
  * Voix off des animations (speechSynthesis) dans la langue de l'app. Règles de Teddy (français) :

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
 import { compresser } from '../../lib/image';
-import { ChoixCategorie } from './donneesProcedures';
+import { ChoixCategorie } from '../../bibliotheque/donneesProcedures';
 import { Animation, Ecran, EtapeAnim, Guide, mettreAJourGuide, Pastille, SceneBlanc, SceneEcrans } from './guides';
 
 /*

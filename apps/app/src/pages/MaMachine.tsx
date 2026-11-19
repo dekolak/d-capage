@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
-import { pourModele, trierCategories, useAccesProcedures, useCategories, useProcedures, useSolutions } from '../espaces/kiavik/donneesProcedures';
-import { SectionCategorie, useSectionOuverte } from '../espaces/kiavik/SectionCategorie';
+import { pourModele, trierCategories, useAccesProcedures, useCategories, useProcedures, useSolutions } from '../bibliotheque/donneesProcedures';
+import { SectionCategorie, useSectionOuverte } from '../bibliotheque/SectionCategorie';
 import { EnvoiRecu, ListeRecus } from '../components/EnvoisRecus';
-import { ListeProcedures } from '../espaces/kiavik/Procedures';
-import { ListeSolutions } from '../espaces/kiavik/Solutions';
+import { ListeProcedures } from '../bibliotheque/Procedures';
+import { ListeSolutions } from '../bibliotheque/Solutions';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useEspace } from '../lib/espace';
@@ -15,7 +15,7 @@ import { date } from '../lib/util';
 import { CarnetMachine, ICONE_ETAT } from './Carnet';
 import { OutilsMachine } from '../academie/Pages';
 
-type Onglet = 'guides' | 'recus' | 'entretien' | 'reglages';
+type Onglet = 'guides' | 'recus' | 'entretien';
 /** Ce qui vise cette machine précisément passe avant ce qui vise sa catégorie, puis le reste. */
 const precision = (c: { cibleModeles: string[]; cibleCategories: string[] }, modeleId: string) =>
   c.cibleModeles.includes(modeleId) ? 0 : c.cibleCategories.length ? 1 : 2;
@@ -23,7 +23,7 @@ const precision = (c: { cibleModeles: string[]; cibleCategories: string[] }, mod
 /**
  * Ma machine : tout ce qui concerne UNE machine du client (filtre « Pour qui ? » : modèle, catégorie, étiquettes).
  * Onglets : Guides (pas-à-pas, dépannages, Bon à savoir, rangés par catégorie de l'accueil comme l'accueil Kiavik),
- * Reçus, Entretien (carnet), Réglages (Lazzeko : fiches de réglage).
+ * Reçus, Entretien (carnet). Lazzeko : une ligne vers les fiches de réglage de la machine (même écran pour toutes les sociétés).
  */
 export default function MaMachine() {
   const { id } = useParams();
@@ -62,7 +62,6 @@ export default function MaMachine() {
     ...(acces ? [{ o: 'guides' as const, l: t('maMachine.guides') }] : []),
     ...(recusIci.length ? [{ o: 'recus' as const, l: t('maMachine.recus') }] : []),
     { o: 'entretien', l: t('maMachine.entretien') },
-    ...(reglages ? [{ o: 'reglages' as const, l: t('maMachine.reglages') }] : []),
   ];
   const actif = onglets.some((x) => x.o === onglet) ? onglet : onglets[0].o;
 
@@ -103,6 +102,8 @@ export default function MaMachine() {
       </div>
 
       <OutilsMachine modeleId={m.modeleId} categorie={m.categorie} />
+      {/* fiches de réglage (Lazzeko) : une ligne, la barre du bas fait le reste */}
+      {reglages && <Link to={`/?machine=${m.id}`} className="bandeau lien-bandeau"><span><b>{t('maMachine.mesFiches')}</b></span><span>›</span></Link>}
       <div className="seg mm-onglets">
         {onglets.map((x) => (
           <button key={x.o} type="button" className={actif === x.o ? 'on' : ''} onClick={() => setOnglet(x.o)}>
@@ -163,13 +164,6 @@ export default function MaMachine() {
         </>
       )}
 
-      {actif === 'reglages' && (
-        <div className="liste">
-          <Link to={`/?machine=${m.id}`} className="bandeau lien-bandeau"><span><b>{t('maMachine.mesFiches')}</b></span><span>›</span></Link>
-          <Link to="/fiches/nouvelle" className="btn prim">{t('maMachine.nouvelleFiche')}</Link>
-          <Link to="/aide" className="bandeau lien-bandeau"><span><b>{t('maMachine.aideReglages')}</b></span><span>›</span></Link>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
-import { ChoixCategorie, Etape, ICONE_TYPE, ImageApi, Procedure, ResumeProcedure, TYPES_PAS_A_PAS, TypePasAPas, viderProcedures } from '../espaces/kiavik/donneesProcedures';
+import { ChoixCategorie, Etape, ICONE_TYPE, ImageApi, Procedure, ResumeProcedure, TYPES_PAS_A_PAS, TypePasAPas, viderProcedures } from '../bibliotheque/donneesProcedures';
 import { t } from '../lib/i18n';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { compresser } from '../lib/image';
 import { BadgeZone } from './Admin';
-import { BlocPourQui, Cible, EspaceContenu } from '../espaces/kiavik/Etiquettes';
+import { BlocPourQui, Cible, EspaceContenu } from '../bibliotheque/Etiquettes';
 import './terrain.css';
 
 /*
