@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { useAuth } from '../lib/auth';
-import { ICONE_TYPE, ResumeProcedure, useProcedures } from './donneesProcedures';
+import { categoriesDe, ICONE_TYPE, ResumeProcedure, useProcedures } from './donneesProcedures';
 import { PreparerHorsLigne } from './PreparerHorsLigne';
 import { normaliser } from './recherche';
 import './bibliotheque.css';
@@ -18,7 +18,7 @@ export default function Procedures() {
     const m = new Map<string, ResumeProcedure[]>();
     for (const p of liste ?? []) {
       const t = normaliser(`${p.titre} ${p.categorie} ${p.resume ?? ''} ${p.textes.join(' ')}`);
-      if (mots.every((w) => t.includes(w))) m.set(p.categorie, [...(m.get(p.categorie) ?? []), p]);
+      if (mots.every((w) => t.includes(w))) for (const c of categoriesDe(p)) m.set(c, [...(m.get(c) ?? []), p]);
     }
     return [...m];
   }, [liste, q]);

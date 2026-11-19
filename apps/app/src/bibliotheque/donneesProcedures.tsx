@@ -13,6 +13,8 @@ export const ICONE_TYPE: Record<TypePasAPas, string> = { tuto: '🎓', procedure
 
 export interface ResumeProcedure {
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string;
+  /** Catégories en plus : le pas-à-pas apparaît aussi dans ces sections. */
+  autresCategories?: string[];
   nbEtapes: number; textes: string[];
   /** Espace (lazzeko ou kiavik) et étiquettes des machines concernées (vide = toutes). */
   espace: 'lazzeko' | 'kiavik'; etiquettes: string[]; type: TypePasAPas; cibleCategories: string[]; cibleModeles: string[];
@@ -48,7 +50,7 @@ export interface Choix {
 export interface Procedure {
   /** « Ce contenu était-il clair ? » à la fin (activé par l'admin). */
   demanderAvis?: boolean;
-  id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string; etapes: Etape[];
+  id: string; titre: string; categorie: string; autresCategories?: string[]; resume: string | null; publiee: boolean; ordre: number; updatedAt: string; etapes: Etape[];
   espace: 'lazzeko' | 'kiavik'; etiquettes: string[]; type: TypePasAPas; cibleCategories: string[]; cibleModeles: string[];
   /** Procédure proposée à la fin (« Continuer avec … ? »). */
   suivanteId: string | null;
@@ -118,6 +120,31 @@ export function ChoixCategorie({ valeur, onChange, espace }: { valeur: string; o
       </select>
       <Link to="/admin/categories" className="petit">Gérer les catégories ›</Link>
     </>
+  );
+}
+
+/** Toutes les catégories d'un pas-à-pas : la principale, puis celles en plus. */
+export const categoriesDe = (p: { categorie: string; autresCategories?: string[] }) => [p.categorie, ...(p.autresCategories ?? [])];
+
+/** « Aussi dans » : 3 catégories en plus au plus, pour qu'un client stressé trouve le pas-à-pas où il le cherche. */
+export function AutresCategories({ principale, valeur, onChange, espace }: { principale: string; valeur: string[]; onChange: (v: string[]) => void; espace?: string }) {
+  const tous = useCategories();
+  const { espace: ouvert } = useEspace();
+  const soc = espace ?? ouvert.slug;
+  const cats = (tous ?? []).filter((c) => c.nom !== principale && (!c.espaces?.length || c.espaces.includes(soc) || valeur.includes(c.nom)));
+  return (
+    <div className="pq-cases">
+      {cats.map((c) => {
+        const on = valeur.includes(c.nom);
+        return (
+          <label key={c.nom} className={`pq-case ${on ? 'on' : ''}`}>
+            <input type="checkbox" checked={on} disabled={!on && valeur.length >= 3}
+              onChange={() => onChange(on ? valeur.filter((x) => x !== c.nom) : [...valeur, c.nom])} />
+            {c.icone} {c.nom}
+          </label>
+        );
+      })}
+    </div>
   );
 }
 

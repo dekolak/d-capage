@@ -4,7 +4,7 @@ import { Chargement, Erreur } from '../components/Composants';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { t, tn } from '../lib/i18n';
-import { trierCategories, useCategories, useProcedures, useSolutions } from './donneesProcedures';
+import { categoriesDe, trierCategories, useCategories, useProcedures, useSolutions } from './donneesProcedures';
 import { ResumeGuide } from '../espaces/kiavik/guides';
 import { ListeProcedures } from './Procedures';
 import { ListeSolutions } from './Solutions';
@@ -43,7 +43,7 @@ export default function Bibliotheque({ avecGuides = false, entete, titre }: { av
   const masquees = (cats ?? []).filter((c) => c.masquee).map((c) => c.nom);
   const categories = trierCategories([
     ...guidees.map((a) => a.categorie ?? ''),
-    ...(accesProcedures ? [...(procedures ?? []).map((p) => p.categorie), ...(solutions ?? []).map((x) => x.categorie)] : []),
+    ...(accesProcedures ? [...(procedures ?? []).flatMap(categoriesDe), ...(solutions ?? []).map((x) => x.categorie)] : []),
   ], cats).filter((c) => !masquees.includes(c));
   return (
     <div className="page kh">
@@ -80,7 +80,7 @@ export default function Bibliotheque({ avecGuides = false, entete, titre }: { av
 
       {categories.map((cat) => {
         const anims = guidees.filter((a) => (a.categorie ?? '') === cat);
-        const procs = (procedures ?? []).filter((p) => p.categorie === cat);
+        const procs = (procedures ?? []).filter((p) => categoriesDe(p).includes(cat));
         const astuces = (solutions ?? []).filter((s) => s.categorie === cat);
         return (
           <SectionCategorie
