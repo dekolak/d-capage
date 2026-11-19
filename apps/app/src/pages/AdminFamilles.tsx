@@ -50,7 +50,7 @@ export default function AdminFamilles() {
         return (
           <section key={g.id} className="carte af-groupe">
             <h2>
-              {g.nom} <small className="muted">· {g.choixUnique ? 'un seul choix par fiche' : 'plusieurs choix possibles'}</small>
+              {g.nom} <small className="muted">· {g.univers?.length ? g.univers.map((u) => (u === 'soudure' ? 'Soudure' : 'Décapage')).join(', ') : 'tous les métiers'} · {g.choixUnique ? 'un seul choix par fiche' : 'plusieurs choix possibles'}</small>
             </h2>
             <b className="petit">Familles</b>
             <div className="puces">

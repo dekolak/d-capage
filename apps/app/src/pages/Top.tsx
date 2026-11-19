@@ -4,6 +4,8 @@ import { CarteFiche } from '../components/CarteFiche';
 import { Chargement, Erreur } from '../components/Composants';
 import { api, Fabricant, Fiche, MaMachine } from '../lib/api';
 import { t } from '../lib/i18n';
+import { BasculeUnivers, universMachine, useUnivers } from '../lib/univers';
+import { universTechnologie } from '@decapage/machine-kit';
 
 interface GroupeTop { slug: string; nom: string; tags: { id: string; nom: string; fiches: Fiche[] }[] }
 
@@ -14,27 +16,39 @@ export default function Top() {
   const [groupe, setGroupe] = useState('materiau');
   const [data, setData] = useState<GroupeTop[]>();
   const [err, setErr] = useState<unknown>();
+  const [machines, setMachines] = useState<MaMachine[]>();
+  const u = useUnivers(machines);
 
   useEffect(() => {
     Promise.all([api<Fabricant[]>('/catalogue'), api<MaMachine[]>('/moi/machines')])
-      .then(([c, m]) => { setCatalogue(c); if (m[0]) setVariante(m[0].varianteId); })
+      .then(([c, m]) => { setCatalogue(c); setMachines(m); })
       .catch(setErr);
   }, []);
   useEffect(() => {
+    if (machines) setVariante(machines.find((m) => universMachine(m) === u.univers)?.varianteId ?? '');
+  }, [machines, u.univers]);
+  useEffect(() => {
+    if (!u.pret) return;
     setData(undefined);
-    api<GroupeTop[]>(`/top${varianteId ? `?varianteId=${varianteId}` : ''}`).then(setData).catch(setErr);
-  }, [varianteId]);
+    const p = new URLSearchParams({ univers: u.univers });
+    if (varianteId) p.set('varianteId', varianteId);
+    api<GroupeTop[]>(`/top?${p}`).then(setData).catch(setErr);
+  }, [varianteId, u.pret, u.univers]);
+  useEffect(() => {
+    if (data?.length && !data.some((x) => x.slug === groupe)) setGroupe(data[0].slug);
+  }, [data, groupe]);
 
   const g = data?.find((x) => x.slug === groupe);
   return (
     <div className="page">
       <p className="petit"><Link to="/communaute">‹ {t('lazzeko.communaute.titre')}</Link></p>
       <h1>{t('lazzeko.top.titre')}</h1>
+      <BasculeUnivers {...u} />
       <p className="muted petit">{t('lazzeko.top.intro')}</p>
       <div className="filtres">
         <select value={varianteId} onChange={(e) => setVariante(e.target.value)}>
           <option value="">{t('lazzeko.top.toutesMachines')}</option>
-          {catalogue.flatMap((f) => f.modeles.flatMap((m) => m.variantes.map((v) => <option key={v.id} value={v.id}>{`${f.nom} ${m.nom} ${v.nom}`}</option>)))}
+          {catalogue.flatMap((f) => f.modeles.filter((m) => universTechnologie(m.technologie) === u.univers).flatMap((m) => m.variantes.map((v) => <option key={v.id} value={v.id}>{`${f.nom} ${m.nom} ${v.nom}`}</option>)))}
         </select>
         {data && data.length > 0 && (
           <div className="seg">

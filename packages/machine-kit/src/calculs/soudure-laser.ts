@@ -38,6 +38,8 @@ export const soudureLaser: Technologie = {
   id: 'soudure-laser',
   nom: 'Soudure laser',
   univers: 'soudure',
+  // Menu nettoyage de la soudeuse (à venir) : ces fiches rejoignent le décapage.
+  universFiche: (_cfg, v) => (v.procede === 'nettoyage' ? 'decapage' : 'soudure'),
   indicateurs(cfg, v): Indicateur[] {
     const m = modeleSoudure(cfg, v);
     const l: Indicateur[] = [

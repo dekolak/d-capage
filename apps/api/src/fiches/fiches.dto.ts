@@ -51,6 +51,8 @@ export class EvaluerDto {
 }
 
 export class FiltresDto {
+  /** Métier : « decapage », « soudure »… */
+  @IsOptional() @IsString() @MaxLength(30) univers?: string;
   @IsOptional() @IsString() varianteId?: string;
   @IsOptional() @IsString() modeleId?: string;
   @IsOptional() @IsString() userMachineId?: string;
