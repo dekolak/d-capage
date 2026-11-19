@@ -4,6 +4,7 @@ import { useEspace } from '../lib/espace';
 /** Académie : module isolé (cours → leçons → blocs). Voir docs/ACADEMIE.md. */
 
 export type TypeBloc = 'titre' | 'texte' | 'vimeo' | 'image' | 'encadre' | 'simulateur' | 'html' | 'fichier' | 'note';
+export interface Repere { x: number; y: number; s: 'halo' | 'attention' }
 export interface Bloc {
   id: string;
   type: TypeBloc;
@@ -16,6 +17,8 @@ export interface Bloc {
   fichierId?: string;
   chemin?: string;
   legende?: string;
+  /** Repères animés sur une photo (position relative 0–1) : halo qui pulse ou ⚠️. */
+  reperes?: Repere[];
   nom?: string | null;
   simulateurId?: string;
   html?: string;

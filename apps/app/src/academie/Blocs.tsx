@@ -2,7 +2,7 @@ import { Fragment, ReactNode, useEffect, useRef, useState } from 'react';
 import { ImageApi } from '../espaces/kiavik/donneesProcedures';
 import { api } from '../lib/api';
 import { t } from '../lib/i18n';
-import { Bloc, duree, idVimeo } from './donnees';
+import { Bloc, duree, idVimeo, Repere } from './donnees';
 
 /**
  * Affichage des blocs d'une leçon (côté client et aperçu admin).
@@ -36,7 +36,12 @@ function BlocVue({ b }: { b: Bloc }) {
     case 'image':
       return (
         <figure className="ac-image">
-          {b.chemin && <ImageApi chemin={b.chemin} />}
+          {b.chemin && (
+            <span className="ac-photo">
+              <ImageApi chemin={b.chemin} />
+              <Reperes liste={b.reperes} />
+            </span>
+          )}
           {b.legende && <figcaption>{b.legende}</figcaption>}
         </figure>
       );
@@ -51,6 +56,47 @@ function BlocVue({ b }: { b: Bloc }) {
     default:
       return null;
   }
+}
+
+/** Repères animés posés sur une photo : ⭕ halo qui pulse, ⚠️ pictogramme qui bat. */
+export function Reperes({ liste = [], onToucher }: { liste?: Repere[]; onToucher?: (i: number) => void }) {
+  return (
+    <>
+      {liste.map((r, i) => (
+        <span key={i} className={`ac-repere ${r.s}`} style={{ left: `${r.x * 100}%`, top: `${r.y * 100}%` }}
+          onClick={onToucher ? (e) => ((e.stopPropagation(), onToucher(i))) : undefined}>
+          {r.s === 'attention' ? '⚠️' : ''}
+        </span>
+      ))}
+    </>
+  );
+}
+
+/** Admin : toucher la photo pose un repère (style choisi), toucher un repère le retire. */
+export function PlacerReperes({ b, onChange }: { b: Bloc; onChange: (b: Bloc) => void }) {
+  const [style, setStyle] = useState<Repere['s']>('halo');
+  if (!b.chemin) return null;
+  const liste = b.reperes ?? [];
+  const poser = (e: React.MouseEvent<HTMLSpanElement>) => {
+    if (liste.length >= 10) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    onChange({ ...b, reperes: [...liste, { x: +x.toFixed(4), y: +y.toFixed(4), s: style }] });
+  };
+  return (
+    <div className="ac-placer">
+      <div className="seg">
+        <button type="button" className={style === 'halo' ? 'on' : ''} onClick={() => setStyle('halo')}>⭕ Halo</button>
+        <button type="button" className={style === 'attention' ? 'on' : ''} onClick={() => setStyle('attention')}>⚠️ Attention</button>
+      </div>
+      <small className="muted">Touchez la photo pour poser un repère animé ; touchez un repère pour le retirer ({liste.length}/10).</small>
+      <span className="ac-photo" onClick={poser}>
+        <ImageApi chemin={b.chemin} />
+        <Reperes liste={liste} onToucher={(i) => onChange({ ...b, reperes: liste.filter((_, j) => j !== i) })} />
+      </span>
+    </div>
+  );
 }
 
 /**

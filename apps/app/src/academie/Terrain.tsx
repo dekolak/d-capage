@@ -5,7 +5,7 @@ import { Camera, Dictee, Galerie } from '../pages/Terrain';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { compresser } from '../lib/image';
-import { Blocs } from './Blocs';
+import { Blocs, PlacerReperes } from './Blocs';
 import { Bloc, Lecon } from './donnees';
 import '../pages/terrain.css';
 import './academie.css';
@@ -185,8 +185,12 @@ export function TerrainLecon() {
       <Galerie reste={20} onPhoto={photo} />
       {envoi && <p className="muted petit">{envoi}</p>}
       {derniere && (
-        <input value={derniere.legende ?? ''} maxLength={300} placeholder="Légende de la dernière photo (facultatif)"
-          onChange={(e) => legende(e.target.value)} onBlur={() => enregistrer(blocs)} />
+        <details className="carte">
+          <summary>Dernière photo : légende et repères animés{derniere.reperes?.length ? ` (${derniere.reperes.length})` : ''}</summary>
+          <input value={derniere.legende ?? ''} maxLength={300} placeholder="Légende (facultatif)"
+            onChange={(e) => legende(e.target.value)} onBlur={() => enregistrer(blocs)} />
+          <PlacerReperes b={derniere} onChange={(nb) => enregistrer(blocs.map((x) => (x.id === nb.id ? nb : x)))} />
+        </details>
       )}
 
       <div className="seg">
