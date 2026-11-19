@@ -51,6 +51,7 @@ Le fichier de chaque puissance ne contient que ce qui change : `base`, `modele` 
 ### Métiers (décapage, soudure)
 - Chaque technologie déclare son métier (`univers`) ; une fiche reçoit le métier de sa machine (colonne `Fiche.univers`, calculée par `universFiche` : une soudeuse en procédé « nettoyage » donnera une fiche décapage).
 - Les groupes de tags ont leurs métiers (`GroupeTag.univers`, vide = tous) : Matériau / À enlever / Application pour le décapage ; Matériau, Épaisseur, Type de joint, Gaz, Fil d'apport pour la soudure (seed).
+- Épaisseur (soudure) : le client tape la valeur exacte (ex. 2,5 mm), gardée en précision ; la tranche est cochée d'office pour les filtres (`VALEUR_EXACTE` dans `apps/app/src/components/Composants.tsx`, d'après les slugs des tranches du seed).
 - Mes fiches, Communauté et Top sont filtrés par métier ; un client qui a les deux voit la bascule « Décapage | Soudure » (`apps/app/src/lib/univers.tsx`).
 - Un seul module « fiches de réglage » (`reglages-decapage`) donne accès aux fiches, quel que soit le métier : la machine décide.
 - Nouveau métier : l'ajouter à `UNIVERS` (machine-kit), à la technologie, aux textes `univers.*` et aux groupes de tags.

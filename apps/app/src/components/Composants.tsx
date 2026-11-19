@@ -94,6 +94,34 @@ export function Indicateurs({ liste }: { liste: Indicateur[] }) {
  * Sous chaque groupe choisi, une précision libre facultative (ex. Aluminium → « 6082 brossé »),
  * avec les précisions déjà utilisées par d'autres en suggestion. « Autre » : la précision dit quoi.
  */
+/**
+ * Groupes à valeur exacte : le client tape la valeur (ex. 2,5 mm), elle est gardée en précision
+ * et la tranche correspondante est cochée d'office (pour filtrer). [borne exclue, slug de la tranche]
+ */
+const VALEUR_EXACTE: Record<string, { unite: string; tranches: [number, string][] }> = {
+  epaisseur: { unite: 'mm', tranches: [[1, 'moins-1'], [2, '1-2'], [3, '2-3'], [5, '3-5'], [Infinity, 'plus-5']] },
+};
+
+function ValeurExacte({ g, choisis, onChange, valeur, onValeur }: { g: GroupeTag; choisis: string[]; onChange(ids: string[]): void; valeur: string; onValeur(v: string): void }) {
+  const def = VALEUR_EXACTE[g.slug];
+  const [saisie, setSaisie] = useState(() => valeur.replace(/\s*[a-zA-Z]+$/, ''));
+  const changer = (txt: string) => {
+    setSaisie(txt);
+    const n = Number(txt.replace(',', '.'));
+    if (!txt.trim() || !Number.isFinite(n) || n <= 0) return onValeur('');
+    onValeur(`${txt.trim()} ${def.unite}`);
+    const slug = def.tranches.find(([borne]) => n < borne)?.[1];
+    const tag = g.tags.find((x) => x.slug === slug);
+    if (tag) onChange([...choisis.filter((x) => !g.tags.some((y) => y.id === x)), tag.id]);
+  };
+  return (
+    <label className="valeur-exacte">
+      <span className="muted petit">{t('commun.tags.valeurExacte', { unite: def.unite })}</span>
+      <input inputMode="decimal" value={saisie} onChange={(e) => changer(e.target.value)} placeholder="2,5" />
+    </label>
+  );
+}
+
 export function ChoixTags({
   groupes,
   choisis,
@@ -122,6 +150,9 @@ export function ChoixTags({
             <b className="gt-titre">
               {g.nom} <small className="muted">{g.choixUnique ? t('commun.tags.unSeul') : t('commun.tags.plusieurs')}</small>
             </b>
+            {VALEUR_EXACTE[g.slug] && (
+              <ValeurExacte g={g} choisis={choisis} onChange={onChange} valeur={precisions[g.id] ?? ''} onValeur={(v) => onPrecisions({ ...precisions, [g.id]: v })} />
+            )}
             <div className="puces">
               {g.tags.map((tag) => (
                 <button key={tag.id} type="button" className={`puce ${choisis.includes(tag.id) ? 'on' : ''}`} aria-pressed={choisis.includes(tag.id)} onClick={() => basculer(g, tag.id)}>
@@ -129,7 +160,7 @@ export function ChoixTags({
                 </button>
               ))}
             </div>
-            {pris.length > 0 && (
+            {pris.length > 0 && !VALEUR_EXACTE[g.slug] && (
               <ChampPrecision
                 groupe={g}
                 tagId={pris[0].id}

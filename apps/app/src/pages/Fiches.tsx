@@ -55,7 +55,7 @@ export default function Fiches() {
       <h1>{t('lazzeko.fiches.titre')}</h1>
       <BasculeUnivers {...u} choisir={(x) => { u.choisir(x); setMachine(''); setTags([]); }} />
       {brouillonUtile(lireBrouillon()) && (
-        <Link to="/fiches/nouvelle" className="bandeau lien-bandeau">
+        <Link to="/fiches/nouvelle?reprendre=1" className="bandeau lien-bandeau">
           <span><b>{t('lazzeko.fiches.enCours')}</b>{t('lazzeko.fiches.reprendre')}</span>
           <span>›</span>
         </Link>
