@@ -59,8 +59,8 @@ export class FichesController {
 
   /** Les meilleurs réglages par matériau / à enlever / application. */
   @Get('top')
-  top(@Moi() moi: Principal, @Query('varianteId') varianteId?: string) {
-    return this.fiches.top(moi, { varianteId: varianteId || undefined });
+  top(@Moi() moi: Principal, @Query('varianteId') varianteId?: string, @Query('univers') univers?: string) {
+    return this.fiches.top(moi, { varianteId: varianteId || undefined, univers: univers || undefined });
   }
 
   /** « Demander de l'aide à Lazzeko » : refusé tant que le paramètre aideSupport est désactivé. */

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { completer, technologie, validerValeurs } from '@decapage/machine-kit';
+import { completer, technologie, universFiche, validerValeurs } from '@decapage/machine-kit';
+import { groupesDu, universMachine } from '../lib/univers';
 import { ChoixTags, Chargement, libellesTags, Erreur, Etoiles, Galerie, Indicateurs, libellePhoto } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
 import { Miroir } from '../components/Miroir';
@@ -103,6 +104,8 @@ export default function FicheEditeur() {
 
   // Config de la machine choisie
   const machine = machines?.find((m) => m.id === b.userMachineId);
+  // Métier de la fiche (tags proposés, titres) : procédé choisi ou technologie de la machine
+  const univers = version ? universFiche(version.config, b.valeurs ?? {}) : machine ? universMachine(machine) : undefined;
   useEffect(() => {
     if (modif || !machine?.version) return;
     chargerVersion(machine.version.id)
@@ -274,8 +277,8 @@ export default function FicheEditeur() {
 
       {e === 1 && (
         <section>
-          <h2>{t('lazzeko.editeur.surface')}</h2>
-          <ChoixTags groupes={groupes} choisis={b.tagIds} onChange={(tagIds) => maj({ tagIds })} precisions={b.precisions ?? {}} onPrecisions={(precisions) => maj({ precisions })} />
+          <h2>{univers === 'soudure' ? t('lazzeko.editeur.surfaceSoudure') : t('lazzeko.editeur.surface')}</h2>
+          <ChoixTags groupes={groupesDu(groupes, univers)} choisis={b.tagIds} onChange={(tagIds) => maj({ tagIds })} precisions={b.precisions ?? {}} onPrecisions={(precisions) => maj({ precisions })} />
         </section>
       )}
 

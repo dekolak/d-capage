@@ -233,6 +233,8 @@ model GroupeTag {
   ordre       Int              @default(0)
   /// Un seul tag par fiche dans ce groupe (Matériau, Application) ; sinon plusieurs (À enlever).
   choixUnique Boolean          @default(false)
+  /// Métiers où le groupe est proposé (« decapage », « soudure ») ; vide = tous (ex. Matériau).
+  univers     String[]         @default([])
   tags        Tag[]
   precisions  FichePrecision[]
 }
@@ -278,6 +280,8 @@ model Fiche {
   commentaire        String?
   /// Valeurs saisies dans le miroir (uniquement les champs `enregistre`).
   valeurs            Json
+  /// Métier de la fiche (« decapage », « soudure ») : donné par la technologie de la machine (et le procédé choisi).
+  univers            String           @default("decapage")
   /// Toutes les fiches sont partagées (mise en commun). PRIVEE reste possible via l'API pour plus tard.
   visibilite         Visibilite       @default(PARTAGEE)
   /// Dénormalisé (mis à jour à chaque note) pour trier la communauté en base.

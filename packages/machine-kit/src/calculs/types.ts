@@ -22,6 +22,8 @@ export interface Technologie {
   nom: string;
   /** Métier des fiches de cette technologie (tags, communauté) : « decapage », « soudure »… */
   univers: string;
+  /** Métier d'une fiche quand il dépend des valeurs (ex. soudeuse en procédé nettoyage → décapage). */
+  universFiche?(cfg: ConfigMachine, v: Valeurs): string;
   indicateurs(cfg: ConfigMachine, v: Valeurs): Indicateur[];
   /** Contrôles qui croisent plusieurs champs (ex. zone max selon la lentille). */
   valider?(cfg: ConfigMachine, v: Valeurs): Erreur[];

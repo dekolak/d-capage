@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, Role, StatutAvis, Visibilite } from '@prisma/client';
-import { completer, technologie, validerValeurs } from '@decapage/machine-kit';
+import { completer, technologie, universFiche, validerValeurs } from '@decapage/machine-kit';
 import { Principal } from '../auth/decorators';
 import { CatalogueService, imageMachine, nomMachine } from '../catalogue/catalogue.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -109,6 +109,7 @@ export class FichesService {
           titre: f.titre,
           commentaire: f.commentaire,
           valeurs,
+          univers: f.univers,
           visibilite: f.visibilite,
           createdAt: f.createdAt,
           updatedAt: f.updatedAt,
@@ -144,6 +145,7 @@ export class FichesService {
   private where(f: FiltresDto): Prisma.FicheWhereInput {
     const tags = (f.tags ?? '').split(',').map((s) => s.trim()).filter(Boolean);
     return {
+      ...(f.univers ? { univers: f.univers } : {}),
       ...(f.userMachineId ? { userMachineId: f.userMachineId } : {}),
       ...(f.varianteId
         ? { versionInterface: { varianteId: f.varianteId } }
@@ -218,18 +220,22 @@ export class FichesService {
    * Les meilleurs réglages par tag (matériau, à enlever, application) : 3 par tag,
    * triés par note moyenne puis nombre de notes. Fiches partagées, non masquées, déjà notées.
    */
-  async top(moi: Principal, f: { varianteId?: string; parTag?: number }) {
+  async top(moi: Principal, f: { varianteId?: string; univers?: string; parTag?: number }) {
     const parTag = f.parTag ?? 3;
     const candidates = await this.prisma.fiche.findMany({
       where: {
         visibilite: Visibilite.PARTAGEE, masquee: false, noteMoyenne: { not: null },
         ...(f.varianteId ? { versionInterface: { varianteId: f.varianteId } } : {}),
+        ...(f.univers ? { univers: f.univers } : {}),
       },
       include: INCLUDE,
       orderBy: [{ noteMoyenne: 'desc' }, { nbNotes: 'desc' }, { createdAt: 'desc' }],
       take: 500,
     });
-    const groupes = await this.prisma.groupeTag.findMany({ orderBy: { ordre: 'asc' } });
+    const groupes = await this.prisma.groupeTag.findMany({
+      where: f.univers ? { OR: [{ univers: { isEmpty: true } }, { univers: { has: f.univers } }] } : {},
+      orderBy: { ordre: 'asc' },
+    });
     const parTagId = new Map<string, { tag: { id: string; nom: string }; groupe: string; fiches: FicheComplete[] }>();
     for (const fi of candidates)
       for (const t of fi.tags) {
@@ -373,11 +379,12 @@ export class FichesService {
     return l;
   }
 
+  /** Valeurs validées et métier de la fiche (décapage, soudure…). */
   private async valider(versionId: string, saisie: Record<string, unknown>) {
     const cfg = await this.catalogue.config(versionId);
     const r = validerValeurs(cfg, saisie);
     if (!r.ok) throw new BadRequestException({ message: 'Réglages invalides', erreurs: r.erreurs });
-    return r.valeurs as Prisma.InputJsonValue;
+    return { valeurs: r.valeurs as Prisma.InputJsonValue, univers: universFiche(cfg, r.valeurs) };
   }
 
   async creer(moi: Principal, dto: CreerFicheDto) {
@@ -385,7 +392,7 @@ export class FichesService {
     if (!um) throw new NotFoundException('Machine introuvable');
     if (dto.parentId) await this.charger(dto.parentId, moi);
     const version = await this.catalogue.derniereVersion(um.varianteId);
-    const valeurs = await this.valider(version.id, dto.valeurs);
+    const { valeurs, univers } = await this.valider(version.id, dto.valeurs);
     const tagIds = await this.verifierTags(dto.tagIds);
     const precisions = (await this.verifierPrecisions(dto.precisions)) ?? [];
 
@@ -397,6 +404,7 @@ export class FichesService {
         titre: dto.titre.trim(),
         commentaire: dto.commentaire?.trim() || null,
         valeurs,
+        univers,
         visibilite: dto.visibilite ?? Visibilite.PARTAGEE, // mise en commun par défaut
         parentId: dto.parentId ?? null,
         tags: { create: tagIds.map((tagId) => ({ tagId })) },
@@ -422,7 +430,7 @@ export class FichesService {
     if (dto.commentaire !== undefined) data.commentaire = dto.commentaire.trim() || null;
     if (dto.visibilite) data.visibilite = dto.visibilite;
     // Les valeurs restent validées contre la version d'origine de la fiche.
-    if (dto.valeurs) data.valeurs = await this.valider(f.versionInterfaceId, dto.valeurs);
+    if (dto.valeurs) Object.assign(data, await this.valider(f.versionInterfaceId, dto.valeurs));
     if (dto.tagIds) {
       const ids = await this.verifierTags(dto.tagIds);
       data.tags = { deleteMany: {}, create: ids.map((tagId) => ({ tagId })) };

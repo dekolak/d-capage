@@ -7,12 +7,15 @@ import { brouillonUtile, lireBrouillon } from '../lib/brouillon';
 import { nomMachine } from '../lib/util';
 import { noterRecherche } from '../lib/activite';
 import { t, tn } from '../lib/i18n';
+import { BasculeUnivers, groupesDu, universMachine, useUnivers } from '../lib/univers';
 
 /** Mes réglages : recherche texte, machine (puces visibles si plusieurs machines, ?machine= depuis Ma machine) et tags, combinables. */
 export default function Fiches() {
   const [data, setData] = useState<PageFiches>();
   const [groupes, setGroupes] = useState<GroupeTag[]>([]);
-  const [machines, setMachines] = useState<MaMachine[]>([]);
+  const [toutes, setMachines] = useState<MaMachine[]>();
+  const u = useUnivers(toutes);
+  const machines = (toutes ?? []).filter((m) => universMachine(m) === u.univers);
   const [q, setQ] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [params, setParams] = useSearchParams();
@@ -28,13 +31,14 @@ export default function Fiches() {
   }, []);
 
   useEffect(() => {
-    const p = new URLSearchParams({ parPage: '50' });
+    if (!u.pret) return;
+    const p = new URLSearchParams({ parPage: '50', univers: u.univers });
     if (q.trim()) p.set('q', q.trim());
     if (tags.length) p.set('tags', tags.join(','));
     if (machine) p.set('userMachineId', machine);
     const h = setTimeout(() => api<PageFiches>(`/fiches?${p}`).then(setData).catch(setErr), 250);
     return () => clearTimeout(h);
-  }, [q, tags, machine]);
+  }, [q, tags, machine, u.pret, u.univers]);
 
   const nbFiltres = tags.length;
   const filtre = nbFiltres > 0 || !!machine || q.trim() !== '';
@@ -49,6 +53,7 @@ export default function Fiches() {
   return (
     <div className="page">
       <h1>{t('lazzeko.fiches.titre')}</h1>
+      <BasculeUnivers {...u} choisir={(x) => { u.choisir(x); setMachine(''); setTags([]); }} />
       {brouillonUtile(lireBrouillon()) && (
         <Link to="/fiches/nouvelle" className="bandeau lien-bandeau">
           <span><b>{t('lazzeko.fiches.enCours')}</b>{t('lazzeko.fiches.reprendre')}</span>
@@ -70,7 +75,7 @@ export default function Fiches() {
         </button>
         {ouverts && (
           <>
-            <FiltreTags groupes={groupes} tags={tags} onChange={setTags} />
+            <FiltreTags groupes={groupesDu(groupes, u.univers)} tags={tags} onChange={setTags} />
             {nbFiltres > 0 && (
               <button type="button" className="lien btn-lien" onClick={() => setTags([])}>{t('lazzeko.filtres.effacer')}</button>
             )}

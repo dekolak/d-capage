@@ -22,9 +22,11 @@ const RACINE_MACHINES = join(__dirname, '../../../machines');
 const RACINE_KIT = join(__dirname, '../../../kit-guides');
 
 /** Familles (listes courtes) ; `choixUnique` : un seul choix par fiche. « Autre » est ajouté à chaque groupe. */
-const TAGS: { slug: string; nom: string; choixUnique?: boolean; tags: [string, string][] }[] = [
+/** Groupes de tags par métier (`univers`). Le seed crée ; l'admin complète les familles (Admin → Familles). */
+const TAGS: { slug: string; nom: string; univers: string[]; choixUnique?: boolean; tags: [string, string][] }[] = [
   {
     slug: 'materiau',
+    univers: ['decapage'],
     nom: 'Matériau',
     choixUnique: true,
     tags: [
@@ -35,6 +37,7 @@ const TAGS: { slug: string; nom: string; choixUnique?: boolean; tags: [string, s
   },
   {
     slug: 'a-enlever',
+    univers: ['decapage'],
     nom: 'À enlever',
     tags: [
       ['peinture', 'Peinture'], ['rouille', 'Rouille'], ['oxyde', 'Couche d\'oxyde'], ['graisse', 'Graisse / huile'],
@@ -43,12 +46,53 @@ const TAGS: { slug: string; nom: string; choixUnique?: boolean; tags: [string, s
   },
   {
     slug: 'application',
+    univers: ['decapage'],
     nom: 'Application',
     choixUnique: true,
     tags: [
       ['degraissage', 'Dégraissage'], ['derouillage', 'Dérouillage'], ['soudure', 'Préparation / nettoyage soudure'],
       ['moule', 'Nettoyage de moule'], ['decapage-peinture', 'Décapage peinture'], ['restauration', 'Restauration'],
     ],
+  },
+  // --- soudure ---
+  {
+    slug: 'materiau-soudure',
+    nom: 'Matériau',
+    univers: ['soudure'],
+    choixUnique: true,
+    tags: [
+      ['acier', 'Acier'], ['inox', 'Acier inox'], ['aluminium', 'Aluminium'], ['galvanise', 'Acier galvanisé'],
+      ['cuivre-laiton', 'Cuivre / laiton'], ['titane', 'Titane'],
+    ],
+  },
+  {
+    slug: 'epaisseur',
+    nom: 'Épaisseur',
+    univers: ['soudure'],
+    choixUnique: true,
+    // noms triés dans l'ordre (les familles sont classées par ordre alphabétique)
+    tags: [['moins-1', '0 à 1 mm'], ['1-2', '1 à 2 mm'], ['2-3', '2 à 3 mm'], ['3-5', '3 à 5 mm'], ['plus-5', '5 mm et plus']],
+  },
+  {
+    slug: 'joint',
+    nom: 'Type de joint',
+    univers: ['soudure'],
+    choixUnique: true,
+    tags: [['bout-a-bout', 'Bout à bout'], ['angle-interieur', 'Angle intérieur'], ['angle-exterieur', 'Angle extérieur'], ['recouvrement', 'Recouvrement'], ['bord-a-bord', 'Bord à bord']],
+  },
+  {
+    slug: 'gaz',
+    nom: 'Gaz',
+    univers: ['soudure'],
+    choixUnique: true,
+    tags: [['argon', 'Argon'], ['azote', 'Azote'], ['air', 'Air comprimé']],
+  },
+  {
+    slug: 'fil',
+    nom: 'Fil d\'apport',
+    univers: ['soudure'],
+    choixUnique: true,
+    tags: [['sans-fil', 'Sans fil'], ['acier', 'Acier (ER70S-6)'], ['inox-308', 'Inox 308L'], ['inox-316', 'Inox 316L'], ['alu-4043', 'Alu 4043 (AlSi5)'], ['alu-5356', 'Alu 5356 (AlMg5)']],
   },
 ];
 
@@ -115,7 +159,7 @@ async function tags() {
     const groupe = await prisma.groupeTag.upsert({
       where: { slug: g.slug },
       update: { nom: g.nom, ordre, choixUnique: !!g.choixUnique },
-      create: { slug: g.slug, nom: g.nom, ordre, choixUnique: !!g.choixUnique },
+      create: { slug: g.slug, nom: g.nom, ordre, choixUnique: !!g.choixUnique, univers: g.univers },
     });
     for (const [slug, nom] of [...g.tags, ['autre', 'Autre'] as [string, string]])
       await prisma.tag.upsert({

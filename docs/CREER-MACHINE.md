@@ -41,6 +41,13 @@ Le fichier de chaque puissance ne contient que ce qui change : `base`, `modele` 
 - Indicateurs : puissance de sortie, énergie par tir (mode point), largeur du cordon (estimation), largeur / fil (repère 2 à 3,5).
 - Menu nettoyage des soudeuses : à ajouter en v2 quand son écran est fourni.
 
+### Métiers (décapage, soudure)
+- Chaque technologie déclare son métier (`univers`) ; une fiche reçoit le métier de sa machine (colonne `Fiche.univers`, calculée par `universFiche` : une soudeuse en procédé « nettoyage » donnera une fiche décapage).
+- Les groupes de tags ont leurs métiers (`GroupeTag.univers`, vide = tous) : Matériau / À enlever / Application pour le décapage ; Matériau, Épaisseur, Type de joint, Gaz, Fil d'apport pour la soudure (seed).
+- Mes fiches, Communauté et Top sont filtrés par métier ; un client qui a les deux voit la bascule « Décapage | Soudure » (`apps/app/src/lib/univers.tsx`).
+- Un seul module « fiches de réglage » (`reglages-decapage`) donne accès aux fiches, quel que soit le métier : la machine décide.
+- Nouveau métier : l'ajouter à `UNIVERS` (machine-kit), à la technologie, aux textes `univers.*` et aux groupes de tags.
+
 ## 3. Dans l'admin, après le déploiement
 1. **Machines** : le modèle apparaît → choisir sa **gamme**, ajouter l'**image**.
 2. **Utilisateurs** : ajouter la machine aux clients (n° de série, mise en service).

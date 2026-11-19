@@ -61,7 +61,7 @@ Administration → **📒 Entretien** (section Commun).
 Administration → **👥 Utilisateurs** (« + Créer un utilisateur » en haut, puis la liste).
 - **Créer** : identifiant, mot de passe (8 caractères min.), nom, n° client Odoo (facultatif).
 - **Accès** : cases par espace.
-  - Lazzeko : *Réglages décapage*.
+  - Lazzeko : *Fiches de réglage (décapage et soudure)*.
   - Kiavik : *Guide Flexiprint*, *Guide DXonJet*, *Pas-à-pas et Bon à savoir*.
   - Un client peut avoir des accès dans les deux espaces.
 - **Client Lazzeko** (si accès Lazzeko) : décocher pour un utilisateur d'une autre marque. Sert à cibler les messages.

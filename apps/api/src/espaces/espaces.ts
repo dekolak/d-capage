@@ -42,7 +42,7 @@ export const ESPACES: EspaceDef[] = [
     icones: '/',
     communaute: true,
     modules: [
-      { slug: 'reglages-decapage', nom: 'Réglages décapage' },
+      { slug: 'reglages-decapage', nom: 'Fiches de réglage (décapage et soudure)' },
       { slug: 'procedures-lazzeko', nom: 'Pas-à-pas et Bon à savoir' },
       { slug: 'academie-lazzeko', nom: 'Académie (cours en vidéo)' },
     ],

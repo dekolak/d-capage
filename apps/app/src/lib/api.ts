@@ -115,13 +115,14 @@ export interface MaMachine {
 }
 export interface Tag { id: string; slug: string; nom: string; groupe?: string }
 /** Groupe de familles ; `choixUnique` : un seul choix par fiche (Matériau, Application). */
-export interface GroupeTag { id: string; slug: string; nom: string; choixUnique: boolean; tags: Tag[] }
+export interface GroupeTag { id: string; slug: string; nom: string; choixUnique: boolean; univers?: string[]; tags: Tag[] }
 /** Précision libre d'une fiche dans un groupe (ex. Matériau → « 316L »). */
 export interface Precision { groupeId: string; groupe: string; texte: string }
 export type TypePhoto = 'AVANT' | 'APRES' | 'INTERFACE' | 'AUTRE';
 export interface PhotoRef { id: string; type: TypePhoto; ordre: number }
 export interface Fiche {
   id: string; titre: string; commentaire: string | null; valeurs: Valeurs; visibilite: 'PRIVEE' | 'PARTAGEE';
+  univers?: string;
   createdAt: string; estAuteur: boolean; auteur: string; masquee: boolean;
   /** Présent uniquement pour les admins. */
   auteurAdmin?: { id: string; identifiant: string; nom: string | null; accordPhotosMarketing: boolean };

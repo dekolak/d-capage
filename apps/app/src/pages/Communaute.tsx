@@ -5,6 +5,8 @@ import { Chargement, Erreur, FiltreTags } from '../components/Composants';
 import { api, Fabricant, GroupeTag, MaMachine, PageFiches } from '../lib/api';
 import { noterRecherche } from '../lib/activite';
 import { t, tn } from '../lib/i18n';
+import { BasculeUnivers, groupesDu, universMachine, useUnivers } from '../lib/univers';
+import { universTechnologie } from '@decapage/machine-kit';
 
 /** Réglages partagés : même machine + mêmes tags, triés par note. */
 export default function Communaute() {
@@ -19,26 +21,35 @@ export default function Communaute() {
   const [ouverts, setOuverts] = useState(false);
   const [data, setData] = useState<PageFiches>();
   const [err, setErr] = useState<unknown>();
+  const [machines, setMachines] = useState<MaMachine[]>();
+  const u = useUnivers(machines);
 
   useEffect(() => {
     Promise.all([api<Fabricant[]>('/catalogue'), api<GroupeTag[]>('/tags'), api<MaMachine[]>('/moi/machines')])
       .then(([c, g, m]) => {
         setCatalogue(c);
         setGroupes(g);
-        if (m[0]) setVariante(m[0].varianteId); // par défaut : ma première machine
+        setMachines(m);
       })
       .catch(setErr);
   }, []);
+  // par défaut : ma première machine du métier choisi
+  useEffect(() => {
+    if (!machines) return;
+    setVariante(machines.find((m) => universMachine(m) === u.univers)?.varianteId ?? '');
+    setTags([]);
+  }, [machines, u.univers]);
 
   useEffect(() => {
-    const p = new URLSearchParams({ tri, parPage: '50' });
+    if (!u.pret) return;
+    const p = new URLSearchParams({ tri, parPage: '50', univers: u.univers });
     if (varianteId) p.set('varianteId', varianteId);
     if (tags.length) p.set('tags', tags.join(','));
     if (q.trim()) p.set('q', q.trim());
     if (meilleurs) p.set('noteMin', '4');
     const h = setTimeout(() => api<PageFiches>(`/communaute?${p}`).then(setData).catch(setErr), 250);
     return () => clearTimeout(h);
-  }, [varianteId, tags, tri, q, meilleurs]);
+  }, [varianteId, tags, tri, q, meilleurs, u.pret, u.univers]);
 
 
   // journal d'activité : recherche notée quand le client arrête de taper
@@ -51,6 +62,7 @@ export default function Communaute() {
   return (
     <div className="page">
       <h1>{t('lazzeko.communaute.titre')}</h1>
+      <BasculeUnivers {...u} />
       <Link to="/top" className="bandeau lien-bandeau lien-top">
         <span><b>{t('lazzeko.top.titre')}</b>{t('lazzeko.communaute.top')}</span>
         <span>›</span>
@@ -60,7 +72,7 @@ export default function Communaute() {
         <select value={varianteId} onChange={(e) => setVariante(e.target.value)}>
           <option value="">{t('lazzeko.top.toutesMachines')}</option>
           {catalogue.flatMap((f) =>
-            f.modeles.flatMap((m) =>
+            f.modeles.filter((m) => universTechnologie(m.technologie) === u.univers).flatMap((m) =>
               m.variantes.map((v) => (
                 <option key={v.id} value={v.id}>{`${f.nom} ${m.nom} ${v.nom}`}</option>
               )),
@@ -80,7 +92,7 @@ export default function Communaute() {
           <button type="button" className={tri === 'note' ? 'on' : ''} onClick={() => setTri('note')}>{t('lazzeko.communaute.mieuxNotes')}</button>
           <button type="button" className={tri === 'recent' ? 'on' : ''} onClick={() => setTri('recent')}>{t('lazzeko.communaute.recents')}</button>
         </div>
-        <FiltreTags groupes={groupes} tags={tags} onChange={setTags} />
+        <FiltreTags groupes={groupesDu(groupes, u.univers)} tags={tags} onChange={setTags} />
           </>
         )}
       </div>
