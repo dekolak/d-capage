@@ -1,0 +1,21 @@
+{
+  "base": "../soudeuse-laser/base-v1.json",
+  "modele": {
+    "id": "cmwn5erx00005qr2ukkvc60f0",
+    "slug": "soudeuse-laser-1500w",
+    "nom": "Soudeuse laser 1500 W"
+  },
+  "variante": {
+    "slug": "standard",
+    "nom": "Standard"
+  },
+  "constantes": {
+    "pmax": 1500
+  },
+  "source": {
+    "notes": [
+      "Puissance nominale de la source : 1500 W.",
+      "Modèle créé dans l'admin (M-vc60f0), rattaché par son id."
+    ]
+  }
+}

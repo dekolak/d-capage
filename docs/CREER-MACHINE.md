@@ -7,7 +7,8 @@ Chaque machine est **isolée dans un fichier** : facile à retrouver et à modif
 | Quoi | Où |
 |---|---|
 | Écran de réglage d'une machine (réglages, unités, min / max, ce qui est enregistré) | `machines/<fabricant>/<modèle-variante>/v1.json` (exemples : `machines/lazzeko/laser-pulse-300w/v1.json`, `machines/lazzeko/zeko-mini-300/v1.json` : 2 pages, 8 trajectoires, plafond 15 mJ) |
-| Calculs d'une technologie (énergie, recouvrement…) | `packages/machine-kit/src/calculs/` (une par technologie : `laser-pulse` ; demain la soudure) |
+| Calculs d'une technologie (énergie, recouvrement…) | `packages/machine-kit/src/calculs/` (une par technologie : `laser-pulse` pour le décapage, `soudure-laser` ; chacune déclare son métier `univers`) |
+| Même écran pour plusieurs puissances | une base `machines/<fabricant>/<famille>/base-v1.json` + un petit `v1.json` par puissance avec `"base": "../<famille>/base-v1.json"` (exemple : soudeuses laser 1500 / 2000 W) |
 | Gamme, image, variantes, plans d'entretien, guides, Académie | dans l'admin (rien à coder) |
 
 ## 1. Ce que l'utilisateur rassemble (à donner à Claude)
@@ -29,6 +30,16 @@ Chaque machine est **isolée dans un fichier** : facile à retrouver et à modif
 2. Une **liste de contrôle** des valeurs incertaines (à vérifier sur la machine).
 3. Les vérifications : `npm run test:kit` (le fichier est contrôlé), puis l'écran de saisie dans l'app (« Nouvelle fiche » avec cette machine).
 4. Branche, pull request, fusion ; en production : redéployer (le seed charge le fichier).
+
+### Plusieurs puissances, même écran
+Le fichier de chaque puissance ne contient que ce qui change : `base`, `modele` (avec `id`), `variante`, `constantes` (ex. `pmax`) et ses notes `source`. Le reste vient de la base (les `constantes` et les notes `source` sont fusionnées). Corriger un libellé ou une aide dans la base corrige toutes les puissances. Le menu change : nouvelle base `base-v2.json` et nouveaux `v2.json`.
+
+### Soudeuses laser (`soudure-laser`)
+- Pages : Soudage (mode, PwrPeak, PwmWid, PwmFre, balayage), Fil, Avancé (gaz, rampes).
+- **Dévidoir facultatif** : l'interrupteur `won` (« Fil d'apport ») ; les champs du fil ont `visibleSi: { "won": [true] }` et ne sont pas enregistrés quand il est sur OFF.
+- Constantes : `pmax` (puissance de la source), `pref_cordon` (référence de l'estimation du cordon).
+- Indicateurs : puissance de sortie, énergie par tir (mode point), largeur du cordon (estimation), largeur / fil (repère 2 à 3,5).
+- Menu nettoyage des soudeuses : à ajouter en v2 quand son écran est fourni.
 
 ## 3. Dans l'admin, après le déploiement
 1. **Machines** : le modèle apparaît → choisir sa **gamme**, ajouter l'**image**.

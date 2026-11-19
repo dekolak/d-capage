@@ -59,6 +59,7 @@ export function modeleLaser(cfg: ConfigMachine, v: Valeurs) {
 export const laserPulse: Technologie = {
   id: 'laser-pulse',
   nom: 'Laser pulsé',
+  univers: 'decapage',
   indicateurs(cfg, v): Indicateur[] {
     const m = modeleLaser(cfg, v);
     const r = +(m.recouvrement * 100).toFixed(0);

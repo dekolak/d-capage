@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  assemblerConfig,
   chargerConfig,
   champsEnregistres,
   modeleLaser,
+  modeleSoudure,
   technologie,
   validerValeurs,
   valeursParDefaut,
@@ -92,5 +94,38 @@ describe('config ZEKO mini 300', () => {
     expect(m.ecart).toBeCloseTo(0.1); // 1000 mm/s ÷ 10 kHz
     expect(m.spot).toBe(0.1);
     expect(modeleLaser(cfg, { pwr: 100, freq: 20, speed: 1000 }).E).toBe(15);
+  });
+});
+
+describe('soudeuses laser (base commune)', () => {
+  const dir = join(__dirname, '../../../machines/lazzeko');
+  const lire = (p: string) => JSON.parse(readFileSync(p, 'utf8'));
+  const charger = (p: number) =>
+    chargerConfig(assemblerConfig(lire(join(dir, `soudeuse-laser-${p}w/v1.json`)), (b) => lire(join(dir, `soudeuse-laser-${p}w`, b))));
+  const s2000 = charger(2000);
+  const s1500 = charger(1500);
+
+  it('hérite de la base et garde sa puissance', () => {
+    expect(s2000.technologie).toBe('soudure-laser');
+    expect(s2000.constantes).toMatchObject({ pmax: 2000, pref_cordon: 3000 });
+    expect(s1500.constantes.pmax).toBe(1500);
+    expect(s1500.pages.map((p) => p.id)).toEqual(['soudage', 'fil', 'avance']);
+    expect(s1500.source?.notes.length).toBeGreaterThan(3);
+  });
+
+  it('sans fil d\'apport : les réglages du fil ne sont pas enregistrés', () => {
+    const sans = validerValeurs(s2000, { ...valeursParDefaut(s2000), won: false });
+    expect(sans.ok).toBe(true);
+    for (const k of ['wire', 'ws', 'wmode']) expect(sans.valeurs).not.toHaveProperty(k);
+    expect(validerValeurs(s2000, valeursParDefaut(s2000)).valeurs).toHaveProperty('ws', 10);
+  });
+
+  it('calcule la puissance de sortie et le repère largeur / fil', () => {
+    const v = valeursParDefaut(s2000); // 50 %, 100 %, largeur 1,5, fil 1,2
+    expect(modeleSoudure(s2000, v).sortie).toBe(1000);
+    expect(modeleSoudure(s1500, v).sortie).toBe(750);
+    const ind = technologie('soudure-laser')!.indicateurs(s2000, { ...v, wd: 3 });
+    expect(ind.find((i) => i.key === 'rapportFil')).toMatchObject({ valeur: 2.5 });
+    expect(technologie('soudure-laser')!.indicateurs(s2000, { ...v, mode: 1, pt: 200 }).find((i) => i.key === 'tir')?.valeur).toBe(200);
   });
 });
