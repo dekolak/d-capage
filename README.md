@@ -13,6 +13,7 @@ Une seule app mobile (PWA), une seule base, un seul admin, **deux espaces** :
 | [docs/ADMIN.md](docs/ADMIN.md) | Admin | Utiliser l'administration : comptes, accès, messages, modération, conditions, accueil Kiavik, procédures, diagnostics, hors ligne |
 | [docs/CREER-PROCEDURE.md](docs/CREER-PROCEDURE.md) | Admin + Claude | Créer une procédure ou un diagnostic à deux : modèle de résumé, brouillon préparé par Claude, finitions dans l'app |
 | [docs/ACADEMIE.md](docs/ACADEMIE.md) | Admin | 🎓 Académie : cours en vidéo (Vimeo), pages en blocs, simulateurs HTML, cours réservés à une machine (🔒) |
+| [docs/CREER-MACHINE.md](docs/CREER-MACHINE.md) | Admin + Claude | Créer une machine (fiches de réglage) : infos à rassembler, fichier par machine, étapes dans l'admin, modifier plus tard |
 | [docs/IMPORT-CLIENTS.md](docs/IMPORT-CLIENTS.md) | Admin | Importer des clients (CSV extrait d'Odoo) : comptes + machines, code provisoire par client, CSV pour n8n |
 | [docs/API.md](docs/API.md) | Intégrations (Odoo, IA) | Routes, clé API, webhooks, exemples |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Développement | Structure, données, espaces, machines |

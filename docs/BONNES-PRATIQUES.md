@@ -52,6 +52,7 @@
 
 ## Recettes
 ### Ajouter une machine
+Guide complet (infos à rassembler, fiche d'identité `source`, étapes dans l'admin) : [CREER-MACHINE.md](CREER-MACHINE.md).
 1. Copier `machines/lazzeko/laser-pulse-300w/v1.json` dans `machines/<fabricant>/<variante>/v1.json` et l'adapter.
 2. `npm run test:kit`, puis `npm run seed` (en production : redéployer).
 3. Si le fabricant change son menu : nouveau fichier `v2.json`. Les anciennes fiches restent sur `v1`.

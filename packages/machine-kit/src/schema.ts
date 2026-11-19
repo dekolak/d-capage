@@ -132,6 +132,16 @@ export const ConfigMachineSchema = z
     guide: z.array(z.object({ titre: I18nSchema, texte: I18nSchema })).default([]),
     /** Lien vers l'aide complète (simulateur, exercices) sur le site. */
     lienAide: z.string().url().optional(),
+    /** Fiche d'identité du fichier : d'où viennent les valeurs (voir docs/CREER-MACHINE.md). */
+    source: z
+      .object({
+        date: z.string().optional(),
+        auteur: z.string().optional(),
+        notice: z.string().optional(),
+        firmware: z.string().optional(),
+        notes: z.array(z.string()).default([]),
+      })
+      .optional(),
   })
   .superRefine((cfg, ctx) => {
     const keys = new Map<string, Champ>();
