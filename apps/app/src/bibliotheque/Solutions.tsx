@@ -3,9 +3,10 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
-import { t } from '../lib/i18n';
+import { t, tn } from '../lib/i18n';
+import { SectionCategorie, useSectionOuverte } from './SectionCategorie';
 import { CaptureBouton } from '../espaces/kiavik/CaptureBouton';
-import { ImageApi, lienGuide, Solution, useProcedures, useSolutions } from './donneesProcedures';
+import { ImageApi, lienGuide, Solution, trierCategories, useCategories, useProcedures, useSolutions } from './donneesProcedures';
 import { Animation, chargerGuide } from '../espaces/kiavik/guides';
 import { normaliser } from './recherche';
 import './bibliotheque.css';
@@ -14,6 +15,9 @@ import './bibliotheque.css';
 export default function Solutions() {
   const { moi } = useAuth();
   const { liste, erreur, acces } = useSolutions();
+  const cats = useCategories();
+  // sections repliables, une seule ouverte (comme l'accueil) ; toutes ouvertes pendant un filtre
+  const { ouverte, basculer } = useSectionOuverte('bons-a-savoir.ouvertes');
   const [q, setQ] = useState('');
   const groupes = useMemo(() => {
     const mots = normaliser(q).split(' ').filter(Boolean);
@@ -22,8 +26,8 @@ export default function Solutions() {
       const txt = normaliser(`${s.titre} ${s.categorie} ${s.cause ?? ''} ${s.texte} ${s.motsCles.join(' ')}`);
       if (mots.every((w) => txt.includes(w))) m.set(s.categorie, [...(m.get(s.categorie) ?? []), s]);
     }
-    return [...m];
-  }, [liste, q]);
+    return trierCategories([...m.keys()], cats).map((c) => [c, m.get(c)!] as const);
+  }, [liste, q, cats]);
 
   if (!acces) return <div className="page"><h1>{t('kiavik.solutions.titre')}</h1><p className="muted">{t('kiavik.procedures.nonActivees')}</p></div>;
   if (erreur) return <div className="page"><Erreur e={erreur} /></div>;
@@ -40,10 +44,10 @@ export default function Solutions() {
       )}
       {!groupes.length && <p className="muted">{liste.length ? t('kiavik.solutions.aucuneCorrespond') : t('kiavik.solutions.aucune')}</p>}
       {groupes.map(([cat, l]) => (
-        <section key={cat}>
-          <h4>{cat}</h4>
+        <SectionCategorie key={cat} icone={cats?.find((c) => c.nom === cat)?.icone ?? '📁'} nom={cat} resume={tn('kiavik.accueil.nbAstuces', l.length)}
+          ouverte={!!q.trim() || ouverte === cat} onBasculer={() => basculer(cat)}>
           <ListeSolutions liste={l} />
-        </section>
+        </SectionCategorie>
       ))}
     </div>
   );
