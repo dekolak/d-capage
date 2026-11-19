@@ -315,6 +315,9 @@ const fr = {
   "aide.plusLoinDetail": " : simulateur et exercices sur le site",
   "aide.reglages": "Les réglages",
   "aide.titre": "Aide",
+  "aide.reglagesTitre": "🎛 Comprendre les réglages",
+  "aide.reglagesLien": "🎛 Comprendre les réglages",
+  "aide.reglagesResume": ": chaque réglage de l'écran de votre machine, expliqué simplement.",
   // ---------- Lazzeko : réglages décapage ----------
   "lazzeko.aide.bouton": "🛟 Demander de l'aide à Lazzeko",
   "lazzeko.aide.detail": "Le réglage, les photos et votre message sont transmis à l'équipe : pas besoin de tout réexpliquer.",

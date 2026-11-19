@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
-import { ImageApi } from '../espaces/kiavik/donneesProcedures';
+import { ImageApi } from '../bibliotheque/donneesProcedures';
 import { api } from '../lib/api';
 import { useEspace } from '../lib/espace';
 import { t, tn } from '../lib/i18n';

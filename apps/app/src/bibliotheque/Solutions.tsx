@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { useAuth } from '../../lib/auth';
-import { t } from '../../lib/i18n';
-import { CaptureBouton } from './CaptureBouton';
+import { Chargement, Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { useAuth } from '../lib/auth';
+import { t } from '../lib/i18n';
+import { CaptureBouton } from '../espaces/kiavik/CaptureBouton';
 import { ImageApi, lienGuide, Solution, useProcedures, useSolutions } from './donneesProcedures';
-import { Animation, chargerGuide } from './guides';
+import { Animation, chargerGuide } from '../espaces/kiavik/guides';
 import { normaliser } from './recherche';
-import './guides.css';
+import './bibliotheque.css';
 
 /** Liste des fiches « Astuces & solutions », par catégorie, avec un filtre. */
 export default function Solutions() {

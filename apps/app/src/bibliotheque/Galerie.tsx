@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { t } from '../../lib/i18n';
-import { ImageReperes, Repere } from '../../components/Reperes';
+import { t } from '../lib/i18n';
+import { ImageReperes, Repere } from '../components/Reperes';
 import './parcours.css';
 
 export interface PhotoEtape { id: string; url: string; reperes?: Repere[] | null }

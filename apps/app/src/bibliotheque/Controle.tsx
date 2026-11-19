@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { t } from '../../lib/i18n';
+import { t } from '../lib/i18n';
 import { Etape, useSolutions } from './donneesProcedures';
 
 

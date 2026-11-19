@@ -1,4 +1,4 @@
-import { Guide } from './guides';
+import { Guide } from '../espaces/kiavik/guides';
 
 /**
  * Recherche dans les guides, sur le téléphone (instantanée, sans serveur, hors connexion).

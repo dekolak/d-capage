@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { Forme } from '../../components/Annotateur';
-import type { Repere } from '../../components/Reperes';
-import { api, espaceActuel } from '../../lib/api';
-import { useEspace } from '../../lib/espace';
-import { useAuth } from '../../lib/auth';
+import type { Forme } from '../components/Annotateur';
+import type { Repere } from '../components/Reperes';
+import { api, espaceActuel } from '../lib/api';
+import { useEspace } from '../lib/espace';
+import { useAuth } from '../lib/auth';
 
 /** Type d'un pas-à-pas (choisi par l'admin, icône pour le client). */
 export type TypePasAPas = 'tuto' | 'procedure' | 'depannage' | 'entretien';
@@ -138,6 +138,7 @@ export const viderProcedures = () => (cache = null);
 
 export function useProcedures() {
   const acces = useAccesProcedures();
+  const { espace } = useEspace();
   const [liste, setListe] = useState<ResumeProcedure[]>();
   const [erreur, setErreur] = useState<unknown>();
   useEffect(() => {
@@ -146,13 +147,14 @@ export function useProcedures() {
       return;
     }
     let actif = true;
+    // la société ouverte seulement (l'admin reçoit tout : il ne voit pas les contenus de l'autre société ici)
     chargerProcedures()
-      .then((l) => actif && setListe(l))
+      .then((l) => actif && setListe(l.filter((x) => x.espace === espace.slug)))
       .catch((e) => actif && setErreur(e));
     return () => {
       actif = false;
     };
-  }, [acces]);
+  }, [acces, espace.slug]);
   return { liste, erreur, acces };
 }
 
@@ -179,6 +181,7 @@ export const viderSolutions = () => (cacheSolutions = null);
 /** Fiches « Astuces & solutions » (même accès que les procédures). */
 export function useSolutions() {
   const acces = useAccesProcedures();
+  const { espace } = useEspace();
   const [liste, setListe] = useState<Solution[]>();
   const [erreur, setErreur] = useState<unknown>();
   useEffect(() => {
@@ -187,13 +190,14 @@ export function useSolutions() {
       return;
     }
     let actif = true;
+    // la société ouverte seulement (l'admin reçoit tout : il ne voit pas les contenus de l'autre société ici)
     chargerSolutions()
-      .then((l) => actif && setListe(l))
+      .then((l) => actif && setListe(l.filter((x) => x.espace === espace.slug)))
       .catch((e) => actif && setErreur(e));
     return () => {
       actif = false;
     };
-  }, [acces]);
+  }, [acces, espace.slug]);
   return { liste, erreur, acces };
 }
 

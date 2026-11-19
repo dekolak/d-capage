@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { langue, t } from '../../lib/i18n';
-import './guides.css';
+import { Chargement, Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { langue, t } from '../lib/i18n';
+import './bibliotheque.css';
 import './parcours.css';
 
 interface MonDiagnostic {

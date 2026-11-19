@@ -1,20 +1,20 @@
 import { Fragment, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Chargement, Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
-import { useAuth } from '../../lib/auth';
-import { CaptureBouton } from './CaptureBouton';
+import { Chargement, Erreur } from '../components/Composants';
+import { api } from '../lib/api';
+import { useAuth } from '../lib/auth';
+import { CaptureBouton } from '../espaces/kiavik/CaptureBouton';
 import { useAvancement } from './avancement';
 import { AideNon, OuiNon } from './Controle';
 import { FinDiagnostic, ProcedureSuivante } from './FinDiagnostic';
 import { Galerie } from './Galerie';
-import { AvisContenu } from '../../components/AvisContenu';
+import { AvisContenu } from '../components/AvisContenu';
 import { PasClair } from './PasClair';
 import { estDiagnostic, Etape, lienGuide, Procedure, useSolutions } from './donneesProcedures';
 import { ParcoursGuide } from './ParcoursGuide';
-import './guides.css';
-import { t } from '../../lib/i18n';
-import { RetourCarnet } from '../../pages/Carnet';
+import './bibliotheque.css';
+import { t } from '../lib/i18n';
+import { RetourCarnet } from '../pages/Carnet';
 import { EnvoyerPasAPas } from './Envoyer';
 
 /** « Partie — texte » : l'étape se range sous le titre « Partie » (ex. « Montage — Vérifier la courroie »). */

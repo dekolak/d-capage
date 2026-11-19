@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { RefId } from '../components/RefId';
-import { useCategoriesMachines } from '../espaces/kiavik/Etiquettes';
+import { useCategoriesMachines } from '../bibliotheque/Etiquettes';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
-import { ImageApi } from '../espaces/kiavik/donneesProcedures';
+import { ImageApi } from '../bibliotheque/donneesProcedures';
 import { api } from '../lib/api';
 import { date } from '../lib/util';
 import { BadgeZone } from './Admin';

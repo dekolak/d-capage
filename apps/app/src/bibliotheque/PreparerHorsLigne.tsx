@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { api } from '../../lib/api';
-import { t } from '../../lib/i18n';
+import { api } from '../lib/api';
+import { t } from '../lib/i18n';
 import { Procedure, Solution } from './donneesProcedures';
-import { ResumeGuide } from './guides';
+import { ResumeGuide } from '../espaces/kiavik/guides';
 
 const CLE_DATE = 'kiavik.horsLigne.date';
 

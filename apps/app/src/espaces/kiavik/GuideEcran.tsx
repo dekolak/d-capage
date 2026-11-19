@@ -4,13 +4,13 @@ import { Chargement, Erreur } from '../../components/Composants';
 import { BoutonPartager } from '../../components/Partager';
 import { EditeurPastille } from './Corrections';
 import { EditeurEnsemble, EditionEnsemble, editionDe, FicheEnsemble, nouvelEnsemble, supprimerEnsemble } from './Ensembles';
-import { lienResultat, rechercher } from './recherche';
+import { lienResultat, rechercher } from '../../bibliotheque/recherche';
 import { useAuth } from '../../lib/auth';
 import { Fenetre } from './Fenetres';
 import { CANAUX_DEPART, CommandesInteractif, EtatCanaux, Interactif } from './Interactifs';
-import { useProcedures, useSolutions } from './donneesProcedures';
+import { useProcedures, useSolutions } from '../../bibliotheque/donneesProcedures';
 import { choisirModeBlanc, ecranCite, Ecran, groupes, Guide, modeBlancChoisi, Pastille, PastilleNav, pastillesNavigation, useGuide } from './guides';
-import './guides.css';
+import '../../bibliotheque/bibliotheque.css';
 import { t } from '../../lib/i18n';
 
 const CLE_REPERES = 'kiavik.reperes';

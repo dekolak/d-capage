@@ -4,10 +4,10 @@ import { Chargement, Erreur } from '../../components/Composants';
 import { CategorieAnimation, EditeurScene } from './Corrections';
 import { Fenetre } from './Fenetres';
 import { Animation as Anim, EtapeAnim, EtatAnim, TexteAnim, Guide, ModeBlanc, SceneBlanc, SceneEcrans, useGuide } from './guides';
-import { useVoix } from './voix';
+import { useVoix } from '../../bibliotheque/voix';
 import { useAuth } from '../../lib/auth';
 import './animations.css';
-import './guides.css';
+import '../../bibliotheque/bibliotheque.css';
 import { t } from '../../lib/i18n';
 
 /**
