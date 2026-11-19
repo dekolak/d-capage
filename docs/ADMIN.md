@@ -230,3 +230,6 @@ Bouton rond **Partager** en bas à droite d'une **fiche de réglage**, **🔗 Pa
 
 ## Clés API
 Pour Odoo ou un service externe. Copier la clé à sa création (elle ne sera plus affichée). Révoquer une clé qui ne sert plus.
+
+## Machines de l'administrateur
+Le compte admin reçoit automatiquement **toutes les machines actives** du catalogue (surnom « Test admin », sans date de mise en service) : il peut créer des fiches, voir l'Académie et les pas-à-pas comme un client de chaque machine. Une nouvelle machine apparaît d'elle-même.
