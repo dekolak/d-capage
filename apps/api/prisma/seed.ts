@@ -84,14 +84,18 @@ async function catalogue() {
       update: { nom: cfg.fabricant.nom },
       create: cfg.fabricant,
     });
-    const modele = await prisma.modele.upsert({
-      where: { fabricantId_slug: { fabricantId: fab.id, slug: cfg.modele.slug } },
-      update: { nom: cfg.modele.nom },
-      create: { ...cfg.modele, fabricantId: fab.id, technologieId: tech.id },
-    });
+    // Modèle déjà créé dans l'admin (modele.id) : on garde son nom, sa gamme, ses variantes ; on lui donne le calcul.
+    const existant = cfg.modele.id ? await prisma.modele.findUnique({ where: { id: cfg.modele.id } }) : null;
+    const modele = existant
+      ? await prisma.modele.update({ where: { id: existant.id }, data: { technologieId: tech.id } })
+      : await prisma.modele.upsert({
+          where: { fabricantId_slug: { fabricantId: fab.id, slug: cfg.modele.slug } },
+          update: { nom: cfg.modele.nom },
+          create: { ...cfg.modele, fabricantId: fab.id, technologieId: tech.id },
+        });
     const variante = await prisma.variante.upsert({
       where: { modeleId_slug: { modeleId: modele.id, slug: cfg.variante.slug } },
-      update: { nom: cfg.variante.nom },
+      update: existant ? {} : { nom: cfg.variante.nom },
       create: { ...cfg.variante, modeleId: modele.id },
     });
     // Une version publiée ne change plus de numéro ; on met à jour son contenu

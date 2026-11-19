@@ -71,3 +71,26 @@ describe('validation du schéma', () => {
     expect(() => chargerConfig(casse)).toThrow(/Limites incohérentes/);
   });
 });
+
+describe('config ZEKO mini 300', () => {
+  const cfg = chargerConfig(
+    JSON.parse(readFileSync(join(__dirname, '../../../machines/lazzeko/zeko-mini-300/v1.json'), 'utf8')),
+  );
+
+  it('valeurs d\'usine et champs selon la trajectoire', () => {
+    expect(valeursParDefaut(cfg)).toMatchObject({ traj: 4, sx: 5, sy: 5, speed: 1000, pwr: 100, freq: 20, pw: 9 });
+    const spirale = validerValeurs(cfg, { ...valeursParDefaut(cfg), traj: 5 });
+    expect(spirale.valeurs).toHaveProperty('pitch');
+    expect(spirale.valeurs).not.toHaveProperty('sy');
+    expect(validerValeurs(cfg, { traj: 5, sx: 5, inside: 6 }).erreurs.map((e) => e.key)).toContain('inside');
+  });
+
+  it('plafonne l\'énergie à 15 mJ et compte la vitesse en mm/s', () => {
+    const m = modeleLaser(cfg, { pwr: 100, freq: 10, speed: 1000 });
+    expect(m.E).toBe(15);
+    expect(m.P).toBe(150); // 15 mJ × 10 kHz
+    expect(m.ecart).toBeCloseTo(0.1); // 1000 mm/s ÷ 10 kHz
+    expect(m.spot).toBe(0.1);
+    expect(modeleLaser(cfg, { pwr: 100, freq: 20, speed: 1000 }).E).toBe(15);
+  });
+});

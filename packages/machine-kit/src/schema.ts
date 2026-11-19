@@ -117,7 +117,8 @@ export const ConfigMachineSchema = z
     /** Clé du module de calcul (voir calculs/). */
     technologie: z.string(),
     fabricant: Ref,
-    modele: Ref,
+    /** `id` facultatif : rattache le fichier à un modèle déjà créé dans l'admin (sa référence M-…). */
+    modele: Ref.extend({ id: z.string().regex(/^[a-z0-9]{20,40}$/).optional() }),
     variante: Ref,
     /** Version de l'interface machine (incrémenter si le menu change). */
     versionInterface: z.number().int().positive(),
