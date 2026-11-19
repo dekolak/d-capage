@@ -1,11 +1,12 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { tousLesChamps } from '@decapage/machine-kit';
+import { tousLesChamps, universTechnologie } from '@decapage/machine-kit';
 import { Chargement, Erreur } from '../components/Composants';
 import { AnimationReglage } from '../components/AnimationsLaser';
 import { Icone } from '../components/Miroir';
 import { api, chargerVersion, Fabricant, MaMachine, Version } from '../lib/api';
 import { libelle } from '../lib/util';
 import { langue, t } from '../lib/i18n';
+import { BasculeUnivers, universMachine, useUnivers } from '../lib/univers';
 
 /**
  * Aide simple pour comprendre les réglages. Le contenu vient de la config de la machine
@@ -21,19 +22,26 @@ export default function Aide() {
   const [ouvert, setOuvert] = useState<string | null>('guide-0');
   const r = (id: string) => ({ id, ouvert: ouvert === id, basculer: () => setOuvert(ouvert === id ? null : id) });
 
+  const [donnees, setDonnees] = useState<{ mes: MaMachine[]; cat: Fabricant[] }>();
+  const u = useUnivers(donnees?.mes);
   useEffect(() => {
     Promise.all([api<MaMachine[]>('/moi/machines'), api<Fabricant[]>('/catalogue')])
-      .then(([mes, cat]) => {
-        // Mes machines d'abord, puis le reste du catalogue (sans doublon).
-        const liste = new Map<string, string>();
-        for (const m of mes) if (m.version) liste.set(m.version.id, m.nom);
-        for (const f of cat) for (const mo of f.modeles) for (const va of mo.variantes) if (!liste.has(va.version.id)) liste.set(va.version.id, `${f.nom} ${mo.nom} ${va.nom}`);
-        const l = [...liste].map(([id, nom]) => ({ versionId: id, nom }));
-        setChoix(l);
-        if (l[0]) setVersionId(l[0].versionId);
-      })
+      .then(([mes, cat]) => setDonnees({ mes, cat }))
       .catch(setErr);
   }, []);
+  // Machines du métier choisi (décapage / soudure) : les miennes d'abord, puis le reste du catalogue (sans doublon).
+  useEffect(() => {
+    if (!donnees) return;
+    const liste = new Map<string, string>();
+    for (const m of donnees.mes) if (m.version && universMachine(m) === u.univers) liste.set(m.version.id, m.nom);
+    for (const f of donnees.cat)
+      for (const mo of f.modeles)
+        if (universTechnologie(mo.technologie) === u.univers)
+          for (const va of mo.variantes) if (va.version && !liste.has(va.version.id)) liste.set(va.version.id, `${f.nom} ${mo.nom} ${va.nom}`);
+    const l = [...liste].map(([id, nom]) => ({ versionId: id, nom }));
+    setChoix(l);
+    setVersionId(l[0]?.versionId ?? '');
+  }, [donnees, u.univers]);
 
   useEffect(() => {
     if (versionId) chargerVersion(versionId).then(setV).catch(setErr);
@@ -46,6 +54,7 @@ export default function Aide() {
     <div className="page aide">
       <h1>{t('aide.titre')}</h1>
       <p className="muted">{t('aide.intro')}</p>
+      <BasculeUnivers {...u} />
       {choix.length > 1 && (
         <select value={versionId} onChange={(e) => setVersionId(e.target.value)}>
           {choix.map((c) => <option key={c.versionId} value={c.versionId}>{c.nom}</option>)}
@@ -78,7 +87,7 @@ export default function Aide() {
                 titre={
                   <>
                     <span>{libelle(c.label)}</span>
-                    {c.label.en && langue() !== 'en' && <small>{c.label.en}</small>}
+                    {c.label.en && c.label.en !== c.label.fr && langue() !== 'en' && <small>{c.label.en}</small>}
                   </>
                 }
               >
@@ -105,8 +114,8 @@ export default function Aide() {
 
           <h2>{t('aide.indicateurs')}</h2>
           <div className="accordeon">
-            <Rubrique {...r('indicateurs')} titre={t('aide.indicateursTitre')}>
-              <p>{t('aide.indicateursTexte')}</p>
+            <Rubrique {...r('indicateurs')} titre={u.univers === 'soudure' ? t('aide.indicateursTitreSoudure') : t('aide.indicateursTitre')}>
+              <p>{u.univers === 'soudure' ? t('aide.indicateursTexteSoudure') : t('aide.indicateursTexte')}</p>
             </Rubrique>
           </div>
 
