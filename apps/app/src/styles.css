@@ -647,3 +647,14 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .avis-contenu.fait { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .avis-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .avis-boutons .btn.on { border-color: var(--o); background: var(--o-doux); }
+
+/* Menu d'administration : tuiles par usage (2 colonnes sur téléphone) */
+.adm-groupe { margin: 18px 0 8px; font-size: 16px; }
+.adm-tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.adm-tuile { display: grid; gap: 2px; align-content: start; text-align: left; font: inherit; cursor: pointer; background: var(--carte, #fff); border: 1px solid var(--bord, #e5e7eb); border-radius: var(--r-sm); padding: 10px 12px; color: inherit; }
+.adm-tuile b { font-size: 14px; }
+.adm-tuile small { color: var(--muted, #6b7280); font-size: 12px; display: flex; align-items: center; gap: 5px; }
+.adm-pastille { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.adm-traiter { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; background: var(--o-doux); border: 1px solid #fbd0bd; border-radius: var(--r-sm); padding: 8px 10px; }
+.adm-traiter > b { margin-right: 4px; }
+.adm-section .bandeau { margin-top: 8px; }

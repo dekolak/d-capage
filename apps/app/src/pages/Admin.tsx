@@ -34,91 +34,101 @@ export function EnteteAdmin({ titre, zone, children }: { titre: string; zone: Zo
 }
 
 /**
- * Administration : un menu court, rangé en sections Commun / Lazzeko / Kiavik (badge de couleur sur chaque entrée).
- * Ordre fixe Commun, Lazzeko, Kiavik, toutes repliables ; ouvrir une entrée d'un autre espace bascule dans cet espace.
+ * Administration : rangée par usage, pensée pour le téléphone.
+ * En haut « À traiter » (seulement s'il y a quelque chose), puis des tuiles courtes : Clients, Contenus, Machines.
+ * Les réglages rares (notifications, conditions, clés API, envoi vers une API) sont repliés en bas.
+ * Pastille de couleur = entrée propre à une société ; l'ouvrir bascule dans cet espace.
  */
+interface Groupe { titre: string; entrees: Entree[] }
 export default function Admin() {
   const { espace: ouvert, espaces, choisir } = useEspace();
   const nav = useNavigate();
-  const [ouvertes, setOuvertes] = useState<Record<string, boolean>>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(CLE_SECTIONS) ?? '{}');
-    } catch {
-      return {};
-    }
-  });
-  const [compte, setCompte] = useState<{ aide: number; utilisateurs: number; retard: number; flous: number }>({ aide: 0, utilisateurs: 0, retard: 0, flous: 0 });
+  const [reglages, setReglages] = useState(() => localStorage.getItem(CLE_SECTIONS) === 'reglages');
+  const [compte, setCompte] = useState({ aide: 0, utilisateurs: 0, retard: 0, flous: 0, mdp: 0 });
   useEffect(() => {
     Promise.all([
       api<unknown[]>('/admin/aide?traitee=non').catch(() => []),
       api<U[]>('/users').catch(() => []),
       api<unknown[]>('/admin/entretien/machines?etat=retard').catch(() => []),
       api<{ n: number }>('/admin/avis-contenu/a-traiter').catch(() => ({ n: 0 })),
-    ]).then(([a, u, r, f]) => setCompte({ aide: a.length, utilisateurs: u.length, retard: r.length, flous: f.n }));
+      api<{ enAttente: number }>('/admin/mots-de-passe').catch(() => ({ enAttente: 0 })),
+    ]).then(([a, u, r, f, m]) => setCompte({ aide: a.length, utilisateurs: u.length, retard: r.length, flous: f.n, mdp: m.enAttente }));
   }, []);
-  const toutes: Entree[] = [
-    { zone: 'commun', to: '/admin/utilisateurs', titre: '👥 Utilisateurs', texte: `créer un compte, accès, machines, activité (${compte.utilisateurs})` },
-    { zone: 'commun', to: '/admin/messages', titre: '💬 Messages', texte: "bulles d'info à l'ouverture de l'app" },
-    { zone: 'commun', to: '/admin/conditions', titre: "📜 Conditions d'utilisation", texte: 'texte et version, par espace' },
-    { zone: 'commun', to: '/admin/cles-api', titre: '🔑 Clés API', texte: 'créer des comptes depuis un autre système (Odoo, n8n)' },
-    { zone: 'commun', to: '/admin/webhooks', titre: '📤 Envoi vers une API', texte: 'événements envoyés à n8n ou une IA' },
-    { zone: 'lazzeko', to: '/admin/fiches', titre: '📝 Fiches de réglage', texte: 'voir qui les a faites, masquer' },
-    { zone: 'commun', to: '/admin/catalogue', titre: '🔧 Machines', texte: 'modèles Lazzeko et Kiavik, où ils sont visibles, images' },
-    { zone: 'commun', to: '/admin/terrain', titre: '🎥 Mode terrain', texte: 'capturer un pas-à-pas sur place : photos (retardateur), dictée, étape par étape' },
-    { zone: 'commun', to: '/admin/entretien', titre: "📒 Entretien", texte: "plans d'entretien des machines, suivi des retards, carnets", compte: compte.retard },
-    { zone: 'lazzeko', to: '/admin/avis', titre: '⭐ Avis', texte: 'masquer ceux qui ne conviennent pas' },
-    { zone: 'lazzeko', to: '/admin/familles', titre: '🏷️ Familles et précisions', texte: 'matériaux, à enlever, applications : listes et précisions des clients' },
-    { zone: 'lazzeko', to: '/admin/aide', titre: "🆘 Demandes d'aide", texte: 'bouton sur les fiches, demandes reçues', compte: compte.aide },
-    { zone: 'commun', to: '/admin/academie', titre: '🎓 Académie', texte: 'cours en vidéo (Vimeo), simulateurs, réservés à une machine ou pour tous' },
-    { zone: 'commun', to: '/admin/categories', titre: '🗂 Catégories', texte: "sections de l'accueil Kiavik et des Guides de Ma machine : renommer, ajouter, ordonner, ranger" },
-    { zone: 'commun', to: '/admin/procedures', titre: '📋 Pas-à-pas', texte: 'Lazzeko et Kiavik : créer, étiqueter, publier' },
-    { zone: 'commun', to: '/admin/avis-contenu', titre: '🤔 Avis sur les contenus', texte: "« C'était clair ? » en fin de pas-à-pas et de leçon (à activer sur chaque contenu)", compte: compte.flous },
-    { zone: 'commun', to: '/admin/diagnostics', titre: '🩺 Dépannages reçus', texte: 'résultats envoyés par les clients' },
-    { zone: 'commun', to: '/admin/solutions', titre: '💡 Bon à savoir', texte: 'Lazzeko et Kiavik : problèmes déjà résolus, astuces' },
+  const groupes: Groupe[] = [
+    { titre: 'Clients', entrees: [
+      { zone: 'commun', to: '/admin/utilisateurs', titre: '👥 Utilisateurs', texte: `${compte.utilisateurs} compte(s)` },
+      { zone: 'commun', to: '/admin/mots-de-passe', titre: '🔐 Mots de passe', texte: 'codes oubliés', compte: compte.mdp },
+      { zone: 'lazzeko', to: '/admin/aide', titre: "🆘 Demandes d'aide", texte: 'depuis les fiches', compte: compte.aide },
+      { zone: 'commun', to: '/admin/diagnostics', titre: '🩺 Dépannages reçus', texte: 'résultats clients' },
+      { zone: 'commun', to: '/admin/avis-contenu', titre: "🤔 C'était clair ?", texte: 'avis sur les contenus', compte: compte.flous },
+      { zone: 'lazzeko', to: '/admin/avis', titre: '⭐ Avis', texte: 'masquer' },
+      { zone: 'lazzeko', to: '/admin/fiches', titre: '📝 Fiches de réglage', texte: 'qui, masquer' },
+    ] },
+    { titre: 'Contenus', entrees: [
+      { zone: 'commun', to: '/admin/procedures', titre: '📋 Pas-à-pas', texte: 'créer, publier' },
+      { zone: 'commun', to: '/admin/solutions', titre: '💡 Bon à savoir', texte: 'astuces, solutions' },
+      { zone: 'commun', to: '/admin/academie', titre: '🎓 Académie', texte: 'parcours, pages' },
+      { zone: 'commun', to: '/admin/terrain', titre: '🎥 Mode terrain', texte: 'capturer sur place' },
+      { zone: 'commun', to: '/admin/categories', titre: '🗂 Catégories', texte: 'ranger, ordonner' },
+      { zone: 'commun', to: '/admin/messages', titre: '💬 Messages', texte: "bulles d'info" },
+    ] },
+    { titre: 'Machines', entrees: [
+      { zone: 'commun', to: '/admin/catalogue', titre: '🔧 Machines', texte: 'modèles, images' },
+      { zone: 'commun', to: '/admin/entretien', titre: '📒 Entretien', texte: 'plans, retards', compte: compte.retard },
+      { zone: 'lazzeko', to: '/admin/familles', titre: '🏷️ Familles', texte: 'matériaux, précisions' },
+    ] },
   ];
-  const entrees = toutes.filter((e) => !e.module || espaces.some((x) => x.slug === e.zone && x.modules.some((m) => m.slug === e.module)));
-  // ordre fixe : Commun, puis les espaces (Lazzeko, Kiavik) ; toutes repliables, ouvertes/fermées gardées sur ce téléphone
-  const zones = ['commun', ...espaces.map((e) => e.slug)].filter((z) => entrees.some((e) => e.zone === z));
-  const nomZone = (z: Zone) => espaces.find((e) => e.slug === z)?.nom ?? 'Commun';
+  const rares: Entree[] = [
+    { zone: 'commun', to: '/admin/conditions', titre: "📜 Conditions d'utilisation", texte: 'texte et version' },
+    { zone: 'commun', to: '/admin/cles-api', titre: '🔑 Clés API', texte: 'Odoo, n8n' },
+    { zone: 'commun', to: '/admin/webhooks', titre: '📤 Envoi vers une API', texte: 'événements vers n8n, IA' },
+  ];
+  const visible = (e: Entree) => e.zone === 'commun' || espaces.some((x) => x.slug === e.zone && (!e.module || x.modules.some((m) => m.slug === e.module)));
+  const aTraiter = groupes.flatMap((g) => g.entrees).filter((e) => visible(e) && (e.compte ?? 0) > 0);
   const ouvrir = (e: Entree) => {
     if (e.zone !== 'commun' && e.zone !== ouvert.slug) choisir(e.zone);
     nav(e.to);
   };
-  const estOuverte = (z: Zone) => ouvertes[z] ?? z === ouvert.slug; // par défaut : la section de l'espace ouvert
-  const basculer = (z: Zone, v: boolean) => {
-    const n = { ...ouvertes, [z]: v };
-    setOuvertes(n);
-    localStorage.setItem(CLE_SECTIONS, JSON.stringify(n));
+  const tuile = (e: Entree) => {
+    const esp = espaces.find((x) => x.slug === e.zone);
+    return (
+      <button key={e.to} type="button" className="adm-tuile" onClick={() => ouvrir(e)} title={esp ? `Propre à ${esp.nom}` : undefined}>
+        <b>{e.titre}{!!e.compte && <span className="badge-rouge">{e.compte}</span>}</b>
+        <small>{esp && <i className="adm-pastille" style={{ ['--c' as string]: esp.couleur }} />}{e.texte}</small>
+      </button>
+    );
   };
 
   return (
     <div className="page adm">
       <h1>Administration</h1>
-      <MotsDePasseEtNotifications />
-      {zones.map((z) => {
-        const n = entrees.filter((e) => e.zone === z).reduce((t, e) => t + (e.compte ?? 0), 0);
-        return (
-          <details key={z} className="adm-section" open={estOuverte(z)} onToggle={(ev) => basculer(z, (ev.target as HTMLDetailsElement).open)}>
-            <summary>
-              <h2>{nomZone(z)} <BadgeZone zone={z} />{n > 0 && <span className="badge-rouge">{n}</span>}</h2>
-            </summary>
-            <div className="adm-liste">
-              {entrees.filter((e) => e.zone === z).map((e) => (
-                <button key={e.to} type="button" className="bandeau lien-bandeau adm-entree" onClick={() => ouvrir(e)}>
-                  <span><b>{e.titre}</b>{!!e.compte && <span className="badge-rouge">{e.compte}</span>} : {e.texte}</span>
-                  <span>›</span>
-                </button>
-              ))}
-            </div>
-          </details>
-        );
-      })}
-      <p className="muted petit">Une entrée d'un autre espace vous fait passer dans cet espace.</p>
+      {aTraiter.length > 0 && (
+        <div className="adm-traiter">
+          <b>À traiter</b>
+          {aTraiter.map((e) => (
+            <button key={e.to} type="button" className="btn petit" onClick={() => ouvrir(e)}>{e.titre} <span className="badge-rouge">{e.compte}</span></button>
+          ))}
+        </div>
+      )}
+      {groupes.map((g) => (
+        <section key={g.titre}>
+          <h2 className="adm-groupe">{g.titre}</h2>
+          <div className="adm-tuiles">{g.entrees.filter(visible).map(tuile)}</div>
+        </section>
+      ))}
+      <details className="adm-section" open={reglages} onToggle={(ev) => {
+        const o = (ev.target as HTMLDetailsElement).open;
+        setReglages(o);
+        localStorage.setItem(CLE_SECTIONS, o ? 'reglages' : '');
+      }}>
+        <summary><h2>⚙️ Réglages</h2></summary>
+        <Notifications />
+        <div className="adm-tuiles">{rares.map(tuile)}</div>
+      </details>
     </div>
   );
 }
 
-/** Administration → Utilisateurs : créer un compte, liste, accès, machines. */
 export function AdminUtilisateurs() {
   const [users, setUsers] = useState<U[]>([]);
   const [catalogue, setCatalogue] = useState<FabricantAdmin[]>([]);
@@ -672,21 +682,14 @@ function CasesModules({ valeur, onChange }: { valeur: string[]; onChange: (modul
 }
 
 /** Demandes de mot de passe en attente (compteur) et notifications sur ce téléphone. */
-function MotsDePasseEtNotifications() {
-  const [attente, setAttente] = useState(0);
-  const [abonne, setAbonne] = useState<boolean | null>(null);
+function Notifications() {
+  const [abonne, setAbonne] = useState(false);
   const [info, setInfo] = useState('');
   useEffect(() => {
-    api<{ enAttente: number }>('/admin/mots-de-passe').then((r) => setAttente(r.enAttente)).catch(() => {});
     abonnementActuel().then((a) => setAbonne(!!a));
   }, []);
   return (
-    <>
-      <Link to="/admin/mots-de-passe" className="bandeau lien-bandeau">
-        <span><b>🔐 Mots de passe oubliés</b>{attente > 0 && <span className="badge-rouge">{attente}</span>} : donner un code au client</span>
-        <span>›</span>
-      </Link>
-      <div className="bandeau">
+    <div className="bandeau">
         <span>
           <b>🔔 Notifications sur ce téléphone</b> : {abonne ? 'activées' : 'pour être prévenu des demandes'}
           {info && <><br /><small>{info}</small></>}
@@ -711,6 +714,5 @@ function MotsDePasseEtNotifications() {
           </button>
         )}
       </div>
-    </>
   );
 }
