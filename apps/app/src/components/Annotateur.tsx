@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { Erreur } from '../../components/Composants';
-import { api } from '../../lib/api';
+import { Erreur } from './Composants';
+import { Repere, Reperes } from './Reperes';
 import './annotateur.css';
 
 /*
- * Annoter une photo d'étape (sur PC, dans l'éditeur des pas-à-pas) : flèche, rond, rectangle, zone grisée, pictos (⚠️ 🎯 ➡️…)
- * ou n'importe quel emoji / texte. Les formes sont en coordonnées relatives (0–1) : le calque se rouvre et se modifie.
- * À l'enregistrement, l'app fabrique l'image annotée (affichée partout) ; l'original et le calque sont gardés par l'API.
+ * Annoter une photo — un seul outil pour les pas-à-pas et l'Académie (PC ou téléphone) :
+ * - formes fixes : flèche, rond, rectangle, zone grisée, pictos (⚠️ 🎯 ➡️…) ou n'importe quel emoji / texte ;
+ *   à l'enregistrement, l'app fabrique l'image annotée (affichée partout) ; l'original et le calque sont gardés par l'API ;
+ * - repères animés : ⭕ halo qui pulse, ⚠️ qui bat ; gardés à part et dessinés par-dessus l'image (ils restent animés).
+ * Tout est en coordonnées relatives (0–1) : le calque se rouvre et se modifie.
  */
 
-type Outil = 'fleche' | 'rond' | 'rect' | 'zone' | 'picto' | 'gomme';
+type Outil = 'fleche' | 'rond' | 'rect' | 'zone' | 'picto' | 'halo' | 'attention' | 'gomme';
 export interface Forme {
-  t: Exclude<Outil, 'gomme'>;
+  t: Exclude<Outil, 'gomme' | 'halo' | 'attention'>;
   x1: number; y1: number; x2: number; y2: number;
   /** Couleur, épaisseur relative à la largeur de l'image, picto ou texte. */
   c: string; e: number; s?: string;
@@ -21,8 +23,21 @@ const EPAISSEURS = [{ n: 'Fin', v: 0.004 }, { n: 'Moyen', v: 0.008 }, { n: 'Gros
 const PICTOS = ['⚠️', '🎯', '➡️', '⬅️', '⬆️', '⬇️', '✅', '❌', '🔧', '①', '②', '③', '④', '⑤'];
 const OUTILS: { o: Outil; l: string }[] = [
   { o: 'fleche', l: '➡ Flèche' }, { o: 'rond', l: '⭕ Rond' }, { o: 'rect', l: '▭ Rectangle' },
-  { o: 'zone', l: '▩ Zone grisée' }, { o: 'picto', l: '😀 Picto / texte' }, { o: 'gomme', l: '🧽 Gomme' },
+  { o: 'zone', l: '▩ Zone grisée' }, { o: 'picto', l: '😀 Picto / texte' },
+  { o: 'halo', l: '⭕ Halo animé' }, { o: 'attention', l: '⚠️ Attention animée' }, { o: 'gomme', l: '🧽 Gomme' },
 ];
+
+/** D'où vient la photo et où enregistrer : chaque endroit (pas-à-pas, Académie) fournit le sien. */
+export interface SourceAnnotation {
+  /** Photo d'origine (sans calque). */
+  original(): Promise<Blob>;
+  formes?: Forme[] | null;
+  reperes?: Repere[] | null;
+  /** Un calque est déjà collé dans l'image (bouton « Revenir à la photo d'origine »). */
+  annotee?: boolean;
+  /** image = photo annotée (null s'il n'y a plus de forme fixe : revenir à l'original). true = enregistré. */
+  enregistrer(r: { image: Blob | null; formes: Forme[]; reperes: Repere[] }): Promise<boolean>;
+}
 
 /** Dessine les formes sur un contexte de la taille de l'image (w × h). */
 function dessiner(g: CanvasRenderingContext2D, formes: Forme[], w: number, h: number) {
@@ -87,17 +102,12 @@ function sous(formes: Forme[], x: number, y: number): number {
   return -1;
 }
 
-/**
- * Fenêtre d'annotation d'une photo d'étape. `maj` envoie la modification (celle de l'éditeur : elle applique la procédure
- * à jour, et renvoie null en cas d'erreur) ; la fenêtre se ferme quand c'est fait.
- */
-export function Annotateur({ photo, maj, onFermer }: {
-  photo: { id: string; annotee?: boolean; annotations?: Forme[] | null };
-  maj: (chemin: string, opts: RequestInit & { json?: unknown }) => Promise<unknown>; onFermer: () => void;
-}) {
+/** Fenêtre d'annotation ; elle se ferme quand l'enregistrement a réussi. */
+export function Annotateur({ source, onFermer }: { source: SourceAnnotation; onFermer: () => void }) {
   const toile = useRef<HTMLCanvasElement>(null);
   const [img, setImg] = useState<HTMLImageElement>();
-  const [formes, setFormes] = useState<Forme[]>(photo.annotations ?? []);
+  const [formes, setFormes] = useState<Forme[]>(source.formes ?? []);
+  const [reperes, setReperes] = useState<Repere[]>(source.reperes ?? []);
   const [encours, setEncours] = useState<Forme | null>(null);
   const [outil, setOutil] = useState<Outil>('fleche');
   const [couleur, setCouleur] = useState(COULEURS[0]);
@@ -110,7 +120,7 @@ export function Annotateur({ photo, maj, onFermer }: {
   // la photo d'origine (sans calque), pour dessiner dessus
   useEffect(() => {
     let url = '';
-    api<Blob>(`/admin/procedures/photos/${photo.id}/originale`)
+    source.original()
       .then((b) => {
         url = URL.createObjectURL(b);
         const i = new Image();
@@ -121,7 +131,8 @@ export function Annotateur({ photo, maj, onFermer }: {
     return () => {
       if (url) URL.revokeObjectURL(url);
     };
-  }, [photo.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const c = toile.current;
@@ -140,8 +151,15 @@ export function Annotateur({ photo, maj, onFermer }: {
   const bas = (e: React.PointerEvent) => {
     const p = point(e);
     if (outil === 'gomme') {
+      // un repère animé proche d'abord, sinon la forme sous le doigt
+      const r = reperes.findIndex((x) => Math.abs(x.x - p.x) < 0.04 && Math.abs(x.y - p.y) < 0.05);
+      if (r >= 0) return setReperes(reperes.filter((_, k) => k !== r));
       const i = sous(formes, p.x, p.y);
       if (i >= 0) setFormes(formes.filter((_, k) => k !== i));
+      return;
+    }
+    if (outil === 'halo' || outil === 'attention') {
+      if (reperes.length < 10) setReperes([...reperes, { x: +p.x.toFixed(4), y: +p.y.toFixed(4), s: outil }]);
       return;
     }
     if (outil === 'picto') {
@@ -170,17 +188,11 @@ export function Annotateur({ photo, maj, onFermer }: {
     setEnvoi(true);
     setErr(undefined);
     try {
-      if (!formes.length) {
-        // plus rien dessiné : on revient à la photo d'origine
-        if (await maj(`/admin/procedures/photos/${photo.id}/annotation`, { method: 'DELETE' })) onFermer();
-        else setEnvoi(false);
-        return;
-      }
-      const b = await new Promise<Blob>((ok, ko) => c.toBlob((x) => (x ? ok(x) : ko(new Error('Image impossible à fabriquer'))), 'image/jpeg', 0.9));
-      const fd = new FormData();
-      fd.append('image', b, 'annotee.jpg');
-      fd.append('annotations', JSON.stringify(formes));
-      if (await maj(`/admin/procedures/photos/${photo.id}/annotation`, { method: 'POST', body: fd })) onFermer();
+      // formes fixes : collées dans l'image ; plus aucune : retour à la photo d'origine (image null)
+      const image = formes.length
+        ? await new Promise<Blob>((ok, ko) => c.toBlob((x) => (x ? ok(x) : ko(new Error('Image impossible à fabriquer'))), 'image/jpeg', 0.9))
+        : null;
+      if (await source.enregistrer({ image, formes, reperes })) onFermer();
       else setEnvoi(false);
     } catch (x) {
       setErr(x);
@@ -188,8 +200,10 @@ export function Annotateur({ photo, maj, onFermer }: {
     }
   };
   const original = async () => {
-    if (!confirm('Supprimer le calque et revenir à la photo d\'origine ?')) return;
-    if (await maj(`/admin/procedures/photos/${photo.id}/annotation`, { method: 'DELETE' })) onFermer();
+    if (!confirm('Supprimer le calque (formes et repères) et revenir à la photo d\'origine ?')) return;
+    setEnvoi(true);
+    if (await source.enregistrer({ image: null, formes: [], reperes: [] }).catch((x) => ((setErr(x), false)))) onFermer();
+    else setEnvoi(false);
   };
 
   return (
@@ -215,13 +229,19 @@ export function Annotateur({ photo, maj, onFermer }: {
           </div>
         )}
         <p className="muted petit an-aide">
-          {outil === 'gomme' ? 'Cliquez sur un élément pour l\'effacer.' : outil === 'picto' ? 'Cliquez sur la photo pour poser le picto.' : 'Cliquez-glissez sur la photo.'}
+          {outil === 'gomme' ? 'Touchez un élément pour l\'effacer.'
+            : outil === 'picto' ? 'Touchez la photo pour poser le picto.'
+            : outil === 'halo' || outil === 'attention' ? `Touchez la photo pour poser un repère animé (il reste animé chez le client, ${reperes.length}/10).`
+            : 'Glissez sur la photo.'}
           {outil === 'zone' && ' La zone grisée masque ou met en retrait une partie de la photo.'}
         </p>
 
         <div className="an-toile">
           {img ? (
-            <canvas ref={toile} onPointerDown={bas} onPointerMove={bouge} onPointerUp={haut} onPointerCancel={haut} className={outil === 'gomme' ? 'gomme' : ''} />
+            <span className="an-cadre">
+              <canvas ref={toile} onPointerDown={bas} onPointerMove={bouge} onPointerUp={haut} onPointerCancel={haut} className={outil === 'gomme' ? 'gomme' : ''} />
+              <Reperes liste={reperes} />
+            </span>
           ) : (
             <p className="muted">Chargement de la photo…</p>
           )}
@@ -229,9 +249,9 @@ export function Annotateur({ photo, maj, onFermer }: {
 
         <Erreur e={err} />
         <div className="an-actions">
-          <button type="button" className="btn" disabled={!formes.length} onClick={() => setFormes(formes.slice(0, -1))}>↩ Annuler</button>
-          <button type="button" className="btn" disabled={!formes.length} onClick={() => confirm('Tout effacer ?') && setFormes([])}>🧹 Tout effacer</button>
-          {photo.annotee && <button type="button" className="btn danger" onClick={original}>🗑 Revenir à la photo d'origine</button>}
+          <button type="button" className="btn" disabled={!formes.length && !reperes.length} onClick={() => (reperes.length && (outil === 'halo' || outil === 'attention' || !formes.length) ? setReperes(reperes.slice(0, -1)) : setFormes(formes.slice(0, -1)))}>↩ Annuler</button>
+          <button type="button" className="btn" disabled={!formes.length && !reperes.length} onClick={() => confirm('Tout effacer ?') && ((setFormes([]), setReperes([])))}>🧹 Tout effacer</button>
+          {(source.annotee || !!source.reperes?.length) && <button type="button" className="btn danger" onClick={original}>🗑 Revenir à la photo d'origine</button>}
           <span className="an-espace" />
           <button type="button" className="btn" onClick={onFermer}>Fermer</button>
           <button type="button" className="btn prim" disabled={envoi || !img} onClick={enregistrer}>{envoi ? 'Enregistrement…' : '💾 Enregistrer'}</button>

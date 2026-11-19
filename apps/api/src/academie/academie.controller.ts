@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import { Type } from 'class-transformer';
@@ -193,6 +193,38 @@ export class AdminAcademieController {
   @Delete('simulateurs/:id')
   supprimerSimulateur(@Param('id') id: string) {
     return this.academie.supprimerSimulateur(id);
+  }
+
+  /** Annotation d'une image (même annotateur que les pas-à-pas) : calque, original, image annotée. */
+  @Get('fichiers/:id/calque')
+  calque(@Param('id') id: string) {
+    return this.academie.calque(id);
+  }
+
+  @Get('fichiers/:id/originale')
+  async originale(@Param('id') id: string, @Res() res: Response) {
+    const { flux, type } = await this.academie.lireOriginale(id);
+    res.setHeader('Content-Type', type);
+    res.setHeader('Cache-Control', 'no-store');
+    flux.pipe(res);
+  }
+
+  /** Multipart « image » (image annotée) + « annotations » (JSON des formes). */
+  @Post('fichiers/:id/annotation')
+  @UseInterceptors(FileInterceptor('image', { limits: { fileSize: 12 * 1024 * 1024 } }))
+  annoter(@Param('id') id: string, @Body('annotations') annotations: string, @UploadedFile() f?: Express.Multer.File) {
+    let formes: unknown;
+    try {
+      formes = JSON.parse(annotations ?? '');
+    } catch {
+      throw new BadRequestException('Calque invalide');
+    }
+    return this.academie.annoter(id, formes, f);
+  }
+
+  @Delete('fichiers/:id/annotation')
+  retirerAnnotation(@Param('id') id: string) {
+    return this.academie.retirerAnnotation(id);
   }
 
   /** Image ou PDF d'un bloc (champ multipart « fichier »). */

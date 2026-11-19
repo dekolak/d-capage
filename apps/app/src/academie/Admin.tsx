@@ -8,7 +8,7 @@ import { compresser } from '../lib/image';
 import { useEspace } from '../lib/espace';
 import { EnteteAdmin } from '../pages/Admin';
 import { ImageApi } from '../espaces/kiavik/donneesProcedures';
-import { PlacerReperes, Blocs, IframeIsolee } from './Blocs';
+import { AnnoterImage, Blocs, IframeIsolee } from './Blocs';
 import { Bloc, Cours, duree, idVimeo, infosVimeo, TypeBloc } from './donnees';
 import './academie.css';
 
@@ -383,7 +383,8 @@ function EditeurBloc({ b, sims, onChange, onErreur }: { b: Bloc; sims: Simulateu
       return (
         <>
           <input type="file" accept="image/*" onChange={(e) => envoyer(e.target.files?.[0], true)} />
-          <PlacerReperes b={b} onChange={onChange} />
+          {b.chemin && <Blocs blocs={[b]} />}
+          <AnnoterImage b={b} onChange={onChange} />
           <input value={b.legende ?? ''} maxLength={300} placeholder="Légende (facultatif)" onChange={(e) => onChange({ ...b, legende: e.target.value })} />
         </>
       );

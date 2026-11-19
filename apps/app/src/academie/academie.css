@@ -73,16 +73,3 @@
 .ac-terrain-bloc .ac-image img { max-height: 160px; width: auto; }
 .ac-apercu-couv { display: grid; gap: 6px; max-width: 360px; }
 .ac-apercu-couv .ac-vignette { border-radius: var(--r-sm); }
-/* Repères animés sur les photos (même anneau que les pas-à-pas) */
-.ac-photo { position: relative; display: block; }
-.ac-photo img { display: block; width: 100%; }
-.ac-repere { position: absolute; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%; pointer-events: none; display: grid; place-items: center; }
-.ac-repere.halo { border: 4px solid #e8541e; box-shadow: 0 0 0 3px #fff, 0 0 18px #e8541e; animation: ac-pulse 1.1s ease-in-out infinite; }
-.ac-repere.attention { font-size: 30px; filter: drop-shadow(0 0 4px #fff) drop-shadow(0 1px 3px rgba(0, 0, 0, .6)); animation: ac-bat 0.9s ease-in-out infinite; }
-@keyframes ac-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.35); opacity: .75; } }
-@keyframes ac-bat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
-@media (prefers-reduced-motion: reduce) { .ac-repere { animation: none; } }
-/* placement (admin) */
-.ac-placer { display: grid; gap: 6px; }
-.ac-placer .ac-photo { cursor: crosshair; }
-.ac-placer .ac-repere { pointer-events: auto; cursor: pointer; }

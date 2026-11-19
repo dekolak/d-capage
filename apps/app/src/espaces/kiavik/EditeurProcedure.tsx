@@ -6,13 +6,14 @@ import { api } from '../../lib/api';
 import { copier } from '../../lib/copier';
 import { compresser } from '../../lib/image';
 import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
-import { ChoixCategorie, ICONE_TYPE, TYPES_PAS_A_PAS, TypePasAPas, Choix, Etape, ImageApi, Procedure, ResumeProcedure, Solution, chargerProcedures, estDiagnostic, viderProcedures } from './donneesProcedures';
+import { ChoixCategorie, ICONE_TYPE, TYPES_PAS_A_PAS, TypePasAPas, Choix, Etape, Procedure, ResumeProcedure, Solution, chargerProcedures, estDiagnostic, viderProcedures } from './donneesProcedures';
 import { Guide } from './guides';
 import { decouperEtape } from './ProcedureDetail';
 import { useSolutions } from './donneesProcedures';
 import './guides.css';
 import './editeur.css';
-import { Annotateur } from './Annotateur';
+import { Annotateur, SourceAnnotation } from '../../components/Annotateur';
+import { ImageReperes } from '../../components/Reperes';
 import { BlocPourQui, EspaceContenu, viderEtiquettes } from './Etiquettes';
 import { EnvoyerPasAPas } from './Envoyer';
 import { t } from '../../lib/i18n';
@@ -204,6 +205,23 @@ function AjoutChoix({ e, maj, choisir, libelle = '+ réponse' }: { e: Etape; maj
   );
 }
 
+/** Photo d'étape dans l'annotateur commun : formes collées dans l'image (annotation), repères animés à part. */
+function sourcePhotoEtape(ph: Etape['photos'][number], maj: Maj): SourceAnnotation {
+  return {
+    original: () => api<Blob>(`/admin/procedures/photos/${ph.id}/originale`),
+    formes: ph.annotations, reperes: ph.reperes, annotee: ph.annotee,
+    async enregistrer({ image, formes, reperes }) {
+      if (image) {
+        const fd = new FormData();
+        fd.append('image', image, 'annotee.jpg');
+        fd.append('annotations', JSON.stringify(formes));
+        if (!(await maj(`/admin/procedures/photos/${ph.id}/annotation`, { method: 'POST', body: fd }))) return false;
+      } else if (ph.annotee && !(await maj(`/admin/procedures/photos/${ph.id}/annotation`, { method: 'DELETE' }))) return false;
+      return !!(await maj(`/admin/procedures/photos/${ph.id}/reperes`, { method: 'PATCH', json: { reperes } }));
+    },
+  };
+}
+
 /** Panneau : une étape (ou question). */
 function EtapeEditeur({ p, e, guides, astuces, maj, choisir }: { p: Procedure; e: Etape; guides: Guide[]; astuces: Solution[]; maj: Maj; choisir(s: Sel): void }) {
   const [texte, setTexte] = useState(e.texte);
@@ -287,18 +305,18 @@ function EtapeEditeur({ p, e, guides, astuces, maj, choisir }: { p: Procedure; e
           </select>
         </label>
       )}
-      {annoter && <Annotateur photo={annoter} maj={maj} onFermer={() => setAnnoter(null)} />}
+      {annoter && <Annotateur source={sourcePhotoEtape(annoter, maj)} onFermer={() => setAnnoter(null)} />}
       <div className="ed-champ">
         <span>Photos {e.photos.length > 0 && <small className="muted">({e.photos.length}/{MAX_PHOTOS}, la première est la principale)</small>}</span>
         {e.photos.length > 0 && (
           <div className="ed-photos">
             {e.photos.map((ph, k) => (
               <div key={ph.id} className="ed-photo">
-                <ImageApi chemin={ph.url} />
+                <ImageReperes chemin={ph.url} reperes={ph.reperes} />
                 <span>
                   <button type="button" className="btn petit" aria-label="Avancer la photo" disabled={k === 0} onClick={() => maj(`/admin/procedures/photos/${ph.id}/deplacer`, { method: 'POST', json: { sens: -1 } })}>←</button>
                   <button type="button" className="btn petit" aria-label="Reculer la photo" disabled={k === e.photos.length - 1} onClick={() => maj(`/admin/procedures/photos/${ph.id}/deplacer`, { method: 'POST', json: { sens: 1 } })}>→</button>
-                  <button type="button" className="btn petit" title="Annoter : flèche, rond, rectangle, zone grisée, picto" onClick={() => setAnnoter(ph)}>✏️{ph.annotee ? '✓' : ''}</button>
+                  <button type="button" className="btn petit" title="Annoter : flèche, rond, rectangle, zone grisée, picto, repères animés" onClick={() => setAnnoter(ph)}>✏️{ph.annotee || ph.reperes?.length ? '✓' : ''}</button>
                   <button type="button" className="btn petit danger" aria-label="Retirer la photo" onClick={() => confirm('Retirer cette photo ?') && maj(`/admin/procedures/photos/${ph.id}`, { method: 'DELETE' })}>✕</button>
                 </span>
               </div>

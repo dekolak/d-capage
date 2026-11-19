@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Prisma } from '@prisma/client';
 import { GuidesService } from '../guides/guides.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { nettoyerReperes } from '../commun/reperes';
 import { formatImage, StockageService } from '../stockage/stockage.service';
 import { SUITES } from './chemin';
 import { assurerCategorie } from '../categories/assurer';
@@ -40,6 +41,7 @@ export class ProceduresService {
         // adresse fixe par photo (une photo n'est jamais modifiée, seulement ajoutée ou supprimée)
         photos: photos.map((ph) => ({
           id: ph.id, url: urlPhoto(ph),
+          ...(Array.isArray(ph.reperes) && ph.reperes.length ? { reperes: ph.reperes } : {}),
           ...(admin ? { annotee: !!ph.cleOriginale, annotations: ph.annotations ?? null } : {}),
         })),
         photo: photos[0] ? urlPhoto(photos[0]) : null,
@@ -313,6 +315,14 @@ export class ProceduresService {
       where: { id: photoId },
       data: { cle, cleOriginale: ph.cleOriginale ?? ph.cle, annotations: annotations as Prisma.InputJsonValue, majLe: new Date() },
     });
+    return this.modifiee(ph.etape.procedureId);
+  }
+
+  /** Repères animés de la photo (halo, ⚠️) : dessinés par l'app par-dessus l'image. */
+  async reperesPhoto(photoId: string, reperes: unknown) {
+    const ph = await this.photoParId(photoId);
+    const l = nettoyerReperes(reperes);
+    await this.prisma.photoEtape.update({ where: { id: photoId }, data: { reperes: l.length ? (l as unknown as Prisma.InputJsonValue) : Prisma.DbNull } });
     return this.modifiee(ph.etape.procedureId);
   }
 

@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { nettoyerReperes } from '../commun/reperes';
 
 /**
  * Blocs d'une leçon de l'Académie (JSON dans LeconAcademie.blocs). Une page = une suite de blocs simples ;
@@ -64,12 +65,8 @@ export function nettoyerBlocs(entree: unknown): Bloc[] {
         };
       }
       case 'image': {
-        // repères animés posés sur la photo (position relative 0–1) : halo qui pulse ou ⚠️
-        const reperes = (Array.isArray(x.reperes) ? x.reperes : []).slice(0, 10).flatMap((r) => {
-          const o = r as Record<string, unknown>;
-          const ok = (v: unknown) => typeof v === 'number' && v >= 0 && v <= 1;
-          return ok(o.x) && ok(o.y) ? [{ x: +(o.x as number).toFixed(4), y: +(o.y as number).toFixed(4), s: o.s === 'attention' ? 'attention' : 'halo' }] : [];
-        });
+        // repères animés posés sur la photo (voir commun/reperes.ts)
+        const reperes = nettoyerReperes(x.reperes);
         return { id, type, fichierId: texte(x.fichierId, 40, n), legende: texte(x.legende, 300, n, false), ...(reperes.length ? { reperes } : {}) };
       }
       case 'fichier': {
