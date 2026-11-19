@@ -1,3 +1,4 @@
+import { GAMMES, gamme } from './gammes';
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { chargerConfig, ConfigMachine } from '@decapage/machine-kit';
 import { PrismaService } from '../prisma/prisma.service';
@@ -64,7 +65,7 @@ export class CatalogueService {
     return fabricants.map((f) => ({
       id: f.id, slug: f.slug, nom: f.nom,
       modeles: f.modeles.map((m) => ({
-        id: m.id, slug: m.slug, nom: m.nom, espaces: m.espaces, etiquettes: m.etiquettes, categorie: m.categorie, technologie: m.technologie?.slug ?? null,
+        id: m.id, slug: m.slug, nom: m.nom, gamme: m.gamme, espaces: m.espaces, etiquettes: m.etiquettes, categorie: m.categorie, technologie: m.technologie?.slug ?? null,
         imageUrl: imageMachine({ id: '', imageCle: null, imageMaj: null, modele: m }),
         variantes: m.variantes.map((v) => ({
           id: v.id, slug: v.slug, nom: v.nom, actif: v.actif, imageUrl: imageMachine({ ...v, modele: m }), imagePropre: !!v.imageCle,
@@ -75,14 +76,15 @@ export class CatalogueService {
     }));
   }
 
-  /** Catégories de machines par espace (Lazzeko : Décapeuse, Soudeuse, Accessoire au départ) avec leurs modèles. */
+  /** Catégories de machines par espace : celles des gammes (liste fixe), avec leurs modèles. */
   async categoriesMachines() {
-    const DEPART: Record<string, string[]> = { lazzeko: ['Décapeuse', 'Soudeuse', 'Accessoire'], kiavik: ['Imprimante', 'Accessoire'] };
+    const DEPART: Record<string, string[]> = Object.fromEntries(['lazzeko', 'kiavik'].map((e) => [e, GAMMES.filter((g) => g.espace === e).map((g) => g.categorie)]));
     const modeles = await this.prisma.modele.findMany({ select: { id: true, nom: true, espaces: true, categorie: true, fabricant: { select: { nom: true } } } });
     const r: { espace: string; categorie: string; modeles: { id: string; nom: string }[] }[] = [];
     for (const esp of ['lazzeko', 'kiavik']) {
       const noms = [...new Set([...DEPART[esp], ...modeles.filter((m) => m.espaces.includes(esp) && m.categorie).map((m) => m.categorie!)])];
-      for (const c of noms)
+      // catégories fixes seulement (celles des gammes)
+      for (const c of noms.filter((n) => DEPART[esp].some((x) => norm(x) === norm(n))))
         r.push({
           espace: esp, categorie: c,
           modeles: modeles.filter((m) => m.espaces.includes(esp) && norm(m.categorie ?? '') === norm(c)).map((m) => ({ id: m.id, nom: `${m.fabricant.nom} ${m.nom}` })),
@@ -116,18 +118,32 @@ export class CatalogueService {
     return this.listerAdmin();
   }
 
-  async creerModele(d: { fabricantId: string; nom: string; espaces: string[]; categorie?: string }) {
+  async creerModele(d: { fabricantId: string; nom: string; gamme?: string; espaces?: string[]; categorie?: string }) {
+    // la gamme décide de l'espace et de la catégorie
+    const g = gamme(d.gamme);
+    if (d.gamme && !g) throw new BadRequestException('Gamme inconnue');
+    if (!g && !d.espaces?.length) throw new BadRequestException('Choisissez la gamme de la machine');
     if (!(await this.prisma.fabricant.findUnique({ where: { id: d.fabricantId } }))) throw new NotFoundException('Fabricant introuvable');
     const slug = slugifier(d.nom);
     if (await this.prisma.modele.findUnique({ where: { fabricantId_slug: { fabricantId: d.fabricantId, slug } } })) throw new ConflictException('Ce modèle existe déjà');
-    const m = await this.prisma.modele.create({ data: { fabricantId: d.fabricantId, slug, nom: d.nom.trim(), espaces: d.espaces, categorie: d.categorie?.trim() || null } });
+    const m = await this.prisma.modele.create({
+      data: g
+        ? { fabricantId: d.fabricantId, slug, nom: d.nom.trim(), gamme: g.slug, espaces: [g.espace], categorie: g.categorie }
+        : { fabricantId: d.fabricantId, slug, nom: d.nom.trim(), espaces: d.espaces!, categorie: d.categorie?.trim() || null },
+    });
     // une variante « Standard » pour pouvoir l'attribuer tout de suite
     await this.prisma.variante.create({ data: { modeleId: m.id, slug: 'standard', nom: 'Standard' } });
     return this.listerAdmin();
   }
 
-  async modifierModele(id: string, d: { nom?: string; espaces?: string[]; etiquettes?: string[]; categorie?: string | null }) {
+  async modifierModele(id: string, d: { nom?: string; gamme?: string; espaces?: string[]; etiquettes?: string[]; categorie?: string | null }) {
     if (!(await this.prisma.modele.findUnique({ where: { id } }))) throw new NotFoundException('Modèle introuvable');
+    if (d.gamme !== undefined) {
+      const g = gamme(d.gamme);
+      if (!g) throw new BadRequestException('Gamme inconnue');
+      // un seul espace et la catégorie de la gamme
+      await this.prisma.modele.update({ where: { id }, data: { gamme: g.slug, espaces: [g.espace], categorie: g.categorie } });
+    }
     await this.prisma.modele.update({
       where: { id },
       data: { ...(d.nom ? { nom: d.nom.trim() } : {}), ...(d.espaces ? { espaces: d.espaces } : {}), ...(d.etiquettes ? { etiquettes: nettoyerEtiquettes(d.etiquettes) } : {}),

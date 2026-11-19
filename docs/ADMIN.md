@@ -25,10 +25,10 @@ Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **L
 
 ## Pour qui ? (qui voit quel contenu)
 - Chaque **pas-à-pas** et **Bon à savoir** appartient à **un espace** (Lazzeko **ou** Kiavik, jamais les deux).
-- Chaque **modèle de machine** (Administration → Machines) a une **catégorie** : *Décapeuse*, *Soudeuse*, *Accessoire* (Kiavik : *Imprimante*, *Accessoire*), ou « ＋ Nouvelle catégorie… ».
+- Chaque **modèle de machine** (Administration → Machines) a une **gamme**, dans une **liste fixe** : *Lazzeko · Décapeuse*, *Lazzeko · Soudeuse*, *Lazzeko · Accessoire*, *Kiavik · Imprimante*, *Kiavik · Accessoire*. Elle décide de l'**espace** (Lazzeko et Kiavik n'ont aucune machine en commun), de la **catégorie** (Décapeuse, Soudeuse… pour « Pour qui ? » et les plans d'entretien) et, plus tard, de l'univers du client (réglages décapage ou soudure). Ajouter une gamme se fait dans le code (`apps/api/src/catalogue/gammes.ts`), pour éviter les doublons. Un modèle sans gamme est signalé **⚠️ à classer** (filtre dans Machines).
 - Sur une ressource, **« Pour qui ? »** : *Toutes les machines* (par défaut) ou *Certaines machines* → cocher des **catégories** et/ou des **machines précises**.
 - **Le client voit un contenu** de son espace s'il est pour toutes les machines, ou si **une de ses machines** est cochée ou est dans une catégorie cochée.
-- **Nouvelle machine** : choisissez sa catégorie, elle reçoit tout de suite les contenus de cette catégorie.
+- **Nouvelle machine** : choisissez sa gamme, elle reçoit tout de suite les contenus de sa catégorie.
 - « 👁 Visible par » montre les modèles concernés. Les anciennes étiquettes restent prises en compte (affichées en puces, supprimables).
 - Où : éditeur d'un pas-à-pas et d'un Bon à savoir, **mode terrain** (au démarrage), liste des pas-à-pas (filtres espace / pour qui / état). Les clients Lazzeko ont besoin de l'accès « Pas-à-pas et Bon à savoir » (Lazzeko) sur leur compte.
 - **Côté client : 🛠 Ma machine** (menu 👤 en haut à droite, Lazzeko et Kiavik, et Compte) : une page par machine du client, avec **📚 Guides** (pas-à-pas, dépannages et Bon à savoir rangés en sections repliables par catégorie de l'accueil, comme l'accueil Kiavik : même ordre, mêmes icônes, sections masquées cachées ; ce qui vise la machine précisément passe en premier), **📤 Reçus**, **📒 Carnet** (carnet d’entretien) et, côté Lazzeko, **🎛 Mes fiches** (fiches de réglage de cette machine). S'il a plusieurs machines, il choisit en haut.

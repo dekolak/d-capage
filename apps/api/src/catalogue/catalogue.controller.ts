@@ -5,6 +5,7 @@ import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsOptional, IsString, MaxLength
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
+import { GAMMES, SLUGS_GAMMES } from './gammes';
 import { AutoriseCleApi, ModuleRequis, Public, Roles } from '../auth/decorators';
 import { PrismaService } from '../prisma/prisma.service';
 import { formatImage, MIME_IMAGE, StockageService } from '../stockage/stockage.service';
@@ -18,10 +19,13 @@ class NomDto {
 }
 class ModeleDto extends NomDto {
   @IsString() fabricantId!: string;
+  /** Gamme (liste fixe) : donne l'espace et la catégorie. Sinon espaces (+ catégorie), ancienne façon. */
+  @IsOptional() @IsIn(SLUGS_GAMMES) gamme?: string;
   @IsOptional() @IsString() @MaxLength(40) categorie?: string;
-  @IsArray() @ArrayMaxSize(2) @IsIn(ESPACES, { each: true }) espaces!: string[];
+  @IsOptional() @IsArray() @ArrayMaxSize(2) @IsIn(ESPACES, { each: true }) espaces?: string[];
 }
 class ModifierModeleDto {
+  @IsOptional() @IsIn(SLUGS_GAMMES) gamme?: string;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) categorie?: string | null;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsString({ each: true }) @MaxLength(40, { each: true }) etiquettes?: string[];
   @IsOptional() @IsString() @MinLength(1) @MaxLength(60) nom?: string;
@@ -60,6 +64,12 @@ export class AdminCatalogueController {
   }
 
   /** Catégories de machines utilisées (Décapeuse, Soudeuse, Accessoire…), par espace. */
+  /** Gammes de machines (liste fixe) : espace, catégorie, univers. */
+  @Get('gammes')
+  gammes() {
+    return GAMMES;
+  }
+
   @Get('categories')
   categories() {
     return this.catalogue.categoriesMachines();
