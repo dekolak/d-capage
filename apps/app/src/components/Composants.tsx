@@ -115,10 +115,7 @@ function ValeurExacte({ g, choisis, onChange, valeur, onValeur }: { g: GroupeTag
     if (tag) onChange([...choisis.filter((x) => !g.tags.some((y) => y.id === x)), tag.id]);
   };
   return (
-    <label className="valeur-exacte">
-      <span className="muted petit">{t('commun.tags.valeurExacte', { unite: def.unite })}</span>
-      <input inputMode="decimal" value={saisie} onChange={(e) => changer(e.target.value)} placeholder="2,5" />
-    </label>
+    <input className="valeur-exacte" inputMode="decimal" value={saisie} onChange={(e) => changer(e.target.value)} placeholder={t('commun.tags.valeurExacte', { unite: def.unite })} aria-label={t('commun.tags.valeurExacte', { unite: def.unite })} />
   );
 }
 
@@ -141,34 +138,50 @@ export function ChoixTags({
     if (ici.includes(id)) return onChange([...autresGroupes, ...ici.filter((x) => x !== id)]);
     onChange(g.choixUnique ? [...autresGroupes, id] : [...choisis, id]);
   };
+  // Un sélecteur par groupe (moins de place que les puces), la précision libre à côté.
   return (
     <div className="choix-tags">
       {groupes.map((g) => {
         const pris = g.tags.filter((tag) => choisis.includes(tag.id));
+        const exacte = VALEUR_EXACTE[g.slug];
         return (
           <div key={g.id} className="groupe-tags">
             <b className="gt-titre">
-              {g.nom} <small className="muted">{g.choixUnique ? t('commun.tags.unSeul') : t('commun.tags.plusieurs')}</small>
+              {g.nom} {!g.choixUnique && <small className="muted">{t('commun.tags.plusieurs')}</small>}
             </b>
-            {VALEUR_EXACTE[g.slug] && (
-              <ValeurExacte g={g} choisis={choisis} onChange={onChange} valeur={precisions[g.id] ?? ''} onValeur={(v) => onPrecisions({ ...precisions, [g.id]: v })} />
+            {!g.choixUnique && pris.length > 0 && (
+              <div className="puces">
+                {pris.map((tag) => (
+                  <button key={tag.id} type="button" className="puce on" aria-label={t('commun.tags.retirer', { nom: tag.nom })} onClick={() => basculer(g, tag.id)}>
+                    {tag.nom} ✕
+                  </button>
+                ))}
+              </div>
             )}
-            <div className="puces">
-              {g.tags.map((tag) => (
-                <button key={tag.id} type="button" className={`puce ${choisis.includes(tag.id) ? 'on' : ''}`} aria-pressed={choisis.includes(tag.id)} onClick={() => basculer(g, tag.id)}>
-                  {tag.nom}
-                </button>
-              ))}
+            <div className="gt-ligne">
+              {exacte && <ValeurExacte g={g} choisis={choisis} onChange={onChange} valeur={precisions[g.id] ?? ''} onValeur={(v) => onPrecisions({ ...precisions, [g.id]: v })} />}
+              {g.choixUnique ? (
+                <select value={pris[0]?.id ?? ''} aria-label={g.nom} onChange={(e) => (e.target.value ? basculer(g, e.target.value) : onChange(choisis.filter((x) => !g.tags.some((tag) => tag.id === x))))}>
+                  <option value="">{t('commun.tags.choisir')}</option>
+                  {g.tags.map((tag) => <option key={tag.id} value={tag.id}>{tag.nom}</option>)}
+                </select>
+              ) : (
+                <select value="" aria-label={g.nom} onChange={(e) => e.target.value && basculer(g, e.target.value)}>
+                  <option value="">{pris.length ? t('commun.tags.ajouterAutre') : t('commun.tags.choisir')}</option>
+                  {g.tags.filter((tag) => !choisis.includes(tag.id)).map((tag) => <option key={tag.id} value={tag.id}>{tag.nom}</option>)}
+                </select>
+              )}
+              {!exacte && (
+                <ChampPrecision
+                  groupe={g}
+                  tagId={pris[0]?.id ?? ''}
+                  autre={pris.some((tag) => tag.slug === 'autre')}
+                  inactif={!pris.length}
+                  valeur={precisions[g.id] ?? ''}
+                  onChange={(v) => onPrecisions({ ...precisions, [g.id]: v })}
+                />
+              )}
             </div>
-            {pris.length > 0 && !VALEUR_EXACTE[g.slug] && (
-              <ChampPrecision
-                groupe={g}
-                tagId={pris[0].id}
-                autre={pris.some((tag) => tag.slug === 'autre')}
-                valeur={precisions[g.id] ?? ''}
-                onChange={(v) => onPrecisions({ ...precisions, [g.id]: v })}
-              />
-            )}
           </div>
         );
       })}
@@ -177,11 +190,11 @@ export function ChoixTags({
 }
 
 /** Précision libre d'un groupe, avec les précisions déjà utilisées en suggestion. */
-function ChampPrecision({ groupe, tagId, autre, valeur, onChange }: { groupe: GroupeTag; tagId: string; autre: boolean; valeur: string; onChange(v: string): void }) {
+function ChampPrecision({ groupe, tagId, autre, inactif, valeur, onChange }: { groupe: GroupeTag; tagId: string; autre: boolean; inactif?: boolean; valeur: string; onChange(v: string): void }) {
   const [suggestions, setSuggestions] = useState<{ texte: string; nb: number }[]>([]);
   const [actif, setActif] = useState(false);
   useEffect(() => {
-    if (!actif) return;
+    if (!actif || !tagId) return;
     const h = setTimeout(() => {
       const p = new URLSearchParams({ groupeId: groupe.id, q: valeur.trim(), tagId });
       api<{ texte: string; nb: number }[]>(`/tags/precisions?${p}`).then(setSuggestions).catch(() => setSuggestions([]));
@@ -194,6 +207,7 @@ function ChampPrecision({ groupe, tagId, autre, valeur, onChange }: { groupe: Gr
       <input
         value={valeur}
         maxLength={80}
+        disabled={inactif}
         placeholder={autre ? t('commun.tags.precisezAutre') : t('commun.tags.precision')}
         aria-label={t('commun.tags.precisionDe', { groupe: groupe.nom })}
         onFocus={() => setActif(true)}
