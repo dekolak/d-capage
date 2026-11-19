@@ -32,7 +32,7 @@ JSON en entrée et en sortie. Les erreurs ont la forme `{ statusCode, message, c
 | POST | `/moi/mot-de-passe` `{ancien, nouveau}` | connecté |
 | PATCH | `/moi/preferences` `{accordPhotosMarketing?, langue?}` (`langue` : `fr`, `en` ou `null` = langue du téléphone) | connecté |
 | GET · POST | `/conditions?espace=` · `/moi/conditions` `{espace?, version, accordPhotosMarketing?}` | connecté |
-| POST | `/users` `{identifiant, motDePasse, motDePasseProvisoire?, nom?, role?, clientLazzeko?, numeroOdoo?, modules?, langue?}` (mot de passe **provisoire par défaut** : le client en choisit un à la connexion) | admin **ou clé API** |
+| POST | `/users` `{identifiant, motDePasse, motDePasseProvisoire?, nom?, role?, numeroOdoo?, modules?, langue?}` (`clientLazzeko` : ancien champ, accepté et ignoré ; « client Lazzeko » = au moins une machine Lazzeko) (mot de passe **provisoire par défaut** : le client en choisit un à la connexion) | admin **ou clé API** |
 | POST | `/moi/premier-mot-de-passe` `{nouveau}` (compte au mot de passe provisoire, une fois ; renvoie un nouveau `jeton`) | connecté |
 | GET | `/admin/catalogue` (modèles et variantes, pour un import) | admin **ou clé API** |
 | GET · POST | `/academie`, `/academie/cours/:id`, `/academie/lecons/:id`, `POST /academie/lecons/:id/terminee {terminee}`, `/academie/simulateurs/:id`, `/academie/fichiers/:id` (voir [ACADEMIE.md](ACADEMIE.md)) | module Académie de l'espace |
@@ -163,7 +163,7 @@ Chaque route renvoie le guide corrigé ; `DELETE` = revenir à l'original.
 | GET | `/admin/annonces/:id/reponses[?occurrence=]`, `/admin/annonces/:id/reponses.csv` | admin **ou clé API** |
 
 Champs d'un message : `titre`, `texte`, `niveau` (`CONSEIL`/`INFO`/`IMPORTANT`), `lienUrl` (`https://…` ou page de l'app `/…`), `debut`, `fin`,
-`recurrence` (`AUCUNE`/`JOURS`/`SEMAINES`/`MOIS`) + `intervalle`, ciblage `espaces[]`, `cibleClient` (`TOUS`/`LAZZEKO`/`AUTRES`),
+`recurrence` (`AUCUNE`/`JOURS`/`SEMAINES`/`MOIS`) + `intervalle`, ciblage `espaces[]`, `cibleClient` (`TOUS`/`LAZZEKO`/`AUTRES` : avec ou sans machine du fabricant Lazzeko),
 `fabricantIds[]`, `modeleIds[]`, `varianteIds[]`, `numerosOdoo[]`, question `questionType` (`OUI_NON`/`CHOIX`/`NOTE`/`TEXTE`), `question`, `options[]`, `autreOption`, `reponseObligatoire`.
 
 ## Exemples (Odoo)

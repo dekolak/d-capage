@@ -49,7 +49,6 @@ model User {
   nom                     String?
   role                    Role          @default(USER)
   /// Client Lazzeko (oui) ou utilisateur d'une autre marque (non) : sert au ciblage des messages.
-  clientLazzeko           Boolean       @default(true)
   /// N° de client dans Odoo (plusieurs comptes peuvent partager le même n°, ex. une entreprise).
   numeroOdoo              String?
   /// N° client court dans l'app (621, 622…), affiché en haut à droite de son app : sert à lui envoyer un pas-à-pas.

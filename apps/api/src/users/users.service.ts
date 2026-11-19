@@ -1,26 +1,30 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from '../auth/auth.service';
 import { espacesDesModules, MODULE_DEFAUT, modulesDeLEspace } from '../espaces/espaces';
+import { StockageService } from '../stockage/stockage.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreerUserDto, ModifierUserDto } from './users.dto';
 
 export const USER_PUBLIC = {
-  id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true, clientLazzeko: true, numeroOdoo: true, numero: true,
+  id: true, identifiant: true, nom: true, role: true, actif: true, createdAt: true, numeroOdoo: true, numero: true,
   accordPhotosMarketing: true, accordPhotosMarketingLe: true, langue: true, motDePasseProvisoire: true,
   modules: { select: { module: true }, orderBy: { module: 'asc' } },
   acceptations: { select: { espace: true, version: true, accepteeLe: true } },
+  // « Client Lazzeko » est calculé : au moins une machine du fabricant Lazzeko
+  machines: { select: { variante: { select: { modele: { select: { fabricant: { select: { slug: true } } } } } } } },
 } satisfies Prisma.UserSelect;
 
 type UserBrut = Prisma.UserGetPayload<{ select: typeof USER_PUBLIC }>;
 
 /** Format renvoyé par l'API : modules en liste de slugs, espaces accessibles, conditions acceptées par espace. */
 export function formater<T extends UserBrut>(u: T) {
-  const { modules, acceptations, ...reste } = u;
+  const { modules, acceptations, machines, ...reste } = u;
   const slugs = modules.map((m) => m.module);
   return {
     ...reste,
+    clientLazzeko: machines.some((m) => m.variante.modele.fabricant.slug === 'lazzeko'),
     modules: slugs,
     espaces: espacesDesModules(slugs).map((e) => e.slug),
     conditions: Object.fromEntries(acceptations.map((a) => [a.espace, { version: a.version, accepteeLe: a.accepteeLe }])),
@@ -29,7 +33,21 @@ export function formater<T extends UserBrut>(u: T) {
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService, private auth: AuthService) {}
+  constructor(private prisma: PrismaService, private auth: AuthService, private stockage: StockageService) {}
+
+  /**
+   * Supprimer un compte client (ex. compte de test) : ses machines, fiches, photos, avis, réponses… partent avec lui.
+   * Un compte admin ne se supprime pas (le désactiver).
+   */
+  async supprimer(id: string) {
+    const u = await this.prisma.user.findUnique({ where: { id }, select: { role: true, fiches: { select: { photos: { select: { cle: true, miniature: true } } } } } });
+    if (!u) throw new NotFoundException('Utilisateur introuvable');
+    if (u.role === Role.ADMIN) throw new BadRequestException('Un compte administrateur ne se supprime pas : désactivez-le.');
+    const fichiers = u.fiches.flatMap((f) => f.photos.flatMap((p) => [p.cle, p.miniature])).filter((c): c is string => !!c);
+    await this.prisma.user.delete({ where: { id } });
+    for (const c of fichiers) await this.stockage.supprimer(c).catch(() => undefined);
+    return { ok: true };
+  }
 
   async creer(dto: CreerUserDto) {
     // n° client court (621, 622…) pour les clients ; on réessaie si deux créations tombent sur le même
@@ -55,7 +73,6 @@ export class UsersService {
           motDePasseProvisoire: dto.motDePasseProvisoire ?? dto.role !== 'ADMIN',
           nom: dto.nom,
           role: dto.role ?? 'USER',
-          clientLazzeko: dto.clientLazzeko ?? true,
           numeroOdoo: dto.numeroOdoo?.trim() || null,
           langue: dto.langue ?? null,
           // Sans `modules` : réglages décapage (Lazzeko), comme avant les espaces.

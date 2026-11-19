@@ -446,9 +446,19 @@ describe('Parcours complet', () => {
     const vus = async (t: string) => (await http.get('/api/annonces').set(auth(t))).body.map((a: any) => a.titre);
     const T = `Pensez à nettoyer la lentille ${id}`;
     await accepter(bob); // le test précédent a publié une nouvelle version des conditions
-    // bob devient « autre marque » ; alice reste cliente Lazzeko (défaut)
+    // « client Lazzeko » se déduit des machines : alice et bob ont une machine Lazzeko ; la case n'existe plus
     const bobId = (await http.get('/api/moi').set(auth(bob))).body.id;
-    expect((await http.patch(`/api/users/${bobId}`).set(auth(admin)).send({ clientLazzeko: false })).body.clientLazzeko).toBe(false);
+    expect((await http.get('/api/users').set(auth(admin))).body.find((u: any) => u.id === bobId).clientLazzeko).toBe(true);
+    expect((await http.patch(`/api/users/${bobId}`).set(auth(admin)).send({ clientLazzeko: false })).status).toBe(400);
+    expect((await http.post('/api/admin/annonces/cible').set(auth(admin)).send({ cibleClient: 'AUTRES', varianteIds: [varianteId] })).body.utilisateurs).toBe(0);
+    // supprimer un compte client (ex. test) : tout part avec lui ; jamais un admin
+    const jetable = (await http.post('/api/users').set(auth(admin)).send({ identifiant: `jetable-${id}`, motDePasse: 'motdepasse1' })).body;
+    await http.post(`/api/users/${jetable.id}/machines`).set(auth(admin)).send({ varianteId }).expect(201);
+    expect((await http.delete(`/api/users/${jetable.id}`).set(auth(bob))).status).toBe(403);
+    await http.delete(`/api/users/${jetable.id}`).set(auth(admin)).expect(200);
+    expect((await http.get('/api/users').set(auth(admin))).body.some((u: any) => u.id === jetable.id)).toBe(false);
+    const adminId = (await http.get('/api/moi').set(auth(admin))).body.id;
+    expect((await http.delete(`/api/users/${adminId}`).set(auth(admin))).status).toBe(400);
 
     // ciblage clients Lazzeko + variante : aperçu du nombre puis création
     const n = (await http.post('/api/admin/annonces/cible').set(auth(admin)).send({ cibleClient: 'LAZZEKO', varianteIds: [varianteId] })).body.utilisateurs;
@@ -456,7 +466,7 @@ describe('Parcours complet', () => {
     expect((await http.post('/api/admin/annonces').set(auth(bob)).send({ titre: 'x', texte: 'yy' })).status).toBe(403);
     const a = (await http.post('/api/admin/annonces').set(auth(admin)).send({ titre: T, texte: 'Chaque mois, un coup de chiffon.', niveau: 'CONSEIL', cibleClient: 'LAZZEKO', varianteIds: [varianteId], recurrence: 'JOURS', intervalle: 1, debut: new Date(Date.now() - 1.5 * 86400000) })).body;
     expect(await vus(alice)).toContain(T);
-    expect(await vus(bob)).not.toContain(T); // pas client Lazzeko
+    expect(await vus(bob)).toContain(T); // client Lazzeko lui aussi (machine Lazzeko)
 
     // « J'ai compris » : disparaît pour cette période
     await http.post(`/api/annonces/${a.id}/compris`).set(auth(alice)).expect(201);

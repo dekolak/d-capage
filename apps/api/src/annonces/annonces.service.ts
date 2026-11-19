@@ -81,11 +81,23 @@ export function utilisateursVises(c: Ciblage): Prisma.UserWhereInput {
     role: Role.USER,
     actif: true,
     ...(c.espaces?.length ? { modules: { some: { module: { in: modules } } } } : {}),
-    ...(c.cibleClient === CibleClient.LAZZEKO ? { clientLazzeko: true } : c.cibleClient === CibleClient.AUTRES ? { clientLazzeko: false } : {}),
-    ...(machines.length ? { machines: { some: { OR: machines } } } : {}),
+    ...(c.cibleClient === CibleClient.LAZZEKO || c.cibleClient === CibleClient.AUTRES || machines.length
+      ? {
+          AND: [
+            ...(c.cibleClient === CibleClient.LAZZEKO ? [{ machines: { some: MACHINE_LAZZEKO } }] : []),
+            ...(c.cibleClient === CibleClient.AUTRES ? [{ machines: { none: MACHINE_LAZZEKO } }] : []),
+            ...(machines.length ? [{ machines: { some: { OR: machines } } }] : []),
+          ],
+        }
+      : {}),
     ...(c.numerosOdoo?.length ? { numeroOdoo: { in: c.numerosOdoo } } : {}),
   };
 }
+
+/** Client Lazzeko = au moins une machine du fabricant Lazzeko (calculé, plus de case à cocher). */
+const MACHINE_LAZZEKO = { variante: { modele: { fabricant: { slug: 'lazzeko' } } } } satisfies Prisma.UserMachineWhereInput;
+const AVEC_FABRICANTS = { machines: { select: { variante: { select: { modele: { select: { fabricant: { select: { slug: true } } } } } } } } } as const;
+const estClientLazzeko = (u: { machines: { variante: { modele: { fabricant: { slug: string } } } }[] }) => u.machines.some((m) => m.variante.modele.fabricant.slug === 'lazzeko');
 
 @Injectable()
 export class AnnoncesService {
@@ -96,7 +108,7 @@ export class AnnoncesService {
     const now = new Date();
     const u = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true, clientLazzeko: true, modules: { select: { module: true } }, numeroOdoo: true, machines: { select: { varianteId: true, variante: { select: { modeleId: true, modele: { select: { fabricantId: true } } } } } } },
+      select: { role: true, modules: { select: { module: true } }, numeroOdoo: true, machines: { select: { varianteId: true, variante: { select: { modeleId: true, modele: { select: { fabricantId: true, fabricant: { select: { slug: true } } } } } } } } },
     });
     if (!u || u.role !== Role.USER) return [];
     // Les messages s'affichent dans l'espace ouvert, si le compte y a accès.
@@ -107,8 +119,9 @@ export class AnnoncesService {
     });
     const vise = (a: Annonce) => {
       if (a.espaces.length && !a.espaces.includes(espace)) return false;
-      if (a.cibleClient === CibleClient.LAZZEKO && !u.clientLazzeko) return false;
-      if (a.cibleClient === CibleClient.AUTRES && u.clientLazzeko) return false;
+      const lazzeko = estClientLazzeko(u);
+      if (a.cibleClient === CibleClient.LAZZEKO && !lazzeko) return false;
+      if (a.cibleClient === CibleClient.AUTRES && lazzeko) return false;
       if (a.numerosOdoo.length && !(u.numeroOdoo && a.numerosOdoo.includes(u.numeroOdoo))) return false;
       if (!a.fabricantIds.length && !a.modeleIds.length && !a.varianteIds.length) return true;
       return u.machines.some(
@@ -205,7 +218,7 @@ export class AnnoncesService {
     const reponses = await this.prisma.annonceReponse.findMany({
       where: { annonceId: id, occurrence: o },
       orderBy: { updatedAt: 'desc' },
-      include: { user: { select: { identifiant: true, nom: true, clientLazzeko: true } } },
+      include: { user: { select: { identifiant: true, nom: true, ...AVEC_FABRICANTS } } },
     });
     const choix =
       a.questionType === TypeQuestion.OUI_NON ? ['oui', 'non']
@@ -222,7 +235,8 @@ export class AnnoncesService {
       moyenne: notes.length ? +(notes.reduce((x, y) => x + y, 0) / notes.length).toFixed(2) : null,
       reponses: await Promise.all(
         reponses.map(async (r) => ({
-          valeur: r.valeur, autre: r.autre, date: r.updatedAt, dateFaite: r.dateFaite, user: r.user,
+          valeur: r.valeur, autre: r.autre, date: r.updatedAt, dateFaite: r.dateFaite,
+          user: { identifiant: r.user.identifiant, nom: r.user.nom, clientLazzeko: estClientLazzeko(r.user) },
           // pas-à-pas terminé depuis ce rappel, pendant cette période
           termine: a.procedureId
             ? (await this.prisma.parcoursTermine.findFirst({
@@ -240,13 +254,13 @@ export class AnnoncesService {
     const rs = await this.prisma.annonceReponse.findMany({
       where: { annonceId: id },
       orderBy: [{ occurrence: 'asc' }, { createdAt: 'asc' }],
-      include: { user: { select: { identifiant: true, nom: true, clientLazzeko: true } } },
+      include: { user: { select: { identifiant: true, nom: true, ...AVEC_FABRICANTS } } },
     });
     const c = (x: unknown) => `"${String(x ?? '').replace(/"/g, '""')}"`;
     const lignes = [
       ['Période', 'Début de période', 'Identifiant', 'Nom', 'Client Lazzeko', 'Réponse', 'Précision', 'Date indiquée', 'Date'].map(c).join(';'),
       ...rs.map((r) =>
-        [r.occurrence + 1, debutPeriode(a, r.occurrence).toISOString().slice(0, 10), r.user.identifiant, r.user.nom, r.user.clientLazzeko ? 'oui' : 'non', r.valeur, r.autre, r.dateFaite?.toISOString().slice(0, 10), r.updatedAt.toISOString()]
+        [r.occurrence + 1, debutPeriode(a, r.occurrence).toISOString().slice(0, 10), r.user.identifiant, r.user.nom, estClientLazzeko(r.user) ? 'oui' : 'non', r.valeur, r.autre, r.dateFaite?.toISOString().slice(0, 10), r.updatedAt.toISOString()]
           .map(c).join(';'),
       ),
     ];

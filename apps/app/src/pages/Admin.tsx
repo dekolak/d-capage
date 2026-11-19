@@ -127,7 +127,7 @@ export function AdminUtilisateurs() {
   const [nouvellesMachines, setNouvellesMachines] = useState<NouvelleMachine[]>([]);
   const [err, setErr] = useState<unknown>();
   const { espace: espaceOuvert, espaces } = useEspace();
-  const vide = () => ({ identifiant: '', motDePasse: '', nom: '', role: 'USER', clientLazzeko: true, numeroOdoo: '', modules: espaceOuvert.modules.slice(0, 1).map((m) => m.slug) });
+  const vide = () => ({ identifiant: '', motDePasse: '', nom: '', role: 'USER', numeroOdoo: '', modules: espaceOuvert.modules.slice(0, 1).map((m) => m.slug) });
   const [f, setF] = useState(vide);
   const [recherche, setRecherche] = useState('');
   const [filtreEspace, setFiltreEspace] = useState('');
@@ -186,12 +186,6 @@ export function AdminUtilisateurs() {
             <CasesModules valeur={f.modules} onChange={(modules) => setF({ ...f, modules })} />
           </div>
         )}
-        {f.role === 'USER' && lazzeko(f.modules) && (
-          <label className="interrupteur">
-            <input type="checkbox" checked={f.clientLazzeko} onChange={(e) => setF({ ...f, clientLazzeko: e.target.checked })} />
-            <span>Client Lazzeko <small className="muted">(décocher pour un utilisateur d'une autre marque)</small></span>
-          </label>
-        )}
         {f.role === 'USER' && (
           <div>
             <b className="petit">Machines du client</b>
@@ -237,12 +231,19 @@ export function AdminUtilisateurs() {
                 return <span key={s} className="badge-espace" style={{ ['--c' as string]: e?.couleur }}>{e?.nom ?? s}</span>;
               })}
               {u.role !== 'ADMIN' && !u.espaces.length && <span className="badge-masquee">Aucun accès</span>}
-              {u.role !== 'ADMIN' && lazzeko(u.modules) && <span className={'badge-client' + (u.clientLazzeko ? '' : ' autre')}>{u.clientLazzeko ? 'Client Lazzeko' : 'Autre marque'}</span>}
+              {u.role !== 'ADMIN' && lazzeko(u.modules) && u.clientLazzeko && <span className="badge-client" title="Au moins une machine Lazzeko">Client Lazzeko</span>}
               {u.numero && <span className="badge-numero" title="N° client dans l'app (en haut à droite de son app)">📱 {u.numero}</span>}
               {u.numeroOdoo && <span className="badge-odoo">Odoo {u.numeroOdoo}</span>}
               {u.motDePasseProvisoire && u.role !== 'ADMIN' && <span className="badge-odoo" title="Pas encore connecté : il choisira son mot de passe à la première connexion">⏳ code provisoire</span>}
             </button>
             <button type="button" className="btn petit" onClick={() => basculerActif(u)}>{u.actif ? 'Désactiver' : 'Réactiver'}</button>
+            {u.role !== 'ADMIN' && (
+              <button type="button" className="btn petit danger" onClick={async () => {
+                const ok = prompt(`Supprimer définitivement « ${u.identifiant} » et tout ce qui lui appartient (machines, fiches, photos, avis, réponses) ?\nTapez son identifiant pour confirmer :`);
+                if (ok?.trim().toLowerCase() !== u.identifiant) return;
+                await api(`/users/${u.id}`, { method: 'DELETE' }).then(charger).catch(setErr);
+              }}>🗑 Supprimer</button>
+            )}
             {selection?.id === u.id && (
               <div className="sous-bloc">
                 <NumeroOdoo u={u} onMaj={charger} />
@@ -259,12 +260,6 @@ export function AdminUtilisateurs() {
                       }}
                     />
                   </>
-                )}
-                {u.role !== 'ADMIN' && lazzeko(u.modules) && (
-                  <label className="interrupteur petit">
-                    <input type="checkbox" checked={u.clientLazzeko} onChange={async (e) => { await api(`/users/${u.id}`, { method: 'PATCH', json: { clientLazzeko: e.target.checked } }); charger(); }} />
-                    Client Lazzeko
-                  </label>
                 )}
                 {LANGUES.length > 1 && (
                   <label className="petit">

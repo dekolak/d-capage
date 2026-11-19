@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { AutoriseCleApi, EspaceCourant, Moi, Principal, Roles, SansConditions } from '../auth/decorators';
 import { espace as espaceDef, ESPACES } from '../espaces/espaces';
@@ -38,6 +38,13 @@ export class UsersController {
   @Roles(Role.ADMIN)
   modifier(@Param('id') id: string, @Body() dto: ModifierUserDto) {
     return this.users.modifier(id, dto);
+  }
+
+  /** Supprimer un compte client et tout ce qui lui appartient (pas un admin). */
+  @Delete('users/:id')
+  @Roles(Role.ADMIN)
+  supprimer(@Param('id') id: string) {
+    return this.users.supprimer(id);
   }
 
   /** Client par son n° court (621…) : vérification avant d'envoyer un pas-à-pas. */
