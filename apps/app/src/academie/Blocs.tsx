@@ -46,6 +46,8 @@ function BlocVue({ b }: { b: Bloc }) {
       return <Simulateur id={b.simulateurId!} nom={b.nom ?? undefined} />;
     case 'html':
       return <IframeIsolee html={b.html ?? ''} hauteur={b.hauteur} />;
+    case 'note': // visible seulement de l'admin (l'API ne l'envoie pas aux clients)
+      return <div className="ac-note">📝 {b.texte}</div>;
     default:
       return null;
   }

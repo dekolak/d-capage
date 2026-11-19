@@ -23,9 +23,17 @@ ses tables, ses routes, son dossier d'app ; seuls le bouton « 🎓 Académie »
 | 🖥 Simulateur | choisi dans la bibliothèque ; dans une leçon : boîte à hauteur d'écran (il défile dedans) + ⤢ plein écran ; seul dans une page : tout l'écran |
 | 🧩 HTML libre | votre code, dans une boîte isolée (hauteur automatique jusqu'à 85 % de l'écran, ou fixe, ⤢ plein écran) |
 | 📎 Fichier | PDF envoyé ou lien https |
+| 📝 Note (admin) | rappel pour vous (« vidéo à placer ici ») : **jamais vu par les clients** ; la liste de l'Académie compte les notes à traiter |
 
 **🖥 Bibliothèque de simulateurs** (lien en haut de la page Académie) : un fichier HTML par machine, envoyé une fois (nom, espace, machine) ;
 **⟳ Remplacer** met à jour toutes les leçons qui l'utilisent ; 👁 pour l'essayer.
+
+**🎥 Mode terrain** (bandeau en haut de la page Académie, sur le téléphone) : préparer une leçon devant la machine, téléphone sur trépied.
+On choisit où la ranger (parcours existant, nouveau parcours, nouvelle page) et son titre ; puis chaque capture devient tout de suite un bloc (enregistré, non publié) :
+📷 photo (caméra avec retardateur 0 / 3 / 5 / 10 s, ou galerie) + légende ; 🎙 texte dicté ou tapé ; ⚠️ attention ; 📝 note de montage.
+« Reprendre » liste les dernières leçons commencées sur ce téléphone ; **Finir ›** ouvre l'éditeur habituel (sur ordinateur : remettre en ordre, Vimeo, publier).
+
+**Image de couverture** : affichée entière (sans recadrage) au format 16/9 ; aperçu dans les réglages ; idéal : photo en paysage, sujet au centre.
 
 **Vimeo** : réglez vos vidéos en « non répertoriée » et, si votre offre le permet, « intégrable seulement sur » `app.lazzeko.com` et `app.kiavikcopilot.ovh`.
 
