@@ -16,7 +16,7 @@ const fr = {
   "commun.etoiles.one": "{n} étoile",
   "commun.etoiles.other": "{n} étoiles",
   "commun.fermer": "Fermer",
-  "commun.hypothese": "* dépend d'une valeur supposée (taille du spot), à confirmer.",
+  "commun.hypothese": "* estimation : dépend d'une valeur supposée, à confirmer.",
   "commun.pasNote": "pas encore noté",
   "commun.photo.APRES": "Après",
   "commun.photo.AUTRE": "Autre",

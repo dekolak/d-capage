@@ -7,6 +7,22 @@ export interface Erreur {
 }
 
 /** Valide et normalise un JSON de config (lève une erreur lisible si invalide). */
+/**
+ * Fichier qui hérite d'une base commune (ex. même écran en 1500 et 2000 W) : `"base": "../soudeuse-laser/base-v1.json"`.
+ * Les clés du fichier remplacent celles de la base ; `constantes` et `source` sont fusionnées (notes ajoutées).
+ * `lire(chemin)` lit la base (chemin relatif au fichier).
+ */
+export function assemblerConfig(json: unknown, lire: (chemin: string) => unknown): unknown {
+  const f = json as Record<string, unknown>;
+  if (!f || typeof f !== 'object' || typeof f.base !== 'string') return json;
+  const { base: chemin, ...reste } = f;
+  const base = lire(chemin as string) as Record<string, unknown>;
+  const fusion = (k: string) => ({ ...((base[k] as object) ?? {}), ...((reste[k] as object) ?? {}) });
+  const notes = (o: unknown) => ((o as { notes?: string[] })?.notes ?? []);
+  const source = base.source || reste.source ? { source: { ...fusion('source'), notes: [...notes(base.source), ...notes(reste.source)] } } : {};
+  return { ...base, ...reste, constantes: fusion('constantes'), ...source };
+}
+
 export function chargerConfig(json: unknown): ConfigMachine {
   const r = ConfigMachineSchema.safeParse(json);
   if (!r.success) {

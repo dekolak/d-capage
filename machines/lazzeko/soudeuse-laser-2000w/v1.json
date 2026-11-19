@@ -1,0 +1,21 @@
+{
+  "base": "../soudeuse-laser/base-v1.json",
+  "modele": {
+    "id": "cmwn5e9cn0001qr2u1prxyrwh",
+    "slug": "soudeuse-laser-2000w",
+    "nom": "Soudeuse laser 2000 W"
+  },
+  "variante": {
+    "slug": "standard",
+    "nom": "Standard"
+  },
+  "constantes": {
+    "pmax": 2000
+  },
+  "source": {
+    "notes": [
+      "Puissance nominale de la source : 2000 W.",
+      "Modèle créé dans l'admin (M-rxyrwh), rattaché par son id."
+    ]
+  }
+}

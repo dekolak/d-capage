@@ -178,7 +178,7 @@ function ValeurAffichee({ champ: c, v }: { champ: Champ; v: unknown }) {
             <Icone svg={o.icone} />
           </span>
         );
-      return <span className="m-v">{o ? String(o.valeur) : '—'}</span>;
+      return <span className="m-v">{o ? libelle(o.label) : '—'}</span>;
     }
   }
 }

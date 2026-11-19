@@ -10,10 +10,10 @@
  */
 import 'dotenv/config';
 import { PrismaClient, Prisma } from '@prisma/client';
-import { chargerConfig } from '@decapage/machine-kit';
+import { assemblerConfig, chargerConfig } from '@decapage/machine-kit';
 import * as bcrypt from 'bcryptjs';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { ESPACES } from '../src/espaces/espaces';
 import { CONDITIONS_DEFAUT } from '../src/parametres/conditions-defaut';
 
@@ -73,7 +73,8 @@ async function admin() {
 
 async function catalogue() {
   for (const f of fichiersConfig(RACINE_MACHINES)) {
-    const cfg = chargerConfig(JSON.parse(readFileSync(f, 'utf8')));
+    const lire = (p: string) => JSON.parse(readFileSync(p, 'utf8'));
+    const cfg = chargerConfig(assemblerConfig(lire(f), (b) => lire(join(dirname(f), b))));
     const tech = await prisma.technologie.upsert({
       where: { slug: cfg.technologie },
       update: {},

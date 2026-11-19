@@ -20,6 +20,8 @@ export interface Indicateur {
 export interface Technologie {
   id: string;
   nom: string;
+  /** Métier des fiches de cette technologie (tags, communauté) : « decapage », « soudure »… */
+  univers: string;
   indicateurs(cfg: ConfigMachine, v: Valeurs): Indicateur[];
   /** Contrôles qui croisent plusieurs champs (ex. zone max selon la lentille). */
   valider?(cfg: ConfigMachine, v: Valeurs): Erreur[];
