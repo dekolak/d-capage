@@ -33,7 +33,7 @@ Chaque machine est **isolée dans un fichier** : facile à retrouver et à modif
 
 ### Ressembler à l'écran de la machine (recommandé)
 Plus la fiche ressemble à l'écran, plus le client recopie sans se tromper.
-- `"apparence": "ecran"` : fond, barre d'icônes à gauche (une par page, `icone` de la page), valeurs sur fond noir avec leur unité, choix et interrupteurs en boutons orange.
+- `"apparence": "ecran"` : copie fidèle de l'écran, dessinée à taille fixe puis réduite à la largeur du téléphone (même disposition partout) ; fond, barre d'icônes à gauche (une par page, `icone` de la page), valeurs sur fond noir avec leur unité, choix et interrupteurs en boutons orange.
 - Couleurs dans `theme` : `fond` et `fond2` (dégradé de l'écran), `valeur` (couleur des chiffres) ; une section peut avoir sa couleur (`couleurValeur`, ex. jaune pour le contrôle laser).
 - Page `"disposition": "colonnes"` : sections côte à côte et titrées, dans le même ordre que sur l'écran ; libellés identiques à l'écran (l'aide donne l'explication en français).
 - Exemple : `machines/lazzeko/soudeuse-laser/base-v1.json`.

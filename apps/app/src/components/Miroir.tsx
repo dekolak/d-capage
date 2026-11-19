@@ -117,7 +117,7 @@ export function Miroir({
     <div className={'miroir' + (ecran ? ' ecran' : '')} style={style}>
       {ecran ? (
         // Apparence « écran » : barre d'icônes à gauche (une par page) et zone de réglages, couleurs de la machine
-        <div className="m-ecran">
+        <EcranReduit>
           <div className="m-barre">
             {config.pages.map((p) => (
               <button key={p.id} type="button" className={'m-icone' + (p.id === page ? ' on' : '')} onClick={() => setPage(p.id)}>
@@ -127,7 +127,7 @@ export function Miroir({
             ))}
           </div>
           <div className="m-zone">{sections}</div>
-        </div>
+        </EcranReduit>
       ) : (
         <>
           <div className="m-logo">{config.fabricant.nom.toUpperCase()}</div>
@@ -174,6 +174,32 @@ export function Miroir({
           onSuivant={() => aller(1)}
         />
       )}
+    </div>
+  );
+}
+
+/** Écran dessiné à taille fixe (760 px) puis réduit à la largeur disponible : même disposition partout. */
+function EcranReduit({ children }: { children: React.ReactNode }) {
+  const cadre = useRef<HTMLDivElement>(null);
+  const ecran = useRef<HTMLDivElement>(null);
+  const [k, setK] = useState(1);
+  const [h, setH] = useState(0);
+  useEffect(() => {
+    const ajuster = () => {
+      if (!cadre.current || !ecran.current) return;
+      const e = Math.min(1, cadre.current.clientWidth / 760);
+      setK(e);
+      setH(ecran.current.offsetHeight * e);
+    };
+    ajuster();
+    const o = new ResizeObserver(ajuster);
+    if (cadre.current) o.observe(cadre.current);
+    if (ecran.current) o.observe(ecran.current);
+    return () => o.disconnect();
+  }, []);
+  return (
+    <div ref={cadre} className="m-cadre" style={{ height: h }}>
+      <div ref={ecran} className="m-ecran" style={{ transform: `scale(${k})` }}>{children}</div>
     </div>
   );
 }
