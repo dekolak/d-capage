@@ -22,6 +22,8 @@ export default function FicheEditeur() {
   const { id: ficheId } = useParams();
   const [qs] = useSearchParams();
   const depuis = qs.get('depuis');
+  // ?reprendre=1 (bandeau « Brouillon » de Mes fiches) : reprend le brouillon ; sinon (bouton +) il est seulement proposé
+  const reprendre = qs.get('reprendre') === '1';
   const modif = !!ficheId;
   const nav = useNavigate();
 
@@ -34,10 +36,15 @@ export default function FicheEditeur() {
   const [noteInitiale, setNoteInitiale] = useState<number | null>(null);
   const [parent, setParent] = useState<Fiche>();
   const [repris, setRepris] = useState<number | null>(null);
+  // Brouillon proposé (bouton +) : rien n'est écrasé tant que le client n'a pas choisi ou commencé la nouvelle fiche
+  const [attente, setAttente] = useState<{ brouillon: Brouillon; photos: Awaited<ReturnType<typeof lirePhotosBrouillon>> } | null>(null);
   const [pret, setPret] = useState(false); // brouillon relu : on peut sauvegarder
   const [err, setErr] = useState<unknown>();
   const [envoi, setEnvoi] = useState('');
-  const maj = (p: Partial<Brouillon>) => setB((x) => ({ ...x, ...p }));
+  const maj = (p: Partial<Brouillon>) => {
+    setAttente(null);
+    setB((x) => ({ ...x, ...p }));
+  };
 
   // Chargement initial
   useEffect(() => {
@@ -66,16 +73,28 @@ export default function FicheEditeur() {
       } else {
         const brouillon = lireBrouillon();
         const ph = await lirePhotosBrouillon();
-        if (brouillonUtile(brouillon, ph.length)) {
-          setB({ ...brouillon!, userMachineId: ms.some((m) => m.id === brouillon!.userMachineId) ? brouillon!.userMachineId : '' });
-          setPhotos(ph.map((x) => ({ ...x, apercu: URL.createObjectURL(x.miniature) })));
-          setRepris(brouillon!.maj ?? Date.now());
-        } else if (ms.length === 1) maj({ userMachineId: ms[0].id, etape: 1 });
+        const utile = brouillonUtile(brouillon, ph.length);
+        if (utile && reprendre) reprendreBrouillon(brouillon!, ph, ms);
+        else {
+          if (utile) setAttente({ brouillon: brouillon!, photos: ph });
+          // une seule machine dans le métier choisi (Décapage / Soudure) : elle est choisie d'office
+          const u = localStorage.getItem('lazzeko.univers');
+          const duMetier = ms.filter((m) => universMachine(m) === u);
+          const cand = duMetier.length ? duMetier : ms;
+          if (cand.length === 1) setB((x) => ({ ...x, userMachineId: cand[0].id, etape: 1 }));
+        }
       }
       setPret(true);
     })().catch(setErr);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ficheId, depuis]);
+
+  function reprendreBrouillon(brouillon: Brouillon, ph: Awaited<ReturnType<typeof lirePhotosBrouillon>>, ms: MaMachine[]) {
+    setB({ ...brouillon, userMachineId: ms.some((m) => m.id === brouillon.userMachineId) ? brouillon.userMachineId : '' });
+    setPhotos(ph.map((x) => ({ ...x, apercu: URL.createObjectURL(x.miniature) })));
+    setRepris(brouillon.maj ?? Date.now());
+    setAttente(null);
+  }
 
   function ajouterTagsInconnus(gs: GroupeTag[], tags: Tag[]) {
     // Tags proposés (pas encore validés) : on les ajoute à la liste pour pouvoir les afficher.
@@ -88,11 +107,11 @@ export default function FicheEditeur() {
   // Sauvegarde automatique du brouillon (création simple) : champs + photos
   const avecBrouillon = !modif && !depuis;
   useEffect(() => {
-    if (avecBrouillon && pret) ecrireBrouillon(b);
-  }, [b, avecBrouillon, pret]);
+    if (avecBrouillon && pret && !attente) ecrireBrouillon(b);
+  }, [b, avecBrouillon, pret, attente]);
   useEffect(() => {
-    if (avecBrouillon && pret) ecrirePhotosBrouillon(photos);
-  }, [photos, avecBrouillon, pret]);
+    if (avecBrouillon && pret && !attente) ecrirePhotosBrouillon(photos);
+  }, [photos, avecBrouillon, pret, attente]);
 
   const recommencer = async () => {
     if (!confirm(t('lazzeko.editeur.recommencerConfirm'))) return;
@@ -248,13 +267,22 @@ export default function FicheEditeur() {
         ))}
       </ol>
 
+      {attente && machines && (
+        <div className="bandeau">
+          <span>{t('lazzeko.editeur.brouillonPropose', { date: dateHeure(attente.brouillon.maj ?? Date.now()) })}</span>
+          <span className="actions-bandeau">
+            <button type="button" className="btn petit" onClick={() => reprendreBrouillon(attente.brouillon, attente.photos, machines)}>{t('lazzeko.editeur.reprendre')}</button>
+            <button type="button" className="btn-lien" onClick={() => setAttente(null)}>{t('lazzeko.editeur.nouvelle')}</button>
+          </span>
+        </div>
+      )}
       {repris && (
         <div className="bandeau">
           <span>{t('lazzeko.editeur.brouillonRepris', { date: dateHeure(repris) })}</span>
           <button type="button" className="btn-lien" onClick={recommencer}>{t('lazzeko.editeur.recommencer')}</button>
         </div>
       )}
-      {avecBrouillon && !repris && <p className="muted petit">{t('lazzeko.editeur.autoEnregistre')}</p>}
+      {avecBrouillon && !repris && !attente && <p className="muted petit">{t('lazzeko.editeur.autoEnregistre')}</p>}
 
       <Erreur e={err} />
 
