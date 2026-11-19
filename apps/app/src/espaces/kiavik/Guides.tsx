@@ -1,4 +1,3 @@
-import { LienAcademie } from '../../academie/Pages';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
@@ -11,7 +10,6 @@ import { ListeProcedures } from './Procedures';
 import { ListeSolutions } from './Solutions';
 import './guides.css';
 import './accueil.css';
-import { LienMaMachine } from '../../pages/MaMachine';
 import { SectionCategorie, useSectionOuverte } from './SectionCategorie';
 
 const CLE_OUVERTES = 'kiavik.accueil.ouvertes';
@@ -55,8 +53,6 @@ export default function Guides() {
         </Link>
       </header>
 
-      <LienMaMachine />
-      <LienAcademie />
 
       {guides.length > 0 && (
         <section>

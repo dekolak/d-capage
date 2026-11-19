@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur, Etoiles, Galerie, Indicateurs, libellesTags } from '../components/Composants';
+import { BoutonPartager } from '../components/Partager';
 import { MiniatureMachine } from '../components/MiniatureMachine';
 import { Miroir } from '../components/Miroir';
 import { completer } from '@decapage/machine-kit';
@@ -99,6 +100,8 @@ export default function FicheDetail() {
       {f.parent && <p className="petit">{tr('lazzeko.fiche.dupliqueeDe', { lien: <Link to={`/fiches/${f.parent.id}`}>{f.parent.titre}</Link> })}</p>}
       <div className="puces">{libellesTags(f).map((x) => <span key={x.id} className="puce">{x.nom}</span>)}</div>
 
+      {/* partager la fiche (admin) : en bas à droite, à la place du ＋ */}
+      <BoutonPartager flottant titre={f.titre} />
       <Galerie photos={photos} />
 
       <h2>{t('lazzeko.fiche.reglages')}</h2>

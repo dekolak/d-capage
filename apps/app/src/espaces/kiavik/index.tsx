@@ -23,7 +23,7 @@ export const kiavik: AppEspace = {
     { to: '/guides', label: 'onglets.accueil', icone: ICONES.accueil },
     { to: '/procedures', label: 'onglets.procedures', icone: ICONES.etapes },
     { to: '/recherche', label: 'onglets.rechercher', icone: ICONES.recherche },
-    { to: '/compte', label: 'onglets.compte', icone: ICONES.compte },
+    { to: '/academie', label: 'onglets.academie', icone: ICONES.academie, academie: true },
   ],
   routes: () => (
     <>

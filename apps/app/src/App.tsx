@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { Annonces } from './components/Annonces';
+import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Chargement } from './components/Composants';
 import { BandeauHorsLigne } from './components/HorsLigne';
-import { BoutonPartager } from './components/Partager';
+import { MenuCompte } from './components/MenuCompte';
+import { Notifications } from './components/Notifications';
+import { moduleAcademie } from './academie/donnees';
 import { APPS } from './espaces';
 import { useAuth } from './lib/auth';
 import { useEspace } from './lib/espace';
@@ -27,10 +28,9 @@ import { AdminAcademie, AdminCours, AdminLecon, AdminSimulateurs } from './acade
 import { t } from './lib/i18n';
 import Carnets, { CarnetRoute } from './pages/Carnet';
 import AdminEntretien, { AdminCarnet } from './pages/AdminEntretien';
-import { RappelsEntretien } from './components/RappelsEntretien';
 import { TerrainAccueil, TerrainCapture } from './pages/Terrain';
 import MaMachine from './pages/MaMachine';
-import { EnvoisRecus, NumeroClient, PageRecus } from './components/EnvoisRecus';
+import { PageRecus } from './components/EnvoisRecus';
 
 /**
  * Une seule app, plusieurs espaces (Lazzeko, Kiavik) : chaque espace a ses écrans et sa barre du bas (src/espaces/),
@@ -39,6 +39,7 @@ import { EnvoisRecus, NumeroClient, PageRecus } from './components/EnvoisRecus';
 export default function App() {
   const { moi, pret, deconnexion } = useAuth();
   const { espace, choisir } = useEspace();
+  const loc = useLocation();
   const acces = moi?.espaces.find((e) => e.slug === espace.slug);
   const autre = moi?.espaces[0];
 
@@ -63,14 +64,14 @@ export default function App() {
 
   const app = APPS[espace.slug] ?? APPS.lazzeko;
   const admin = moi.role === 'ADMIN';
+  const academie = admin || moi.modules.includes(moduleAcademie(espace.slug));
   return (
     <div key={espace.slug} className="app-espace">
       <main>
         <BandeauHorsLigne />
-        {!admin && <Annonces />}
-        {!admin && <RappelsEntretien />}
-        {!admin && moi.numero ? <NumeroClient numero={moi.numero} /> : null}
-        {!admin && <EnvoisRecus />}
+        <MenuCompte />
+        {/* notifications (messages, entretiens, pas-à-pas reçus) : sur l'écran principal seulement */}
+        {!admin && ACCUEILS.includes(loc.pathname) && <Notifications />}
         {!admin && <JournalPages />}
         <Routes>
           {app.routes()}
@@ -110,9 +111,11 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      {admin && <BoutonPartager flottant />}
+      {app.boutonPlus && !app.boutonPlus.masquerSur.test(loc.pathname) && (
+        <Link to={app.boutonPlus.to} className="fab-plus" aria-label={t(app.boutonPlus.label)} title={t(app.boutonPlus.label)}>＋</Link>
+      )}
       <nav className="onglets">
-        {app.onglets.map((o) =>
+        {app.onglets.filter((o) => !o.academie || academie).map((o) =>
           o.plus ? (
             <NavLink key={o.to} to={o.to} className="plus">
               <span>+</span>{t(o.label)}
@@ -129,6 +132,9 @@ export default function App() {
 }
 
 /** Journal d'activité : chaque page ouverte par un client (titre lu une fois la page affichée). */
+/** Écrans principaux (accueil Lazzeko « Mes fiches », accueil Kiavik). */
+const ACCUEILS = ['/', '/guides'];
+
 function JournalPages() {
   const loc = useLocation();
   useEffect(() => {

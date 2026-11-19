@@ -14,7 +14,7 @@ Le simulateur du site (bloc HTML Odoo) reste à part : il sert à expliquer la m
 - `apps/api/src/espaces/espaces.ts` : espaces et **modules** (fonctions). `UserModule` = accès d'un compte à un module ; l'accès à un espace découle de ses modules.
 - Garde : `@ModuleRequis('reglages-decapage')` sur les contrôleurs d'un module (403 `MODULE_NON_AUTORISE`), puis conditions de l'espace du module (403 `CONDITIONS_A_ACCEPTER`). Routes communes : espace de l'en-tête `X-Espace` (sinon l'adresse).
 - Conditions par espace : `Parametre` `conditions:<espace>` = `{version, texte}`, acceptations dans `AcceptationConditions`.
-- App : `src/lib/espace.tsx` (espace ouvert, thème), `src/espaces/<espace>/` (écrans et barre du bas propres), `src/App.tsx` (commun : compte, conditions, messages, admin).
+- App : `src/lib/espace.tsx` (espace ouvert, thème), `src/espaces/<espace>/` (écrans, barre du bas, `boutonPlus` flottant), `src/App.tsx` (commun : compte, conditions, messages, admin ; `MenuCompte` en haut à droite ; `Notifications` sur les écrans principaux).
 
 ## Principe clé : une machine = un fichier JSON
 ```
