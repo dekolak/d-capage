@@ -18,7 +18,7 @@ ses tables, ses routes, son dossier d'app ; seuls le bouton « 🎓 Académie »
 | Titre | intertitre |
 | Texte | ligne vide = paragraphe, « - » = liste, `**gras**`, `*italique*`, `[lien](https://…)` |
 | 🎬 Vimeo | coller le lien (vidéo non répertoriée acceptée) : titre, vignette et durée remplis automatiquement ; le lecteur ne se charge qu'au toucher |
-| 🖼 Image | photo compressée par l'app, légende |
+| 🖼 Image | photo compressée par l'app, légende ; **repères animés** : toucher la photo pose un ⭕ halo qui pulse ou un ⚠️ qui bat (10 au plus), toucher un repère le retire (aussi en mode terrain, « Dernière photo ») |
 | 💡 Encadré | astuce ou ⚠️ attention |
 | 🖥 Simulateur | choisi dans la bibliothèque ; dans une leçon : boîte à hauteur d'écran (il défile dedans) + ⤢ plein écran ; seul dans une page : tout l'écran |
 | 🧩 HTML libre | votre code, dans une boîte isolée (hauteur automatique jusqu'à 85 % de l'écran, ou fixe, ⤢ plein écran) |
