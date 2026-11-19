@@ -824,6 +824,8 @@ model CategorieAccueil {
   ordre     Int      @default(0)
   /// Masquée : sa section n'apparaît pas sur l'accueil (le contenu reste dans les listes et la recherche).
   masquee   Boolean  @default(false)
+  /// Sociétés où la catégorie est proposée (« lazzeko », « kiavik ») ; vide = toutes.
+  espaces   String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

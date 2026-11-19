@@ -90,7 +90,7 @@ export class ProceduresService {
   }) {
     verifierEspace(d.espace);
     d = { ...d, etiquettes: nettoyerEtiquettes(d.etiquettes), cibleCategories: nettoyerEtiquettes(d.cibleCategories) };
-    await assurerCategorie(this.prisma, d.categorie ?? 'Impression');
+    await assurerCategorie(this.prisma, d.categorie ?? 'Impression', d.espace ?? 'kiavik');
     const ordre = ((await this.prisma.procedure.aggregate({ _max: { ordre: true } }))._max.ordre ?? -1) + 1;
     const p = await this.prisma.procedure.create({ data: { ...d, ordre }, include: avecEtapes });
     return this.vue(p);
@@ -160,7 +160,8 @@ export class ProceduresService {
       if (d.suivanteId === id) throw new BadRequestException('Une procédure ne peut pas se proposer elle-même');
       await this.existe(d.suivanteId);
     }
-    if (typeof d.categorie === 'string') await assurerCategorie(this.prisma, d.categorie);
+    if (typeof d.categorie === 'string')
+      await assurerCategorie(this.prisma, d.categorie, d.espace ?? (await this.prisma.procedure.findUnique({ where: { id }, select: { espace: true } }))?.espace);
     await this.prisma.procedure.update({ where: { id }, data: d });
     return this.lire(id, true);
   }

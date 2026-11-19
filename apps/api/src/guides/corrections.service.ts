@@ -141,7 +141,7 @@ export class CorrectionsService {
   /** Catégorie d'une animation sur l'accueil. */
   async categorieAnimation(slug: string, anim: string, categorie: string) {
     this.animation(slug, anim);
-    await assurerCategorie(this.prisma, categorie);
+    await assurerCategorie(this.prisma, categorie, 'kiavik'); // guides écran : Kiavik
     return this.enregistrer(slug, 'animation', anim, { valeur: { categorie: categorie.trim() } });
   }
 

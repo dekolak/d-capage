@@ -68,7 +68,7 @@ export function TerrainAccueil() {
       <Erreur e={err} />
       <div className="carte form">
         <label>Titre<input value={titre} maxLength={120} placeholder="ex. Changer les filtres F1080" onChange={(e) => setTitre(e.target.value)} /></label>
-        <label>Catégorie<ChoixCategorie valeur={categorie} onChange={setCategorie} /></label>
+        <label>Catégorie<ChoixCategorie valeur={categorie} espace={cible.espace} onChange={setCategorie} /></label>
         <div>
           <b className="petit">Type</b>
           <div className="seg">
