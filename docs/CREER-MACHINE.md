@@ -6,7 +6,7 @@ Chaque machine est **isolée dans un fichier** : facile à retrouver et à modif
 ## 0. Où se trouve quoi
 | Quoi | Où |
 |---|---|
-| Écran de réglage d'une machine (réglages, unités, min / max, ce qui est enregistré) | `machines/<fabricant>/<modèle-variante>/v1.json` (exemple : `machines/lazzeko/laser-pulse-300w/v1.json`) |
+| Écran de réglage d'une machine (réglages, unités, min / max, ce qui est enregistré) | `machines/<fabricant>/<modèle-variante>/v1.json` (exemples : `machines/lazzeko/laser-pulse-300w/v1.json`, `machines/lazzeko/zeko-mini-300/v1.json` : 2 pages, 8 trajectoires, plafond 15 mJ) |
 | Calculs d'une technologie (énergie, recouvrement…) | `packages/machine-kit/src/calculs/` (une par technologie : `laser-pulse` ; demain la soudure) |
 | Gamme, image, variantes, plans d'entretien, guides, Académie | dans l'admin (rien à coder) |
 
@@ -21,6 +21,8 @@ Chaque machine est **isolée dans un fichier** : facile à retrouver et à modif
 ## 2. Ce que Claude prépare
 1. Le fichier `machines/<fabricant>/<modèle-variante>/v1.json` en copiant l'exemple 300 W :
    - `technologie` (ex. `laser-pulse`), `fabricant`, `modele`, `variante` (slugs en minuscules et tirets), `versionInterface: 1` ;
+   - **modèle déjà créé dans l'admin** : mettre son identifiant complet dans `modele.id` (clic sur sa référence `M-…` pour le copier) et `variante.slug: "standard"`. Le fichier se rattache à ce modèle (nom, gamme, image, clients gardés) au lieu d'en créer un autre ;
+   - constantes du calcul `laser-pulse` : `pmax` (W), `emax` (mJ, plafond par impulsion, facultatif), `spot_mm` (spot fixe) ou `spot_f254_mm` (spot proportionnel à la lentille) ; le champ `speed` peut être en `m/s` ou en `mm/s` (d'après son `unite`) ;
    - `pages → sections → champs` (types `nombre`, `interrupteur`, `choix`, `texte` ; voir [ARCHITECTURE.md](ARCHITECTURE.md)) avec `enregistre: true` pour les réglages de la fiche ;
    - `constantes`, `hypotheses`, `presets`, `guide` (aide de l'app) ;
    - la **fiche d'identité** `source` : `{ "date": "2026-11-20", "auteur": "…", "notice": "Notice X v2.1", "firmware": "…", "notes": ["vitesse max lue sur l'écran", "…"] }`.
