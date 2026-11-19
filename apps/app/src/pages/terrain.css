@@ -6,13 +6,13 @@
 .tr-titre small { color: var(--g); }
 .tr-camera { position: relative; border-radius: var(--r); overflow: hidden; background: #000; aspect-ratio: 4 / 3; }
 .tr-camera video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tr-flash { position: absolute; inset: 0; background: #fff; opacity: .8; }
+.tr-flash { position: absolute; inset: 0; background: var(--carte); opacity: .8; }
 .tr-compte { position: absolute; inset: 0; display: grid; place-items: center; font-size: 120px; font-weight: 800; color: #fff; text-shadow: 0 2px 12px #000; }
 .tr-commandes { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; }
 .tr-delais { display: flex; gap: 4px; background: rgba(0, 0, 0, .45); border-radius: 999px; padding: 4px; }
 .tr-delais button { border: 0; background: none; color: #fff; padding: 6px 10px; border-radius: 999px; font-weight: 600; }
-.tr-delais button.on { background: #fff; color: #000; }
-.tr-declencheur { width: 76px; height: 76px; border-radius: 50%; border: 5px solid #fff; background: rgba(255, 255, 255, .25); color: #fff; font-size: 28px; font-weight: 800; }
+.tr-delais button.on { background: var(--carte); color: #000; }
+.tr-declencheur { width: 76px; height: 76px; border-radius: 50%; border: 5px solid #fff; background: color-mix(in srgb, var(--carte) 25%, transparent); color: #fff; font-size: 28px; font-weight: 800; }
 .tr-declencheur:disabled { opacity: .6; }
 .tr-secours { width: 100%; }
 .tr-secours.desactive { opacity: .5; pointer-events: none; }

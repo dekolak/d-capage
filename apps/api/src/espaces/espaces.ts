@@ -53,10 +53,11 @@ export const ESPACES: EspaceDef[] = [
     nomApp: 'Kiavik Copilot',
     nomCourt: 'Kiavik',
     domaines: ['app.kiavikcopilot.ovh'],
-    // Couleurs provisoires : à remplacer par celles de Kiavik.
-    couleur: '#1d6fb8',
-    couleurFoncee: '#155a96',
-    couleurDouce: '#e9f2fb',
+    // Vert acidulé Kiavik (Pantone 397 C) ; foncée = liens et textes sur fond blanc (lisible), douce = fonds légers.
+    // Texte posé sur la couleur : foncé automatiquement (lib/espace.tsx), car elle est claire.
+    couleur: '#c4d600',
+    couleurFoncee: '#5e6b00',
+    couleurDouce: '#f6f9d6',
     icones: '/espaces/kiavik/',
     communaute: false,
     modules: [

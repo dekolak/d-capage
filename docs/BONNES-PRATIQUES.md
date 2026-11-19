@@ -45,6 +45,7 @@
 ## Règles app
 - Appels serveur uniquement via `api()` (`lib/api.ts`) : jeton, en-tête `X-Espace`, déconnexion et conditions gérés au même endroit.
 - Couleurs via les variables CSS (`--o`, `--od`, `--o-doux`) : jamais de couleur de marque en dur (elles changent selon l'espace).
+- **Mode sombre** (Compte → Affichage : Auto / Clair / Sombre, gardé sur le téléphone, `lib/theme.ts` → `<html data-theme>`) : pas de `#fff` ni de gris ou de fond pastel en dur dans un écran de l'app. Utiliser `--carte` (fond des cartes), `--fond`, `--t` / `--t2` / `--g` (textes), `--bord`, `--gris-doux`, et les paires `--vert-doux`/`--vert-texte`, `--rouge-doux`/`--rouge-texte`, `--jaune-doux`/`--jaune-texte`, `--bleu-doux`/`--bleu-texte`. Texte posé sur la couleur de l'espace : `--sur-o` (foncé si la couleur est claire, comme le vert Kiavik). Les reproductions d'écrans (logiciels, écran machine, animations, simulateurs) gardent leurs couleurs d'origine : leurs conteneurs sont listés dans le bloc « Mode sombre » de `styles.css`.
 - Nom de la société via `useEspace().espace.nom`, pas « Lazzeko » écrit en dur dans un écran commun.
 - Cases à cocher qui enregistrent tout de suite : mise à jour **optimiste** (affichage immédiat, retour arrière si erreur).
 - Photos : compressées sur le téléphone avant envoi (les métadonnées GPS sont supprimées).

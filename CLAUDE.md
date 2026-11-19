@@ -14,7 +14,7 @@ Lire d'abord [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) et [docs/BONNES-PRATIQ
 - Migration Prisma : nommée, reprend les données existantes, testée sur base vide ; ne jamais modifier une migration déjà fusionnée.
 - Nouvelle fonction d'un espace : un **module** (`apps/api/src/espaces/espaces.ts`), `@ModuleRequis` côté API, écrans dans `apps/app/src/espaces/<espace>/`.
 - **Aide et assistance communes** à toutes les sociétés (pas-à-pas, dépannages, Bon à savoir, recherche, bibliothèque, catégories) : `apps/app/src/bibliotheque/`, filtrées par société et machines du client. Une société n'apporte que sa brique propre (Lazzeko : fiches de réglage, communauté ; Kiavik : guides écran) ; ne pas dupliquer le mécanisme d'aide.
-- Pas de couleur ni de nom de société en dur dans les écrans communs (variables CSS, `useEspace()`).
+- Pas de couleur ni de nom de société en dur dans les écrans (variables CSS, `useEspace()`) : sinon le mode sombre casse (voir BONNES-PRATIQUES).
 - Pas de texte en dur dans les écrans clients : clé dans `apps/app/src/textes/fr.ts` + `t()` (voir [docs/TRADUCTION.md](docs/TRADUCTION.md)). L'administration reste en français.
 - Mettre à jour la doc (`README.md`, `docs/`) dans la même pull request.
 - Nouvelle machine (fiches de réglage) : suivre [docs/CREER-MACHINE.md](docs/CREER-MACHINE.md) (un fichier `machines/…/v1.json` par machine, bloc `source`).
