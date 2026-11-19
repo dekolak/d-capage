@@ -1019,9 +1019,10 @@ describe('Parcours complet', () => {
     await http.post(`/api/users/${u.id}/machines`).set(A).send({ varianteId: soud.variantes[0].id }).expect(201);
     expect(await titres()).toEqual([`General ${id}`, `Lentille ${id}`, `Souder ${id}`]);
     // « Pour qui ? » : par catégorie de machine et par modèle précis
-    await http.patch(`/api/admin/catalogue/modeles/${deca.id}`).set(A).send({ categorie: `Décapeuse ${id}` }).expect(200);
+    // la gamme donne la catégorie (Décapeuse) et l'espace
+    await http.patch(`/api/admin/catalogue/modeles/${deca.id}`).set(A).send({ gamme: 'lazzeko-decapeuse' }).expect(200);
     const catDeca = await creer(`Cat deca ${id}`, 'lazzeko', []);
-    await http.patch(`/api/admin/procedures/${catDeca.id}`).set(A).send({ cibleCategories: [`décapeuse ${id}`] }).expect(200);
+    await http.patch(`/api/admin/procedures/${catDeca.id}`).set(A).send({ cibleCategories: ['décapeuse'] }).expect(200);
     const pourSoud = await creer(`Pour soudeuse ${id}`, 'lazzeko', []);
     await http.patch(`/api/admin/procedures/${pourSoud.id}`).set(A).send({ cibleModeles: [soud.id] }).expect(200);
     const autreCat = await creer(`Cat soudeuse ${id}`, 'lazzeko', []);
@@ -1030,8 +1031,8 @@ describe('Parcours complet', () => {
     expect(vues).toContain(`Cat deca ${id}`);
     expect(vues).toContain(`Pour soudeuse ${id}`);
     expect(vues).not.toContain(`Cat soudeuse ${id}`);
-    const catsM = (await http.get('/api/admin/catalogue/categories').set(A)).body.find((c: any) => c.categorie === `Décapeuse ${id}`);
-    expect(catsM.modeles.map((m: any) => m.id)).toEqual([deca.id]);
+    const catsM = (await http.get('/api/admin/catalogue/categories').set(A)).body.find((c: any) => c.espace === 'lazzeko' && c.categorie === 'Décapeuse');
+    expect(catsM.modeles.map((m: any) => m.id)).toContain(deca.id);
     for (const p of [catDeca, pourSoud, autreCat]) await http.delete(`/api/admin/procedures/${p.id}`).set(A).expect(200);
 
     // « Ma machine » : chaque machine du client avec les étiquettes de son modèle
@@ -1539,5 +1540,26 @@ describe('Parcours complet', () => {
     await http.delete(`/api/admin/academie/simulateurs/${sim.id}`).set(A).expect(200);
     for (const x of [general, dedie]) await http.delete(`/api/admin/academie/cours/${x.id}`).set(A).expect(200);
     expect((await http.get(`/api/academie/lecons/${l1.id}`).set(avec.H)).status).toBe(404);
+  });
+
+  it('gammes de machines (liste fixe) : elles donnent l\'espace et la catégorie', async () => {
+    const A = auth(admin);
+    const gammes = (await http.get('/api/admin/catalogue/gammes').set(A)).body;
+    expect(gammes.map((g: any) => g.slug)).toEqual(['lazzeko-decapeuse', 'lazzeko-soudeuse', 'lazzeko-accessoire', 'kiavik-imprimante', 'kiavik-accessoire']);
+    let cat = (await http.post('/api/admin/catalogue/fabricants').set(A).send({ nom: `Gam ${id}` })).body;
+    const fab = cat.find((f: any) => f.nom === `Gam ${id}`);
+    expect((await http.post('/api/admin/catalogue/modeles').set(A).send({ fabricantId: fab.id, nom: 'X', gamme: 'lazzeko-graveuse' })).status).toBe(400);
+    expect((await http.post('/api/admin/catalogue/modeles').set(A).send({ fabricantId: fab.id, nom: 'X' })).status).toBe(400); // gamme obligatoire
+    cat = (await http.post('/api/admin/catalogue/modeles').set(A).send({ fabricantId: fab.id, nom: 'LZK 2000', gamme: 'lazzeko-soudeuse' })).body;
+    let mo = cat.find((f: any) => f.id === fab.id).modeles[0];
+    expect(mo).toMatchObject({ gamme: 'lazzeko-soudeuse', espaces: ['lazzeko'], categorie: 'Soudeuse' });
+    // changer de gamme change d'espace : jamais les deux
+    cat = (await http.patch(`/api/admin/catalogue/modeles/${mo.id}`).set(A).send({ gamme: 'kiavik-accessoire' })).body;
+    mo = cat.find((f: any) => f.id === fab.id).modeles[0];
+    expect(mo).toMatchObject({ gamme: 'kiavik-accessoire', espaces: ['kiavik'], categorie: 'Accessoire' });
+    // catégories proposées : seulement celles des gammes
+    const cats = (await http.get('/api/admin/catalogue/categories').set(A)).body;
+    expect([...new Set(cats.map((c: any) => `${c.espace}:${c.categorie}`))].sort()).toEqual(['kiavik:Accessoire', 'kiavik:Imprimante', 'lazzeko:Accessoire', 'lazzeko:Décapeuse', 'lazzeko:Soudeuse']);
+    await http.delete(`/api/admin/catalogue/modeles/${mo.id}`).set(A).expect(200);
   });
 });

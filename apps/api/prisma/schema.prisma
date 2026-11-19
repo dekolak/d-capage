@@ -156,7 +156,9 @@ model Modele {
   plans         PlanEntretien[]
   /// Étiquettes (familles, usages : « Laser pulsé », « Soudure », « DXonJet »…) : le client voit les contenus qui en portent une.
   etiquettes    String[]        @default([])
-  /// Catégorie de machine (« Décapeuse », « Soudeuse », « Accessoire »…) : les ressources ciblées sur cette catégorie s'appliquent à ses machines.
+  /// Gamme (liste fixe, catalogue/gammes.ts) : décide de l'espace, de la catégorie et de l'univers. null = à classer.
+  gamme         String?
+  /// Catégorie de machine (« Décapeuse », « Soudeuse », « Accessoire »…), donnée par la gamme : ciblage « Pour qui ? », plans d'entretien.
   categorie     String?
   /// Miniature de la machine (clé de stockage) : envoyée par l'admin, PNG de préférence.
   imageCle      String?
