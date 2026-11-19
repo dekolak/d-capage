@@ -109,7 +109,8 @@ describe('soudeuses laser (base commune)', () => {
     expect(s2000.technologie).toBe('soudure-laser');
     expect(s2000.constantes).toMatchObject({ pmax: 2000, pref_cordon: 3000 });
     expect(s1500.constantes.pmax).toBe(1500);
-    expect(s1500.pages.map((p) => p.id)).toEqual(['soudage', 'fil', 'avance']);
+    expect(s1500.pages.map((p) => p.id)).toEqual(['principal', 'avance']);
+    expect(s1500.apparence).toBe('ecran');
     expect(s1500.source?.notes.length).toBeGreaterThan(3);
   });
 

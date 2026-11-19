@@ -11,7 +11,9 @@
     "en"
   ],
   "theme": {
-    "fond": "#d9dee6",
+    "fond": "#55657a",
+    "fond2": "#3d4a5c",
+    "valeur": "#7cfc00",
     "carte": "#eef1f5",
     "pastille": "#1e64d0",
     "orange": "#f15a21",
@@ -27,230 +29,123 @@
   ],
   "pages": [
     {
-      "id": "soudage",
+      "id": "principal",
       "label": {
-        "fr": "Soudage",
-        "en": "Welding"
+        "fr": "Param",
+        "en": "Param"
       },
+      "icone": "▦",
+      "disposition": "colonnes",
       "sections": [
         {
-          "id": "laser",
+          "id": "assistance",
           "label": {
-            "fr": "Contrôle laser",
-            "en": "Laser control"
+            "fr": "Contrôle d'assistance",
+            "en": "Assist control"
           },
-          "zone": "gauche",
           "colonnes": 1,
           "champs": [
             {
-              "key": "mode",
+              "key": "ws",
+              "type": "nombre",
+              "enregistre": true,
+              "label": {
+                "fr": "WireSpd",
+                "en": "WireSpd"
+              },
+              "visibleSi": {
+                "won": [
+                  true
+                ]
+              },
+              "unite": "mm/s",
+              "min": 1,
+              "max": 55,
+              "step": 1,
+              "defaut": 10,
+              "aide": {
+                "fr": "Vitesse d'avance du fil par le dévidoir (1 à 55 mm/s)."
+              }
+            },
+            {
+              "key": "pre",
+              "type": "nombre",
+              "enregistre": true,
+              "label": {
+                "fr": "CoupBef",
+                "en": "CoupBef"
+              },
+              "unite": "ms",
+              "min": 0,
+              "max": 2000,
+              "step": 50,
+              "defaut": 100,
+              "aide": {
+                "fr": "Pré-soufflage : le gaz souffle avant l'émission laser et protège le bain dès le début."
+              }
+            },
+            {
+              "key": "post",
+              "type": "nombre",
+              "enregistre": true,
+              "label": {
+                "fr": "CoupAft",
+                "en": "CoupAft"
+              },
+              "unite": "ms",
+              "min": 0,
+              "max": 3000,
+              "step": 50,
+              "defaut": 500,
+              "aide": {
+                "fr": "Post-soufflage : le gaz souffle après l'arrêt du laser et protège la soudure pendant qu'elle refroidit."
+              }
+            },
+            {
+              "key": "wmode",
               "type": "choix",
               "enregistre": true,
               "label": {
-                "fr": "Mode laser",
-                "en": "Laser mode"
+                "fr": "Mode filaire",
+                "en": "Wire mode"
               },
               "defaut": 0,
               "options": [
                 {
                   "valeur": 0,
                   "label": {
-                    "fr": "Continu",
-                    "en": "Continuous"
+                    "fr": "Auto",
+                    "en": "Auto"
                   }
                 },
                 {
                   "valeur": 1,
                   "label": {
-                    "fr": "Point",
-                    "en": "Spot"
-                  }
-                },
-                {
-                  "valeur": 2,
-                  "label": {
-                    "fr": "Oscillation",
-                    "en": "Wobble"
+                    "fr": "Manuel",
+                    "en": "Manual"
                   }
                 }
               ],
               "aide": {
-                "fr": "Continu : le laser émet tant que la gâchette est enfoncée. Point : un tir par appui. Oscillation : le spot tourne en boucle pour un cordon en écailles."
-              }
-            },
-            {
-              "key": "pk",
-              "type": "nombre",
-              "enregistre": true,
-              "label": {
-                "fr": "PwrPeak (%)",
-                "en": "PwrPeak"
-              },
-              "unite": "%",
-              "min": 0,
-              "max": 100,
-              "step": 1,
-              "defaut": 50,
-              "aide": {
-                "fr": "Part de la puissance du laser utilisée pour souder : c'est le réglage de puissance principal. Puissance de sortie = puissance du laser × PwrPeak × PwmWid."
-              }
-            },
-            {
-              "key": "du",
-              "type": "nombre",
-              "enregistre": true,
-              "label": {
-                "fr": "PwmWid (%)",
-                "en": "PwmWid"
-              },
-              "unite": "%",
-              "min": 1,
-              "max": 100,
-              "step": 1,
-              "defaut": 100,
-              "aide": {
-                "fr": "Part du temps où le laser est allumé. À 100 % il émet en continu ; en dessous, il pulse et la puissance moyenne baisse."
-              }
-            },
-            {
-              "key": "pf",
-              "type": "nombre",
-              "enregistre": true,
-              "label": {
-                "fr": "PwmFre (Hz)",
-                "en": "PwmFre"
-              },
-              "echelle": "log",
-              "unite": "Hz",
-              "min": 1,
-              "max": 5000,
-              "step": 1,
-              "defaut": 40,
-              "aide": {
-                "fr": "Fréquence des impulsions. N'agit que si PwmWid est inférieur à 100 %."
-              }
-            },
-            {
-              "key": "pt",
-              "type": "nombre",
-              "enregistre": true,
-              "label": {
-                "fr": "Durée impulsion (ms)",
-                "en": "Pulse time"
+                "fr": "Auto : le fil avance pendant la soudure et s'arrête avec elle. Manuel : il n'avance que quand on appuie sur le bouton de dévidage."
               },
               "visibleSi": {
-                "mode": [
-                  1
-                ]
-              },
-              "unite": "ms",
-              "min": 20,
-              "max": 1000,
-              "step": 20,
-              "defaut": 200,
-              "aide": {
-                "fr": "Mode point : durée d'un tir (20 à 1000 ms)."
-              }
-            }
-          ]
-        },
-        {
-          "id": "balayage",
-          "label": {
-            "fr": "Balayage du faisceau",
-            "en": "Beam wobble"
-          },
-          "zone": "droite",
-          "colonnes": 1,
-          "champs": [
-            {
-              "key": "swing",
-              "type": "interrupteur",
-              "enregistre": true,
-              "label": {
-                "fr": "Balançoire laser",
-                "en": "Laser swing"
-              },
-              "defaut": true,
-              "aide": {
-                "fr": "Active l'oscillation du faisceau (fréquence + largeur). Sur OFF, le spot reste fixe et le cordon est fin."
-              }
-            },
-            {
-              "key": "fq",
-              "type": "nombre",
-              "enregistre": true,
-              "label": {
-                "fr": "Vitesse de balayage (Hz)",
-                "en": "Scan speed"
-              },
-              "visibleSi": {
-                "swing": [
+                "won": [
                   true
                 ]
-              },
-              "unite": "Hz",
-              "min": 2,
-              "max": 300,
-              "step": 1,
-              "defaut": 50,
-              "aide": {
-                "fr": "Fréquence d'oscillation du faisceau : plus elle est haute, plus le spot va et vient vite."
               }
             },
-            {
-              "key": "wd",
-              "type": "nombre",
-              "enregistre": true,
-              "label": {
-                "fr": "Largeur (mm)",
-                "en": "Width"
-              },
-              "visibleSi": {
-                "swing": [
-                  true
-                ]
-              },
-              "unite": "mm",
-              "min": 0,
-              "max": 5,
-              "step": 0.05,
-              "defaut": 1.5,
-              "aide": {
-                "fr": "Amplitude d'oscillation : donne la largeur du cordon. Repère : 2 à 3,5 fois le diamètre du fil."
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fil",
-      "label": {
-        "fr": "Fil",
-        "en": "Wire"
-      },
-      "sections": [
-        {
-          "id": "fil",
-          "label": {
-            "fr": "Contrôle d'assistance (fil)",
-            "en": "Wire feeder"
-          },
-          "zone": "gauche",
-          "colonnes": 1,
-          "champs": [
             {
               "key": "won",
               "type": "interrupteur",
               "enregistre": true,
               "label": {
-                "fr": "Fil d'apport",
+                "fr": "Wire Switch",
                 "en": "Wire Switch"
               },
               "defaut": true,
               "aide": {
-                "fr": "Dévidoir utilisé ou non. Sur OFF : soudure sans fil d'apport (les réglages du fil disparaissent)."
+                "fr": "« Wire Switch » : dévidoir utilisé ou non. Sur OFF, soudure sans fil d'apport : les réglages du fil disparaissent de la fiche."
               }
             },
             {
@@ -258,8 +153,8 @@
               "type": "choix",
               "enregistre": true,
               "label": {
-                "fr": "Diamètre du fil",
-                "en": "Wire diameter"
+                "fr": "Diam. fil",
+                "en": "Wire diam."
               },
               "defaut": 1.2,
               "options": [
@@ -322,61 +217,171 @@
                   true
                 ]
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "laser",
+          "label": {
+            "fr": "Contrôle laser",
+            "en": "Laser control"
+          },
+          "colonnes": 1,
+          "couleurValeur": "#fde047",
+          "champs": [
             {
-              "key": "ws",
+              "key": "pk",
               "type": "nombre",
               "enregistre": true,
               "label": {
-                "fr": "WireSpd (mm/s)",
-                "en": "WireSpd"
+                "fr": "PwrPeak",
+                "en": "PwrPeak"
               },
-              "visibleSi": {
-                "won": [
-                  true
-                ]
-              },
-              "unite": "mm/s",
-              "min": 1,
-              "max": 55,
+              "unite": "%",
+              "min": 0,
+              "max": 100,
               "step": 1,
-              "defaut": 10,
+              "defaut": 50,
               "aide": {
-                "fr": "Vitesse d'avance du fil par le dévidoir (1 à 55 mm/s)."
+                "fr": "Part de la puissance du laser utilisée pour souder : c'est le réglage de puissance principal. Puissance de sortie = puissance du laser × PwrPeak × PwmWid."
               }
             },
             {
-              "key": "wmode",
+              "key": "du",
+              "type": "nombre",
+              "enregistre": true,
+              "label": {
+                "fr": "PwmWid",
+                "en": "PwmWid"
+              },
+              "unite": "%",
+              "min": 1,
+              "max": 100,
+              "step": 1,
+              "defaut": 100,
+              "aide": {
+                "fr": "Part du temps où le laser est allumé. À 100 % il émet en continu ; en dessous, il pulse et la puissance moyenne baisse."
+              }
+            },
+            {
+              "key": "pf",
+              "type": "nombre",
+              "enregistre": true,
+              "label": {
+                "fr": "PwmFre",
+                "en": "PwmFre"
+              },
+              "echelle": "log",
+              "unite": "Hz",
+              "min": 1,
+              "max": 5000,
+              "step": 1,
+              "defaut": 40,
+              "aide": {
+                "fr": "Fréquence des impulsions. N'agit que si PwmWid est inférieur à 100 %."
+              }
+            },
+            {
+              "key": "mode",
               "type": "choix",
               "enregistre": true,
               "label": {
-                "fr": "Mode filaire",
-                "en": "Wire mode"
+                "fr": "Mode laser",
+                "en": "Laser mode"
               },
               "defaut": 0,
               "options": [
                 {
                   "valeur": 0,
                   "label": {
-                    "fr": "Auto",
-                    "en": "Auto"
+                    "fr": "Mode continu",
+                    "en": "Continuous"
                   }
                 },
                 {
                   "valeur": 1,
                   "label": {
-                    "fr": "Manuel",
-                    "en": "Manual"
+                    "fr": "Mode point",
+                    "en": "Spot"
+                  }
+                },
+                {
+                  "valeur": 2,
+                  "label": {
+                    "fr": "Mode oscillation",
+                    "en": "Wobble"
                   }
                 }
               ],
               "aide": {
-                "fr": "Auto : le fil avance pendant la soudure et s'arrête avec elle. Manuel : il n'avance que quand on appuie sur le bouton de dévidage."
+                "fr": "Continu : le laser émet tant que la gâchette est enfoncée. Point : un tir par appui. Oscillation : le spot tourne en boucle pour un cordon en écailles."
+              }
+            }
+          ]
+        },
+        {
+          "id": "chargeur",
+          "label": {
+            "fr": "Contrôle du chargeur de fil",
+            "en": "Wire feeder control"
+          },
+          "colonnes": 1,
+          "champs": [
+            {
+              "key": "fq",
+              "type": "nombre",
+              "enregistre": true,
+              "label": {
+                "fr": "Vitesse de balayage",
+                "en": "Scan speed"
               },
               "visibleSi": {
-                "won": [
+                "swing": [
                   true
                 ]
+              },
+              "unite": "Hz",
+              "min": 2,
+              "max": 300,
+              "step": 1,
+              "defaut": 50,
+              "aide": {
+                "fr": "Fréquence d'oscillation du faisceau : plus elle est haute, plus le spot va et vient vite."
+              }
+            },
+            {
+              "key": "wd",
+              "type": "nombre",
+              "enregistre": true,
+              "label": {
+                "fr": "Largeur",
+                "en": "Width"
+              },
+              "visibleSi": {
+                "swing": [
+                  true
+                ]
+              },
+              "unite": "mm",
+              "min": 0,
+              "max": 5,
+              "step": 0.05,
+              "defaut": 1.5,
+              "aide": {
+                "fr": "Amplitude d'oscillation : donne la largeur du cordon. Repère : 2 à 3,5 fois le diamètre du fil."
+              }
+            },
+            {
+              "key": "swing",
+              "type": "interrupteur",
+              "enregistre": true,
+              "label": {
+                "fr": "Balançoire laser",
+                "en": "Laser swing"
+              },
+              "defaut": true,
+              "aide": {
+                "fr": "Active l'oscillation du faisceau (fréquence + largeur). Sur OFF, le spot reste fixe et le cordon est fin."
               }
             }
           ]
@@ -389,69 +394,26 @@
         "fr": "Avancé",
         "en": "Advanced"
       },
+      "icone": "☰",
+      "disposition": "colonnes",
       "sections": [
         {
-          "id": "gaz",
+          "id": "avances",
           "label": {
-            "fr": "Gaz",
-            "en": "Gas"
+            "fr": "Paramètres avancés",
+            "en": "Advanced parameters"
           },
-          "zone": "gauche",
-          "champs": [
-            {
-              "key": "pre",
-              "type": "nombre",
-              "enregistre": true,
-              "label": {
-                "fr": "CoupBef (ms)",
-                "en": "CoupBef"
-              },
-              "unite": "ms",
-              "min": 0,
-              "max": 2000,
-              "step": 50,
-              "defaut": 100,
-              "aide": {
-                "fr": "Pré-soufflage : le gaz souffle avant l'émission laser et protège le bain dès le début."
-              }
-            },
-            {
-              "key": "post",
-              "type": "nombre",
-              "enregistre": true,
-              "label": {
-                "fr": "CoupAft (ms)",
-                "en": "CoupAft"
-              },
-              "unite": "ms",
-              "min": 0,
-              "max": 3000,
-              "step": 50,
-              "defaut": 500,
-              "aide": {
-                "fr": "Post-soufflage : le gaz souffle après l'arrêt du laser et protège la soudure pendant qu'elle refroidit."
-              }
-            }
-          ]
-        },
-        {
-          "id": "rampes",
-          "label": {
-            "fr": "Rampes",
-            "en": "Ramps"
-          },
-          "zone": "droite",
-          "colonnes": 2,
+          "colonnes": 3,
+          "couleurValeur": "#fde047",
           "champs": [
             {
               "key": "st",
               "type": "nombre",
               "enregistre": true,
               "label": {
-                "fr": "Puissance départ (%)",
+                "fr": "Puissance départ",
                 "en": "Start power"
               },
-              "colonne": 1,
               "unite": "%",
               "min": 0,
               "max": 100,
@@ -459,17 +421,17 @@
               "defaut": 30,
               "aide": {
                 "fr": "Puissance au début de l'émission, avant la montée."
-              }
+              },
+              "colonne": 1
             },
             {
               "key": "ru",
               "type": "nombre",
               "enregistre": true,
               "label": {
-                "fr": "Montée (ms)",
+                "fr": "Montée",
                 "en": "Ramp up"
               },
-              "colonne": 1,
               "unite": "ms",
               "min": 0,
               "max": 1500,
@@ -477,17 +439,17 @@
               "defaut": 400,
               "aide": {
                 "fr": "Temps pour passer de la puissance de départ à la puissance de soudage. Évite les trous en début de soudure."
-              }
+              },
+              "colonne": 2
             },
             {
               "key": "rd",
               "type": "nombre",
               "enregistre": true,
               "label": {
-                "fr": "Descente (ms)",
+                "fr": "Descente",
                 "en": "Ramp down"
               },
-              "colonne": 2,
               "unite": "ms",
               "min": 0,
               "max": 1500,
@@ -495,17 +457,17 @@
               "defaut": 300,
               "aide": {
                 "fr": "Temps pour redescendre quand on relâche. Évite le cratère en fin de soudure."
-              }
+              },
+              "colonne": 3
             },
             {
               "key": "sp",
               "type": "nombre",
               "enregistre": true,
               "label": {
-                "fr": "Puissance arrêt (%)",
+                "fr": "Puissance arrêt",
                 "en": "Stop power"
               },
-              "colonne": 2,
               "unite": "%",
               "min": 0,
               "max": 100,
@@ -513,7 +475,31 @@
               "defaut": 20,
               "aide": {
                 "fr": "Puissance à la fin de l'émission."
-              }
+              },
+              "colonne": 1
+            },
+            {
+              "key": "pt",
+              "type": "nombre",
+              "enregistre": true,
+              "label": {
+                "fr": "Durée impulsion",
+                "en": "Pulse time"
+              },
+              "visibleSi": {
+                "mode": [
+                  1
+                ]
+              },
+              "unite": "ms",
+              "min": 20,
+              "max": 1000,
+              "step": 20,
+              "defaut": 200,
+              "aide": {
+                "fr": "Mode point : durée d'un tir (20 à 1000 ms)."
+              },
+              "colonne": 2
             }
           ]
         }
@@ -579,7 +565,9 @@
       "Base commune aux soudeuses laser : chaque puissance a son fichier (machines/lazzeko/soudeuse-laser-<puissance>/v1.json).",
       "Non repris dans la fiche : Laser Fr (sécurité), Guide laser (pointeur), sens du fil, température de la lentille (affichages ou sécurité).",
       "Diamètre du fil ajouté (pas sur l'écran) : utile pour comparer les réglages.",
-      "Menu nettoyage de la soudeuse : à ajouter (v2) quand son écran sera fourni."
+      "Menu nettoyage de la soudeuse : à ajouter (v2) quand son écran sera fourni.",
+      "Apparence « écran » : couleurs, colonnes et libellés repris de l'écran de la machine."
     ]
-  }
+  },
+  "apparence": "ecran"
 }

@@ -34,7 +34,7 @@ export function Miroir({
   const lecture = !onChange;
   const th = config.theme;
   const style = {
-    '--m-fond': th.fond, '--m-carte': th.carte, '--m-pastille': th.pastille, '--m-orange': th.orange,
+    '--m-fond': th.fond, '--m-fond2': th.fond2, '--m-valeur': th.valeur, '--m-carte': th.carte, '--m-pastille': th.pastille, '--m-orange': th.orange,
     '--m-rouge': th.rouge, '--m-marine': th.marine, '--m-ligne': th.ligne,
   } as React.CSSProperties;
 
@@ -65,20 +65,37 @@ export function Miroir({
   };
   const champEdite = ordre.find((o) => o.champ.key === edit)?.champ;
 
-  return (
-    <div className="miroir" style={style}>
-      <div className="m-logo">{config.fabricant.nom.toUpperCase()}</div>
-      {config.pages.length > 1 && (
-        <div className="m-nav">
-          {config.pages.map((p) => (
-            <button key={p.id} type="button" className={p.id === page ? 'on' : ''} onClick={() => setPage(p.id)}>
-              {libelle(p.label)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {pageCourante.sections.map((s) =>
+  const ecran = config.apparence === 'ecran';
+  const ligne = (c: Champ) => (
+    <button
+      key={c.key}
+      type="button"
+      className={'m-ligne' + (edit === c.key ? ' sel' : '') + (erreurDe(c.key) ? ' err' : '')}
+      onClick={() => ouvrir(c)}
+      disabled={lecture}
+    >
+      <span className="m-lab">{libelle(c.label)}</span>
+      <ValeurAffichee champ={c} v={valeurs[c.key]} ecran={ecran} />
+    </button>
+  );
+  // Sections côte à côte et titrées (comme l'écran réel), ou empilées en cartes.
+  const sections =
+    pageCourante.disposition === 'colonnes' ? (
+      <div className="m-colonnes" style={{ gridTemplateColumns: `repeat(${pageCourante.sections.length}, minmax(0, 1fr))` }}>
+        {pageCourante.sections.map((s) => {
+          const cols = colonnes(s, valeurs);
+          return (
+            <div key={s.id} className="m-bloc" style={s.couleurValeur ? ({ '--m-valeur': s.couleurValeur } as React.CSSProperties) : undefined}>
+              {s.label && <h5>{libelle(s.label)}</h5>}
+              <div className="m-bloc-cols" style={{ gridTemplateColumns: `repeat(${Math.max(1, cols.length)}, minmax(0, 1fr))` }}>
+                {cols.map((col, i) => <div key={i} className="m-col">{col.map(ligne)}</div>)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      pageCourante.sections.map((s) =>
         s.zone === 'haut' ? (
           <div key={s.id} className="m-tuiles">
             {s.champs.filter((c) => estVisible(c, valeurs)).map((c) => (
@@ -90,24 +107,41 @@ export function Miroir({
           </div>
         ) : (
           <div key={s.id} className={'m-carte cols-' + Math.min(2, colonnes(s, valeurs).length)}>
-            {colonnes(s, valeurs).map((col, i) => (
-              <div key={i} className="m-col">
-                {col.map((c) => (
-                  <button
-                    key={c.key}
-                    type="button"
-                    className={'m-ligne' + (edit === c.key ? ' sel' : '') + (erreurDe(c.key) ? ' err' : '')}
-                    onClick={() => ouvrir(c)}
-                    disabled={lecture}
-                  >
-                    <span className="m-lab">{libelle(c.label)}</span>
-                    <ValeurAffichee champ={c} v={valeurs[c.key]} />
-                  </button>
-                ))}
-              </div>
-            ))}
+            {colonnes(s, valeurs).map((col, i) => <div key={i} className="m-col">{col.map(ligne)}</div>)}
           </div>
         ),
+      )
+    );
+
+  return (
+    <div className={'miroir' + (ecran ? ' ecran' : '')} style={style}>
+      {ecran ? (
+        // Apparence « écran » : barre d'icônes à gauche (une par page) et zone de réglages, couleurs de la machine
+        <div className="m-ecran">
+          <div className="m-barre">
+            {config.pages.map((p) => (
+              <button key={p.id} type="button" className={'m-icone' + (p.id === page ? ' on' : '')} onClick={() => setPage(p.id)}>
+                <i>{p.icone ?? '▦'}</i>
+                {libelle(p.label)}
+              </button>
+            ))}
+          </div>
+          <div className="m-zone">{sections}</div>
+        </div>
+      ) : (
+        <>
+          <div className="m-logo">{config.fabricant.nom.toUpperCase()}</div>
+          {config.pages.length > 1 && (
+            <div className="m-nav">
+              {config.pages.map((p) => (
+                <button key={p.id} type="button" className={p.id === page ? 'on' : ''} onClick={() => setPage(p.id)}>
+                  {libelle(p.label)}
+                </button>
+              ))}
+            </div>
+          )}
+          {sections}
+        </>
       )}
 
       {!lecture && page === config.pages[0].id && config.presets.length > 0 && (
@@ -162,10 +196,10 @@ export function Icone({ svg, couleur = '#fff' }: { svg: string; couleur?: string
   return <svg viewBox="0 0 56 36" fill="none" stroke={couleur} strokeLinecap="round" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
-function ValeurAffichee({ champ: c, v }: { champ: Champ; v: unknown }) {
+function ValeurAffichee({ champ: c, v, ecran }: { champ: Champ; v: unknown; ecran?: boolean }) {
   switch (c.type) {
     case 'nombre':
-      return <span className="m-v">{fmt(c, v)}</span>;
+      return <span className="m-v">{fmt(c, v)}{ecran && c.unite ? c.unite : ''}</span>;
     case 'interrupteur':
       return <span className={'m-tg' + (v ? ' on' : '')}>{v ? 'ON' : 'OFF'}</span>;
     case 'texte':
@@ -178,6 +212,7 @@ function ValeurAffichee({ champ: c, v }: { champ: Champ; v: unknown }) {
             <Icone svg={o.icone} />
           </span>
         );
+      if (ecran) return <span className="m-tg on">{o ? libelle(o.label) : '—'}</span>;
       return <span className="m-v">{o ? libelle(o.label) : '—'}</span>;
     }
   }

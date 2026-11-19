@@ -87,6 +87,8 @@ export const SectionSchema = z.object({
   /** Indice de mise en page pour le miroir (zone de l'écran réel). */
   zone: z.string().optional(),
   colonnes: z.number().int().min(1).max(3).default(1),
+  /** Apparence « écran » : couleur des valeurs de cette section (ex. jaune pour le contrôle laser). */
+  couleurValeur: z.string().optional(),
   champs: z.array(ChampSchema),
 });
 export type Section = z.infer<typeof SectionSchema>;
@@ -94,6 +96,10 @@ export type Section = z.infer<typeof SectionSchema>;
 export const PageSchema = z.object({
   id: z.string(),
   label: I18nSchema,
+  /** Apparence « écran » : icône du bouton de la barre de gauche (caractère, ex. « ☰ »). */
+  icone: z.string().max(4).optional(),
+  /** `colonnes` : sections côte à côte, titrées, comme sur l'écran réel. */
+  disposition: z.enum(['pile', 'colonnes']).default('pile'),
   sections: z.array(SectionSchema).min(1),
 });
 export type Page = z.infer<typeof PageSchema>;
@@ -124,6 +130,8 @@ export const ConfigMachineSchema = z
     versionInterface: z.number().int().positive(),
     langues: z.array(z.string()).default(['fr']),
     theme: z.record(z.string(), z.string()).default({}),
+    /** `ecran` : le miroir reprend l'écran de la machine (fond, valeurs sur fond noir, barre d'icônes) ; `cartes` : présentation simple. */
+    apparence: z.enum(['cartes', 'ecran']).default('cartes'),
     /** Constantes physiques (puissance max…). Les hypothèses sont signalées dans `hypotheses`. */
     constantes: z.record(z.string(), z.number()).default({}),
     hypotheses: z.array(z.string()).default([]),
