@@ -14,6 +14,21 @@ export class MachinesService {
     return Promise.all(ms.map((m) => this.vue(m)));
   }
 
+  /**
+   * L'admin a toutes les machines actives du catalogue (pour tester les fiches, l'Académie…) :
+   * celles qui lui manquent sont ajoutées, sans date de mise en service.
+   */
+  async completerAdmin(userId: string) {
+    const [variantes, siennes] = await Promise.all([
+      this.prisma.variante.findMany({ where: { actif: true }, select: { id: true } }),
+      this.prisma.userMachine.findMany({ where: { userId }, select: { varianteId: true } }),
+    ]);
+    const deja = new Set(siennes.map((m) => m.varianteId));
+    const manquantes = variantes.filter((v) => !deja.has(v.id));
+    if (manquantes.length)
+      await this.prisma.userMachine.createMany({ data: manquantes.map((v) => ({ userId, varianteId: v.id, surnom: 'Test admin' })) });
+  }
+
   private async vue(m: Prisma.UserMachineGetPayload<{ include: typeof INCLUDE }>) {
     const version = await this.catalogue.derniereVersion(m.varianteId).catch(() => null);
     return {

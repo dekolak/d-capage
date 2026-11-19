@@ -33,6 +33,7 @@ export class MachinesController {
   /** Mes machines (celles visibles dans l'espace ouvert). */
   @Get('moi/machines')
   async mesMachines(@Moi() moi: Principal, @EspaceCourant() espace: string) {
+    if (moi.type === 'user' && moi.role === 'ADMIN') await this.machines.completerAdmin(moi.id);
     // Lazzeko : seulement les machines qui ont un écran de réglage (fiches)
     return (await this.machines.lister(moi.id)).filter((m) => m.espaces.includes(espace) && (espace !== 'lazzeko' || m.version));
   }
