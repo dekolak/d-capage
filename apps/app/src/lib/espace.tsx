@@ -23,13 +23,21 @@ function espaceInitial(espaces: Espace[]): Espace {
   return espaces.find((e) => e.domaines.includes(location.hostname)) ?? espaces[0];
 }
 
+/** Clarté perçue d'une couleur #rrggbb (0 noir, 1 blanc). */
+function clarte(hex: string) {
+  const n = parseInt(hex.replace('#', '').slice(0, 6), 16);
+  return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+}
+
 function appliquer(e: Espace) {
   definirEspace(e.slug);
   definirSociete(e.nom);
   const r = document.documentElement.style;
   r.setProperty('--o', e.couleur);
-  r.setProperty('--od', e.couleurFoncee);
-  r.setProperty('--o-doux', e.couleurDouce);
+  r.setProperty('--od-clair', e.couleurFoncee);
+  r.setProperty('--o-doux-clair', e.couleurDouce);
+  // texte sur la couleur de l'espace : foncé si elle est claire (ex. vert Kiavik), sinon blanc
+  r.setProperty('--sur-o', clarte(e.couleur) > 0.6 ? '#1c1d21' : '#fff');
   r.setProperty('--anneau', `0 0 0 3px ${e.couleur}38`);
   document.title = e.nomApp;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', e.couleur);

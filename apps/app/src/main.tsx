@@ -5,7 +5,10 @@ import App from './App';
 import { AuthProvider, useAuth } from './lib/auth';
 import { LangueProvider } from './lib/i18n';
 import { EspaceProvider } from './lib/espace';
+import { demarrerTheme } from './lib/theme';
 import './styles.css';
+
+demarrerTheme();
 
 /** Langue du compte connecté (sinon celle du téléphone). */
 function AvecLangue() {

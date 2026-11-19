@@ -3,7 +3,7 @@
 .ac-liste { display: grid; gap: 12px; margin: 12px 0; }
 @media (min-width: 700px) { .ac-liste { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } }
 .ac-cours { position: relative; display: grid; gap: 0; padding: 0; overflow: hidden; text-align: left; border: 0; cursor: pointer; font: inherit; color: inherit; text-decoration: none; }
-.ac-vignette { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: #eef0f3; }
+.ac-vignette { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: var(--gris-doux); }
 .ac-vignette-vide { background: var(--o-doux); }
 .ac-vignette-vide { display: flex; align-items: center; justify-content: center; font-size: 42px; }
 .ac-cadenas { position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.65); color: #fff; border-radius: 999px; padding: 6px 9px; font-size: 18px; }
@@ -16,7 +16,7 @@
 .ac-sommaire a { display: flex; gap: 12px; align-items: center; }
 .ac-sommaire .faite { opacity: 0.75; }
 .ac-num { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--o-doux); color: var(--od); display: flex; align-items: center; justify-content: center; font-weight: 700; }
-.ac-sommaire .faite .ac-num { background: #e8f5ec; color: #14532d; }
+.ac-sommaire .faite .ac-num { background: var(--vert-doux); color: var(--vert-texte); }
 .ac-lecon h1 { margin-top: 4px; }
 .ac-lecon > .btn-lien, .ac-lecon > small { display: block; }
 .ac-blocs { display: grid; gap: 14px; margin: 14px 0; }
@@ -28,7 +28,7 @@
 .ac-video-vignette { position: absolute; inset: 0; border: 0; padding: 0; background: #111; cursor: pointer; }
 .ac-video-vignette img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
 .ac-video-vide { display: block; width: 100%; height: 100%; }
-.ac-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: var(--o); color: #fff; font-size: 26px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4); }
+.ac-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; border-radius: 50%; background: var(--o); color: var(--sur-o); font-size: 26px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4); }
 .ac-video-titre { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 12px 10px; color: #fff; font-weight: 600; text-align: left; background: linear-gradient(transparent, rgba(0, 0, 0, 0.7)); }
 .ac-image { margin: 0; }
 .ac-image img { width: 100%; border-radius: var(--r-sm); }
@@ -42,7 +42,7 @@
 .ac-plein .gx-fermer { position: absolute; top: 6px; right: 10px; z-index: 2; }
 .ac-charge { height: 180px; border-radius: var(--r-sm); background: var(--bord); }
 .ac-fin { display: grid; gap: 12px; margin: 24px 0 10px; }
-.ac-fin .btn.ok { background: #e8f5ec; color: #14532d; border-color: #b7e2c4; }
+.ac-fin .btn.ok { background: var(--vert-doux); color: var(--vert-texte); border-color: #b7e2c4; }
 .ac-nav { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 /* administration */
 .ac-admin .ac-ligne { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -67,7 +67,7 @@
 .ac-html-plein iframe { border-radius: 0; }
 .ac-outils-machine { margin: 0 0 12px; gap: 6px; }
 .ac-outils-machine .bandeau { margin: 0; }
-.ac-note { background: #fff8db; border: 1px dashed #d9b400; border-radius: var(--r-sm); padding: 8px 10px; font-size: 14px; white-space: pre-wrap; }
+.ac-note { background: var(--jaune-doux); border: 1px dashed #d9b400; border-radius: var(--r-sm); padding: 8px 10px; font-size: 14px; white-space: pre-wrap; }
 .ac-terrain-blocs { display: grid; gap: 8px; }
 .ac-terrain-bloc { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; background: var(--carte); border-radius: var(--r-sm); padding: 8px; }
 .ac-terrain-bloc .ac-image img { max-height: 160px; width: auto; }

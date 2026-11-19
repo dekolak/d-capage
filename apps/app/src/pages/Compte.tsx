@@ -5,6 +5,7 @@ import { api, jeton } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useEspace } from '../lib/espace';
 import { LANGUES, NOMS_LANGUES, t } from '../lib/i18n';
+import { choisirTheme, Theme, themeChoisi } from '../lib/theme';
 
 export default function Compte() {
   const { moi, deconnexion, rafraichir } = useAuth();
@@ -16,6 +17,7 @@ export default function Compte() {
   const [nouveau, setNouveau] = useState('');
   const [ok, setOk] = useState(false);
   const [err, setErr] = useState<unknown>();
+  const [theme, setTheme] = useState<Theme>(themeChoisi);
 
   const changer = async (e: FormEvent) => {
     e.preventDefault();
@@ -113,6 +115,13 @@ export default function Compte() {
           </select>
         </>
       )}
+
+      <h2>{t('compte.affichage')}</h2>
+      <div className="seg">
+        {(['auto', 'clair', 'sombre'] as Theme[]).map((x) => (
+          <button key={x} type="button" className={theme === x ? 'on' : ''} onClick={() => ((choisirTheme(x), setTheme(x)))}>{t(`compte.theme.${x}`)}</button>
+        ))}
+      </div>
 
       <h2>{t('compte.motDePasse')}</h2>
       <form className="form" onSubmit={changer}>
