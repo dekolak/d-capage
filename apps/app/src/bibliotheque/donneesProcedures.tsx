@@ -62,7 +62,8 @@ export const estDiagnostic = (p: Procedure) => p.etapes.some((e) => e.choix.leng
 export const moduleProcedures = (espace: string) => (espace === 'lazzeko' ? 'procedures-lazzeko' : 'procedures-kiavik');
 
 /** Catégorie de l'accueil (Administration → Catégories) : nom, icône, ordre, masquée. */
-export interface Categorie { id: string; nom: string; icone: string; ordre: number; masquee: boolean }
+/** `espaces` : sociétés où elle est proposée (vide = toutes). */
+export interface Categorie { id: string; nom: string; icone: string; ordre: number; masquee: boolean; espaces?: string[] }
 
 let cacheCategories: Promise<Categorie[]> | null = null;
 export function chargerCategories(): Promise<Categorie[]> {
@@ -99,8 +100,12 @@ export function trierCategories(l: string[], cats: Categorie[] = []): string[] {
 }
 
 /** Choix de la catégorie dans les écrans d'administration (les catégories se créent dans « Catégories »). */
-export function ChoixCategorie({ valeur, onChange }: { valeur: string; onChange: (v: string) => void }) {
-  const cats = useCategories();
+/** `espace` : société du contenu (sinon celle ouverte) ; seules ses catégories sont proposées. */
+export function ChoixCategorie({ valeur, onChange, espace }: { valeur: string; onChange: (v: string) => void; espace?: string }) {
+  const tous = useCategories();
+  const { espace: ouvert } = useEspace();
+  const soc = espace ?? ouvert.slug;
+  const cats = tous?.filter((c) => !c.espaces?.length || c.espaces.includes(soc) || c.nom === valeur);
   const noms = [...(cats ?? []).map((c) => c.nom), ...(valeur && !cats?.some((c) => c.nom === valeur) ? [valeur] : [])];
   return (
     <>

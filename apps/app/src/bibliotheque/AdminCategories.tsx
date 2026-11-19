@@ -225,6 +225,7 @@ function LigneCategorie({ c, n, premier, dernier, autres, actif, filtrer, faire 
   c: Categorie; n: number; premier: boolean; dernier: boolean; autres: Categorie[]; actif: boolean; filtrer: () => void;
   faire: (chemin: string, opts: RequestInit & { json?: unknown }) => Promise<boolean>;
 }) {
+  const { espaces } = useEspace();
   const [edition, setEdition] = useState(false);
   const [nom, setNom] = useState(c.nom);
   const [suppr, setSuppr] = useState(false);
@@ -251,6 +252,21 @@ function LigneCategorie({ c, n, premier, dernier, autres, actif, filtrer, faire 
         <span aria-hidden="true">{c.icone}</span> <b>{c.nom}</b> <small className="muted">{n}</small>
         {c.masquee && <small className="gx-brouillon">masquée</small>}
       </button>
+      {/* sociétés où elle est proposée (toutes cochées = toutes) */}
+      <span className="ca-societes">
+        {espaces.map((e) => {
+          const on = !c.espaces?.length || c.espaces.includes(e.slug);
+          return (
+            <button key={e.slug} type="button" className={`btn petit ${on ? 'on' : ''}`} title={on ? `Retirer de ${e.nom}` : `Proposer aussi pour ${e.nom}`}
+              onClick={() => {
+                const actuels = c.espaces?.length ? c.espaces : espaces.map((x) => x.slug);
+                const suivants = on ? actuels.filter((x) => x !== e.slug) : [...actuels, e.slug];
+                if (!suivants.length) return; // au moins une société
+                faire(url, { method: 'PATCH', json: { espaces: suivants.length === espaces.length ? [] : suivants } });
+              }}>{on ? '✓ ' : ''}{e.nom}</button>
+          );
+        })}
+      </span>
       <span className="ca-actions">
         <button type="button" className="btn petit" aria-label="Monter" disabled={premier} onClick={() => faire(`${url}/deplacer`, { method: 'POST', json: { sens: -1 } })}>↑</button>
         <button type="button" className="btn petit" aria-label="Descendre" disabled={dernier} onClick={() => faire(`${url}/deplacer`, { method: 'POST', json: { sens: 1 } })}>↓</button>

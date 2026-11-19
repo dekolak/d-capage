@@ -626,7 +626,7 @@ export function AdminProcedure() {
           <div className="carte form">
             <label>Titre<input type="text" value={infos.titre} onChange={(e) => setInfos({ ...infos, titre: e.target.value })} /></label>
             <label>Catégorie
-              <ChoixCategorie valeur={infos.categorie} onChange={(categorie) => setInfos({ ...infos, categorie })} />
+              <ChoixCategorie valeur={infos.categorie} espace={infos.espace} onChange={(categorie) => setInfos({ ...infos, categorie })} />
             </label>
             <label>Résumé (court, vu par le client dans la liste)<textarea rows={2} value={infos.resume} onChange={(e) => setInfos({ ...infos, resume: e.target.value })} /></label>
             <div>

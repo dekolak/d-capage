@@ -199,7 +199,7 @@ export function CategorieAnimation({ guide, a }: { guide: Guide; a: Animation })
     <div className="cx-categorie">
       <label>
         Catégorie sur l'accueil
-        <ChoixCategorie valeur={v} onChange={setV} />
+        <ChoixCategorie valeur={v} espace="kiavik" onChange={setV} />
       </label>
       <span>
         {v.trim() !== (a.categorie ?? '') && <button type="button" className="btn prim petit" disabled={v.trim().length < 2} onClick={() => faire({ method: 'PUT', json: { categorie: v.trim() } })}>Enregistrer</button>}

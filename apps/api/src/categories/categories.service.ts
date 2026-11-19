@@ -52,16 +52,16 @@ export class CategoriesService {
     ];
   }
 
-  async creer(d: { nom: string; icone?: string }) {
+  async creer(d: { nom: string; icone?: string; espaces?: string[] }) {
     const nom = d.nom.trim();
     if (await this.prisma.categorieAccueil.findUnique({ where: { nom } })) throw new BadRequestException('Cette catégorie existe déjà');
     const ordre = ((await this.prisma.categorieAccueil.aggregate({ _max: { ordre: true } }))._max.ordre ?? -1) + 1;
-    await this.prisma.categorieAccueil.create({ data: { nom, icone: d.icone?.trim() || '📁', ordre } });
+    await this.prisma.categorieAccueil.create({ data: { nom, icone: d.icone?.trim() || '📁', ordre, espaces: [...new Set(d.espaces ?? [])] } });
     return this.lister();
   }
 
   /** Modifier : icône, masquée, et renommer (tout son contenu suit, animations comprises). */
-  async modifier(id: string, d: { nom?: string; icone?: string; masquee?: boolean }) {
+  async modifier(id: string, d: { nom?: string; icone?: string; masquee?: boolean; espaces?: string[] }) {
     const c = await this.categorie(id);
     const nom = d.nom?.trim();
     const renommee = !!nom && nom !== c.nom;
@@ -69,7 +69,7 @@ export class CategoriesService {
     // la catégorie d'abord (garde son icône, son ordre), puis son contenu la suit
     await this.prisma.categorieAccueil.update({
       where: { id },
-      data: { ...(renommee ? { nom } : {}), ...(d.icone !== undefined ? { icone: d.icone.trim() || '📁' } : {}), ...(d.masquee !== undefined ? { masquee: d.masquee } : {}) },
+      data: { ...(renommee ? { nom } : {}), ...(d.icone !== undefined ? { icone: d.icone.trim() || '📁' } : {}), ...(d.masquee !== undefined ? { masquee: d.masquee } : {}), ...(d.espaces ? { espaces: [...new Set(d.espaces)] } : {}) },
     });
     if (renommee) await this.deplacerContenu(c.nom, nom);
     return this.lister();

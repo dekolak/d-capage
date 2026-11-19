@@ -34,3 +34,5 @@
 .ca-aide { margin: 0 0 6px; }
 main:has(.ca) { max-width: 1200px; }
 .ca-liste select { max-width: 190px; }
+.ca-societes { display: flex; gap: 4px; }
+.ca-societes .btn.on { border-color: var(--o); background: var(--o-doux); }

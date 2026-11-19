@@ -132,7 +132,7 @@ export function AdminSolution() {
         <label>Le problème ou l'astuce (titre)<input type="text" value={f.titre} maxLength={160} onChange={(e) => setF({ ...f, titre: e.target.value })} /></label>
         <label>
           Catégorie
-          <ChoixCategorie valeur={f.categorie} onChange={(categorie) => setF({ ...f, categorie })} />
+          <ChoixCategorie valeur={f.categorie} espace={f.espace} onChange={(categorie) => setF({ ...f, categorie })} />
         </label>
         <BlocPourQui valeur={f} onChange={(v) => setF({ ...f, ...v })} />
         <label>Pourquoi ? (facultatif)<textarea rows={2} value={f.cause} maxLength={1000} onChange={(e) => setF({ ...f, cause: e.target.value })} /></label>

@@ -37,7 +37,7 @@ export class SolutionsService {
     const r: Record<string, unknown> = { ...d };
     for (const k of ['cause', 'avertissement'] as const) if (d[k] !== undefined) r[k] = d[k]?.trim() || null;
     for (const k of ['titre', 'texte', 'categorie'] as const) if (d[k] !== undefined) r[k] = d[k]!.trim();
-    if (d.categorie !== undefined) await assurerCategorie(this.prisma, d.categorie);
+    if (d.categorie !== undefined) await assurerCategorie(this.prisma, d.categorie, d.espace);
     verifierEspace(d.espace);
     if (d.etiquettes) r.etiquettes = nettoyerEtiquettes(d.etiquettes);
     if (d.cibleCategories) r.cibleCategories = nettoyerEtiquettes(d.cibleCategories);

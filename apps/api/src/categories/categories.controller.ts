@@ -8,11 +8,14 @@ import { CategoriesService, TypeElement } from './categories.service';
 class CategorieDto {
   @IsString() @MinLength(2) @MaxLength(40) nom!: string;
   @IsOptional() @IsString() @MaxLength(16) icone?: string;
+  /** Sociétés où elle est proposée ; vide = toutes. */
+  @IsOptional() @IsArray() @IsIn(['lazzeko', 'kiavik'], { each: true }) espaces?: string[];
 }
 class ModifierCategorieDto {
   @IsOptional() @IsString() @MinLength(2) @MaxLength(40) nom?: string;
   @IsOptional() @IsString() @MaxLength(16) icone?: string;
   @IsOptional() @IsBoolean() masquee?: boolean;
+  @IsOptional() @IsArray() @IsIn(['lazzeko', 'kiavik'], { each: true }) espaces?: string[];
 }
 class DeplacerDto {
   @IsIn([-1, 1]) sens!: -1 | 1;
