@@ -25,6 +25,7 @@ import Connexion from './pages/Connexion';
 import PremierMotDePasse from './pages/PremierMotDePasse';
 import { PageAcademie, PageCours, PageLecon } from './academie/Pages';
 import { AdminAcademie, AdminCours, AdminLecon, AdminSimulateurs } from './academie/Admin';
+import { TerrainAcademie, TerrainLecon } from './academie/Terrain';
 import { t } from './lib/i18n';
 import Carnets, { CarnetRoute } from './pages/Carnet';
 import AdminEntretien, { AdminCarnet } from './pages/AdminEntretien';
@@ -84,6 +85,8 @@ export default function App() {
           <Route path="/academie/lecons/:leconId" element={<PageLecon />} />
           <Route path="/academie/:coursId" element={<PageCours />} />
           {admin && <Route path="/admin/academie" element={<AdminAcademie />} />}
+          {admin && <Route path="/admin/academie/terrain" element={<TerrainAcademie />} />}
+          {admin && <Route path="/admin/academie/terrain/:id" element={<TerrainLecon />} />}
           {admin && <Route path="/admin/academie/simulateurs" element={<AdminSimulateurs />} />}
           {admin && <Route path="/admin/academie/cours/:id" element={<AdminCours />} />}
           {admin && <Route path="/admin/academie/lecons/:id" element={<AdminLecon />} />}

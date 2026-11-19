@@ -1498,7 +1498,9 @@ describe('Parcours complet', () => {
     expect((await http.post(`/api/admin/academie/cours/${dedie.id}/lecons`).set(A).send({ titre: 'x', blocs: [{ type: 'script' }] })).status).toBe(400);
     const l1 = (await http.post(`/api/admin/academie/cours/${dedie.id}/lecons`).set(A).send({ titre: 'Leçon 1', blocs })).body;
     const l2 = (await http.post(`/api/admin/academie/cours/${dedie.id}/lecons`).set(A).send({ titre: 'Leçon 2' })).body;
-    await http.patch(`/api/admin/academie/lecons/${l2.id}`).set(A).send({ blocs: [{ type: 'texte', texte: 'Fin' }] }).expect(200);
+    await http.patch(`/api/admin/academie/lecons/${l2.id}`).set(A).send({ blocs: [{ type: 'texte', texte: 'Fin' }, { type: 'note', texte: 'Vidéo à placer' }] }).expect(200);
+    // note de montage : vue par l'admin, jamais envoyée aux clients
+    expect((await http.get(`/api/academie/lecons/${l2.id}`).set(A)).body.blocs.map((b: any) => b.type)).toEqual(['texte', 'note']);
     expect(l1.blocs[1]).not.toHaveProperty('inconnu');
 
     // client avec la machine : il voit tout ; sans : le cours ciblé n'apparaît pas et ne s'ouvre pas
@@ -1511,6 +1513,7 @@ describe('Parcours complet', () => {
     expect(refus.body.code).toBe('HORS_CIBLE');
     expect((await http.get(`/api/academie/cours/${dedie.id}`).set(sans.H)).status).toBe(403);
 
+    expect((await http.get(`/api/academie/lecons/${l2.id}`).set(avec.H)).body.blocs.map((b: any) => b.type)).toEqual(['texte']);
     // leçon : blocs, simulateur nommé, fichier avec chemin, navigation
     const lecon = (await http.get(`/api/academie/lecons/${l1.id}`).set(avec.H)).body;
     expect(lecon).toMatchObject({ titre: 'Leçon 1', faite: false, suivante: l2.id, precedente: null, cours: { id: dedie.id, rang: 1, nbLecons: 2 } });

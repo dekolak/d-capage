@@ -3,7 +3,8 @@
 .ac-liste { display: grid; gap: 12px; margin: 12px 0; }
 @media (min-width: 700px) { .ac-liste { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } }
 .ac-cours { position: relative; display: grid; gap: 0; padding: 0; overflow: hidden; text-align: left; border: 0; cursor: pointer; font: inherit; color: inherit; text-decoration: none; }
-.ac-vignette { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--o-doux); }
+.ac-vignette { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: #eef0f3; }
+.ac-vignette-vide { background: var(--o-doux); }
 .ac-vignette-vide { display: flex; align-items: center; justify-content: center; font-size: 42px; }
 .ac-cadenas { position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.65); color: #fff; border-radius: 999px; padding: 6px 9px; font-size: 18px; }
 .ac-infos { display: grid; gap: 4px; padding: 12px 14px 14px; }
@@ -66,3 +67,9 @@
 .ac-html-plein iframe { border-radius: 0; }
 .ac-outils-machine { margin: 0 0 12px; gap: 6px; }
 .ac-outils-machine .bandeau { margin: 0; }
+.ac-note { background: #fff8db; border: 1px dashed #d9b400; border-radius: var(--r-sm); padding: 8px 10px; font-size: 14px; white-space: pre-wrap; }
+.ac-terrain-blocs { display: grid; gap: 8px; }
+.ac-terrain-bloc { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; background: var(--carte); border-radius: var(--r-sm); padding: 8px; }
+.ac-terrain-bloc .ac-image img { max-height: 160px; width: auto; }
+.ac-apercu-couv { display: grid; gap: 6px; max-width: 360px; }
+.ac-apercu-couv .ac-vignette { border-radius: var(--r-sm); }

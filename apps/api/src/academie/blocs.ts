@@ -4,7 +4,8 @@ import { BadRequestException } from '@nestjs/common';
  * Blocs d'une leçon de l'Académie (JSON dans LeconAcademie.blocs). Une page = une suite de blocs simples ;
  * le bloc « html » (et le simulateur) est affiché dans une iframe isolée côté app (sandbox, sans accès au compte).
  */
-export const TYPES_BLOCS = ['titre', 'texte', 'vimeo', 'image', 'encadre', 'simulateur', 'html', 'fichier'] as const;
+/** « note » : rappel pour l'admin (ex. « vidéo à placer ici ») : jamais envoyé aux clients. */
+export const TYPES_BLOCS = ['titre', 'texte', 'vimeo', 'image', 'encadre', 'simulateur', 'html', 'fichier', 'note'] as const;
 export type TypeBloc = (typeof TYPES_BLOCS)[number];
 export type Bloc = { id: string; type: TypeBloc } & Record<string, unknown>;
 
@@ -45,6 +46,8 @@ export function nettoyerBlocs(entree: unknown): Bloc[] {
     switch (type) {
       case 'titre':
         return { id, type, texte: texte(x.texte, 200, n) };
+      case 'note':
+        return { id, type, texte: texte(x.texte, 4000, n) };
       case 'texte':
         return { id, type, texte: texte(x.texte, 20000, n) };
       case 'encadre':

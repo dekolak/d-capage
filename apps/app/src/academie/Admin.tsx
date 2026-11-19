@@ -7,6 +7,7 @@ import { api } from '../lib/api';
 import { compresser } from '../lib/image';
 import { useEspace } from '../lib/espace';
 import { EnteteAdmin } from '../pages/Admin';
+import { ImageApi } from '../espaces/kiavik/donneesProcedures';
 import { Blocs, IframeIsolee } from './Blocs';
 import { Bloc, Cours, duree, idVimeo, infosVimeo, TypeBloc } from './donnees';
 import './academie.css';
@@ -15,7 +16,7 @@ import './academie.css';
 
 interface CoursAdmin {
   id: string; titre: string; description: string | null; publie: boolean; espace: string; type: 'parcours' | 'page'; couverture?: string; vignette?: string;
-  cibleCategories: string[]; cibleModeles: string[]; pourQui: string[]; nbLecons: number;
+  cibleCategories: string[]; cibleModeles: string[]; pourQui: string[]; nbLecons: number; notes: number;
 }
 interface Simulateur { id: string; nom: string; espace: string; modeleId: string | null }
 
@@ -28,6 +29,7 @@ const TYPES: { t: TypeBloc; l: string }[] = [
   { t: 'simulateur', l: '🖥 Simulateur' },
   { t: 'html', l: '🧩 HTML libre' },
   { t: 'fichier', l: '📎 Fichier' },
+  { t: 'note', l: '📝 Note (admin)' },
 ];
 const nouvelId = () => `b${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
@@ -83,6 +85,10 @@ export function AdminAcademie() {
         rangé dans « Mes outils » ; un simulateur seul s'affiche en plein écran. « Pour qui ? » : tout le monde, une machine ou une catégorie (les autres clients ne le voient pas).
         Le contenu se compose de blocs (texte, Vimeo, image, simulateur, HTML…). <Link to="/admin/academie/simulateurs">🖥 Bibliothèque de simulateurs ›</Link>
       </p>
+      <Link to="/admin/academie/terrain" className="bandeau lien-bandeau">
+        <span><b>🎥 Mode terrain</b> : préparer une leçon devant la machine (photos, dictée, notes), la finir ici ensuite</span>
+        <span>›</span>
+      </Link>
       <div className="seg">
         {espaces.map((e) => (
           <button key={e.slug} type="button" className={fEsp === e.slug ? 'on' : ''} onClick={() => setFEsp(e.slug)}>{e.nom}</button>
@@ -114,7 +120,8 @@ export function AdminAcademie() {
               <b>{c.type === 'page' ? '🧰' : '📚'} {c.titre} <RefId id={c.id} p="C" /></b>
               <small className="muted">
                 {c.type === 'page' ? 'page' : `${c.nbLecons} leçon${c.nbLecons > 1 ? 's' : ''}`} · {c.pourQui.length ? `🎯 ${c.pourQui.join(', ')}` : 'tout le monde'}
-                {c.publie ? ' · ✅ publié' : ' · 🔒 brouillon'}
+                {c.publie ? ' · ✅ publié' : ' · ✏️ brouillon'}
+                {c.notes > 0 && ` · 📝 ${c.notes} note${c.notes > 1 ? 's' : ''} à traiter`}
               </small>
             </Link>
             <span className="cx-actions">
@@ -180,7 +187,13 @@ export function AdminCours() {
           Image de couverture <small className="muted">(sinon la vignette de la première vidéo)</small>
           <input type="file" accept="image/*" onChange={(e) => couverture(e.target.files?.[0])} />
         </label>
-        {c.couverture && <button type="button" className="btn-lien petit" onClick={() => api(`/admin/academie/cours/${id}/couverture`, { method: 'DELETE' }).then(charger)}>Retirer la couverture</button>}
+        {c.couverture && (
+          <div className="ac-apercu-couv">
+            <small className="muted">Aperçu (comme le client la voit) : image entière, format 16/9 ; idéal : photo en paysage, sujet au centre.</small>
+            <ImageApi chemin={c.couverture.replace(/^\/api/, '')} className="ac-vignette" />
+            <button type="button" className="btn-lien petit" onClick={() => api(`/admin/academie/cours/${id}/couverture`, { method: 'DELETE' }).then(charger)}>Retirer la couverture</button>
+          </div>
+        )}
       </div>
       <div className="carte form">
         <BlocPourQui
@@ -326,6 +339,8 @@ function EditeurBloc({ b, sims, onChange, onErreur }: { b: Bloc; sims: Simulateu
   switch (b.type) {
     case 'titre':
       return <input value={b.texte ?? ''} maxLength={200} placeholder="Intertitre" onChange={(e) => onChange({ ...b, texte: e.target.value })} />;
+    case 'note':
+      return <textarea rows={2} value={b.texte ?? ''} maxLength={4000} placeholder="Rappel pour vous (jamais vu par les clients) : ex. vidéo à placer ici" onChange={(e) => onChange({ ...b, texte: e.target.value })} />;
     case 'texte':
       return (
         <>

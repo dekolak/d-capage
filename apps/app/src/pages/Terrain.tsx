@@ -307,7 +307,7 @@ export function TerrainCapture() {
  * Caméra en direct (arrière) : déclencheur avec retardateur réglable (0, 3, 5, 10 s), bip à chaque seconde.
  * Si la caméra n'est pas accessible : bouton « Prendre une photo » de l'appareil.
  */
-function Camera({ onPhoto, pleine }: { onPhoto: (b: Blob) => void; pleine: boolean }) {
+export function Camera({ onPhoto, pleine }: { onPhoto: (b: Blob) => void; pleine: boolean }) {
   const video = useRef<HTMLVideoElement>(null);
   const [actif, setActif] = useState<boolean | null>(null);
   const [delai, setDelai] = useState<number>(() => Number(localStorage.getItem(CLE_RETARDATEUR) ?? 3));
@@ -407,7 +407,7 @@ function Camera({ onPhoto, pleine }: { onPhoto: (b: Blob) => void; pleine: boole
 }
 
 /** Ajouter des photos déjà prises (galerie du téléphone, ou fichiers sur PC), plusieurs à la fois. */
-function Galerie({ reste, onPhoto }: { reste: number; onPhoto: (b: Blob) => Promise<void> }) {
+export function Galerie({ reste, onPhoto }: { reste: number; onPhoto: (b: Blob) => Promise<void> }) {
   return (
     <label className={`btn tr-galerie ${reste <= 0 ? 'desactive' : ''}`}>
       🖼 Ajouter depuis la galerie
@@ -429,7 +429,7 @@ type Reconnaissance = {
 };
 
 /** Dictée (Chrome Android, avec Internet) : le texte reconnu s'ajoute à l'étape. */
-function Dictee({ onTexte }: { onTexte: (t: string) => void }) {
+export function Dictee({ onTexte }: { onTexte: (t: string) => void }) {
   const R = (window as unknown as { SpeechRecognition?: new () => Reconnaissance; webkitSpeechRecognition?: new () => Reconnaissance }).SpeechRecognition
     ?? (window as unknown as { webkitSpeechRecognition?: new () => Reconnaissance }).webkitSpeechRecognition;
   const rec = useRef<Reconnaissance | null>(null);

@@ -91,7 +91,8 @@ export class AcademieService {
     const l = await this.prisma.leconAcademie.findUnique({ where: { id }, select: { id: true, coursId: true, titre: true, blocs: true } });
     if (!l) throw new NotFoundException('Leçon introuvable');
     const c = await this.coursVisible(l.coursId, qui);
-    const blocs = l.blocs as Bloc[];
+    // les notes de montage (rappels de l'admin) ne partent jamais chez les clients
+    const blocs = (l.blocs as Bloc[]).filter((b) => !qui || b.type !== 'note');
     const simIds = blocs.filter((b) => b.type === 'simulateur').map((b) => b.simulateurId as string);
     const sims = simIds.length ? await this.prisma.simulateurAcademie.findMany({ where: { id: { in: simIds } }, select: { id: true, nom: true } }) : [];
     const i = c.lecons.findIndex((x) => x.id === id);
@@ -154,6 +155,7 @@ export class AcademieService {
         id: c.id, titre: c.titre, description: c.description, publie: c.publie, espace: c.espace, type: c.type, ...this.vignette(c),
         cibleCategories: c.cibleCategories, cibleModeles: c.cibleModeles, pourQui: await this.pourQui(c),
         nbLecons: c.lecons.length, updatedAt: c.updatedAt,
+        notes: c.lecons.reduce((n, l) => n + (l.blocs as Bloc[]).filter((b) => b.type === 'note').length, 0),
       })),
     );
   }
