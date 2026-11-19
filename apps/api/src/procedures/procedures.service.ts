@@ -32,7 +32,7 @@ export class ProceduresService {
   /** Vue d'une procédure. Pour le client : sans description, prompt, notes ni significations (réservés à l'admin et à l'IA). */
   private vue(p: ProcedureComplete, admin = true) {
     return {
-      id: p.id, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee, demanderAvis: p.demanderAvis, ordre: p.ordre, updatedAt: p.updatedAt,
+      id: p.id, titre: p.titre, categorie: p.categorie, autresCategories: p.autresCategories, resume: p.resume, publiee: p.publiee, demanderAvis: p.demanderAvis, ordre: p.ordre, updatedAt: p.updatedAt,
       suivanteId: p.suivanteId, espace: p.espace, etiquettes: p.etiquettes, type: p.type, cibleCategories: p.cibleCategories, cibleModeles: p.cibleModeles,
       ...(admin ? { description: p.description, prompt: p.prompt, resumeIa: p.resumeIa, resumeIaLe: p.resumeIaLe } : {}),
       etapes: p.etapes.map(({ photos, procedureId: _p, note, choix, ...e }) => ({
@@ -149,8 +149,8 @@ export class ProceduresService {
 
   async modifier(
     id: string,
-    d: Omit<Prisma.ProcedureUncheckedUpdateInput, 'suivanteId' | 'etiquettes' | 'espace' | 'cibleCategories' | 'cibleModeles'>
-      & { suivanteId?: string | null; espace?: string; etiquettes?: string[]; cibleCategories?: string[]; cibleModeles?: string[] },
+    d: Omit<Prisma.ProcedureUncheckedUpdateInput, 'suivanteId' | 'etiquettes' | 'espace' | 'cibleCategories' | 'cibleModeles' | 'autresCategories'>
+      & { suivanteId?: string | null; espace?: string; etiquettes?: string[]; cibleCategories?: string[]; cibleModeles?: string[]; autresCategories?: string[] },
   ) {
     await this.existe(id);
     verifierEspace(d.espace);
@@ -160,8 +160,14 @@ export class ProceduresService {
       if (d.suivanteId === id) throw new BadRequestException('Une procédure ne peut pas se proposer elle-même');
       await this.existe(d.suivanteId);
     }
-    if (typeof d.categorie === 'string')
-      await assurerCategorie(this.prisma, d.categorie, d.espace ?? (await this.prisma.procedure.findUnique({ where: { id }, select: { espace: true } }))?.espace);
+    const espace = d.espace ?? (await this.prisma.procedure.findUnique({ where: { id }, select: { espace: true } }))?.espace;
+    if (typeof d.categorie === 'string') await assurerCategorie(this.prisma, d.categorie, espace);
+    if (d.autresCategories) {
+      const principale = typeof d.categorie === 'string' ? d.categorie : (await this.prisma.procedure.findUnique({ where: { id }, select: { categorie: true } }))?.categorie;
+      const autres = [...new Set(d.autresCategories.map((x) => x.trim()).filter((x) => x.length >= 2 && x !== principale))].slice(0, 3);
+      for (const c of autres) await assurerCategorie(this.prisma, c, espace);
+      d = { ...d, autresCategories: autres };
+    }
     await this.prisma.procedure.update({ where: { id }, data: d });
     return this.lire(id, true);
   }

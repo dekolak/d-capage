@@ -6,7 +6,7 @@ import { api } from '../lib/api';
 import { copier } from '../lib/copier';
 import { compresser } from '../lib/image';
 import { ChoixBouton, Lien, useGuidesAdmin } from './AdminProcedures';
-import { ChoixCategorie, ICONE_TYPE, TYPES_PAS_A_PAS, TypePasAPas, Choix, Etape, Procedure, ResumeProcedure, Solution, chargerProcedures, estDiagnostic, viderProcedures } from './donneesProcedures';
+import { AutresCategories, ChoixCategorie, ICONE_TYPE, TYPES_PAS_A_PAS, TypePasAPas, Choix, Etape, Procedure, ResumeProcedure, Solution, chargerProcedures, estDiagnostic, viderProcedures } from './donneesProcedures';
 import { Guide } from '../espaces/kiavik/guides';
 import { decouperEtape } from './ProcedureDetail';
 import { useSolutions } from './donneesProcedures';
@@ -539,14 +539,14 @@ export function AdminProcedure() {
   const [procedures, setProcedures] = useState<ResumeProcedure[]>([]);
   const [p, setP] = useState<Procedure>();
   const [erreur, setErreur] = useState<unknown>();
-  const [infos, setInfos] = useState({ titre: '', categorie: '', resume: '', description: '', espace: 'kiavik' as EspaceContenu, etiquettes: [] as string[], type: 'procedure' as TypePasAPas, cibleCategories: [] as string[], cibleModeles: [] as string[] });
+  const [infos, setInfos] = useState({ titre: '', categorie: '', autresCategories: [] as string[], resume: '', description: '', espace: 'kiavik' as EspaceContenu, etiquettes: [] as string[], type: 'procedure' as TypePasAPas, cibleCategories: [] as string[], cibleModeles: [] as string[] });
   const [sel, setSel] = useState<Sel>(null);
   const [stats, setStats] = useState<Stats>();
   const [signalements, setSignalements] = useState<Signalement[]>([]);
 
   const appliquer = (x: Procedure) => {
     setP(x);
-    setInfos({ titre: x.titre, categorie: x.categorie, resume: x.resume ?? '', description: x.description ?? '', espace: x.espace, etiquettes: x.etiquettes, type: x.type, cibleCategories: x.cibleCategories, cibleModeles: x.cibleModeles });
+    setInfos({ titre: x.titre, categorie: x.categorie, autresCategories: x.autresCategories ?? [], resume: x.resume ?? '', description: x.description ?? '', espace: x.espace, etiquettes: x.etiquettes, type: x.type, cibleCategories: x.cibleCategories, cibleModeles: x.cibleModeles });
     viderProcedures();
   };
   useEffect(() => {
@@ -573,7 +573,7 @@ export function AdminProcedure() {
   };
 
   if (!p) return erreur ? <Erreur e={erreur} /> : <Chargement />;
-  const infosModifiees = infos.titre !== p.titre || infos.categorie !== p.categorie || infos.resume !== (p.resume ?? '') || infos.description !== (p.description ?? '')
+  const infosModifiees = infos.titre !== p.titre || infos.categorie !== p.categorie || infos.autresCategories.join('|') !== (p.autresCategories ?? []).join('|') || infos.resume !== (p.resume ?? '') || infos.description !== (p.description ?? '')
     || infos.espace !== p.espace || infos.etiquettes.join('|') !== p.etiquettes.join('|') || infos.type !== p.type
     || infos.cibleCategories.join('|') !== p.cibleCategories.join('|') || infos.cibleModeles.join('|') !== p.cibleModeles.join('|');
   const etapeSel = sel?.type === 'etape' ? p.etapes.find((e) => e.id === sel.id) : undefined;
@@ -628,6 +628,10 @@ export function AdminProcedure() {
             <label>Catégorie
               <ChoixCategorie valeur={infos.categorie} espace={infos.espace} onChange={(categorie) => setInfos({ ...infos, categorie })} />
             </label>
+            <div>
+              <b className="petit">Aussi dans (3 au plus)</b> <small className="muted">pour un client qui le cherche ailleurs (ex. réglage du blanc aussi dans Impression)</small>
+              <AutresCategories principale={infos.categorie} valeur={infos.autresCategories} espace={infos.espace} onChange={(autresCategories) => setInfos({ ...infos, autresCategories })} />
+            </div>
             <label>Résumé (court, vu par le client dans la liste)<textarea rows={2} value={infos.resume} onChange={(e) => setInfos({ ...infos, resume: e.target.value })} /></label>
             <div>
               <b className="petit">Type</b>
@@ -641,7 +645,7 @@ export function AdminProcedure() {
             </label>
             {infosModifiees && (
               <button type="button" className="btn prim" disabled={infos.titre.trim().length < 2 || infos.categorie.trim().length < 2}
-                onClick={() => maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { titre: infos.titre.trim(), categorie: infos.categorie.trim(), resume: infos.resume.trim() || null, description: infos.description.trim() || null, espace: infos.espace, etiquettes: infos.etiquettes, type: infos.type, cibleCategories: infos.cibleCategories, cibleModeles: infos.cibleModeles } }).then((r) => r && viderEtiquettes())}>
+                onClick={() => maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { titre: infos.titre.trim(), categorie: infos.categorie.trim(), autresCategories: infos.autresCategories.filter((c) => c !== infos.categorie), resume: infos.resume.trim() || null, description: infos.description.trim() || null, espace: infos.espace, etiquettes: infos.etiquettes, type: infos.type, cibleCategories: infos.cibleCategories, cibleModeles: infos.cibleModeles } }).then((r) => r && viderEtiquettes())}>
                 Enregistrer
               </button>
             )}

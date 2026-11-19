@@ -536,6 +536,8 @@ model Procedure {
   cle             String?            @unique
   titre           String
   categorie       String             @default("Impression")
+  /// Catégories en plus (le pas-à-pas apparaît aussi dans ces sections ; la principale reste `categorie`).
+  autresCategories String[]          @default([])
   resume          String?
   /// Module requis pour la voir.
   module          String             @default("procedures-kiavik")

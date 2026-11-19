@@ -34,6 +34,8 @@ class ModifierProcedureDto {
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(5000) prompt?: string | null;
   @IsOptional() @IsString() @MinLength(2) @MaxLength(120) titre?: string;
   @IsOptional() @IsString() @MinLength(2) @MaxLength(40) categorie?: string;
+  /** Catégories en plus (3 au plus) : le pas-à-pas apparaît aussi dans ces sections. */
+  @IsOptional() @IsArray() @ArrayMaxSize(3) @IsString({ each: true }) @MaxLength(40, { each: true }) autresCategories?: string[];
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(400) resume?: string | null;
   @IsOptional() @IsBoolean() publiee?: boolean;
   /** « C'était clair ? » à la fin, pour le client. */

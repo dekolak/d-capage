@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
-import { pourModele, trierCategories, useAccesProcedures, useCategories, useProcedures, useSolutions } from '../bibliotheque/donneesProcedures';
+import { categoriesDe, pourModele, trierCategories, useAccesProcedures, useCategories, useProcedures, useSolutions } from '../bibliotheque/donneesProcedures';
 import { SectionCategorie, useSectionOuverte } from '../bibliotheque/SectionCategorie';
 import { EnvoiRecu, ListeRecus } from '../components/EnvoisRecus';
 import { ListeProcedures } from '../bibliotheque/Procedures';
@@ -71,7 +71,7 @@ export default function MaMachine() {
   const astuces = parPrecision((solutions ?? []).filter((s) => pourModele(s, m)));
   // sections comme l'accueil : ordre, icônes et sections masquées dans Administration → Catégories
   const masquees = (cats ?? []).filter((c) => c.masquee).map((c) => c.nom);
-  const categories = trierCategories([...pas.map((p) => p.categorie), ...astuces.map((x) => x.categorie)], cats).filter((c) => !masquees.includes(c));
+  const categories = trierCategories([...pas.flatMap(categoriesDe), ...astuces.map((x) => x.categorie)], cats).filter((c) => !masquees.includes(c));
   const retard = m.taches.filter((x) => x.etat === 'retard').length;
 
   return (
@@ -116,7 +116,7 @@ export default function MaMachine() {
         !procedures || !solutions ? <Chargement /> : !categories.length ? <p className="muted">{t('maMachine.rienGuides')}</p> : (
           <div className="liste">
             {categories.map((cat) => {
-              const procs = pas.filter((p) => p.categorie === cat);
+              const procs = pas.filter((p) => categoriesDe(p).includes(cat));
               const bons = astuces.filter((x) => x.categorie === cat);
               return (
                 <SectionCategorie

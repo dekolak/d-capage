@@ -141,6 +141,12 @@ export class CategoriesService {
 
   /** Tout ce qui est dans la catégorie `de` passe dans `vers`. */
   private async deplacerContenu(de: string, vers: string) {
+    // catégories en plus des pas-à-pas : remplacer le nom (sans doublon avec la principale)
+    const avec = await this.prisma.procedure.findMany({ where: { autresCategories: { has: de } }, select: { id: true, categorie: true, autresCategories: true } });
+    for (const p of avec) {
+      const autres = [...new Set(p.autresCategories.map((x) => (x === de ? vers : x)))].filter((x) => x !== (p.categorie === de ? vers : p.categorie));
+      await this.prisma.procedure.update({ where: { id: p.id }, data: { autresCategories: autres } });
+    }
     const contenu = (await this.elements()).filter((e) => e.categorie === de);
     await this.ranger(contenu.map((e) => ({ type: e.type, id: e.id, ...('guide' in e ? { guide: e.guide } : {}) })), vers);
   }
