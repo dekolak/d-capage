@@ -233,3 +233,9 @@ Pour Odoo ou un service externe. Copier la clé à sa création (elle ne sera pl
 
 ## Machines de l'administrateur
 Le compte admin reçoit automatiquement **toutes les machines actives** du catalogue (surnom « Test admin », sans date de mise en service) : il peut créer des fiches, voir l'Académie et les pas-à-pas comme un client de chaque machine. Une nouvelle machine apparaît d'elle-même.
+
+## 🤔 Avis sur les contenus (« C'était clair ? »)
+Pour vérifier que les **nouveaux** contenus sont compris : sur un pas-à-pas (case « Demander “C'était clair ?” », sous « Publiée ») ou un parcours / une page de l'Académie (réglages du cours),
+le client voit à la fin **👍 Clair** / **🤔 Pas tout compris** (+ commentaire facultatif). Un avis par client et par contenu, modifiable. Pas de notification.
+**Administration → 🤔 Avis sur les contenus** (badge rouge = 🤔 à traiter) : par contenu, 👍 / 🤔, commentaires, client (nom, n° client) ; **✓ Traité** une fois le contenu corrigé.
+Décochez la case quand le contenu est validé. Technique : table `AvisContenu` (type `procedure` | `lecon`), `Procedure.demanderAvis`, `CoursAcademie.demanderAvis`, `apps/api/src/avis-contenu/`, `components/AvisContenu.tsx`.

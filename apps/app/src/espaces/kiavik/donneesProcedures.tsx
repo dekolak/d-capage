@@ -46,6 +46,8 @@ export interface Choix {
   signification?: string | null;
 }
 export interface Procedure {
+  /** « Ce contenu était-il clair ? » à la fin (activé par l'admin). */
+  demanderAvis?: boolean;
   id: string; titre: string; categorie: string; resume: string | null; publiee: boolean; ordre: number; updatedAt: string; etapes: Etape[];
   espace: 'lazzeko' | 'kiavik'; etiquettes: string[]; type: TypePasAPas; cibleCategories: string[]; cibleModeles: string[];
   /** Procédure proposée à la fin (« Continuer avec … ? »). */

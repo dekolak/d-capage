@@ -8,6 +8,7 @@ import { useAvancement } from './avancement';
 import { AideNon, OuiNon } from './Controle';
 import { FinDiagnostic, ProcedureSuivante } from './FinDiagnostic';
 import { Galerie } from './Galerie';
+import { AvisContenu } from '../../components/AvisContenu';
 import { PasClair } from './PasClair';
 import { estDiagnostic, Etape, lienGuide, Procedure, useSolutions } from './donneesProcedures';
 import { ParcoursGuide } from './ParcoursGuide';
@@ -133,6 +134,7 @@ export default function ProcedureDetail() {
       {diagnostic && fin && <FinDiagnostic p={p} av={av} />}
       {!diagnostic && pas.length > 0 && fait >= pas.length && <RetourCarnet procedureId={p.id} />}
       {!diagnostic && pas.length > 0 && fait >= pas.length && <ProcedureSuivante p={p} />}
+      {p.demanderAvis && (diagnostic ? !!fin : pas.length > 0 && fait >= pas.length) && <AvisContenu type="procedure" id={p.id} />}
       {commence && (
         <button type="button" className="btn petit" onClick={av.recommencer}>{t('kiavik.procedures.recommencer')}</button>
       )}

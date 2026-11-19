@@ -2,6 +2,7 @@ import { TouchEvent, useEffect, useRef, useState } from 'react';
 import { t } from '../../lib/i18n';
 import { Avancement } from './avancement';
 import { CaptureBouton } from './CaptureBouton';
+import { AvisContenu } from '../../components/AvisContenu';
 import { AideNon } from './Controle';
 import { FinDiagnostic } from './FinDiagnostic';
 import { Procedure } from './donneesProcedures';
@@ -165,6 +166,7 @@ export function ParcoursGuide({ p, av, onFermer }: { p: Procedure; av: Avancemen
             <button type="button" className="btn" onClick={() => { av.recommencer(); setI(0); }}>{t('kiavik.procedures.recommencer')}</button>
             {n > 0 && <button type="button" className="btn-lien petit" onClick={precedent}>{t('kiavik.diagnostic.revenir')}</button>}
           </FinDiagnostic>
+          {p.demanderAvis && <AvisContenu type="procedure" id={p.id} />}
         </div>
       )}
     </div>

@@ -84,6 +84,7 @@ model User {
   abonnementsPush     AbonnementPush[]
   diagnostics         DiagnosticEnvoye[]
   signalements        SignalementEtape[]
+  avisContenus        AvisContenu[]
   progressionAcademie ProgressionAcademie[]
 
   @@index([numeroOdoo])
@@ -550,6 +551,8 @@ model Procedure {
   cibleCategories String[]           @default([])
   cibleModeles    String[]           @default([])
   publiee         Boolean            @default(false)
+  /// Demander « C'était clair ? » à la fin (nouveaux contenus : vérifier que tout le monde comprend).
+  demanderAvis    Boolean            @default(false)
   ordre           Int                @default(0)
   /// Description détaillée (à quoi elle sert, quand l'utiliser, symptômes) : pour l'admin, et le catalogue lu par l'IA.
   description     String?
@@ -993,6 +996,8 @@ model CoursAcademie {
   /// Image de couverture (stockage) ; sinon la vignette de la première vidéo.
   couvertureCle   String?
   publie          Boolean         @default(false)
+  /// Demander « C'était clair ? » à la fin de chaque leçon (ou de la page).
+  demanderAvis    Boolean         @default(false)
   ordre           Int             @default(0)
   cibleCategories String[]        @default([])
   cibleModeles    String[]        @default([])
@@ -1057,4 +1062,22 @@ model ProgressionAcademie {
 
   @@id([userId, leconId])
   @@index([leconId])
+}
+
+/// « C'était clair ? » d'un client à la fin d'un contenu (pas-à-pas, leçon ou page de l'Académie) : un avis par client et par contenu.
+model AvisContenu {
+  id          String   @id @default(cuid())
+  /// « procedure » ou « lecon » (une page de l'Académie a une leçon)
+  type        String
+  contenuId   String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clair       Boolean
+  commentaire String?
+  traite      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([type, contenuId, userId])
+  @@index([traite])
 }

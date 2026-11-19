@@ -7,6 +7,7 @@ import { useAuth } from '../lib/auth';
 import { useEspace } from '../lib/espace';
 import { t } from '../lib/i18n';
 import { Blocs } from './Blocs';
+import { AvisContenu } from '../components/AvisContenu';
 import { Cours, Lecon, ResumeCours, useAccesAcademie } from './donnees';
 import './academie.css';
 
@@ -111,6 +112,8 @@ function PageSeule({ c }: { c: Cours }) {
       </div>
       <Erreur e={err} />
       {!premiere ? <p className="muted">{t('academie.aucuneLecon')}</p> : !l ? <Chargement /> : <Blocs blocs={l.blocs} pleinePage />}
+      {/* pas sous un simulateur plein écran (il occupe tout l'écran) */}
+      {l && c.demanderAvis && !(l.blocs.length === 1 && ['simulateur', 'html'].includes(l.blocs[0].type)) && <AvisContenu type="lecon" id={l.id} />}
     </div>
   );
 }
@@ -189,6 +192,7 @@ export function PageLecon() {
       <h1>{l.titre}</h1>
       {moi?.role === 'ADMIN' && <Link to={`/admin/academie/lecons/${l.id}`} className="btn petit">✏️ Modifier (admin)</Link>}
       <Blocs blocs={l.blocs} />
+      {l.cours.demanderAvis && <AvisContenu type="lecon" id={l.id} />}
       <div className="ac-fin">
         <button type="button" className={`btn ${l.faite ? 'ok' : ''}`} onClick={basculer}>{l.faite ? `✓ ${t('academie.terminee')}` : t('academie.marquer')}</button>
         <div className="ac-nav">

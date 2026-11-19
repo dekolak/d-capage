@@ -183,6 +183,7 @@ export function AdminCours() {
           </select>
         </label>
         <label className="interrupteur"><input type="checkbox" checked={c.publie} onChange={(e) => enregistrer({ publie: e.target.checked })} /> Publié (visible par les clients)</label>
+        <label className="interrupteur"><input type="checkbox" checked={!!c.demanderAvis} onChange={(e) => enregistrer({ demanderAvis: e.target.checked })} /> 🤔 Demander « C'était clair ? » à la fin {c.type === 'page' ? 'de la page' : 'de chaque leçon'} <small className="muted">(réponses : Administration → Avis sur les contenus)</small></label>
         <label>
           Image de couverture <small className="muted">(sinon la vignette de la première vidéo)</small>
           <input type="file" accept="image/*" onChange={(e) => couverture(e.target.files?.[0])} />

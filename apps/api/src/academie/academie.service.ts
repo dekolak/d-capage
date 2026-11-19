@@ -83,7 +83,7 @@ export class AcademieService {
     const c = await this.coursVisible(id, qui);
     const faites = new Set((await this.prisma.progressionAcademie.findMany({ where: { userId, lecon: { coursId: id } }, select: { leconId: true } })).map((p) => p.leconId));
     return {
-      id: c.id, titre: c.titre, description: c.description, publie: c.publie, espace: c.espace, type: c.type, ...this.vignette(c),
+      id: c.id, titre: c.titre, description: c.description, publie: c.publie, espace: c.espace, type: c.type, demanderAvis: c.demanderAvis, ...this.vignette(c),
       cibleCategories: c.cibleCategories, cibleModeles: c.cibleModeles,
       lecons: c.lecons.map((l) => ({ id: l.id, titre: l.titre, faite: faites.has(l.id) })),
     };
@@ -104,7 +104,7 @@ export class AcademieService {
     const faite = !!(await this.prisma.progressionAcademie.findUnique({ where: { userId_leconId: { userId, leconId: id } } }));
     return {
       id: l.id, titre: l.titre, faite,
-      cours: { id: c.id, titre: c.titre, nbLecons: c.lecons.length, rang: i + 1 },
+      cours: { id: c.id, titre: c.titre, nbLecons: c.lecons.length, rang: i + 1, demanderAvis: c.demanderAvis },
       precedente: c.lecons[i - 1]?.id ?? null,
       suivante: c.lecons[i + 1]?.id ?? null,
       blocs: blocs.map((b) =>
@@ -179,7 +179,7 @@ export class AcademieService {
     });
   }
 
-  async modifierCours(id: string, d: { type?: 'parcours' | 'page'; titre?: string; description?: string | null; publie?: boolean; espace?: string; cibleCategories?: string[]; cibleModeles?: string[] }) {
+  async modifierCours(id: string, d: { demanderAvis?: boolean; type?: 'parcours' | 'page'; titre?: string; description?: string | null; publie?: boolean; espace?: string; cibleCategories?: string[]; cibleModeles?: string[] }) {
     await this.existeCours(id);
     if (d.espace) verifierEspace(d.espace);
     // devenir une page : il lui faut au moins une leçon (son contenu)
@@ -189,6 +189,7 @@ export class AcademieService {
       where: { id },
       data: {
         ...(d.type ? { type: d.type } : {}),
+        ...(d.demanderAvis !== undefined ? { demanderAvis: d.demanderAvis } : {}),
         ...(d.titre !== undefined ? { titre: d.titre.trim() } : {}),
         ...(d.description !== undefined ? { description: d.description?.trim() || null } : {}),
         ...(d.publie !== undefined ? { publie: d.publie } : {}),

@@ -597,6 +597,15 @@ export function AdminProcedure() {
               }} />
             <span><b>{p.publiee ? '✅ Publiée' : '🔒 Non publiée'}</b><br /><span className="muted petit">{p.publiee ? 'Visible par les clients (accès « Pas-à-pas et Bon à savoir »).' : 'Visible seulement par vous. Cochez pour la montrer aux clients.'}</span></span>
           </label>
+          <label className="gx-publier carte">
+            <input type="checkbox" checked={!!p.demanderAvis}
+              onChange={(ev) => {
+                const demanderAvis = ev.target.checked;
+                setP({ ...p, demanderAvis });
+                maj(`/admin/procedures/${p.id}`, { method: 'PATCH', json: { demanderAvis } }).then((ok) => !ok && setP(p));
+              }} />
+            <span><b>🤔 Demander « C'était clair ? »</b><br /><span className="muted petit">À la fin, le client répond 👍 Clair ou 🤔 Pas tout compris (+ commentaire). Pour les nouveautés ; réponses dans Administration → Avis sur les contenus.</span></span>
+          </label>
           <Link to={`/admin/messages?procedure=${p.id}`} className="bandeau lien-bandeau">
             <span><b>🔁 Rappel d'entretien</b> : message périodique « L'avez-vous fait ? » (Oui / Non, date), avec ce pas-à-pas à faire</span>
             <span>›</span>
