@@ -26,7 +26,7 @@ export const lazzeko: AppEspace = {
     { to: '/academie', label: 'onglets.academie', icone: ICONES.academie, academie: true },
   ],
   // nouvelle fiche : bouton flottant (caché sur une fiche et dans l'éditeur, où il y a « partager »)
-  boutonPlus: { to: '/fiches/nouvelle', label: 'onglets.nouvelle', masquerSur: /^\/fiches\// },
+  boutonPlus: { to: '/fiches/nouvelle', label: 'onglets.nouvelle', masquerSur: /^\/(fiches|academie)\// },
   routes: () => (
     <>
       <Route path="/" element={<Fiches />} />

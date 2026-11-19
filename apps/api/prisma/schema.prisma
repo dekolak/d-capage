@@ -986,6 +986,8 @@ model CoursAcademie {
   espace          String
   titre           String
   description     String?
+  /// « parcours » : formation en plusieurs leçons (progression) ; « page » : un contenu seul (simulateur, fiche…), une seule leçon.
+  type            String          @default("parcours")
   /// Image de couverture (stockage) ; sinon la vignette de la première vidéo.
   couvertureCle   String?
   publie          Boolean         @default(false)

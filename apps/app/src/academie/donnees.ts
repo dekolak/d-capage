@@ -22,13 +22,16 @@ export interface Bloc {
   hauteur?: number;
 }
 
+/** « parcours » : plusieurs leçons, progression ; « page » : un contenu seul (simulateur, fiche…). */
+export type TypeCours = 'parcours' | 'page';
 export interface ResumeCours {
-  id: string; titre: string; description: string | null; publie: boolean; espace: string;
-  couverture?: string; vignette?: string; nbLecons: number; verrouille: boolean; pourQui: string[];
+  id: string; titre: string; description: string | null; publie: boolean; espace: string; type: TypeCours;
+  couverture?: string; vignette?: string; nbLecons: number; pourQui: string[];
+  cibleModeles: string[]; cibleCategories: string[];
   faites: number; reprendre: string | null;
 }
 export interface Cours {
-  id: string; titre: string; description: string | null; publie: boolean; espace: string; couverture?: string; vignette?: string;
+  id: string; titre: string; description: string | null; publie: boolean; espace: string; type: TypeCours; couverture?: string; vignette?: string;
   cibleCategories: string[]; cibleModeles: string[];
   lecons: { id: string; titre: string; faite: boolean }[];
 }

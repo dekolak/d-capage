@@ -13,6 +13,7 @@ import { useEspace } from '../lib/espace';
 import { t, tn } from '../lib/i18n';
 import { date } from '../lib/util';
 import { CarnetMachine, ICONE_ETAT } from './Carnet';
+import { OutilsMachine } from '../academie/Pages';
 
 type Onglet = 'guides' | 'recus' | 'entretien' | 'reglages';
 /** Ce qui vise cette machine précisément passe avant ce qui vise sa catégorie, puis le reste. */
@@ -101,6 +102,7 @@ export default function MaMachine() {
         </span>
       </div>
 
+      <OutilsMachine modeleId={m.modeleId} categorie={m.categorie} />
       <div className="seg mm-onglets">
         {onglets.map((x) => (
           <button key={x.o} type="button" className={actif === x.o ? 'on' : ''} onClick={() => setOnglet(x.o)}>

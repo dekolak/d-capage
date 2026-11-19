@@ -1,14 +1,17 @@
 # 🎓 Académie
 
-Des cours en pages simples (vidéos Vimeo, textes, simulateurs), pour Lazzeko et Kiavik. Un **module isolé** :
+Des **parcours** (formations en plusieurs leçons) et des **pages** (un contenu seul : simulateur, fiche technique, vidéo), pour Lazzeko et Kiavik. Un **module isolé** :
 ses tables, ses routes, son dossier d'app ; seuls le bouton « 🎓 Académie » de la barre du bas et une entrée d'administration le relient au reste.
 
 ## Pour l'admin (sur ordinateur, de préférence)
 **Administration → 🎓 Académie** (section Commun) :
-1. **Créer le cours** (titre) — ou **🎬 Créer depuis Vimeo** : collez plusieurs liens Vimeo (un par ligne), une leçon par vidéo, titres et vignettes lus sur Vimeo.
-2. **Régler le cours** : description, image de couverture (sinon la vignette de la 1ʳᵉ vidéo), **Pour qui ?** (tout le monde, ou des catégories / modèles de machines), **Publié**.
-   Un cours ciblé est visible par les autres clients **avec 🔒** (« réservé aux propriétaires de… ») : il ne s'ouvre pas.
-3. **Leçons** : ＋ Leçon, ↑ ↓, 🗑. Chaque leçon est une **page de blocs** : **＋ Bloc**, ↑ ↓, 🗑, **👁 Aperçu**, **Enregistrer**.
+1. Choisir **📚 Parcours** ou **🧰 Page**, donner le titre, créer.
+   - **Parcours** : formation en plusieurs leçons (progression du client) ; ou **🎬 Créer depuis Vimeo** : plusieurs liens (un par ligne), une leçon par vidéo.
+   - **Page** : un contenu seul, rangé dans « 🧰 Mes outils » du client (ex. « Simulateur 300 W ») ; on arrive directement sur son contenu (blocs).
+     Une page faite d'**un seul bloc Simulateur** (ou HTML) s'affiche **en plein écran** : le simulateur a toute la hauteur, ses panneaux s'ouvrent normalement.
+2. **Régler** : type, description, image de couverture (sinon la vignette de la 1ʳᵉ vidéo), **Pour qui ?** (tout le monde, des **modèles** précis ou des **catégories** de machines), **Publié**.
+   Un contenu ciblé n'est **visible que** par les clients qui ont ces machines (pas de cadenas pour les autres).
+3. **Leçons** (parcours) : ＋ Leçon, ↑ ↓, 🗑. Chaque leçon (et chaque page) est faite de **blocs** : **＋ Bloc**, ↑ ↓, 🗑, **👁 Aperçu**, **Enregistrer**.
 
 | Bloc | Usage |
 |---|---|
@@ -17,8 +20,8 @@ ses tables, ses routes, son dossier d'app ; seuls le bouton « 🎓 Académie »
 | 🎬 Vimeo | coller le lien (vidéo non répertoriée acceptée) : titre, vignette et durée remplis automatiquement ; le lecteur ne se charge qu'au toucher |
 | 🖼 Image | photo compressée par l'app, légende |
 | 💡 Encadré | astuce ou ⚠️ attention |
-| 🖥 Simulateur | choisi dans la bibliothèque |
-| 🧩 HTML libre | votre code, dans une boîte isolée (hauteur automatique ou fixe, ⤢ plein écran) |
+| 🖥 Simulateur | choisi dans la bibliothèque ; dans une leçon : boîte à hauteur d'écran (il défile dedans) + ⤢ plein écran ; seul dans une page : tout l'écran |
+| 🧩 HTML libre | votre code, dans une boîte isolée (hauteur automatique jusqu'à 85 % de l'écran, ou fixe, ⤢ plein écran) |
 | 📎 Fichier | PDF envoyé ou lien https |
 
 **🖥 Bibliothèque de simulateurs** (lien en haut de la page Académie) : un fichier HTML par machine, envoyé une fois (nom, espace, machine) ;
@@ -27,8 +30,9 @@ ses tables, ses routes, son dossier d'app ; seuls le bouton « 🎓 Académie »
 **Vimeo** : réglez vos vidéos en « non répertoriée » et, si votre offre le permet, « intégrable seulement sur » `app.lazzeko.com` et `app.kiavikcopilot.ovh`.
 
 ## Pour le client
-Bouton **🎓 Académie** dans la barre du bas (Lazzeko et Kiavik) → les cours (vignette, nombre de leçons, avancement), puis « 🔒 Réservés à d'autres machines ».
-Un cours : sommaire, **▶ Commencer / Reprendre** ; une leçon : ses blocs, **Marquer comme terminée**, **Leçon suivante →** (la marque terminée).
+Bouton **🎓 Académie** dans la barre du bas (Lazzeko et Kiavik) → **🧰 Mes outils** (les pages de ses machines), puis **📚 Parcours** (vignette, nombre de leçons, avancement).
+**Ma machine** affiche aussi les pages faites pour cette machine (ou sa catégorie).
+Un parcours : sommaire, **▶ Commencer / Reprendre** ; une leçon : ses blocs, **Marquer comme terminée**, **Leçon suivante →** (la marque terminée).
 Accès : module « Académie » de l'espace (donné à tous les clients existants à la mise à jour ; à cocher pour les nouveaux, ou fourni par l'import).
 
 ## Sécurité

@@ -1501,14 +1501,14 @@ describe('Parcours complet', () => {
     await http.patch(`/api/admin/academie/lecons/${l2.id}`).set(A).send({ blocs: [{ type: 'texte', texte: 'Fin' }] }).expect(200);
     expect(l1.blocs[1]).not.toHaveProperty('inconnu');
 
-    // client avec la machine : tout ouvert ; sans : cadenas
+    // client avec la machine : il voit tout ; sans : le cours ciblé n'apparaît pas et ne s'ouvre pas
     const listeAvec = (await http.get('/api/academie').set(avec.H)).body.filter((c: any) => c.titre.endsWith(id));
-    expect(listeAvec.map((c: any) => [c.titre, c.verrouille])).toEqual([[`Général ${id}`, false], [`F1080 ${id}`, false]]);
-    const coursSans = (await http.get('/api/academie').set(sans.H)).body.find((c: any) => c.id === dedie.id);
-    expect(coursSans).toMatchObject({ verrouille: true, pourQui: [`Acad ${id} F1080`], reprendre: null, vignette: 'https://i.vimeocdn.com/video/1.jpg', nbLecons: 2 });
+    expect(listeAvec.map((c: any) => [c.titre, c.type])).toEqual([[`Général ${id}`, 'parcours'], [`F1080 ${id}`, 'parcours']]);
+    expect(listeAvec[1]).toMatchObject({ pourQui: [`Acad ${id} F1080`], vignette: 'https://i.vimeocdn.com/video/1.jpg', nbLecons: 2 });
+    expect((await http.get('/api/academie').set(sans.H)).body.find((c: any) => c.id === dedie.id)).toBeUndefined();
     const refus = await http.get(`/api/academie/lecons/${l1.id}`).set(sans.H);
     expect(refus.status).toBe(403);
-    expect(refus.body.code).toBe('VERROUILLE');
+    expect(refus.body.code).toBe('HORS_CIBLE');
     expect((await http.get(`/api/academie/cours/${dedie.id}`).set(sans.H)).status).toBe(403);
 
     // leçon : blocs, simulateur nommé, fichier avec chemin, navigation

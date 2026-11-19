@@ -21,11 +21,13 @@ class TermineeDto {
 }
 class CreerCoursDto {
   @IsIn(['lazzeko', 'kiavik']) espace!: string;
+  @IsOptional() @IsIn(['parcours', 'page']) type?: 'parcours' | 'page';
   @IsString() @MinLength(2) @MaxLength(150) titre!: string;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(1000) description?: string | null;
 }
 class ModifierCoursDto {
   @IsOptional() @IsIn(['lazzeko', 'kiavik']) espace?: string;
+  @IsOptional() @IsIn(['parcours', 'page']) type?: 'parcours' | 'page';
   @IsOptional() @IsString() @MinLength(2) @MaxLength(150) titre?: string;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(1000) description?: string | null;
   @IsOptional() @IsBoolean() publie?: boolean;
