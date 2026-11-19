@@ -642,3 +642,8 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .gt-ligne select, .gt-ligne input { width: 100%; min-height: 44px; }
 .gt-ligne input:disabled { opacity: 0.45; }
 .groupe-tags .puces { margin: 0; }
+/* « Ce contenu était-il clair ? » */
+.avis-contenu { display: grid; gap: 10px; margin: 16px 0; padding: 14px; }
+.avis-contenu.fait { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.avis-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.avis-boutons .btn.on { border-color: var(--o); background: var(--o-doux); }

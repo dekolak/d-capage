@@ -27,6 +27,8 @@ class CreerCoursDto {
 }
 class ModifierCoursDto {
   @IsOptional() @IsIn(['lazzeko', 'kiavik']) espace?: string;
+  /** « C'était clair ? » à la fin de chaque leçon (ou de la page). */
+  @IsOptional() @IsBoolean() demanderAvis?: boolean;
   @IsOptional() @IsIn(['parcours', 'page']) type?: 'parcours' | 'page';
   @IsOptional() @IsString() @MinLength(2) @MaxLength(150) titre?: string;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(1000) description?: string | null;

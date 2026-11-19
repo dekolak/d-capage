@@ -32,7 +32,7 @@ export class ProceduresService {
   /** Vue d'une procédure. Pour le client : sans description, prompt, notes ni significations (réservés à l'admin et à l'IA). */
   private vue(p: ProcedureComplete, admin = true) {
     return {
-      id: p.id, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee, ordre: p.ordre, updatedAt: p.updatedAt,
+      id: p.id, titre: p.titre, categorie: p.categorie, resume: p.resume, publiee: p.publiee, demanderAvis: p.demanderAvis, ordre: p.ordre, updatedAt: p.updatedAt,
       suivanteId: p.suivanteId, espace: p.espace, etiquettes: p.etiquettes, type: p.type, cibleCategories: p.cibleCategories, cibleModeles: p.cibleModeles,
       ...(admin ? { description: p.description, prompt: p.prompt, resumeIa: p.resumeIa, resumeIaLe: p.resumeIaLe } : {}),
       etapes: p.etapes.map(({ photos, procedureId: _p, note, choix, ...e }) => ({

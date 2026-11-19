@@ -47,13 +47,14 @@ export default function Admin() {
       return {};
     }
   });
-  const [compte, setCompte] = useState<{ aide: number; utilisateurs: number; retard: number }>({ aide: 0, utilisateurs: 0, retard: 0 });
+  const [compte, setCompte] = useState<{ aide: number; utilisateurs: number; retard: number; flous: number }>({ aide: 0, utilisateurs: 0, retard: 0, flous: 0 });
   useEffect(() => {
     Promise.all([
       api<unknown[]>('/admin/aide?traitee=non').catch(() => []),
       api<U[]>('/users').catch(() => []),
       api<unknown[]>('/admin/entretien/machines?etat=retard').catch(() => []),
-    ]).then(([a, u, r]) => setCompte({ aide: a.length, utilisateurs: u.length, retard: r.length }));
+      api<{ n: number }>('/admin/avis-contenu/a-traiter').catch(() => ({ n: 0 })),
+    ]).then(([a, u, r, f]) => setCompte({ aide: a.length, utilisateurs: u.length, retard: r.length, flous: f.n }));
   }, []);
   const toutes: Entree[] = [
     { zone: 'commun', to: '/admin/utilisateurs', titre: '👥 Utilisateurs', texte: `créer un compte, accès, machines, activité (${compte.utilisateurs})` },
@@ -71,6 +72,7 @@ export default function Admin() {
     { zone: 'commun', to: '/admin/academie', titre: '🎓 Académie', texte: 'cours en vidéo (Vimeo), simulateurs, réservés à une machine ou pour tous' },
     { zone: 'commun', to: '/admin/categories', titre: '🗂 Catégories', texte: "sections de l'accueil Kiavik et des Guides de Ma machine : renommer, ajouter, ordonner, ranger" },
     { zone: 'commun', to: '/admin/procedures', titre: '📋 Pas-à-pas', texte: 'Lazzeko et Kiavik : créer, étiqueter, publier' },
+    { zone: 'commun', to: '/admin/avis-contenu', titre: '🤔 Avis sur les contenus', texte: "« C'était clair ? » en fin de pas-à-pas et de leçon (à activer sur chaque contenu)", compte: compte.flous },
     { zone: 'commun', to: '/admin/diagnostics', titre: '🩺 Dépannages reçus', texte: 'résultats envoyés par les clients' },
     { zone: 'commun', to: '/admin/solutions', titre: '💡 Bon à savoir', texte: 'Lazzeko et Kiavik : problèmes déjà résolus, astuces' },
   ];

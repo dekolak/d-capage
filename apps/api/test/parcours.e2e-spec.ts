@@ -1518,6 +1518,18 @@ describe('Parcours complet', () => {
     expect((await http.get(`/api/academie/cours/${dedie.id}`).set(sans.H)).status).toBe(403);
 
     expect((await http.get(`/api/academie/lecons/${l2.id}`).set(avec.H)).body.blocs.map((b: any) => b.type)).toEqual(['texte']);
+    // « C'était clair ? » : refusé tant que l'admin ne l'a pas activé ; un avis par client, modifiable ; l'admin le traite
+    expect((await http.put('/api/avis-contenu').set(avec.H).send({ type: 'lecon', id: l1.id, clair: false })).status).toBe(404);
+    await http.patch(`/api/admin/academie/cours/${dedie.id}`).set(A).send({ demanderAvis: true }).expect(200);
+    await http.put('/api/avis-contenu').set(avec.H).send({ type: 'lecon', id: l1.id, clair: true }).expect(200);
+    await http.put('/api/avis-contenu').set(avec.H).send({ type: 'lecon', id: l1.id, clair: false, commentaire: ' Pas compris ' }).expect(200);
+    expect((await http.get(`/api/avis-contenu?type=lecon&id=${l1.id}`).set(avec.H)).body).toEqual({ clair: false, commentaire: 'Pas compris' });
+    const groupe = (await http.get('/api/admin/avis-contenu').set(A)).body.find((g: any) => g.contenuId === l1.id);
+    expect(groupe).toMatchObject({ clairs: 0, flous: 1, aTraiter: 1, actif: true });
+    await http.patch(`/api/admin/avis-contenu/${groupe.avis[0].id}`).set(A).send({ traite: true }).expect(200);
+    expect((await http.get('/api/admin/avis-contenu').set(A)).body.find((g: any) => g.contenuId === l1.id).aTraiter).toBe(0);
+    expect((await http.get('/api/admin/avis-contenu').set(avec.H)).status).toBe(403);
+
     // leçon : blocs, simulateur nommé, fichier avec chemin, navigation
     const lecon = (await http.get(`/api/academie/lecons/${l1.id}`).set(avec.H)).body;
     expect(lecon).toMatchObject({ titre: 'Leçon 1', faite: false, suivante: l2.id, precedente: null, cours: { id: dedie.id, rang: 1, nbLecons: 2 } });

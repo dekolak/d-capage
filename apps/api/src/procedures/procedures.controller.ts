@@ -36,6 +36,8 @@ class ModifierProcedureDto {
   @IsOptional() @IsString() @MinLength(2) @MaxLength(40) categorie?: string;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(400) resume?: string | null;
   @IsOptional() @IsBoolean() publiee?: boolean;
+  /** « C'était clair ? » à la fin, pour le client. */
+  @IsOptional() @IsBoolean() demanderAvis?: boolean;
   @IsOptional() @IsInt() @Min(0) ordre?: number;
   /** Procédure proposée à la fin ; null pour aucune. */
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() @MaxLength(40) suivanteId?: string | null;

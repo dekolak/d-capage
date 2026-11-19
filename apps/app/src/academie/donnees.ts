@@ -34,13 +34,13 @@ export interface ResumeCours {
   faites: number; reprendre: string | null;
 }
 export interface Cours {
-  id: string; titre: string; description: string | null; publie: boolean; espace: string; type: TypeCours; couverture?: string; vignette?: string;
+  id: string; titre: string; description: string | null; publie: boolean; espace: string; type: TypeCours; demanderAvis?: boolean; couverture?: string; vignette?: string;
   cibleCategories: string[]; cibleModeles: string[];
   lecons: { id: string; titre: string; faite: boolean }[];
 }
 export interface Lecon {
   id: string; titre: string; faite: boolean; blocs: Bloc[];
-  cours: { id: string; titre: string; nbLecons: number; rang: number };
+  cours: { id: string; titre: string; nbLecons: number; rang: number; demanderAvis?: boolean };
   precedente: string | null; suivante: string | null;
 }
 
