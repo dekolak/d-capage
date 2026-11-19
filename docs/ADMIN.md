@@ -64,7 +64,8 @@ Administration → **👥 Utilisateurs** (« + Créer un utilisateur » en haut,
   - Lazzeko : *Fiches de réglage (décapage et soudure)*.
   - Kiavik : *Guide Flexiprint*, *Guide DXonJet*, *Pas-à-pas et Bon à savoir*.
   - Un client peut avoir des accès dans les deux espaces.
-- **Client Lazzeko** (si accès Lazzeko) : décocher pour un utilisateur d'une autre marque. Sert à cibler les messages.
+- **Client Lazzeko** : calculé, plus de case à cocher : un client qui a au moins une machine Lazzeko (badge « Client Lazzeko »). Sert à cibler les messages (clients Lazzeko / autres marques).
+- **🗑 Supprimer** un compte client (ex. compte de test) : confirmer en tapant son identifiant ; ses machines, fiches, photos, avis et réponses partent avec lui. Un compte admin ne se supprime pas (le désactiver).
 - Dans la liste : recherche (identifiant, nom, n° Odoo), filtre par espace, badges d'espace, conditions acceptées, accord photos, **⏳ code provisoire** (pas encore connecté).
 - **Mot de passe perdu** (le client appelle) : toucher le client → **🔑 Créer un code provisoire** → le dicter ou l'envoyer (copier, SMS, WhatsApp). À la connexion, il choisit son mot de passe. Import de clients en nombre : voir [IMPORT-CLIENTS.md](IMPORT-CLIENTS.md).
 - **Langue** : par défaut celle du téléphone du client. Dès qu'une deuxième langue existe (anglais prévu), elle se choisit sur le compte (ou par le client dans Compte, ou depuis Odoo avec `langue`).
