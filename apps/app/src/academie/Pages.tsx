@@ -29,11 +29,10 @@ export function LienAcademie() {
   );
 }
 
-/** Liste des cours : ouverts, puis ceux réservés à une machine (cadenas). */
+/** Accueil de l'Académie : « Mes outils » (pages : simulateurs, fiches…) puis « Parcours » (formations en leçons). */
 export function PageAcademie() {
   const [l, setL] = useState<ResumeCours[]>();
   const [err, setErr] = useState<unknown>();
-  const [verrou, setVerrou] = useState<ResumeCours | null>(null);
   const { espace } = useEspace();
   const { moi } = useAuth();
   useEffect(() => {
@@ -41,43 +40,37 @@ export function PageAcademie() {
   }, [espace.slug]);
   if (err) return <div className="page"><Erreur e={err} /></div>;
   if (!l) return <Chargement />;
-  const ouverts = l.filter((c) => !c.verrouille);
-  const fermes = l.filter((c) => c.verrouille);
-  const carte = (c: ResumeCours) =>
-    c.verrouille ? (
-      <button key={c.id} type="button" className="carte ac-cours ferme" onClick={() => setVerrou(c)}>
-        <Vignette c={c} />
-        <span className="ac-cadenas">🔒</span>
-        <Infos c={c} />
-      </button>
-    ) : (
-      <Link key={c.id} to={`/academie/${c.id}`} className="carte ac-cours">
-        <Vignette c={c} />
-        <Infos c={c} />
-      </Link>
-    );
+  const pages = l.filter((c) => c.type === 'page');
+  const parcours = l.filter((c) => c.type !== 'page');
   return (
     <div className="page ac">
       <h1>{t('academie.titre')}</h1>
       <p className="muted">{t('academie.intro')}</p>
       {moi?.role === 'ADMIN' && <Link to="/admin/academie" className="btn petit">⚙️ Gérer l'Académie (admin)</Link>}
       {!l.length && <p className="muted">{t('academie.aucun')}</p>}
-      <div className="ac-liste">{ouverts.map(carte)}</div>
-      {fermes.length > 0 && (
+      {pages.length > 0 && (
         <>
-          <h2>{t('academie.reserves')}</h2>
-          <div className="ac-liste">{fermes.map(carte)}</div>
+          <h2>{t('academie.outils')}</h2>
+          <div className="ac-outils">
+            {pages.map((c) => (
+              <Link key={c.id} to={`/academie/${c.id}`} className="carte ac-outil">
+                <Vignette c={c} />
+                <span><b>{c.titre}{!c.publie && <span className="gx-brouillon"> · brouillon</span>}</b>{c.description && <small className="muted">{c.description}</small>}</span>
+              </Link>
+            ))}
+          </div>
         </>
       )}
-      {verrou && (
+      {parcours.length > 0 && (
         <>
-          <div className="gx-masque" onClick={() => setVerrou(null)} />
-          <div className="gx-fiche" role="dialog">
-            <button type="button" className="gx-fermer" aria-label={t('commun.fermer')} onClick={() => setVerrou(null)}>✕</button>
-            <h3>🔒 {verrou.titre}</h3>
-            {verrou.description && <p>{verrou.description}</p>}
-            <p>{verrou.pourQui.length ? t('academie.reserveA', { machines: verrou.pourQui.join(', ') }) : t('academie.verrouillee')}</p>
-            <p className="muted">{t('academie.contact', { societe: espace.nom })}</p>
+          <h2>{t('academie.parcours')}</h2>
+          <div className="ac-liste">
+            {parcours.map((c) => (
+              <Link key={c.id} to={`/academie/${c.id}`} className="carte ac-cours">
+                <Vignette c={c} />
+                <Infos c={c} />
+              </Link>
+            ))}
           </div>
         </>
       )}
@@ -89,14 +82,36 @@ function Infos({ c }: { c: ResumeCours }) {
   const pct = c.nbLecons ? Math.round((c.faites / c.nbLecons) * 100) : 0;
   return (
     <span className="ac-infos">
-      <b>{c.titre}{!c.publie && <span className="gx-brouillon"> 🔒 brouillon</span>}</b>
+      <b>{c.titre}{!c.publie && <span className="gx-brouillon"> · brouillon</span>}</b>
       {c.description && <small className="muted">{c.description}</small>}
       <small className="muted">
         {t('academie.nbLecons', { n: c.nbLecons })}
-        {c.verrouille ? ` · ${c.pourQui.length ? t('academie.reserveCourt', { machines: c.pourQui.join(', ') }) : '🔒'}` : c.faites ? ` · ${t('academie.avancement', { n: c.faites, total: c.nbLecons })}` : ''}
+        {c.faites ? ` · ${t('academie.avancement', { n: c.faites, total: c.nbLecons })}` : ''}
       </small>
-      {!c.verrouille && c.faites > 0 && <span className="gx-progres"><i style={{ width: `${pct}%` }} /></span>}
+      {c.faites > 0 && <span className="gx-progres"><i style={{ width: `${pct}%` }} /></span>}
     </span>
+  );
+}
+
+/** Page de l'Académie (un contenu seul) : affichée directement ; un simulateur seul occupe tout l'écran. */
+function PageSeule({ c }: { c: Cours }) {
+  const [l, setL] = useState<Lecon>();
+  const [err, setErr] = useState<unknown>();
+  const { moi } = useAuth();
+  const premiere = c.lecons[0]?.id;
+  useEffect(() => {
+    if (premiere) api<Lecon>(`/academie/lecons/${premiere}`).then(setL).catch(setErr);
+  }, [premiere]);
+  return (
+    <div className="page ac ac-page-seule">
+      <div className="ac-page-tete">
+        <Link to="/academie" className="btn-lien">← {t('academie.titre')}</Link>
+        <b>{c.titre}</b>
+        {moi?.role === 'ADMIN' && <Link to={`/admin/academie/cours/${c.id}`} className="btn-lien petit">✏️</Link>}
+      </div>
+      <Erreur e={err} />
+      {!premiere ? <p className="muted">{t('academie.aucuneLecon')}</p> : !l ? <Chargement /> : <Blocs blocs={l.blocs} pleinePage />}
+    </div>
   );
 }
 
@@ -110,6 +125,7 @@ export function PageCours() {
   }, [coursId]);
   if (err) return <div className="page"><Link to="/academie" className="btn-lien">← {t('academie.titre')}</Link><Erreur e={err} /></div>;
   if (!c) return <Chargement />;
+  if (c.type === 'page') return <PageSeule c={c} />;
   const faites = c.lecons.filter((l) => l.faite).length;
   const suite = c.lecons.find((l) => !l.faite) ?? c.lecons[0];
   return (
@@ -155,7 +171,7 @@ export function PageLecon() {
     window.scrollTo(0, 0);
     api<Lecon>(`/academie/lecons/${leconId}`).then(setL).catch(setErr);
   }, [leconId]);
-  if (err) return <div className="page"><Link to="/academie" className="btn-lien">← {t('academie.titre')}</Link><Erreur e={err} />{err instanceof ErreurApi && err.status === 403 && <p className="muted">{t('academie.verrouillee')}</p>}</div>;
+  if (err) return <div className="page"><Link to="/academie" className="btn-lien">← {t('academie.titre')}</Link><Erreur e={err} />{err instanceof ErreurApi && err.status === 403 && <p className="muted">{t('academie.horsCible')}</p>}</div>;
   if (!l) return <Chargement />;
   const marquer = (terminee: boolean) => api(`/academie/lecons/${l.id}/terminee`, { method: 'POST', json: { terminee } }).catch(() => {});
   const basculer = async () => {
@@ -180,6 +196,28 @@ export function PageLecon() {
           <button type="button" className="btn prim" onClick={suivante}>{l.suivante ? `${t('academie.suivante')} →` : `${t('academie.finCours')} ✓`}</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Ma machine : raccourcis vers les pages de l'Académie faites pour cette machine (ou sa catégorie). */
+export function OutilsMachine({ modeleId, categorie }: { modeleId: string; categorie: string | null }) {
+  const acces = useAccesAcademie();
+  const [l, setL] = useState<ResumeCours[]>([]);
+  useEffect(() => {
+    if (acces) api<ResumeCours[]>('/academie').then(setL).catch(() => setL([]));
+  }, [acces]);
+  const cat = categorie?.trim().toLowerCase();
+  const pages = l.filter((c) => c.type === 'page' && (c.cibleModeles.includes(modeleId) || (!!cat && c.cibleCategories.some((x) => x.trim().toLowerCase() === cat))));
+  if (!pages.length) return null;
+  return (
+    <div className="ac-outils ac-outils-machine">
+      {pages.map((c) => (
+        <Link key={c.id} to={`/academie/${c.id}`} className="bandeau lien-bandeau">
+          <span>🎓 <b>{c.titre}</b></span>
+          <span>›</span>
+        </Link>
+      ))}
     </div>
   );
 }

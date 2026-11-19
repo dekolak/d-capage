@@ -14,7 +14,7 @@ import './academie.css';
 /* Administration de l'Académie (en français) : cours → leçons → blocs, simulateurs. */
 
 interface CoursAdmin {
-  id: string; titre: string; description: string | null; publie: boolean; espace: string; couverture?: string; vignette?: string;
+  id: string; titre: string; description: string | null; publie: boolean; espace: string; type: 'parcours' | 'page'; couverture?: string; vignette?: string;
   cibleCategories: string[]; cibleModeles: string[]; pourQui: string[]; nbLecons: number;
 }
 interface Simulateur { id: string; nom: string; espace: string; modeleId: string | null }
@@ -39,6 +39,7 @@ export function AdminAcademie() {
   const [err, setErr] = useState<unknown>();
   const [fEsp, setFEsp] = useState(espace.slug);
   const [titre, setTitre] = useState('');
+  const [type, setType] = useState<'parcours' | 'page'>('parcours');
   const [vimeo, setVimeo] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState('');
   const charger = () => api<CoursAdmin[]>('/admin/academie/cours').then(setL).catch(setErr);
@@ -46,8 +47,9 @@ export function AdminAcademie() {
     charger();
   }, []);
   const creer = async () => {
-    const c = await api<{ id: string }>('/admin/academie/cours', { method: 'POST', json: { espace: fEsp, titre } }).catch(setErr);
-    if (c) nav(`/admin/academie/cours/${c.id}`);
+    const c = await api<{ id: string; lecons: { id: string }[] }>('/admin/academie/cours', { method: 'POST', json: { espace: fEsp, titre, type } }).catch(setErr);
+    // une page : on va directement à son contenu ; « Pour qui ? » et publication se règlent ensuite
+    if (c) nav(type === 'page' && c.lecons[0] ? `/admin/academie/lecons/${c.lecons[0].id}` : `/admin/academie/cours/${c.id}`);
   };
   /** Un cours avec une leçon par vidéo (titres et vignettes lus sur Vimeo). */
   const depuisVimeo = async () => {
@@ -77,8 +79,9 @@ export function AdminAcademie() {
     <div className="page ac-admin">
       <EnteteAdmin titre="🎓 Académie" zone="commun" />
       <p className="muted petit">
-        Des cours en pages simples : on crée le cours, on règle « Pour qui ? » (tout le monde, ou une machine : les autres clients le voient avec 🔒),
-        puis chaque leçon se compose de blocs (texte, Vimeo, image, simulateur, HTML…). <Link to="/admin/academie/simulateurs">🖥 Bibliothèque de simulateurs ›</Link>
+        <b>Parcours</b> : une formation en plusieurs leçons (progression du client). <b>Page</b> : un contenu seul (simulateur, fiche technique, vidéo),
+        rangé dans « Mes outils » ; un simulateur seul s'affiche en plein écran. « Pour qui ? » : tout le monde, une machine ou une catégorie (les autres clients ne le voient pas).
+        Le contenu se compose de blocs (texte, Vimeo, image, simulateur, HTML…). <Link to="/admin/academie/simulateurs">🖥 Bibliothèque de simulateurs ›</Link>
       </p>
       <div className="seg">
         {espaces.map((e) => (
@@ -87,10 +90,14 @@ export function AdminAcademie() {
       </div>
       <Erreur e={err} />
       <div className="carte form">
-        <input value={titre} maxLength={150} placeholder="Titre du nouveau cours (ex. Prise en main DXonJet)" onChange={(e) => setTitre(e.target.value)} />
+        <div className="seg">
+          <button type="button" className={type === 'parcours' ? 'on' : ''} onClick={() => setType('parcours')}>📚 Parcours</button>
+          <button type="button" className={type === 'page' ? 'on' : ''} onClick={() => ((setType('page'), setVimeo(null)))}>🧰 Page</button>
+        </div>
+        <input value={titre} maxLength={150} placeholder={type === 'page' ? 'Titre de la page (ex. Simulateur 300 W)' : 'Titre du parcours (ex. Prise en main DXonJet)'} onChange={(e) => setTitre(e.target.value)} />
         <div className="cx-actions">
-          <button type="button" className="btn prim" disabled={titre.trim().length < 2} onClick={creer}>+ Créer le cours</button>
-          <button type="button" className="btn" onClick={() => setVimeo(vimeo === null ? '' : null)}>🎬 Créer depuis Vimeo…</button>
+          <button type="button" className="btn prim" disabled={titre.trim().length < 2} onClick={creer}>{type === 'page' ? '+ Créer la page' : '+ Créer le parcours'}</button>
+          {type === 'parcours' && <button type="button" className="btn" onClick={() => setVimeo(vimeo === null ? '' : null)}>🎬 Créer depuis Vimeo…</button>}
         </div>
         {vimeo !== null && (
           <>
@@ -104,9 +111,9 @@ export function AdminAcademie() {
         {liste.map((c, i) => (
           <div key={c.id} className="carte ac-ligne">
             <Link to={`/admin/academie/cours/${c.id}`} className="ac-ligne-lien">
-              <b>{c.titre} <RefId id={c.id} p="C" /></b>
+              <b>{c.type === 'page' ? '🧰' : '📚'} {c.titre} <RefId id={c.id} p="C" /></b>
               <small className="muted">
-                {c.nbLecons} leçon{c.nbLecons > 1 ? 's' : ''} · {c.pourQui.length ? `🎯 ${c.pourQui.join(', ')}` : 'tout le monde'}
+                {c.type === 'page' ? 'page' : `${c.nbLecons} leçon${c.nbLecons > 1 ? 's' : ''}`} · {c.pourQui.length ? `🎯 ${c.pourQui.join(', ')}` : 'tout le monde'}
                 {c.publie ? ' · ✅ publié' : ' · 🔒 brouillon'}
               </small>
             </Link>
@@ -116,7 +123,7 @@ export function AdminAcademie() {
             </span>
           </div>
         ))}
-        {!liste.length && <p className="muted">Aucun cours dans cet espace.</p>}
+        {!liste.length && <p className="muted">Rien dans cet espace pour l'instant.</p>}
       </div>
     </div>
   );
@@ -162,6 +169,12 @@ export function AdminCours() {
       <div className="carte form">
         <label>Titre<input defaultValue={c.titre} maxLength={150} onBlur={(e) => e.target.value.trim() !== c.titre && enregistrer({ titre: e.target.value })} /></label>
         <label>Description (courte, vue dans la liste)<textarea defaultValue={c.description ?? ''} rows={2} maxLength={1000} onBlur={(e) => e.target.value !== (c.description ?? '') && enregistrer({ description: e.target.value || null })} /></label>
+        <label>Type
+          <select value={c.type} onChange={(e) => enregistrer({ type: e.target.value })}>
+            <option value="parcours">📚 Parcours (plusieurs leçons)</option>
+            <option value="page">🧰 Page (un contenu seul, dans « Mes outils »)</option>
+          </select>
+        </label>
         <label className="interrupteur"><input type="checkbox" checked={c.publie} onChange={(e) => enregistrer({ publie: e.target.checked })} /> Publié (visible par les clients)</label>
         <label>
           Image de couverture <small className="muted">(sinon la vignette de la première vidéo)</small>
@@ -174,9 +187,14 @@ export function AdminCours() {
           valeur={{ espace: c.espace as 'lazzeko' | 'kiavik', cibleCategories: c.cibleCategories, cibleModeles: c.cibleModeles, etiquettes: [] }}
           onChange={(v) => enregistrer({ espace: v.espace, cibleCategories: v.cibleCategories, cibleModeles: v.cibleModeles })}
         />
-        <small className="muted">Les clients qui n'ont pas ces machines voient le cours avec 🔒 (« réservé aux propriétaires de… »).</small>
+        <small className="muted">Seuls les clients qui ont ces machines (ou une machine de ces catégories) le voient.</small>
       </div>
 
+      {c.type === 'page' ? (
+        <div className="cx-actions">
+          {c.lecons[0] && <Link to={`/admin/academie/lecons/${c.lecons[0].id}`} className="btn prim">✏️ Modifier le contenu de la page</Link>}
+        </div>
+      ) : (<>
       <h2>Leçons</h2>
       <div className="liste">
         {c.lecons.map((l, i) => (
@@ -197,13 +215,14 @@ export function AdminCours() {
           if (l) nav(`/admin/academie/lecons/${l.id}`);
         }}>Ajouter</button>
       </div>
+      </>)}
       <div className="cx-actions" style={{ marginTop: 20 }}>
         <Link to={`/academie/${id}`} className="btn">👁 Voir comme un client</Link>
         <button type="button" className="btn danger" onClick={async () => {
-          if (!confirm(`Supprimer le cours « ${c.titre} » et ses ${c.lecons.length} leçon(s) ?`)) return;
+          if (!confirm(c.type === 'page' ? `Supprimer la page « ${c.titre} » ?` : `Supprimer le parcours « ${c.titre} » et ses ${c.lecons.length} leçon(s) ?`)) return;
           await api(`/admin/academie/cours/${id}`, { method: 'DELETE' });
           nav('/admin/academie');
-        }}>🗑 Supprimer le cours</button>
+        }}>🗑 Supprimer</button>
       </div>
     </div>
   );
@@ -250,7 +269,7 @@ export function AdminLecon() {
   };
   return (
     <div className="page ac-admin">
-      <Link to={`/admin/academie/cours/${coursId}`} className="btn-lien">← Cours</Link> <RefId id={id} p="L" />
+      <Link to={`/admin/academie/cours/${coursId}`} className="btn-lien">← Réglages (Pour qui ?, publication)</Link> <RefId id={id} p="L" />
       <input className="ac-titre-lecon" value={titre} maxLength={150} onChange={(e) => ((setTitre(e.target.value), setModifie(true)))} />
       <div className="seg">
         <button type="button" className={!apercu ? 'on' : ''} onClick={() => setApercu(false)}>✏️ Blocs</button>

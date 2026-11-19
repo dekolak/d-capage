@@ -3,7 +3,6 @@
 .ac-liste { display: grid; gap: 12px; margin: 12px 0; }
 @media (min-width: 700px) { .ac-liste { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } }
 .ac-cours { position: relative; display: grid; gap: 0; padding: 0; overflow: hidden; text-align: left; border: 0; cursor: pointer; font: inherit; color: inherit; text-decoration: none; }
-.ac-cours.ferme .ac-vignette { filter: grayscale(0.8) brightness(0.8); }
 .ac-vignette { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--o-doux); }
 .ac-vignette-vide { display: flex; align-items: center; justify-content: center; font-size: 42px; }
 .ac-cadenas { position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.65); color: #fff; border-radius: 999px; padding: 6px 9px; font-size: 18px; }
@@ -55,3 +54,15 @@
 .ac-mini { width: 160px; border-radius: 6px; }
 .ac-ajout { align-items: center; }
 .ac-barre-enreg { position: sticky; bottom: 90px; background: var(--fond, #f4f4f6); border-radius: var(--r-sm); padding-left: 10px; padding-right: 10px; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06); display: flex; gap: 10px; align-items: center; justify-content: flex-end; padding: 10px 0; z-index: 5; }
+/* Mes outils (pages) : cartes compactes, vignette à gauche */
+.ac-outils { display: grid; gap: 10px; margin: 12px 0; }
+@media (min-width: 700px) { .ac-outils { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } }
+.ac-outil { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; padding: 8px; text-decoration: none; color: inherit; }
+.ac-outil .ac-vignette { border-radius: var(--r-sm); }
+.ac-outil span { display: grid; gap: 2px; }
+/* Page seule : en-tête d'une ligne, le simulateur prend le reste de l'écran */
+.ac-page-tete { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.ac-page-tete b { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ac-html-plein iframe { border-radius: 0; }
+.ac-outils-machine { margin: 0 0 12px; gap: 6px; }
+.ac-outils-machine .bandeau { margin: 0; }

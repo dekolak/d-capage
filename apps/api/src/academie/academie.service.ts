@@ -9,8 +9,9 @@ import { Bloc, nettoyerBlocs } from './blocs';
 type CoursComplet = Prisma.CoursAcademieGetPayload<{ include: { lecons: { select: { id: true; titre: true; ordre: true; blocs: true } } } }>;
 
 /**
- * Académie : cours (visibles par tous les clients de l'espace, ou ciblés « Pour qui ? » : les autres voient un cadenas),
- * leçons en blocs, simulateurs HTML réutilisables, progression des clients.
+ * Académie : parcours (plusieurs leçons, progression) et pages (un contenu seul : simulateur, fiche…).
+ * Visibles par tous les clients de l'espace, ou ciblés « Pour qui ? » (machines, catégories) : les autres ne les voient pas.
+ * Leçons en blocs, simulateurs HTML réutilisables.
  */
 @Injectable()
 export class AcademieService {
@@ -36,11 +37,12 @@ export class AcademieService {
     return {};
   }
 
-  private verrouille(c: { espace: string; etiquettes: string[]; cibleCategories: string[]; cibleModeles: string[] }, qui: Lecteur) {
+  /** Hors cible (« Pour qui ? ») : le client ne voit pas le contenu (l'admin voit tout). */
+  private horsCible(c: { espace: string; etiquettes: string[]; cibleCategories: string[]; cibleModeles: string[] }, qui: Lecteur) {
     return !!qui && !visible(c, qui.espace, qui);
   }
 
-  /** Cours de l'espace : publiés (tous pour l'admin), avec cadenas, progression et leçon où reprendre. */
+  /** Contenus de l'espace pour ce client : publiés et pour ses machines (tout pour l'admin), progression et leçon où reprendre. */
   async lister(espace: string, qui: Lecteur, userId: string) {
     const l = await this.prisma.coursAcademie.findMany({
       where: { espace, ...(qui ? { publie: true } : {}) },
@@ -51,18 +53,15 @@ export class AcademieService {
       (await this.prisma.progressionAcademie.findMany({ where: { userId, lecon: { coursId: { in: l.map((c) => c.id) } } }, select: { leconId: true } })).map((p) => p.leconId),
     );
     return Promise.all(
-      l.map(async (c) => {
-        const verrouille = this.verrouille(c, qui);
-        return {
-          id: c.id, titre: c.titre, description: c.description, publie: c.publie, espace: c.espace,
-          ...this.vignette(c),
-          nbLecons: c.lecons.length,
-          verrouille,
-          pourQui: c.cibleModeles.length || c.cibleCategories.length ? await this.pourQui(c) : [],
-          faites: c.lecons.filter((x) => faites.has(x.id)).length,
-          reprendre: verrouille ? null : (c.lecons.find((x) => !faites.has(x.id)) ?? c.lecons[0])?.id ?? null,
-        };
-      }),
+      l.filter((c) => !this.horsCible(c, qui)).map(async (c) => ({
+        id: c.id, titre: c.titre, description: c.description, publie: c.publie, espace: c.espace, type: c.type,
+        ...this.vignette(c),
+        nbLecons: c.lecons.length,
+        cibleModeles: c.cibleModeles, cibleCategories: c.cibleCategories,
+        pourQui: c.cibleModeles.length || c.cibleCategories.length ? await this.pourQui(c) : [],
+        faites: c.lecons.filter((x) => faites.has(x.id)).length,
+        reprendre: (c.lecons.find((x) => !faites.has(x.id)) ?? c.lecons[0])?.id ?? null,
+      })),
     );
   }
 
@@ -72,7 +71,7 @@ export class AcademieService {
       include: { lecons: { orderBy: { ordre: 'asc' }, select: { id: true, titre: true, ordre: true, blocs: true } } },
     });
     if (!c || (qui && (!c.publie || c.espace !== qui.espace))) throw new NotFoundException('Cours introuvable');
-    if (this.verrouille(c, qui)) throw new ForbiddenException({ message: 'Cours réservé aux propriétaires de la machine', code: 'VERROUILLE', pourQui: await this.pourQui(c) });
+    if (this.horsCible(c, qui)) throw new ForbiddenException({ message: 'Contenu réservé aux propriétaires de la machine', code: 'HORS_CIBLE' });
     return c;
   }
 
@@ -81,7 +80,7 @@ export class AcademieService {
     const c = await this.coursVisible(id, qui);
     const faites = new Set((await this.prisma.progressionAcademie.findMany({ where: { userId, lecon: { coursId: id } }, select: { leconId: true } })).map((p) => p.leconId));
     return {
-      id: c.id, titre: c.titre, description: c.description, publie: c.publie, espace: c.espace, ...this.vignette(c),
+      id: c.id, titre: c.titre, description: c.description, publie: c.publie, espace: c.espace, type: c.type, ...this.vignette(c),
       cibleCategories: c.cibleCategories, cibleModeles: c.cibleModeles,
       lecons: c.lecons.map((l) => ({ id: l.id, titre: l.titre, faite: faites.has(l.id) })),
     };
@@ -152,25 +151,37 @@ export class AcademieService {
     });
     return Promise.all(
       l.map(async (c) => ({
-        id: c.id, titre: c.titre, description: c.description, publie: c.publie, espace: c.espace, ...this.vignette(c),
+        id: c.id, titre: c.titre, description: c.description, publie: c.publie, espace: c.espace, type: c.type, ...this.vignette(c),
         cibleCategories: c.cibleCategories, cibleModeles: c.cibleModeles, pourQui: await this.pourQui(c),
         nbLecons: c.lecons.length, updatedAt: c.updatedAt,
       })),
     );
   }
 
-  async creerCours(d: { espace: string; titre: string; description?: string | null }) {
+  /** Une page est créée avec sa leçon unique (son contenu). */
+  async creerCours(d: { espace: string; type?: 'parcours' | 'page'; titre: string; description?: string | null }) {
     verifierEspace(d.espace);
     const ordre = ((await this.prisma.coursAcademie.aggregate({ where: { espace: d.espace }, _max: { ordre: true } }))._max.ordre ?? -1) + 1;
-    return this.prisma.coursAcademie.create({ data: { espace: d.espace, titre: d.titre.trim(), description: d.description?.trim() || null, ordre } });
+    const type = d.type ?? 'parcours';
+    return this.prisma.coursAcademie.create({
+      data: {
+        espace: d.espace, type, titre: d.titre.trim(), description: d.description?.trim() || null, ordre,
+        ...(type === 'page' ? { lecons: { create: { titre: d.titre.trim(), ordre: 0, blocs: [] } } } : {}),
+      },
+      include: { lecons: { select: { id: true } } },
+    });
   }
 
-  async modifierCours(id: string, d: { titre?: string; description?: string | null; publie?: boolean; espace?: string; cibleCategories?: string[]; cibleModeles?: string[] }) {
+  async modifierCours(id: string, d: { type?: 'parcours' | 'page'; titre?: string; description?: string | null; publie?: boolean; espace?: string; cibleCategories?: string[]; cibleModeles?: string[] }) {
     await this.existeCours(id);
     if (d.espace) verifierEspace(d.espace);
+    // devenir une page : il lui faut au moins une leçon (son contenu)
+    if (d.type === 'page' && !(await this.prisma.leconAcademie.count({ where: { coursId: id } })))
+      await this.prisma.leconAcademie.create({ data: { coursId: id, titre: d.titre?.trim() || 'Contenu', ordre: 0, blocs: [] } });
     return this.prisma.coursAcademie.update({
       where: { id },
       data: {
+        ...(d.type ? { type: d.type } : {}),
         ...(d.titre !== undefined ? { titre: d.titre.trim() } : {}),
         ...(d.description !== undefined ? { description: d.description?.trim() || null } : {}),
         ...(d.publie !== undefined ? { publie: d.publie } : {}),

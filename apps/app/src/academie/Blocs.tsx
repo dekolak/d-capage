@@ -4,8 +4,14 @@ import { api } from '../lib/api';
 import { t } from '../lib/i18n';
 import { Bloc, duree, idVimeo } from './donnees';
 
-/** Affichage des blocs d'une leçon (côté client et aperçu admin). */
-export function Blocs({ blocs }: { blocs: Bloc[] }) {
+/**
+ * Affichage des blocs d'une leçon (côté client et aperçu admin).
+ * `pleinePage` : page de l'Académie faite d'un seul simulateur (ou HTML) : il occupe tout l'écran restant.
+ */
+export function Blocs({ blocs, pleinePage }: { blocs: Bloc[]; pleinePage?: boolean }) {
+  const seul = pleinePage && blocs.length === 1 ? blocs[0] : null;
+  if (seul?.type === 'simulateur') return <Simulateur id={seul.simulateurId!} nom={seul.nom ?? undefined} mode="plein" />;
+  if (seul?.type === 'html') return <IframeIsolee html={seul.html ?? ''} mode="plein" />;
   return (
     <div className="ac-blocs">
       {blocs.map((b) => (
@@ -114,52 +120,80 @@ function Fichier({ b }: { b: Bloc }) {
   );
 }
 
-function Simulateur({ id, nom }: { id: string; nom?: string }) {
+function Simulateur({ id, nom, mode = 'ecran' }: { id: string; nom?: string; mode?: ModeCadre }) {
   const [html, setHtml] = useState<string>();
   const [err, setErr] = useState(false);
   useEffect(() => {
     api<{ html: string }>(`/academie/simulateurs/${id}`).then((r) => setHtml(r.html)).catch(() => setErr(true));
   }, [id]);
   if (err) return <p className="muted petit">{t('academie.simulateurIndisponible')}</p>;
-  return html === undefined ? <div className="ac-charge" /> : <IframeIsolee html={html} titre={nom ?? t('academie.simulateur')} pleinEcranDirect />;
+  return html === undefined ? <div className="ac-charge" /> : <IframeIsolee html={html} titre={mode === 'plein' ? undefined : nom ?? t('academie.simulateur')} pleinEcranDirect={mode !== 'plein'} mode={mode} />;
 }
 
 /** Script ajouté au HTML : il envoie sa hauteur à l'app pour que la boîte s'ajuste. */
 const SCRIPT_HAUTEUR = `<script>(function(){function h(){parent.postMessage({academieHauteur:Math.max(document.documentElement.scrollHeight,document.body?document.body.scrollHeight:0)},'*')}addEventListener('load',h);new ResizeObserver(h).observe(document.documentElement);setTimeout(h,300)})()</script>`;
 
 /**
+ * Hauteur de la boîte :
+ * - auto : suit le contenu (petit HTML), sans dépasser 85 % de l'écran ;
+ * - ecran : simulateur dans une leçon : hauteur d'écran fixe, il défile dedans (ses panneaux « en bas de l'écran » restent visibles) ;
+ * - plein : page faite du seul simulateur : tout l'écran restant, comme s'il était ouvert seul.
+ */
+type ModeCadre = 'auto' | 'ecran' | 'plein';
+
+/**
  * HTML libre ou simulateur, dans une boîte isolée : iframe `sandbox` sans `allow-same-origin` (origine opaque) :
  * le code tourne (animations, boutons, calculs) mais ne peut ni lire le compte du client ni toucher à l'app.
- * Hauteur ajustée automatiquement ; ⤢ plein écran.
+ * ⤢ plein écran.
  */
-export function IframeIsolee({ html, hauteur, titre, pleinEcranDirect }: { html: string; hauteur?: number; titre?: string; pleinEcranDirect?: boolean }) {
+export function IframeIsolee({ html, hauteur, titre, pleinEcranDirect, mode = 'auto' }: { html: string; hauteur?: number; titre?: string; pleinEcranDirect?: boolean; mode?: ModeCadre }) {
   const ref = useRef<HTMLIFrameElement>(null);
+  const boite = useRef<HTMLDivElement>(null);
   const [h, setH] = useState(hauteur ?? 200);
   const [plein, setPlein] = useState(false);
+  const auto = mode === 'auto' && !hauteur;
   useEffect(() => {
-    if (hauteur) return;
+    if (!auto) return;
     const f = (e: MessageEvent) => {
       if (e.source !== ref.current?.contentWindow) return;
       const v = Number((e.data as { academieHauteur?: number })?.academieHauteur);
-      if (Number.isFinite(v) && v > 0) setH(Math.min(Math.max(v, 80), 4000));
+      if (Number.isFinite(v) && v > 0) setH(Math.min(Math.max(v, 80), Math.round(innerHeight * 0.85)));
     };
     addEventListener('message', f);
     return () => removeEventListener('message', f);
-  }, [hauteur]);
-  const doc = `${html}${SCRIPT_HAUTEUR}`;
+  }, [auto]);
+  // plein : de la boîte jusqu'au bas de l'écran (au-dessus de la barre d'onglets)
+  useEffect(() => {
+    if (mode !== 'plein') return;
+    const calc = () => {
+      const haut = boite.current?.getBoundingClientRect().top ?? 0;
+      const barre = (document.querySelector('.onglets') as HTMLElement | null)?.offsetHeight ?? 0;
+      setH(Math.max(300, innerHeight - haut - barre - 8));
+      // puis on retire ce qui dépasse encore (marges de la page) : une seule barre de défilement, celle du simulateur
+      requestAnimationFrame(() => {
+        const trop = document.documentElement.scrollHeight - innerHeight;
+        if (trop > 0) setH((x) => Math.max(300, x - trop));
+      });
+    };
+    calc();
+    addEventListener('resize', calc);
+    return () => removeEventListener('resize', calc);
+  }, [mode]);
+  const doc = auto ? `${html}${SCRIPT_HAUTEUR}` : html;
+  const hauteurCadre = mode === 'ecran' && !hauteur ? 'min(85dvh, 900px)' : h;
   const cadre = (style: React.CSSProperties) => (
     <iframe ref={ref} srcDoc={doc} sandbox="allow-scripts allow-forms allow-popups allow-modals" title={titre ?? 'Contenu'} style={style} />
   );
   return (
-    <div className="ac-html">
+    <div ref={boite} className={'ac-html' + (mode === 'plein' ? ' ac-html-plein' : '')}>
       {(titre || pleinEcranDirect) && (
         <div className="ac-html-barre">
           <b>🖥 {titre}</b>
           <button type="button" className="btn petit" onClick={() => setPlein(true)}>⤢ {t('academie.pleinEcran')}</button>
         </div>
       )}
-      {!plein && cadre({ height: h })}
-      {!titre && !pleinEcranDirect && (
+      {!plein && cadre({ height: hauteurCadre })}
+      {!titre && !pleinEcranDirect && mode !== 'plein' && (
         <button type="button" className="btn-lien petit" onClick={() => setPlein(true)}>⤢ {t('academie.pleinEcran')}</button>
       )}
       {plein && (
