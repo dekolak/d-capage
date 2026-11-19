@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { RefId } from '../../components/RefId';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Chargement, Erreur } from '../../components/Composants';
 import { api } from '../../lib/api';
@@ -48,7 +49,7 @@ export function AdminSolutions() {
       <div className="gx-resultats">
         {liste.map((s) => (
           <Link key={s.id} to={`/admin/solutions/${s.id}`} className="carte gx-resultat">
-            <b>{s.titre} <BadgeZone zone={s.espace} /></b>
+            <b>{s.titre} <BadgeZone zone={s.espace} /> <RefId id={s.id} p="B" /></b>
             {(s.cibleCategories.length > 0 || s.etiquettes.length > 0) && <span className="et-mini">{[...s.cibleCategories, ...s.etiquettes].map((e) => <span key={e}>🎯 {e}</span>)}</span>}
             <span className="petit muted">
               {s.categorie}
@@ -113,7 +114,7 @@ export function AdminSolution() {
   return (
     <div className="page gx">
       <Link to="/admin/solutions" className="btn-lien">← Astuces & solutions</Link>
-      <h1 className="gx-proc-titre">{s.titre}</h1>
+      <h1 className="gx-proc-titre">{s.titre} <RefId id={s.id} p="B" /></h1>
       <label className="gx-publier carte">
         <input
           type="checkbox"

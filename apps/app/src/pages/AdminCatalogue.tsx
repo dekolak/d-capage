@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { RefId } from '../components/RefId';
 import { Link } from 'react-router-dom';
 import { Erreur } from '../components/Composants';
 import { MiniatureMachine } from '../components/MiniatureMachine';
@@ -164,7 +165,7 @@ function Modele({ f, mo, faire, nomEspace, espaces, BoutonImage }: {
         <MiniatureMachine url={mo.imageUrl} taille={72} />
         <div style={{ flex: 1 }}>
           {nom === null ? (
-            <b>{f.nom} {mo.nom}</b>
+            <b>{f.nom} {mo.nom} <RefId id={mo.id} p="M" /></b>
           ) : (
             <span className="ba-libre">
               <input autoFocus value={nom} maxLength={60} onChange={(e) => setNom(e.target.value)} />
@@ -199,7 +200,7 @@ function Modele({ f, mo, faire, nomEspace, espaces, BoutonImage }: {
         <div key={v.id} className={'ligne-machine sous-bloc' + (v.actif ? '' : ' inactif')}>
           <MiniatureMachine url={v.imageUrl} badge={v.nom} taille={48} />
           <div style={{ flex: 1 }} className="petit">
-            <b>{v.nom}</b> <span className="muted">· {v.machines} machine{v.machines > 1 ? 's' : ''} chez des clients{v.reglages ? ' · écran de réglage' : ''}{v.actif ? '' : ' · désactivée'}</span>
+            <b>{v.nom}</b> <RefId id={v.id} p="V" /> <span className="muted">· {v.machines} machine{v.machines > 1 ? 's' : ''} chez des clients{v.reglages ? ' · écran de réglage' : ''}{v.actif ? '' : ' · désactivée'}</span>
           </div>
           <BoutonImage cible="variantes" id={v.id} a={v.imagePropre} />
           <button type="button" className="btn petit" title={v.actif ? 'Ne plus proposer cette variante' : 'Proposer de nouveau'}
