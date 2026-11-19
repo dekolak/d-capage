@@ -771,6 +771,8 @@ model PhotoEtape {
   annotations  Json?
   /// Change à chaque annotation : l'adresse de l'image change (?v=), les téléphones ne gardent pas l'ancienne.
   majLe        DateTime?
+  /// Repères animés posés sur la photo (halo qui pulse, ⚠️) : [{ x, y, s }] en position relative, dessinés par l'app.
+  reperes      Json?
   createdAt    DateTime       @default(now())
 
   @@index([etapeId, ordre])
@@ -1031,11 +1033,18 @@ model SimulateurAcademie {
 
 /// Image ou PDF d'un bloc de leçon.
 model FichierAcademie {
-  id        String   @id @default(cuid())
-  cle       String
-  nom       String
-  type      String
-  createdAt DateTime @default(now())
+  id           String    @id @default(cuid())
+  /// Fichier affiché (image annotée si un calque a été dessiné).
+  cle          String
+  nom          String
+  type         String
+  /// Image d'origine, gardée quand l'image est annotée (même annotateur que les pas-à-pas).
+  cleOriginale String?
+  /// Calque d'annotation (formes en coordonnées relatives 0–1).
+  annotations  Json?
+  /// Change à chaque annotation (?v= dans l'adresse).
+  majLe        DateTime?
+  createdAt    DateTime  @default(now())
 }
 
 /// Leçon terminée par un client (progression, reprise).

@@ -4,7 +4,7 @@ import { useEspace } from '../lib/espace';
 /** Académie : module isolé (cours → leçons → blocs). Voir docs/ACADEMIE.md. */
 
 export type TypeBloc = 'titre' | 'texte' | 'vimeo' | 'image' | 'encadre' | 'simulateur' | 'html' | 'fichier' | 'note';
-export interface Repere { x: number; y: number; s: 'halo' | 'attention' }
+import type { Repere } from '../components/Reperes';
 export interface Bloc {
   id: string;
   type: TypeBloc;

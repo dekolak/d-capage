@@ -6,6 +6,9 @@ import { Lecteur, nettoyerListe, verifierEspace, visible } from '../procedures/v
 import { formatImage, StockageService } from '../stockage/stockage.service';
 import { Bloc, nettoyerBlocs } from './blocs';
 
+/** Adresse d'un fichier ; ?v= change quand l'image est annotée (le téléphone ne garde pas l'ancienne). */
+const cheminFichier = (f: { id: string; majLe?: Date | null }) => `/academie/fichiers/${f.id}${f.majLe ? `?v=${f.majLe.getTime()}` : ''}`;
+
 type CoursComplet = Prisma.CoursAcademieGetPayload<{ include: { lecons: { select: { id: true; titre: true; ordre: true; blocs: true } } } }>;
 
 /**
@@ -95,6 +98,8 @@ export class AcademieService {
     const blocs = (l.blocs as Bloc[]).filter((b) => !qui || b.type !== 'note');
     const simIds = blocs.filter((b) => b.type === 'simulateur').map((b) => b.simulateurId as string);
     const sims = simIds.length ? await this.prisma.simulateurAcademie.findMany({ where: { id: { in: simIds } }, select: { id: true, nom: true } }) : [];
+    const fIds = blocs.filter((b) => b.type === 'image' && b.fichierId).map((b) => b.fichierId as string);
+    const majs = new Map((fIds.length ? await this.prisma.fichierAcademie.findMany({ where: { id: { in: fIds } }, select: { id: true, majLe: true } }) : []).map((f) => [f.id, f.majLe]));
     const i = c.lecons.findIndex((x) => x.id === id);
     const faite = !!(await this.prisma.progressionAcademie.findUnique({ where: { userId_leconId: { userId, leconId: id } } }));
     return {
@@ -104,7 +109,7 @@ export class AcademieService {
       suivante: c.lecons[i + 1]?.id ?? null,
       blocs: blocs.map((b) =>
         b.type === 'simulateur' ? { ...b, nom: sims.find((s) => s.id === b.simulateurId)?.nom ?? null }
-        : (b.type === 'image' || b.type === 'fichier') && b.fichierId ? { ...b, chemin: `/academie/fichiers/${b.fichierId}` }
+        : (b.type === 'image' || b.type === 'fichier') && b.fichierId ? { ...b, chemin: cheminFichier({ id: b.fichierId as string, majLe: majs.get(b.fichierId as string) }) }
         : b,
       ),
     };
@@ -314,6 +319,53 @@ export class AcademieService {
   }
 
   /** Image (PNG, JPEG, WebP) ou PDF pour un bloc. */
+  // ---------- annotation des images (même annotateur que les pas-à-pas) ----------
+
+  private async image(id: string) {
+    const f = await this.prisma.fichierAcademie.findUnique({ where: { id } });
+    if (!f || !f.type.startsWith('image/')) throw new NotFoundException('Image introuvable');
+    return f;
+  }
+
+  /** Calque actuel (pour rouvrir l'annotateur). */
+  async calque(id: string) {
+    const f = await this.image(id);
+    return { annotee: !!f.cleOriginale, annotations: f.annotations ?? null };
+  }
+
+  async lireOriginale(id: string) {
+    const f = await this.image(id);
+    const flux = this.stockage.lire(f.cleOriginale ?? f.cle);
+    if (!flux) throw new NotFoundException();
+    return { flux, type: f.type };
+  }
+
+  /** L'image annotée devient l'image affichée ; l'original et le calque sont gardés. */
+  async annoter(id: string, annotations: unknown, img?: Express.Multer.File) {
+    const f = await this.image(id);
+    if (!img) throw new BadRequestException('Image annotée manquante');
+    const fmt = formatImage(img.buffer);
+    if (!fmt) throw new BadRequestException('Image PNG, JPEG ou WebP attendue');
+    if (!Array.isArray(annotations) || annotations.length > 300) throw new BadRequestException('Calque invalide');
+    const cle = `academie/fichiers/${randomUUID()}-annotee.${fmt}`;
+    await this.stockage.ecrire(cle, img.buffer);
+    if (f.cleOriginale) await this.stockage.supprimer(f.cle);
+    const r = await this.prisma.fichierAcademie.update({
+      where: { id },
+      data: { cle, type: `image/${fmt === 'jpg' ? 'jpeg' : fmt}`, cleOriginale: f.cleOriginale ?? f.cle, annotations: annotations as Prisma.InputJsonValue, majLe: new Date() },
+    });
+    return { chemin: cheminFichier(r) };
+  }
+
+  /** Retirer le calque : l'image d'origine revient. */
+  async retirerAnnotation(id: string) {
+    const f = await this.image(id);
+    if (!f.cleOriginale) return { chemin: cheminFichier(f) };
+    await this.stockage.supprimer(f.cle);
+    const r = await this.prisma.fichierAcademie.update({ where: { id }, data: { cle: f.cleOriginale, cleOriginale: null, annotations: Prisma.DbNull, majLe: new Date() } });
+    return { chemin: cheminFichier(r) };
+  }
+
   async envoyerFichier(f?: Express.Multer.File) {
     if (!f) throw new BadRequestException('Fichier manquant');
     const img = formatImage(f.buffer);

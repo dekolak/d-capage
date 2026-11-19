@@ -308,6 +308,12 @@ export class AdminProceduresController {
     return this.procedures.annoter(id, formes, f);
   }
 
+  /** Repères animés de la photo : { reperes: [{ x, y, s }] }. */
+  @Patch('photos/:id/reperes')
+  reperesPhoto(@Param('id') id: string, @Body('reperes') reperes: unknown) {
+    return this.procedures.reperesPhoto(id, reperes);
+  }
+
   @Delete('photos/:id/annotation')
   retirerAnnotation(@Param('id') id: string) {
     return this.procedures.retirerAnnotation(id);

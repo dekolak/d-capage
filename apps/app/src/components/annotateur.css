@@ -15,3 +15,4 @@
 .an-toile canvas.gomme { cursor: not-allowed; }
 .an-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .an-espace { flex: 1; }
+.an-cadre { position: relative; display: inline-block; line-height: 0; max-width: 100%; }

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../../lib/i18n';
-import { ImageApi } from './donneesProcedures';
+import { ImageReperes, Repere } from '../../components/Reperes';
 import './parcours.css';
 
-export interface PhotoEtape { id: string; url: string }
+export interface PhotoEtape { id: string; url: string; reperes?: Repere[] | null }
 
 /**
  * Photos d'une étape : une seule = l'image ; plusieurs = défilement au doigt (aimanté) avec un compteur.
@@ -22,12 +22,12 @@ export function Galerie({ photos, className = 'gx-etape-photo' }: { photos: Phot
   return (
     <>
       {photos.length === 1 ? (
-        <ImageApi chemin={photos[0].url} className={className} onClick={() => setPlein(0)} />
+        <ImageReperes chemin={photos[0].url} reperes={photos[0].reperes} className={className} hauteurMax={className === 'pg-photo' ? '50vh' : '260px'} onClick={() => setPlein(0)} />
       ) : (
         <div className="ga" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           <div className="ga-bande" ref={bande} onScroll={surDefilement}>
             {photos.map((ph, k) => (
-              <ImageApi key={ph.id} chemin={ph.url} className={`${className} ga-photo`} onClick={() => setPlein(k)} />
+              <ImageReperes key={ph.id} chemin={ph.url} reperes={ph.reperes} className={`${className} ga-photo`} hauteurMax={className === 'pg-photo' ? '50vh' : '260px'} onClick={() => setPlein(k)} />
             ))}
           </div>
           <span className="ga-compteur">{t('kiavik.photos.compteur', { i: ici + 1, n: photos.length })}</span>
@@ -63,7 +63,7 @@ function PleinEcran({ photos, depart, onFermer }: { photos: PhotoEtape[]; depart
         if (Math.abs(d) > 60) setI((x) => (d < 0 ? Math.min(n - 1, x + 1) : Math.max(0, x - 1)));
       }}
     >
-      <ImageApi chemin={photos[i].url} />
+      <ImageReperes chemin={photos[i].url} reperes={photos[i].reperes} hauteurMax="92vh" />
       {n > 1 && (
         <>
           <button type="button" className="ga-fleche g" aria-label={t('kiavik.photos.precedente')} disabled={i === 0} onClick={(e) => { e.stopPropagation(); setI(i - 1); }}>‹</button>

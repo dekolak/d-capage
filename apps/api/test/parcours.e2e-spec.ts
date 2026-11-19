@@ -1502,6 +1502,10 @@ describe('Parcours complet', () => {
     // note de montage : vue par l'admin, jamais envoyée aux clients
     expect((await http.get(`/api/academie/lecons/${l2.id}`).set(A)).body.blocs.map((b: any) => b.type)).toEqual(['texte', 'note']);
     expect(l1.blocs[1]).not.toHaveProperty('inconnu');
+    // repères animés d'une image : nettoyés (position 0–1, 10 au plus, style connu)
+    const avecReperes = (await http.patch(`/api/admin/academie/lecons/${l2.id}`).set(A).send({ blocs: [{ type: 'image', fichierId: 'f1', reperes: [{ x: 0.5, y: 0.25, s: 'attention' }, { x: 2, y: 0 }, { x: 0.1, y: 0.1, s: 'autre' }] }] })).body;
+    expect(avecReperes.blocs[0].reperes).toEqual([{ x: 0.5, y: 0.25, s: 'attention' }, { x: 0.1, y: 0.1, s: 'halo' }]);
+    await http.patch(`/api/admin/academie/lecons/${l2.id}`).set(A).send({ blocs: [{ type: 'texte', texte: 'Fin' }, { type: 'note', texte: 'Vidéo à placer' }] }).expect(200);
 
     // client avec la machine : il voit tout ; sans : le cours ciblé n'apparaît pas et ne s'ouvre pas
     const listeAvec = (await http.get('/api/academie').set(avec.H)).body.filter((c: any) => c.titre.endsWith(id));
