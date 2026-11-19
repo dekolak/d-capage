@@ -604,7 +604,7 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .pq-case.on { background: var(--o-doux); border-color: var(--o); color: var(--od); }
 
 /* Choix des familles + précision (éditeur de fiche) */
-.groupe-tags { display: grid; gap: 6px; margin-bottom: 14px; }
+.groupe-tags { display: grid; gap: 6px; }
 .groupe-tags .gt-titre small { font-weight: 400; }
 .precision input { width: 100%; }
 .precision .mini-choix { margin-top: 4px; }
@@ -638,5 +638,7 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .ref-id { display: inline-block; vertical-align: middle; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--bord); border-radius: 6px; background: var(--carte); color: var(--g); font: 600 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; cursor: copy; }
 .ref-id:hover { color: var(--t); border-color: var(--g2); }
 .actions-bandeau { display: flex; gap: 10px; align-items: center; flex: none; }
-.valeur-exacte { display: flex; align-items: center; gap: 10px; margin: 4px 0 8px; }
-.valeur-exacte input { width: 110px; min-height: 44px; border: 1px solid var(--bord-fort); border-radius: var(--r-sm); padding: 0 12px; font-size: 18px; }
+.gt-ligne { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+.gt-ligne select, .gt-ligne input { width: 100%; min-height: 44px; }
+.gt-ligne input:disabled { opacity: 0.45; }
+.groupe-tags .puces { margin: 0; }

@@ -125,6 +125,8 @@ export default function FicheEditeur() {
   const machine = machines?.find((m) => m.id === b.userMachineId);
   // Métier de la fiche (tags proposés, titres) : procédé choisi ou technologie de la machine
   const univers = version ? universFiche(version.config, b.valeurs ?? {}) : machine ? universMachine(machine) : undefined;
+  // Soudure : pas d'étape « photo avant »
+  const sautees: number[] = univers === 'soudure' ? [ETAPES.indexOf('avant')] : [];
   useEffect(() => {
     if (modif || !machine?.version) return;
     chargerVersion(machine.version.id)
@@ -158,7 +160,12 @@ export default function FicheEditeur() {
     libellesTags({ tags: groupes.flatMap((g) => g.tags.map((tag) => ({ ...tag, groupe: g.slug }))).filter((tag) => b.tagIds.includes(tag.id)), precisions: groupes.filter((g) => b.precisions?.[g.id]?.trim()).map((g) => ({ groupe: g.slug, texte: b.precisions![g.id].trim() })) })
       .map((x) => x.nom).slice(0, 3).join(' · ');
 
-  const aller = (e: number) => {
+  const aller = (cible: number) => {
+    // étapes sautées (ex. pas de photo avant en soudure)
+    const sens = cible >= b.etape ? 1 : -1;
+    let e = cible;
+    while (sautees.includes(e)) e += sens;
+    if (e < 0 || e >= ETAPES.length) return;
     if (e === 5 && !b.titre) maj({ etape: e, titre: titreSuggere() });
     else maj({ etape: e });
     window.scrollTo(0, 0);
@@ -257,10 +264,10 @@ export default function FicheEditeur() {
       {parent && <p className="muted petit">{t('lazzeko.editeur.aPartirDe', { titre: parent.titre, auteur: parent.auteur })}</p>}
 
       <ol className="etapes">
-        {ETAPES.map((n, i) => (
+        {ETAPES.map((n, i) => sautees.includes(i) ? null : (
           <li key={n} className={(i === e ? 'on ' : '') + (i < e ? 'fait' : '')}>
             <button type="button" onClick={() => aller(i)} disabled={(modif && i === 0) || (i > 0 && !version)}>
-              <span>{i + 1}</span>
+              <span>{i + 1 - sautees.filter((x) => x < i).length}</span>
               {t(`lazzeko.editeur.etape.${n}`)}
             </button>
           </li>
