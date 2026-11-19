@@ -123,8 +123,10 @@ export function Bulle({ a, onCompris, onRepondre, onPasAPas, apercu }: {
  * Messages de l'admin (Lazzeko ou Kiavik selon l'espace) à l'ouverture de l'app : bulles en haut de l'écran,
  * message « Important » en grand (à fermer pour continuer). Pas de réponse libre au-delà de la question posée.
  */
-export function Annonces() {
+export function Annonces({ onCompte }: { onCompte?: (n: number) => void } = {}) {
   const [liste, setListe] = useState<Annonce[]>([]);
+  // nombre affiché (bandeau de notifications)
+  useEffect(() => onCompte?.(liste.length), [liste.length, onCompte]);
   const [tout, setTout] = useState(false);
   const [merci, setMerci] = useState(false);
   // rappel d'entretien répondu « Non » : on propose de faire le pas-à-pas tout de suite

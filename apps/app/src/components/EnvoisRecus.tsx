@@ -20,9 +20,11 @@ export function ouvrirRecu(e: EnvoiRecu, nav: (to: string) => void) {
 }
 
 /** Bulles « 📤 Teddy vous a envoyé : … » à l'ouverture de l'app (pas encore vues). */
-export function EnvoisRecus() {
+export function EnvoisRecus({ onCompte }: { onCompte?: (n: number) => void } = {}) {
   const acces = useAccesProcedures();
   const [liste, setListe] = useState<EnvoiRecu[]>([]);
+  // nombre affiché (bandeau de notifications)
+  useEffect(() => onCompte?.(liste.length), [liste.length, onCompte]);
   const nav = useNavigate();
   const charger = useCallback(() => api<EnvoiRecu[]>('/procedures/envois/miens').then((l) => setListe(l.filter((e) => !e.vu))).catch(() => {}), []);
   useEffect(() => {

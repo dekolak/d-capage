@@ -1,7 +1,7 @@
 # 🎓 Académie
 
 Des cours en pages simples (vidéos Vimeo, textes, simulateurs), pour Lazzeko et Kiavik. Un **module isolé** :
-ses tables, ses routes, son dossier d'app ; seul un bandeau « 🎓 Académie » (accueil) et une entrée d'administration le relient au reste.
+ses tables, ses routes, son dossier d'app ; seuls le bouton « 🎓 Académie » de la barre du bas et une entrée d'administration le relient au reste.
 
 ## Pour l'admin (sur ordinateur, de préférence)
 **Administration → 🎓 Académie** (section Commun) :
@@ -27,7 +27,7 @@ ses tables, ses routes, son dossier d'app ; seul un bandeau « 🎓 Académie »
 **Vimeo** : réglez vos vidéos en « non répertoriée » et, si votre offre le permet, « intégrable seulement sur » `app.lazzeko.com` et `app.kiavikcopilot.ovh`.
 
 ## Pour le client
-Bandeau **🎓 Académie** sur l'accueil (Lazzeko et Kiavik) → les cours (vignette, nombre de leçons, avancement), puis « 🔒 Réservés à d'autres machines ».
+Bouton **🎓 Académie** dans la barre du bas (Lazzeko et Kiavik) → les cours (vignette, nombre de leçons, avancement), puis « 🔒 Réservés à d'autres machines ».
 Un cours : sommaire, **▶ Commencer / Reprendre** ; une leçon : ses blocs, **Marquer comme terminée**, **Leçon suivante →** (la marque terminée).
 Accès : module « Académie » de l'espace (donné à tous les clients existants à la mise à jour ; à cocher pour les nouveaux, ou fourni par l'import).
 

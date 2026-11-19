@@ -14,8 +14,10 @@ const DELAIS = [2, 7, 30] as const;
  * Rappels du carnet d'entretien, à l'ouverture de l'app : une bulle par tâche à faire (jour J ou en retard).
  * Oui → date (la tâche est notée, l'échéance repart de là) ; Non → faire le pas-à-pas ; « Me le rappeler dans… ».
  */
-export function RappelsEntretien() {
+export function RappelsEntretien({ onCompte }: { onCompte?: (n: number) => void } = {}) {
   const [liste, setListe] = useState<Rappel[]>([]);
+  // nombre affiché (bandeau de notifications)
+  useEffect(() => onCompte?.(liste.length), [liste.length, onCompte]);
   const charger = useCallback(() => api<Rappel[]>('/moi/carnet/rappels').then(setListe).catch(() => {}), []);
   useEffect(() => {
     charger();

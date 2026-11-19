@@ -31,7 +31,7 @@ Un menu court, en **sections** avec un badge de couleur : **Commun** (gris), **L
 - **Nouvelle machine** : choisissez sa catégorie, elle reçoit tout de suite les contenus de cette catégorie.
 - « 👁 Visible par » montre les modèles concernés. Les anciennes étiquettes restent prises en compte (affichées en puces, supprimables).
 - Où : éditeur d'un pas-à-pas et d'un Bon à savoir, **mode terrain** (au démarrage), liste des pas-à-pas (filtres espace / pour qui / état). Les clients Lazzeko ont besoin de l'accès « Pas-à-pas et Bon à savoir » (Lazzeko) sur leur compte.
-- **Côté client : 🛠 Ma machine** (bandeau en haut de l'accueil, Lazzeko et Kiavik, et Compte) : une page par machine du client, avec **📚 Guides** (pas-à-pas, dépannages et Bon à savoir rangés en sections repliables par catégorie de l'accueil, comme l'accueil Kiavik : même ordre, mêmes icônes, sections masquées cachées ; ce qui vise la machine précisément passe en premier), **📤 Reçus**, **📒 Carnet** (carnet d’entretien) et, côté Lazzeko, **🎛 Mes fiches** (fiches de réglage de cette machine). S'il a plusieurs machines, il choisit en haut.
+- **Côté client : 🛠 Ma machine** (menu 👤 en haut à droite, Lazzeko et Kiavik, et Compte) : une page par machine du client, avec **📚 Guides** (pas-à-pas, dépannages et Bon à savoir rangés en sections repliables par catégorie de l'accueil, comme l'accueil Kiavik : même ordre, mêmes icônes, sections masquées cachées ; ce qui vise la machine précisément passe en premier), **📤 Reçus**, **📒 Carnet** (carnet d’entretien) et, côté Lazzeko, **🎛 Mes fiches** (fiches de réglage de cette machine). S'il a plusieurs machines, il choisit en haut.
 - **Pas-à-pas, Bon à savoir, Dépannages reçus** sont dans la section **Commun** de l'administration : on y crée les contenus des deux espaces (filtre espace en haut de la liste).
 
 ## Machines (Lazzeko et Kiavik)
@@ -211,8 +211,15 @@ Administration → Comptes → toucher le client → **Voir son activité** (con
 - Les admins ne sont pas enregistrés. Le journal est **effacé automatiquement après 12 mois**.
 - **Conditions d'utilisation** : le journal y est mentionné, partie « Vos données » (Lazzeko et Kiavik). La phrase a été ajoutée automatiquement aux conditions en vigueur au déploiement (nouvelle version, acceptée par les clients à leur prochaine ouverture). À garder si on réécrit les conditions.
 
+## Navigation de l'app (clients)
+- **Barre du bas** : Lazzeko *Mes fiches · Communauté · Aide · 🎓 Académie* ; Kiavik *Accueil · Pas-à-pas · Rechercher · 🎓 Académie* (Académie seulement si le compte y a accès).
+- **＋ flottant** (Lazzeko) en bas à droite : nouvelle fiche ; caché sur une fiche (où se trouve « Partager ») et dans l'éditeur.
+- **En haut à droite** : n° client et **👤** → 🛠 Ma machine (guides, carnet, réglages), 👤 Mon compte, 📤 Pas-à-pas reçus (+ ⚙️ Administration pour l'admin). **Pastille rouge** = entretiens en retard.
+- **Écran principal** : un **bandeau de notifications** seulement s'il y a quelque chose (messages, rappels d'entretien, pas-à-pas reçus) : une seule = affichée directement ; plusieurs = « 🔔 3 notifications à regarder », à déplier.
+- Brouillon de fiche en cours : bandeau « 📝 Brouillon de fiche : toucher pour reprendre ».
+
 ## Partager une page avec un client
-Bouton rond **Partager** (en bas à droite, visible seulement par l'admin), et bouton **Partager** dans la fiche d'un bouton des guides.
+Bouton rond **Partager** en bas à droite d'une **fiche de réglage**, **🔗 Partager cette page** dans le menu 👤 (en haut à droite, pour toutes les autres pages), et bouton **Partager** dans la fiche d'un bouton des guides. Visible seulement par l'admin.
 - Sur téléphone : menu de partage habituel (SMS, WhatsApp, mail…). Sur ordinateur : WhatsApp, SMS ou **Copier le lien**.
 - Le lien ouvre exactement la page affichée : écran du guide avec le bouton sélectionné, procédure, animation, recherche…
 - Il utilise l'adresse de l'espace ouvert (ex. app.kiavikcopilot.ovh). Le client doit avoir un compte avec l'accès concerné ; s'il n'est pas connecté, il se connecte puis arrive sur la page.

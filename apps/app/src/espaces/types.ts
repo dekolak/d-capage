@@ -9,6 +9,8 @@ export interface Onglet {
   icone?: string;
   plus?: boolean;
   end?: boolean;
+  /** Affiché seulement si le compte a l'Académie de l'espace. */
+  academie?: boolean;
 }
 
 /**
@@ -17,6 +19,8 @@ export interface Onglet {
  */
 export interface AppEspace {
   onglets: Onglet[];
+  /** Bouton ＋ flottant (en bas à droite), caché sur les pages qui correspondent à `masquerSur`. */
+  boutonPlus?: { to: string; label: Cle; masquerSur: RegExp };
   /** Routes de l'espace (fragment de <Route>, appelé comme une fonction dans <Routes>). */
   routes(): ReactElement;
 }
@@ -30,4 +34,5 @@ export const ICONES = {
   livre: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5zM4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5',
   etapes: 'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
   recherche: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16M21 21l-4.3-4.3',
+  academie: 'M22 9 12 4 2 9l10 5 10-5zM6 11.5V16c3.5 2.5 8.5 2.5 12 0v-4.5M22 9v6',
 };

@@ -1,4 +1,3 @@
-import { LienAcademie } from '../academie/Pages';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CarteFiche } from '../components/CarteFiche';
@@ -8,7 +7,6 @@ import { brouillonUtile, lireBrouillon } from '../lib/brouillon';
 import { nomMachine } from '../lib/util';
 import { noterRecherche } from '../lib/activite';
 import { t, tn } from '../lib/i18n';
-import { LienMaMachine } from './MaMachine';
 
 /** Mes réglages : recherche texte, machine (puces visibles si plusieurs machines, ?machine= depuis Ma machine) et tags, combinables. */
 export default function Fiches() {
@@ -50,8 +48,6 @@ export default function Fiches() {
 
   return (
     <div className="page">
-      <LienMaMachine />
-      <LienAcademie />
       <h1>{t('lazzeko.fiches.titre')}</h1>
       {brouillonUtile(lireBrouillon()) && (
         <Link to="/fiches/nouvelle" className="bandeau lien-bandeau">

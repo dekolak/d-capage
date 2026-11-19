@@ -21,11 +21,12 @@ import Solutions, { SolutionDetail } from '../kiavik/Solutions';
 export const lazzeko: AppEspace = {
   onglets: [
     { to: '/', label: 'onglets.mesFiches', icone: ICONES.liste, end: true },
-    { to: '/fiches/nouvelle', label: 'onglets.nouvelle', plus: true },
     { to: '/communaute', label: 'onglets.communaute', icone: ICONES.groupe },
     { to: '/aide', label: 'onglets.aide', icone: ICONES.aide },
-    { to: '/compte', label: 'onglets.compte', icone: ICONES.compte },
+    { to: '/academie', label: 'onglets.academie', icone: ICONES.academie, academie: true },
   ],
+  // nouvelle fiche : bouton flottant (caché sur une fiche et dans l'éditeur, où il y a « partager »)
+  boutonPlus: { to: '/fiches/nouvelle', label: 'onglets.nouvelle', masquerSur: /^\/fiches\// },
   routes: () => (
     <>
       <Route path="/" element={<Fiches />} />
