@@ -127,7 +127,7 @@ export function ParcoursGuide({ p, av, onFermer }: { p: Procedure; av: Avancemen
             {e.photos.length ? (
               <Galerie key={e.id} photos={e.photos} className="pg-photo" />
             ) : e.guide && e.ecran ? (
-              <CaptureBouton key={e.id} guide={e.guide} ecran={e.ecran} pastille={e.pastille} zoomDepart />
+              <CaptureBouton key={e.id} guide={e.guide} ecran={e.ecran} pastille={e.pastille} cleZoom="kiavik.parcours.zoom" />
             ) : null}
             {e.photo && e.guide && e.ecran && <CaptureBouton key={`${e.id}-c`} guide={e.guide} ecran={e.ecran} pastille={e.pastille} />}
             <PasClair key={`${e.id}-pc`} etape={e.id} />

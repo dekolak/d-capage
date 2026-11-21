@@ -8,13 +8,19 @@ import '../../bibliotheque/parcours.css';
 
 /**
  * Capture d'un écran du guide avec le bouton à toucher entouré (cercle qui clignote), sans quitter la page.
- * Zoom : la capture est agrandie et centrée sur le bouton. Sert à « Voir le bouton » et au parcours guidé.
+ * Par défaut plein écran (le cercle montre déjà le bouton) ; le client zoome d'un geste. `cleZoom` : garde son
+ * choix de zoom sur ce téléphone (ex. d'une étape à l'autre du parcours). Sert à « Voir le bouton » et au parcours guidé.
  */
-export function CaptureBouton({ guide: slug, ecran: idEcran, pastille, explication = true, zoomDepart = false }: {
-  guide: string; ecran: string; pastille: string | null; explication?: boolean; zoomDepart?: boolean;
+export function CaptureBouton({ guide: slug, ecran: idEcran, pastille, explication = true, cleZoom }: {
+  guide: string; ecran: string; pastille: string | null; explication?: boolean; cleZoom?: string;
 }) {
   const { guide } = useGuide(slug);
-  const [zoom, setZoom] = useState(zoomDepart);
+  const [zoom, setZoom] = useState(() => (cleZoom ? localStorage.getItem(cleZoom) === '1' : false));
+  const basculerZoom = () => setZoom((z) => {
+    const v = !z;
+    if (cleZoom) localStorage.setItem(cleZoom, v ? '1' : '0');
+    return v;
+  });
   const defile = useRef<HTMLDivElement>(null);
   const e = guide?.ecrans.find((x) => x.id === idEcran);
   const p = e?.pastilles.find((x) => x.id === pastille) ?? (guide && e ? pastillesNavigation(guide, e).find((n) => n.info?.id === pastille)?.info : undefined);
@@ -49,7 +55,7 @@ export function CaptureBouton({ guide: slug, ecran: idEcran, pastille, explicati
           {p && <span className="cb-anneau" style={{ left: `${(p.x / e.largeur) * 100}%`, top: `${(p.y / e.hauteur) * 100}%` }} />}
         </div>
       </div>
-        <button type="button" className="cb-zoom" aria-label={t('kiavik.guide.zoom')} onClick={() => setZoom(!zoom)}>{zoom ? '⤡' : '⤢'}</button>
+        <button type="button" className="cb-zoom" aria-label={t('kiavik.guide.zoom')} onClick={basculerZoom}>{zoom ? '⤡' : '⤢'}</button>
       </div>
       <div className="cb-legende">
         <span className="gx-ref">{guide.nom.split(' ')[0]} · {e.code}{pastille ? ` · ${pastille}` : ''}</span>
