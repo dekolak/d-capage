@@ -194,7 +194,7 @@ docs/                       documentation
 ## Aide et assistance : la Bibliothèque commune
 Toutes les sociétés ont **le même mécanisme d'aide** (`apps/app/src/bibliotheque/`) : pas-à-pas, dépannages guidés, Bon à savoir, mode terrain, recherche,
 catégories, éditeur, annotateur ; filtré par la société ouverte et les machines du client (« Pour qui ? »). Modifier ce mécanisme le modifie partout.
-- Écran `Bibliotheque` : recherche, **un bloc propre à la société** (`entete`), puis les sections par catégorie. Kiavik : accueil `/guides` avec ses guides écran (`avecGuides`) ; Lazzeko : onglet **Aide** `/aide` avec le bloc « 🎛 Comprendre les réglages » (`espaces/lazzeko/BlocReglages.tsx` → `/aide/reglages`, `pages/Aide.tsx`).
+- Écran `Bibliotheque` : recherche, **un bloc propre à la société** (`entete`), puis les sections par catégorie. Kiavik : accueil `/guides` avec ses guides écran (`avecGuides`) ; Lazzeko : onglet **Aide** `/aide` avec le bouton « 🎛 Comprendre les réglages » (`espaces/lazzeko/BlocReglages.tsx`, bouton-carte `.bouton-carte` → `/aide/reglages`, `pages/Aide.tsx` ; réservé au décapage). Le même bouton est repris en tête de l'**Académie** (`PageAcademie`, `lazzekoSeul` : masqué hors Lazzeko).
 - `Recherche` (`/recherche`) : la même ; avec `avecGuides`, elle cherche aussi dans les guides écran.
 - **Ma machine** (Guides, Carnet, Reçus) : la même pour toutes les sociétés ; Lazzeko ajoute une ligne vers les fiches de réglage de la machine.
 - Briques propres : `espaces/lazzeko/` (fiches, communauté), `espaces/kiavik/` (guides écran : `GuideEcran`, `Animation`, `CaptureBouton`, `guides.ts`…). Le moteur commun peut utiliser les guides écran (étape « Voir le bouton ») quand la société en a.

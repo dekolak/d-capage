@@ -695,3 +695,11 @@ h1 .badge-espace, h2 .badge-espace { vertical-align: middle; font-size: 12px; }
 .adm-traiter { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; background: var(--o-doux); border: 1px solid color-mix(in srgb, var(--o) 30%, var(--carte)); border-radius: var(--r-sm); padding: 8px 10px; }
 .adm-traiter > b { margin-right: 4px; }
 .adm-section .bandeau { margin-top: 8px; }
+
+/* Bouton-carte : une ligne cliquable propre (pastille, titre + sous-titre, chevron) — ex. « Comprendre les réglages » */
+.bouton-carte { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-decoration: none; color: inherit; }
+.bouton-carte .bc-icone { flex: none; width: 46px; height: 46px; border-radius: 12px; background: var(--o-doux); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.bouton-carte .bc-texte { display: grid; gap: 2px; min-width: 0; }
+.bouton-carte .bc-texte b { font-size: 15px; }
+.bouton-carte .bc-texte small { color: var(--g); font-size: 13px; }
+.bouton-carte .bc-chevron { margin-left: auto; font-size: 22px; line-height: 1; color: var(--o); }

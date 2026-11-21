@@ -8,6 +8,7 @@ import { useEspace } from '../lib/espace';
 import { t } from '../lib/i18n';
 import { Blocs } from './Blocs';
 import { AvisContenu } from '../components/AvisContenu';
+import { BlocReglages } from '../espaces/lazzeko/BlocReglages';
 import { Cours, Lecon, ResumeCours, useAccesAcademie } from './donnees';
 import './academie.css';
 
@@ -48,6 +49,7 @@ export function PageAcademie() {
       <h1>{t('academie.titre')}</h1>
       <p className="muted">{t('academie.intro')}</p>
       {moi?.role === 'ADMIN' && <Link to="/admin/academie" className="btn petit">⚙️ Gérer l'Académie (admin)</Link>}
+      <BlocReglages lazzekoSeul />
       {!l.length && <p className="muted">{t('academie.aucun')}</p>}
       {pages.length > 0 && (
         <>
